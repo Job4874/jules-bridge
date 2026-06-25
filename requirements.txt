@@ -1,0 +1,4 @@
+flask
+flask-cors
+pyautogui
+pyngrok
