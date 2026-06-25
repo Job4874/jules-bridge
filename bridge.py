@@ -168,8 +168,25 @@ def session_log():
 @route_errors
 def inbox_read():
     """Read a file from jules_inbox/ by filename."""
-    name = (request.json or {}).get("file", "OPERATOR_RESPONSE.md")
-    path = os.path.join(INBOX_DIR, os.path.basename(name))
+    data = request.get_json(silent=True) or {}
+    name = os.path.basename(data.get("file") or "OPERATOR_RESPONSE.md")
+    if not name:
+        return jsonify({
+            "error": "file is required",
+            "hint": "Use POST /fs/read for paths outside jules_inbox/",
+        }), 400
+
+    path = os.path.join(INBOX_DIR, name)
+    if not os.path.isfile(path):
+        return jsonify({
+            "error": f"inbox file not found: {name}",
+            "hint": "Playbooks and host paths use POST /fs/read with full path.",
+            "inbox_files": sorted(
+                f for f in os.listdir(INBOX_DIR)
+                if os.path.isfile(os.path.join(INBOX_DIR, f))
+            ),
+        }), 404
+
     with open(path, "r", encoding="utf-8") as handle:
         return jsonify({"file": name, "content": handle.read()})
 
@@ -198,8 +215,20 @@ def ping():
 @route_errors
 def run_shell():
     """Execute terminal commands (PowerShell by default)."""
-    data = request.json or {}
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({
+            "error": "JSON body required",
+            "hint": 'Send {"command":"your powershell here"} with Content-Type: application/json',
+        }), 400
+
     cmd = data.get("command")
+    if not cmd or not str(cmd).strip():
+        return jsonify({
+            "error": "command is required and cannot be empty",
+            "example": {"command": "Get-Location"},
+        }), 400
+
     cwd = data.get("cwd", os.getcwd())
     timeout = int(data.get("timeout", 120))
     print(f"[JULES SHELL] -> {cmd}")
