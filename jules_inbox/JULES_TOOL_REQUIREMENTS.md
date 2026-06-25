@@ -41,6 +41,34 @@ Header: `ngrok-skip-browser-warning: true`
 
 **Forbidden:** Eight `/shell` build loops while Symbol/Account remain empty.
 
+### `/shell` selector contract
+
+Payload:
+
+```json
+{
+  "command": "Get-Process",
+  "shell": "powershell",
+  "timeout": 30
+}
+```
+
+Supported selectors:
+
+- `powershell` (default): native Windows PowerShell via `powershell -Command`.
+- `cmd`: Windows command prompt via `cmd.exe /d /s /c`.
+- `bash`: Git Bash only. The bridge checks `JULES_BASH_PATH`, then local Git install paths, then `PATH`.
+
+Do not request `wsl`; this host exposes `wsl.exe` but has no installed WSL distribution.
+
+Input and error rules:
+
+- POST bodies must be JSON objects.
+- Malformed JSON or non-JSON bodies return `400`.
+- Missing files return `404`.
+- Access denied returns `403`.
+- Command timeouts return `504`.
+
 ---
 
 ## 3. Codex handover access (on this host)

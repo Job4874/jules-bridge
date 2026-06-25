@@ -1,8 +1,13 @@
-"""Jules God-Mode Bridge — Flask API for remote host control via ngrok."""
+"""Jules God-Mode Bridge - Flask API for remote host control via ngrok."""
+import base64
+import errno
+import logging
+from logging.handlers import RotatingFileHandler
 import os
 import re
+import shutil
 import subprocess
-import base64
+import sys
 from collections import deque
 from datetime import datetime, timezone
 from functools import wraps
@@ -14,24 +19,298 @@ from flask_cors import CORS
 import notify_email as email_service
 import oracle_tools
 
-# Safety switch: Move mouse to a corner of the screen to kill the automation if it goes crazy
+# Safety switch: move mouse to a corner of the screen to kill runaway automation.
 pyautogui.FAILSAFE = True
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+INBOX_DIR = os.path.join(ROOT_DIR, "jules_inbox")
+SCREENSHOT_DIR = os.path.join(INBOX_DIR, "screenshots")
+LOG_PATH = os.path.join(ROOT_DIR, "bridge.log")
+
+REQUEST_LOG = deque(maxlen=200)
+CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+MISSING = object()
+
+SUPPORTED_SHELLS = ("powershell", "cmd", "bash")
+BASH_CANDIDATES = (
+    r"C:\Program Files\Git\bin\bash.exe",
+    r"C:\Program Files (x86)\Git\bin\bash.exe",
+    r"C:\Program Files\Git\usr\bin\bash.exe",
+)
+
+
+def configure_logging():
+    """Send bridge logs to stdout and a rotating bridge.log file."""
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    if any(getattr(handler, "_jules_bridge_handler", False) for handler in root_logger.handlers):
+        return
+
+    formatter = logging.Formatter(
+        "%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+    )
+
+    os.makedirs(ROOT_DIR, exist_ok=True)
+    file_handler = RotatingFileHandler(
+        LOG_PATH,
+        maxBytes=2_000_000,
+        backupCount=3,
+        encoding="utf-8",
+    )
+    file_handler.setFormatter(formatter)
+    file_handler._jules_bridge_handler = True
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    stream_handler._jules_bridge_handler = True
+
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(stream_handler)
+
+
+configure_logging()
+LOGGER = logging.getLogger("jules_bridge")
 
 app = Flask(__name__)
 CORS(app)
 
-INBOX_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "jules_inbox")
-SCREENSHOT_DIR = os.path.join(INBOX_DIR, "screenshots")
-REQUEST_LOG = deque(maxlen=200)
 
-ROUTE_ERRORS = (
-    OSError,
-    ValueError,
-    TypeError,
-    re.error,
-    subprocess.SubprocessError,
-    RuntimeError,
-)
+class BridgeHTTPError(Exception):
+    """Exception that maps directly to a structured HTTP JSON response."""
+
+    def __init__(self, status_code, error, **payload):
+        super().__init__(error)
+        self.status_code = status_code
+        self.error = error
+        self.payload = payload
+
+
+def _json_error(status_code, error, **payload):
+    body = {"error": error}
+    for key, value in payload.items():
+        if value is not None:
+            body[key] = value
+    return jsonify(body), status_code
+
+
+def route_errors(func):
+    """Translate expected operational failures into semantic JSON responses."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except BridgeHTTPError as exc:
+            LOGGER.warning("%s %s -> %s %s", request.method, request.path, exc.status_code, exc.error)
+            return _json_error(exc.status_code, exc.error, **exc.payload)
+        except subprocess.TimeoutExpired as exc:
+            timeout = getattr(exc, "timeout", None)
+            message = f"Execution timed out after {timeout} seconds" if timeout else "Execution timed out"
+            LOGGER.warning("%s %s -> 504 %s", request.method, request.path, message)
+            return _json_error(504, message)
+        except FileNotFoundError as exc:
+            path = getattr(exc, "filename", None)
+            LOGGER.warning("%s %s -> 404 Resource not found: %s", request.method, request.path, path)
+            return _json_error(404, "Resource not found", path=path)
+        except PermissionError as exc:
+            LOGGER.warning("%s %s -> 403 Access denied: %s", request.method, request.path, exc)
+            return _json_error(403, "Access denied", reason="Insufficient permissions")
+        except re.error as exc:
+            LOGGER.warning("%s %s -> 400 Invalid regex: %s", request.method, request.path, exc)
+            return _json_error(400, "Invalid input", details=f"Invalid regex: {exc}")
+        except OSError as exc:
+            if getattr(exc, "errno", None) in (errno.EACCES, errno.EPERM, 13):
+                LOGGER.warning("%s %s -> 403 Access denied: %s", request.method, request.path, exc)
+                return _json_error(403, "Access denied", reason="Insufficient permissions")
+            if getattr(exc, "errno", None) in (errno.ENOENT, 2, 3):
+                path = getattr(exc, "filename", None)
+                LOGGER.warning("%s %s -> 404 Resource not found: %s", request.method, request.path, path)
+                return _json_error(404, "Resource not found", path=path)
+            LOGGER.exception("%s %s -> 500 OSError", request.method, request.path)
+            return _json_error(500, "Internal operational failure")
+        except Exception:
+            LOGGER.exception("%s %s -> 500 Internal operational failure", request.method, request.path)
+            return _json_error(500, "Internal operational failure")
+
+    return wrapper
+
+
+def json_payload():
+    """Return a request JSON object without allowing Flask 415 surprises."""
+    raw = request.get_data(cache=True)
+    if not raw:
+        return {}
+    if not request.is_json:
+        raise BridgeHTTPError(400, "Malformed JSON or missing Content-Type header.")
+
+    data = request.get_json(silent=True)
+    if data is None:
+        raise BridgeHTTPError(400, "Malformed JSON or missing Content-Type header.")
+    if not isinstance(data, dict):
+        raise BridgeHTTPError(400, "Invalid input", details="JSON body must be an object.")
+    return data
+
+
+def _reject_control_chars(value, field):
+    if CONTROL_CHAR_RE.search(value):
+        raise BridgeHTTPError(400, "Invalid input", details=f"{field} contains illegal control characters")
+
+
+def string_field(data, key, default=MISSING, allow_empty=False, control_safe=False):
+    if key not in data:
+        if default is MISSING:
+            raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
+        return default
+
+    value = data.get(key)
+    if not isinstance(value, str):
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a string")
+    if not allow_empty and not value.strip():
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} cannot be empty")
+    if control_safe:
+        _reject_control_chars(value, key)
+    return value
+
+
+def int_field(data, key, default=MISSING, min_value=None, max_value=None):
+    if key not in data or data.get(key) is None:
+        if default is MISSING:
+            raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
+        return default
+
+    value = data.get(key)
+    if isinstance(value, bool):
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be an integer")
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be an integer") from None
+
+    if min_value is not None and value < min_value:
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be >= {min_value}")
+    if max_value is not None and value > max_value:
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be <= {max_value}")
+    return value
+
+
+def path_field(data, key="path", default=MISSING):
+    path = string_field(data, key, default=default, control_safe=True)
+    if not isinstance(path, str):
+        return path
+    return path
+
+
+def existing_path(path, kind="file"):
+    if not os.path.exists(path):
+        raise BridgeHTTPError(404, "Resource not found", path=path)
+    if kind == "file" and not os.path.isfile(path):
+        raise BridgeHTTPError(400, "Invalid input", details="path must point to a file", path=path)
+    if kind == "directory" and not os.path.isdir(path):
+        raise BridgeHTTPError(400, "Invalid input", details="path must point to a directory", path=path)
+    return path
+
+
+def content_field(data):
+    if "content" in data:
+        return string_field(data, "content", allow_empty=True)
+    if "data" in data:
+        return string_field(data, "data", allow_empty=True)
+    raise BridgeHTTPError(400, "Invalid input", details="content or data is required")
+
+
+def inbox_name(data, default):
+    if "file" not in data or data.get("file") in (None, ""):
+        return default
+    name = string_field(data, "file", control_safe=True)
+    name = os.path.basename(name)
+    if not name:
+        raise BridgeHTTPError(400, "Invalid input", details="file cannot be empty")
+    return name
+
+
+def validate_email(value, key="to"):
+    if not EMAIL_RE.match(value):
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a valid email address")
+    return value
+
+
+def optional_email(data, key):
+    if key not in data or data.get(key) in (None, ""):
+        return None
+    return validate_email(string_field(data, key), key=key)
+
+
+def _coerce_text(value):
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
+def _discover_bash():
+    configured = os.environ.get("JULES_BASH_PATH", "").strip()
+    if configured:
+        if os.path.exists(configured):
+            return configured
+        raise BridgeHTTPError(
+            400,
+            "Invalid input",
+            details=f"JULES_BASH_PATH is set but not found: {configured}",
+        )
+
+    for candidate in BASH_CANDIDATES:
+        if os.path.exists(candidate):
+            return candidate
+
+    for executable in ("bash.exe", "bash"):
+        found = shutil.which(executable)
+        if found:
+            return found
+
+    raise BridgeHTTPError(
+        400,
+        "Invalid input",
+        details="bash shell is not installed or configured on this host",
+        supported_shells=list(SUPPORTED_SHELLS),
+    )
+
+
+def shell_command_args(shell_name, command):
+    shell_name = (shell_name or "powershell").strip().lower()
+    if shell_name in ("ps", "powershell", "windows-powershell"):
+        return "powershell", ["powershell", "-Command", command]
+    if shell_name == "cmd":
+        return "cmd", ["cmd.exe", "/d", "/s", "/c", command]
+    if shell_name == "bash":
+        return "bash", [_discover_bash(), "-lc", command]
+    if shell_name in ("wsl", "linux"):
+        raise BridgeHTTPError(
+            400,
+            "Invalid input",
+            details="WSL is not enabled for /shell because this host has no installed WSL distribution",
+            supported_shells=list(SUPPORTED_SHELLS),
+        )
+    raise BridgeHTTPError(
+        400,
+        "Invalid input",
+        details=f"Unsupported shell selector: {shell_name}",
+        supported_shells=list(SUPPORTED_SHELLS),
+    )
+
+
+def validate_click_target(x, y):
+    width, height = pyautogui.size()
+    if x >= width or y >= height:
+        raise BridgeHTTPError(
+            400,
+            "Invalid input",
+            details=f"x/y must fit within the display bounds {width}x{height}",
+        )
+
 
 TENTACLES = [
     {"name": "pulse", "route": "GET /ping", "reach": "Confirm the bridge is alive"},
@@ -45,7 +324,11 @@ TENTACLES = [
         "route": "GET /session/log",
         "reach": "Audit which tools Jules used recently",
     },
-    {"name": "shell", "route": "POST /shell", "reach": "Run PowerShell on the host"},
+    {
+        "name": "shell",
+        "route": "POST /shell",
+        "reach": "Run PowerShell, cmd.exe, or Git Bash on the host",
+    },
     {
         "name": "read",
         "route": "POST /fs/read",
@@ -103,19 +386,6 @@ TENTACLES = [
 ]
 
 
-def route_errors(func):
-    """Return JSON 500 for expected operational failures."""
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except ROUTE_ERRORS as exc:
-            return jsonify({"error": str(exc)}), 500
-
-    return wrapper
-
-
 @app.before_request
 def _start_timer():
     g.request_start = datetime.now(timezone.utc)
@@ -129,28 +399,35 @@ def _finalize_request(response):
         elapsed_ms = round((datetime.now(timezone.utc) - started).total_seconds() * 1000, 2)
         response.headers["X-Response-Time-Ms"] = str(elapsed_ms)
 
-    REQUEST_LOG.appendleft(
-        {
-            "time_utc": datetime.now(timezone.utc).isoformat(),
-            "method": request.method,
-            "path": request.path,
-            "status": response.status_code,
-            "remote": request.headers.get("X-Forwarded-For", request.remote_addr),
-            "ms": elapsed_ms,
-        }
+    entry = {
+        "time_utc": datetime.now(timezone.utc).isoformat(),
+        "method": request.method,
+        "path": request.path,
+        "status": response.status_code,
+        "remote": request.headers.get("X-Forwarded-For", request.remote_addr),
+        "ms": elapsed_ms,
+    }
+    REQUEST_LOG.appendleft(entry)
+    LOGGER.info(
+        "%s %s -> %s %.2fms remote=%s",
+        entry["method"],
+        entry["path"],
+        entry["status"],
+        entry["ms"],
+        entry["remote"],
     )
     return response
 
 
 @app.route("/tentacles", methods=["GET"])
 def tentacles():
-    """Octopus manifest — each endpoint is a tentacle: far reach through one URL."""
+    """Octopus manifest - each endpoint is a distinct reach into the host."""
     return jsonify(
         {
             "creature": "Jules Bridge",
             "meaning": "One ngrok URL. Many tentacles. Each route extends reach to the host.",
             "access": "Possession of the bridge URL is possession of host access.",
-            "codex_parity": "Use oracle/status + fs/* + ui/* — not shell-only.",
+            "codex_parity": "Use oracle/status + fs/* + ui/* - not shell-only.",
             "mandatory_read": "jules_inbox/JULES_TOOL_REQUIREMENTS.md",
             "tentacles": TENTACLES,
         }
@@ -158,9 +435,15 @@ def tentacles():
 
 
 @app.route("/session/log", methods=["GET"])
+@route_errors
 def session_log():
     """Return recent bridge requests for operator audit."""
-    limit = int(request.args.get("limit", 50))
+    try:
+        limit = int(request.args.get("limit", 50))
+    except ValueError:
+        raise BridgeHTTPError(400, "Invalid input", details="limit must be an integer") from None
+    if limit < 1:
+        raise BridgeHTTPError(400, "Invalid input", details="limit must be >= 1")
     return jsonify({"entries": list(REQUEST_LOG)[:limit]})
 
 
@@ -168,26 +451,21 @@ def session_log():
 @route_errors
 def inbox_read():
     """Read a file from jules_inbox/ by filename."""
-    data = request.get_json(silent=True) or {}
-    name = os.path.basename(data.get("file") or "OPERATOR_RESPONSE.md")
-    if not name:
-        return jsonify({
-            "error": "file is required",
-            "hint": "Use POST /fs/read for paths outside jules_inbox/",
-        }), 400
-
+    data = json_payload()
+    name = inbox_name(data, "OPERATOR_RESPONSE.md")
     path = os.path.join(INBOX_DIR, name)
     if not os.path.isfile(path):
-        return jsonify({
-            "error": f"inbox file not found: {name}",
-            "hint": "Playbooks and host paths use POST /fs/read with full path.",
-            "inbox_files": sorted(
-                f for f in os.listdir(INBOX_DIR)
-                if os.path.isfile(os.path.join(INBOX_DIR, f))
-            ),
-        }), 404
+        return jsonify(
+            {
+                "error": f"inbox file not found: {name}",
+                "hint": "Playbooks and host paths use POST /fs/read with full path.",
+                "inbox_files": sorted(
+                    f for f in os.listdir(INBOX_DIR) if os.path.isfile(os.path.join(INBOX_DIR, f))
+                ),
+            }
+        ), 404
 
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, "r", encoding="utf-8", errors="replace") as handle:
         return jsonify({"file": name, "content": handle.read()})
 
 
@@ -195,9 +473,9 @@ def inbox_read():
 @route_errors
 def inbox_write():
     """Write a file to jules_inbox/ by filename."""
-    data = request.json or {}
-    name = os.path.basename(data.get("file", "JULES_RESPONSE.md"))
-    content = data.get("content", "")
+    data = json_payload()
+    name = inbox_name(data, "JULES_RESPONSE.md")
+    content = content_field(data)
     path = os.path.join(INBOX_DIR, name)
     os.makedirs(INBOX_DIR, exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
@@ -214,33 +492,36 @@ def ping():
 @app.route("/shell", methods=["POST"])
 @route_errors
 def run_shell():
-    """Execute terminal commands (PowerShell by default)."""
-    data = request.get_json(silent=True)
-    if not data:
-        return jsonify({
-            "error": "JSON body required",
-            "hint": 'Send {"command":"your powershell here"} with Content-Type: application/json',
-        }), 400
+    """Execute terminal commands through a selected native shell."""
+    data = json_payload()
+    command = string_field(data, "command")
+    shell_name = string_field(data, "shell", default="powershell")
+    cwd = path_field(data, "cwd", default=os.getcwd())
+    timeout = int_field(data, "timeout", default=120, min_value=1)
+    stdin = string_field(data, "stdin", default=None, allow_empty=True)
+    shell_name, args = shell_command_args(shell_name, command)
 
-    cmd = data.get("command")
-    if not cmd or not str(cmd).strip():
-        return jsonify({
-            "error": "command is required and cannot be empty",
-            "example": {"command": "Get-Location"},
-        }), 400
+    if cwd:
+        existing_path(cwd, kind="directory")
 
-    cwd = data.get("cwd", os.getcwd())
-    timeout = int(data.get("timeout", 120))
-    print(f"[JULES SHELL] -> {cmd}")
+    LOGGER.info("[JULES SHELL] shell=%s cwd=%s command=%s", shell_name, cwd, command)
     res = subprocess.run(
-        ["powershell", "-Command", cmd],
+        args,
         cwd=cwd,
         capture_output=True,
         text=True,
+        input=stdin,
         timeout=timeout,
         check=False,
     )
-    return jsonify({"stdout": res.stdout, "stderr": res.stderr, "code": res.returncode})
+    return jsonify(
+        {
+            "stdout": _coerce_text(res.stdout),
+            "stderr": _coerce_text(res.stderr),
+            "code": res.returncode,
+            "shell": shell_name,
+        }
+    )
 
 
 @app.route("/oracle/status", methods=["GET"])
@@ -268,16 +549,16 @@ def codex_handover():
 @route_errors
 def get_file_content():
     """Read a local file, optionally by line offset/limit."""
-    data = request.json or {}
-    path = data.get("path")
-    offset = int(data.get("offset", 0))
-    limit = data.get("limit")
+    data = json_payload()
+    path = existing_path(path_field(data), kind="file")
+    offset = int_field(data, "offset", default=0, min_value=0)
+    limit = int_field(data, "limit", default=None, min_value=0)
     with open(path, "r", encoding="utf-8", errors="replace") as handle:
         if limit is None:
             content = handle.read()
         else:
             lines = handle.readlines()
-            content = "".join(lines[offset : offset + int(limit)])
+            content = "".join(lines[offset : offset + limit])
     return jsonify({"path": path, "offset": offset, "content": content})
 
 
@@ -285,8 +566,8 @@ def get_file_content():
 @route_errors
 def list_directory():
     """List files and folders under a path."""
-    data = request.json or {}
-    path = data.get("path", INBOX_DIR)
+    data = json_payload()
+    path = existing_path(path_field(data, default=INBOX_DIR), kind="directory")
     entries = []
     for name in os.listdir(path):
         full = os.path.join(path, name)
@@ -306,9 +587,9 @@ def list_directory():
 @route_errors
 def tail_file():
     """Return the last N lines of a file."""
-    data = request.json or {}
-    path = data.get("path")
-    lines = int(data.get("lines", 50))
+    data = json_payload()
+    path = existing_path(path_field(data), kind="file")
+    lines = int_field(data, "lines", default=50, min_value=1)
     with open(path, "r", encoding="utf-8", errors="replace") as handle:
         content = handle.readlines()
     tail = content[-lines:]
@@ -319,10 +600,10 @@ def tail_file():
 @route_errors
 def grep_file():
     """Search a file for a regex pattern."""
-    data = request.json or {}
-    path = data.get("path")
-    pattern = data.get("pattern", "")
-    max_matches = int(data.get("max_matches", 50))
+    data = json_payload()
+    path = existing_path(path_field(data), kind="file")
+    pattern = string_field(data, "pattern", default="", allow_empty=True)
+    max_matches = int_field(data, "max_matches", default=50, min_value=1)
     regex = re.compile(pattern, re.IGNORECASE)
     matches = []
     with open(path, "r", encoding="utf-8", errors="replace") as handle:
@@ -338,13 +619,13 @@ def grep_file():
 @route_errors
 def save_file_content():
     """Write content to a local file."""
-    data = request.json or {}
-    path = data.get("path")
-    content = data.get("content")
+    data = json_payload()
+    path = path_field(data)
+    content = content_field(data)
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(content)
-    return jsonify({"status": "success"})
+    return jsonify({"status": "success", "path": path})
 
 
 @app.route("/ui/screenshot", methods=["GET"])
@@ -370,10 +651,13 @@ def take_screenshot():
 @route_errors
 def click_ui():
     """Move the mouse and click."""
-    data = request.json or {}
-    x = data.get("x")
-    y = data.get("y")
-    button = data.get("button", "left")
+    data = json_payload()
+    x = int_field(data, "x", min_value=0)
+    y = int_field(data, "y", min_value=0)
+    button = string_field(data, "button", default="left")
+    if button not in ("left", "right", "middle"):
+        raise BridgeHTTPError(400, "Invalid input", details="button must be left, right, or middle")
+    validate_click_target(x, y)
     pyautogui.moveTo(x, y, duration=0.2)
     pyautogui.click(button=button)
     return jsonify({"status": f"Clicked {x}, {y}"})
@@ -383,7 +667,8 @@ def click_ui():
 @route_errors
 def type_text():
     """Type text on the keyboard."""
-    text = (request.json or {}).get("text")
+    data = json_payload()
+    text = string_field(data, "text", allow_empty=True)
     pyautogui.write(text, interval=0.01)
     return jsonify({"status": "Typed successfully"})
 
@@ -392,17 +677,18 @@ def type_text():
 @route_errors
 def send_notify_email():
     """Send email from Gmail to operator iCloud (see .env)."""
-    data = request.json or {}
-    subject = data.get("subject", "Jules Bridge update")
-    body = data.get("body", "")
-    if not body:
-        return jsonify({"error": "body is required"}), 400
-    result = email_service.send_email(subject, body)
+    data = json_payload()
+    subject = string_field(data, "subject", default="Jules Bridge update")
+    body = string_field(data, "body")
+    mail_to = optional_email(data, "to")
+    result = email_service.send_email(subject, body, mail_to=mail_to)
     return jsonify({"status": "sent", **result})
 
 
 if __name__ == "__main__":
-    print("========================================")
-    print("🚀 JULES GOD-MODE BRIDGE ACTIVATED 🚀")
-    print("========================================")
+    LOGGER.info("========================================")
+    LOGGER.info("JULES GOD-MODE BRIDGE ACTIVATED")
+    LOGGER.info("Listening on 0.0.0.0:5000")
+    LOGGER.info("Log path: %s", LOG_PATH)
+    LOGGER.info("========================================")
     app.run(port=5000, host="0.0.0.0")

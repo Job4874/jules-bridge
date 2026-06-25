@@ -1,8 +1,9 @@
 import atexit
+import logging
+from logging.handlers import RotatingFileHandler
 import sys
 import time
 import subprocess
-from datetime import datetime, timezone
 from pathlib import Path
 
 from pyngrok import ngrok
@@ -12,11 +13,35 @@ LOG_PATH = ROOT / "bridge.log"
 NGROK_DOMAIN = "parade-marrow-pulp.ngrok-free.dev"
 
 
+def configure_logging():
+    logger = logging.getLogger("jules_bridge_start")
+    logger.setLevel(logging.INFO)
+    if logger.handlers:
+        return logger
+
+    formatter = logging.Formatter(
+        "%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+    )
+    file_handler = RotatingFileHandler(
+        LOG_PATH,
+        maxBytes=2_000_000,
+        backupCount=3,
+        encoding="utf-8",
+    )
+    file_handler.setFormatter(formatter)
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+    return logger
+
+
+LOGGER = configure_logging()
+
+
 def log(message):
-    line = f"{datetime.now(timezone.utc).isoformat()} {message}"
-    print(message, flush=True)
-    with LOG_PATH.open("a", encoding="utf-8") as handle:
-        handle.write(line + "\n")
+    LOGGER.info(message)
 
 
 def ping_local():

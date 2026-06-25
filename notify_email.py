@@ -18,11 +18,11 @@ def load_env():
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
-def send_email(subject, body):
+def send_email(subject, body, mail_to=None):
     load_env()
     gmail_user = os.environ.get("GMAIL_USER", "").strip()
     gmail_pass = os.environ.get("GMAIL_APP_PASSWORD", "").strip()
-    mail_to = os.environ.get("EMAIL_TO", "abdul487417@icloud.com").strip()
+    mail_to = (mail_to or os.environ.get("EMAIL_TO", "abdul487417@icloud.com")).strip()
 
     if not gmail_user or not gmail_pass:
         raise RuntimeError(
