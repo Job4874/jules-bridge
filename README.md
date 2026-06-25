@@ -25,7 +25,20 @@ Copy `.env.example` to `.env` and add a Gmail App Password for the **mail** tent
 
 ## Run
 
+**Recommended — dedicated CMD window (stays up when you scroll in Cursor):**
+
+Double-click or run:
+
 ```powershell
+C:\Users\abdul\.jules\Open-JulesBridge-Window.cmd
+```
+
+This opens a green **“Jules Bridge - KEEP THIS WINDOW OPEN”** terminal. Do not close it while Jules is working. Logs also append to `bridge.log`.
+
+**Alternative — inside current terminal:**
+
+```powershell
+cd C:\Users\abdul\.jules
 $env:PYTHONIOENCODING='utf-8'
 python start.py
 ```
