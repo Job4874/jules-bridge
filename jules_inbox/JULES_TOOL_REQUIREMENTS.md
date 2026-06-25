@@ -1,77 +1,131 @@
-# Jules Tool Requirements — Codex Parity on Windows Host
+# Jules System Tool Requirements
 
-**Read this after WAKE_UP.txt.** Shell-only sessions are **incomplete** unless every blocker below is cleared with evidence.
+Read this after `WAKE_UP.txt`. Shell-only sessions are incomplete unless the bridge also uses the structured host tools needed for the current blocker.
 
-Bridge: `https://parade-marrow-pulp.ngrok-free.dev`  
-Header: `ngrok-skip-browser-warning: true`
+Bridge: `https://parade-marrow-pulp.ngrok-free.dev`
 
----
+## Required Tool Mix
 
-## 1. What Codex has that you must mirror via bridge
+| Local capability | Jules bridge route | Use |
+|------------------|--------------------|-----|
+| Health check | `GET /ping` | Confirm the bridge is online |
+| Route manifest | `GET /tentacles` | Discover available tools |
+| Request audit | `GET /session/log` | Review recent bridge calls |
+| Read project files | `POST /fs/read` | Read playbooks, logs, `info.xml`, handovers |
+| List folders | `POST /fs/list` | Discover logs and diagnostics |
+| Tail logs | `POST /fs/tail` | Inspect recent telemetry and runtime output |
+| Search logs | `POST /fs/grep` | Find gate strings such as `BROKER_SUBMISSION_BLOCKED_DRY_RUN` |
+| Shell | `POST /shell` | Run targeted terminal commands |
+| Desktop screenshot | `GET /ui/screenshot?save=true` | Capture UI state before clicks |
+| Desktop input | `POST /ui/click`, `POST /ui/type` | Bind Symbol/Account or interact with Quantower when needed |
+| Structured Oracle status | `GET /oracle/status` | Start every Oracle/Quantower session |
+| One-shot Oracle build | `POST /oracle/build-deploy` | Use only when code changed |
+| Codex handover index | `GET /codex/handover` | Locate host handover files |
+| Operator inbox | `POST /inbox/read`, `POST /inbox/write` | Read instructions and write evidence |
 
-| Codex / Cursor (local) | Jules bridge equivalent | Required? |
-|------------------------|-------------------------|-----------|
-| Read any project file | `POST /fs/read` | **Yes** — playbooks, logs, `info.xml` |
-| List directories | `POST /fs/list` | **Yes** — find logs, diagnostics |
-| Tail logs | `POST /fs/tail` | **Yes** — Serilog, telemetry CSV |
-| Search logs | `POST /fs/grep` | **Yes** — `BROKER_SUBMISSION_BLOCKED_DRY_RUN` |
-| Terminal | `POST /shell` | Yes — but not for everything |
-| See UI | `GET /ui/screenshot?save=true` | **Yes — before every click** |
-| Click / type | `POST /ui/click`, `/ui/type` | **Yes** — StM, Symbol, Account, replay |
-| Structured health | `GET /oracle/status` | **Yes — start every session** |
-| One-shot build | `POST /oracle/build-deploy` | Only if code changed |
-| Codex handover docs | `GET /codex/handover` + `/fs/read` | **Yes** — read before guessing |
-| Audit trail | `GET /session/log` | Operator uses this to grade you |
-| Inbox | `/inbox/read`, `/inbox/write` | **Yes** — every 30 min |
+## Mandatory Session Workflow
 
----
-
-## 2. Mandatory session workflow (do not skip)
-
-```
+```text
 1. GET  /ping
 2. GET  /tentacles
-3. POST /inbox/read  → JULES_TOOL_REQUIREMENTS.md (this file)
-4. POST /inbox/read  → WAKE_UP.txt
-5. GET  /oracle/status          ← blockers list in JSON
+3. POST /inbox/read  {"file": "JULES_TOOL_REQUIREMENTS.md"}
+4. POST /inbox/read  {"file": "WAKE_UP.txt"}
+5. GET  /oracle/status
 6. GET  /ui/screenshot?save=true
-7. … fix blockers using ui/* + fs/* …
-8. POST /inbox/write → JULES_RESPONSE.md with evidence
+7. Fix blockers with the narrowest route that proves the state.
+8. POST /inbox/write with evidence and next action.
 ```
 
-**Forbidden:** Eight `/shell` build loops while Symbol/Account remain empty.
+Do not run repeated `/shell` build loops while Symbol, Account, or telemetry blockers remain visible in `/oracle/status`.
 
-### `/shell` selector contract
+## Shell Routing Architecture
 
-Payload:
+All terminal calls should explicitly choose the intended shell when the command syntax matters.
+
+### PowerShell
+
+Engine:
+
+```text
+powershell.exe -NoProfile -NonInteractive -Command
+```
+
+Use for Windows objects, Quantower/Oracle PowerShell scripts, file checks, process checks, and structured admin queries.
 
 ```json
 {
-  "command": "Get-Process",
+  "command": "Get-Process -Name Starter -ErrorAction SilentlyContinue | Select-Object Id, CPU",
   "shell": "powershell",
   "timeout": 30
 }
 ```
 
-Supported selectors:
+### Command Prompt
 
-- `powershell` (default): native Windows PowerShell via `powershell -Command`.
-- `cmd`: Windows command prompt via `cmd.exe /d /s /c`.
-- `bash`: Git Bash only. The bridge checks `JULES_BASH_PATH`, then local Git install paths, then `PATH`.
+Engine:
+
+```text
+cmd.exe /d /s /c
+```
+
+Use for simple batch syntax and Windows environment variable expansion.
+
+```json
+{
+  "command": "echo %COMPUTERNAME%",
+  "shell": "cmd",
+  "timeout": 30
+}
+```
+
+### Git Bash
+
+Engine:
+
+```text
+bash.exe -lc
+```
+
+Discovery order:
+
+1. `JULES_BASH_PATH`
+2. `C:\Program Files\Git\bin\bash.exe`
+3. `C:\Program Files (x86)\Git\bin\bash.exe`
+4. `C:\Program Files\Git\usr\bin\bash.exe`
+5. `PATH`
+
+Use for Unix-style text pipelines when Git Bash is installed.
+
+```json
+{
+  "command": "printf ok | grep ok",
+  "shell": "bash",
+  "timeout": 30
+}
+```
 
 Do not request `wsl`; this host exposes `wsl.exe` but has no installed WSL distribution.
 
-Input and error rules:
+## Request And Error Rules
 
 - POST bodies must be JSON objects.
+- Empty POST bodies are treated as `{}` and then validated per route.
 - Malformed JSON or non-JSON bodies return `400`.
-- Missing files return `404`.
+- Missing or invalid parameters return `400`.
+- Missing files or directories return `404`.
 - Access denied returns `403`.
-- Command timeouts return `504`.
+- Shell timeouts return `504`.
+- Unexpected runtime failures return `500` without raw stack traces.
 
----
+## UI Safety Rules
 
-## 3. Codex handover access (on this host)
+- Always run `GET /ui/screenshot?save=true` before `POST /ui/click`.
+- `x` and `y` must be non-negative integers.
+- Click coordinates must fit within the current display bounds.
+- `button` must be `left`, `right`, or `middle`.
+- `/ui/click` and `/ui/type` affect the real desktop, not a simulation.
+
+## Codex Handover Access
 
 Index:
 
@@ -79,85 +133,49 @@ Index:
 GET /codex/handover
 ```
 
-Then read files:
+Read files:
 
 ```json
 POST /fs/read
 {"path": "C:\\Users\\abdul\\.gemini\\antigravity-ide\\scratch\\tibin_handover\\TIBIN_CODEX_MASTER_HANDOVER_V2\\..."}
 ```
 
-Playbook (acceptance gates):
+Useful Oracle/Quantower references:
 
 ```json
 POST /fs/read
 {"path": "C:\\aotp\\projects\\Quantower-c-sat\\Quantower c+ sat\\VISUAL_STUDIO_QUANTOWER_ACCEPTANCE_PLAYBOOK.md"}
 ```
 
-Oracle replay checklist:
-
 ```json
 POST /fs/read
 {"path": "C:\\aotp\\projects\\OracleV5\\diagnostics\\REPLAY_POST_DEPLOY_CHECKLIST.md"}
 ```
 
----
+## Gate Evidence Targets
 
-## 4. Gate evidence (grep targets)
+Dry-run broker block proof:
 
 ```json
 POST /fs/grep
 {"path": "<serilog path>", "pattern": "BROKER_SUBMISSION_BLOCKED_DRY_RUN"}
 ```
 
+Telemetry tail:
+
 ```json
 POST /fs/tail
 {"path": "C:\\Users\\abdul\\OneDrive\\Documents\\Oracle_V5_Telemetry\\CSV\\heartbeat_2026-06-25.csv", "lines": 10}
 ```
 
-Gate G3 is **not** proven until grep finds dry-run block lines or playbook-equivalent log proof.
+G3 is not proven until logs or an equivalent playbook artifact prove dry-run broker blocking.
 
----
+## Completion Checklist
 
-## 5. GitHub / repo access (Codex accs)
-
-| Resource | URL / path |
-|----------|------------|
-| OracleV5 canonical repo | `C:\aotp\projects\OracleV5` |
-| GitHub remote | `https://github.com/Job4874/OracleV5.git` |
-| Branch | `perf/fix-empty-catch-block-datafeedmanager` |
-| Do not build from | `Quantower-c-sat` LFS pointers, `Downloads\OracleV5-main` |
-
-Use shell for git only when needed:
-
-```powershell
-cd C:\aotp\projects\OracleV5
-git fetch origin
-git status
-dotnet test
-```
-
-Prefer `GET /oracle/status` over re-running verify by hand.
-
----
-
-## 6. Completion checklist (all required)
-
-- [ ] `GET /oracle/status` → `blockers: []`
-- [ ] Symbol + Account bound in `info.xml`
-- [ ] `GET /ui/screenshot?save=true` — StM Running
-- [ ] MES Market Replay wired — telemetry `pipeline_active: true`
-- [ ] `POST /fs/grep` — G3 dry-run proof
-- [ ] `POST /inbox/write` — paste JSON snippets + screenshot paths
-
----
-
-## 7. Operator grades you on tool mix
-
-| Pattern | Grade |
-|---------|-------|
-| shell + inbox only | **F** for Quantower tasks |
-| + oracle/status + fs/read | **C** |
-| + ui/screenshot before clicks | **B** |
-| + StM wired + replay telemetry + G3 grep | **A** |
-
-— Operator, 2026-06-25
+- [ ] `GET /oracle/status` reviewed.
+- [ ] Symbol and Account are bound in the Oracle V5 `info.xml`.
+- [ ] `GET /ui/screenshot?save=true` shows the expected StM/UI state.
+- [ ] MES Market Replay or equivalent feed is wired.
+- [ ] Telemetry shows `pipeline_active: true`.
+- [ ] Dry-run broker block proof is captured.
+- [ ] `/inbox/write` records JSON snippets, screenshot paths, and next action.

@@ -56,7 +56,7 @@ def configure_logging():
     os.makedirs(ROOT_DIR, exist_ok=True)
     file_handler = RotatingFileHandler(
         LOG_PATH,
-        maxBytes=2_000_000,
+        maxBytes=10_000_000,
         backupCount=3,
         encoding="utf-8",
     )
@@ -282,7 +282,7 @@ def _discover_bash():
 def shell_command_args(shell_name, command):
     shell_name = (shell_name or "powershell").strip().lower()
     if shell_name in ("ps", "powershell", "windows-powershell"):
-        return "powershell", ["powershell", "-Command", command]
+        return "powershell", ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", command]
     if shell_name == "cmd":
         return "cmd", ["cmd.exe", "/d", "/s", "/c", command]
     if shell_name == "bash":
@@ -497,7 +497,7 @@ def run_shell():
     command = string_field(data, "command")
     shell_name = string_field(data, "shell", default="powershell")
     cwd = path_field(data, "cwd", default=os.getcwd())
-    timeout = int_field(data, "timeout", default=120, min_value=1)
+    timeout = int_field(data, "timeout", default=30, min_value=1)
     stdin = string_field(data, "stdin", default=None, allow_empty=True)
     shell_name, args = shell_command_args(shell_name, command)
 
@@ -519,6 +519,7 @@ def run_shell():
             "stdout": _coerce_text(res.stdout),
             "stderr": _coerce_text(res.stderr),
             "code": res.returncode,
+            "exit_code": res.returncode,
             "shell": shell_name,
         }
     )
@@ -559,7 +560,7 @@ def get_file_content():
         else:
             lines = handle.readlines()
             content = "".join(lines[offset : offset + limit])
-    return jsonify({"path": path, "offset": offset, "content": content})
+    return jsonify({"path": path, "offset": offset, "content": content, "data": content})
 
 
 @app.route("/fs/list", methods=["POST"])
@@ -593,7 +594,8 @@ def tail_file():
     with open(path, "r", encoding="utf-8", errors="replace") as handle:
         content = handle.readlines()
     tail = content[-lines:]
-    return jsonify({"path": path, "lines": len(tail), "content": "".join(tail)})
+    content = "".join(tail)
+    return jsonify({"path": path, "lines": len(tail), "content": content, "data": content})
 
 
 @app.route("/fs/grep", methods=["POST"])

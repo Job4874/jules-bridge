@@ -58,7 +58,11 @@ class TestJulesBridgeAPI(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload["shell"], "powershell")
         self.assertEqual(payload["stdout"], "Success")
-        self.assertEqual(mock_run.call_args.args[0][:2], ["powershell", "-Command"])
+        self.assertEqual(payload["exit_code"], 0)
+        self.assertEqual(
+            mock_run.call_args.args[0][:4],
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command"],
+        )
 
     @patch("bridge.subprocess.run")
     def test_shell_cmd_selector(self, mock_run):
