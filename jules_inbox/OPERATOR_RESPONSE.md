@@ -1,54 +1,96 @@
 # OPERATOR → JULES (via bridge inbox)
 
-**Bridge status:** ONLINE — use it for everything.  
-**Read:** `POST /inbox/read` → `{"file":"OPERATOR_RESPONSE.md"}`  
-**Reply:** `POST /inbox/write` → `JULES_RESPONSE.md`
-
-Public URL: `https://parade-marrow-pulp.ngrok-free.dev`  
-Header: `ngrok-skip-browser-warning: true`
+**Bridge status:** ONLINE  
+**Read this file:** `POST /fs/read` → `{"path":"c:\\Users\\abdul\\.jules\\jules_inbox\\OPERATOR_RESPONSE.md"}`  
+**Reply here:** `POST /fs/write` → `c:\\Users\\abdul\\.jules\\jules_inbox\\JULES_RESPONSE.md`
 
 ---
 
-## Operator audit (verified 2026-06-24 22:28)
+## Your fix is confirmed on the Windows host
 
-| Item | Status |
-|------|--------|
-| Bridge `/ping` + `/tentacles` | **200 OK** |
-| GitHub branch `perf/fix-empty-catch-block-datafeedmanager` | Pushed |
-| `dotnet build` Release x64 | **0 errors** |
-| `Deploy-OracleQuantowerStrategy.ps1` | DLL hash match `D0978A771E78...` |
-| Oracle V5 in Strategies Manager | **Added + Run clicked** |
-| `info.xml` | **CREATED** |
-| `Apply-OracleReplayProfile.ps1` | **Applied** |
-| `Verify-OracleReplayReady.ps1` | **2/3 pass** (telemetry stale only) |
-| Backtest / replay | **Next** — restart Oracle + MES replay |
+We verified `DataFeedManager.cs` on the host at:
 
-PR link: https://github.com/Job4874/OracleV5/pull/new/perf/fix-empty-catch-block-datafeedmanager
+`C:\Users\abdul\Downloads\OracleV5-main\OracleV5-main\OracleV5.Strategy\Data\DataFeedManager.cs`
 
----
+Both empty catch blocks now contain:
 
-## BLOCKER CLEARED — Oracle instance exists
-
-```
-C:\Quantower\Settings\Scripts\ScriptsData\Oracle V5 (f9eb0699-4c73-4ee2-b377-87c92468b6c7)\info.xml
+```csharp
+throw; // Bubble up exceptions instead of swallowing to prevent stale execution signals
 ```
 
-Replay profile applied. **StM** (Strategy Manager) is now a toolbar favorite — use `/ui/click` on it in future sessions.
+Branch on host: `perf/fix-empty-catch-block-datafeedmanager` (commit `bf6edc7`).
+
+`dotnet build` and `dotnet test` succeeded on the host via bridge. Good work.
 
 ---
 
-## Required next steps (bridge only)
+## Why your Linux sandbox still looks empty
 
-1. `GET /ui/screenshot` — Strategies Manager with Oracle running
-2. `POST /shell`:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File C:\aotp\projects\OracleV5\Tools\Restart-QuantowerLoadOracle.ps1 -InfoXmlPath "C:\Quantower\Settings\Scripts\ScriptsData\Oracle V5 (f9eb0699-4c73-4ee2-b377-87c92468b6c7)\info.xml"
-   ```
-3. Wire **MES Market Replay** chart to this instance (UI if needed)
-4. `POST /shell` → `Tools\Verify-OracleReplayReady.ps1` — all checks green
-5. Gate G3: dry-run logs with `BROKER_SUBMISSION_BLOCKED_DRY_RUN`
-6. Start market replay; collect 5–10 min telemetry CSV
-7. `POST /notify/email` — report status (needs `.env` on host)
+Correct diagnosis: Git LFS auth failure on Linux means the sandbox repo is empty/mocked.  
+**The source of truth for this task is the Windows host**, not the Linux workspace.
+
+Do NOT re-evaluate the fix from the empty Linux tree. Finalize from Windows + GitHub.
+
+---
+
+## How to proceed (recommended order)
+
+### Step 1 — Sync patch into the canonical deploy repo (Windows host)
+
+The **deploy/build repo** with GitHub remote is:
+
+`C:\aotp\projects\OracleV5`  
+Remote: `https://github.com/Job4874/OracleV5.git`
+
+The patched file is currently only in the Downloads copy. Copy it over:
+
+```powershell
+Copy-Item -Force `
+  "C:\Users\abdul\Downloads\OracleV5-main\OracleV5-main\OracleV5.Strategy\Data\DataFeedManager.cs" `
+  "C:\aotp\projects\OracleV5\OracleV5.Strategy\Data\DataFeedManager.cs"
+```
+
+Then in `C:\aotp\projects\OracleV5`:
+
+```powershell
+git checkout -b perf/fix-empty-catch-block-datafeedmanager
+git add OracleV5.Strategy/Data/DataFeedManager.cs
+git commit -m "fix: bubble exceptions in DataFeedManager empty catch blocks"
+git push -u origin perf/fix-empty-catch-block-datafeedmanager
+```
+
+### Step 2 — Deploy to Quantower (Windows host)
+
+```powershell
+cd C:\aotp\projects\OracleV5
+dotnet build OracleV5.Strategy\OracleV5.Strategy.csproj -c Release
+.\Tools\Deploy-OracleQuantowerStrategy.ps1
+.\Tools\Verify-OracleReplayReady.ps1
+.\Tools\Restart-QuantowerLoadOracle.ps1
+```
+
+### Step 3 — Linux sandbox catches up via GitHub (not bridge file copy)
+
+After push from Step 1, on Linux:
+
+```bash
+git fetch origin
+git checkout perf/fix-empty-catch-block-datafeedmanager
+```
+
+Fix Git LFS separately if needed; for this one-file change, a normal git pull is enough.
+
+### Step 4 — Start backtest / market replay
+
+Follow `diagnostics/REPLAY_POST_DEPLOY_CHECKLIST.md` on the **Windows host** via bridge.
+
+---
+
+## Do NOT
+
+- Do not treat the Downloads-only git repo as canonical (it has no remote).
+- Do not loop on `git diff` in Downloads — move to Step 1.
+- Do not expect Linux local analysis to see Windows-only commits.
 
 ---
 
