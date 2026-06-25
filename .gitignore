@@ -7,6 +7,9 @@ env/
 .cache/
 cache/
 temp_screen.png
+q_*.png
+qw_*.png
+quantower_screen.png
 *.log
 .env
 .env.*

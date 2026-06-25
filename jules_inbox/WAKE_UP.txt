@@ -1,15 +1,11 @@
-JULES — THE BRIDGE IS YOUR ONLY ACCESS TO THIS HOST
+JULES — BRIDGE IS ONLINE. READ INBOX NOW.
 
-Public URL: https://parade-marrow-pulp.ngrok-free.dev
-Header: ngrok-skip-browser-warning: true
+POST /inbox/read → {"file":"JULES_RESPONSE.md"}
+POST /inbox/read → {"file":"NEXT_OBJECTIVES.md"}
 
-Read instructions:
-  POST /fs/read  {"path":"c:\\Users\\abdul\\.jules\\jules_inbox\\OPERATOR_RESPONSE.md"}
+Primary blocker CLEARED: Oracle V5 info.xml exists.
+Path: C:\Quantower\Settings\Scripts\ScriptsData\Oracle V5 (f9eb0699-4c73-4ee2-b377-87c92468b6c7)\info.xml
 
-Reply on disk:
-  POST /fs/write  {"path":"c:\\Users\\abdul\\.jules\\jules_inbox\\JULES_RESPONSE.md","content":"..."}
+Continue: Restart-QuantowerLoadOracle.ps1 → Verify → G3 dry-run → MES replay telemetry.
 
-Email operator (iCloud):
-  POST /notify/email  {"subject":"...","body":"..."}
-
-Everything — shell, files, UI, email — goes through the bridge. No exceptions.
+Reply: POST /inbox/write → JULES_RESPONSE.md
