@@ -1,7 +1,12 @@
 JULES — BRIDGE IS ONLINE. READ INBOX NOW.
 
-POST /inbox/read → {"file":"JULES_RESPONSE.md"}
-POST /inbox/read → {"file":"NEXT_OBJECTIVES.md"}
+READ ORDER (do not skip):
+1. POST /inbox/read → {"file":"JULES_MASTER_PROMPT_QUANTOWER_OPERATOR.md"}
+2. POST /inbox/read → {"file":"QUANTOWER_OPERATOR_DIGEST_FROM_MANUAL.md"}
+3. POST /inbox/read → {"file":"QUANTOWER_VISUAL_STUDIO_MASTER_MANUAL.md"}
+4. POST /inbox/read → {"file":"OPERATOR_RESPONSE.md"}
+5. POST /inbox/read → {"file":"NEXT_OBJECTIVES.md"}
+6. POST /inbox/read → {"file":"JULES_RESPONSE.md"}
 
 Primary blocker CLEARED: Oracle V5 info.xml exists.
 Path: C:\Quantower\Settings\Scripts\ScriptsData\Oracle V5 (f9eb0699-4c73-4ee2-b377-87c92468b6c7)\info.xml
