@@ -36,6 +36,13 @@ python start.py
 |----------|-------|-------|
 | pulse | `GET /ping` | Health check |
 | manifest | `GET /tentacles` | List all tentacles |
+| session_log | `GET /session/log` | Audit recent Jules requests |
+| oracle_status | `GET /oracle/status` | Oracle health, blockers, telemetry |
+| oracle_build | `POST /oracle/build-deploy` | Build + deploy + verify |
+| codex_handover | `GET /codex/handover` | Index Codex handover files on host |
+| list | `POST /fs/list` | List directory |
+| tail | `POST /fs/tail` | Tail log/CSV |
+| grep | `POST /fs/grep` | Search files for gate strings |
 | shell | `POST /shell` | Run PowerShell |
 | read | `POST /fs/read` | Read a file |
 | write | `POST /fs/write` | Write a file |
