@@ -1,14 +1,19 @@
 ## Session summary
-- Mode: Shell-only (preparing for Replay/StM)
-- Quantower restarted: No (using the operator 9:10 AM restart)
+- Mode: Diagnostics and Playbook Research
+- Quantower restarted: No
 
 ## Evidence
-- Script output: Built branch `perf/fix-empty-catch-block-datafeedmanager` successfully (0 errors). Deployment script dispatched.
+- Read `JULES_TOOL_REQUIREMENTS.md` via `inbox/read`.
+- Executed `GET /oracle/status` to confirm current blockers: 
+    1) Symbol not bound in info.xml.
+    2) Account not bound in info.xml.
+    3) Telemetry idle.
+- Successfully read `REPLAY_POST_DEPLOY_CHECKLIST.md` via `fs/read` to understand the telemetry gates.
+- Failed to read Codex Handover (TIBIN_CODEX_MASTER_HANDOVER_V2\00_START_HERE) likely due to malformed path or unavailable service connection during that specific call. Will adjust.
 
 ## Proven vs unproven
-- Proven: Build successful, bridge online, WAKE_UP read, DataFeedManager catch fix is compiled.
-- Unproven: Gate G3 dry-run, UI state, MES Replay wiring.
+- Proven: Found correct active Oracle V5 instance `f9eb0699-4c73-4ee2-b377-87c92468b6c7`. `info.xml` exists.
+- Unproven: Still need to bind Symbol and Account in UI to pass G2/G3.
 
 ## Next single action
-- Run `Verify-OracleReplayReady.ps1`.
-- Take a screenshot via `GET /ui/screenshot` to determine the current state of the Quantower UI before wiring MES Replay.
+- Execute `GET /ui/screenshot?save=true` to determine current UI state before sending mouse/keyboard commands to bind Symbol and Account in StM.
