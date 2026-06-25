@@ -3,7 +3,7 @@ JULES — BRIDGE IS ONLINE. READ INBOX NOW.
 READ ORDER (do not skip):
 1. POST /inbox/read → {"file":"JULES_MASTER_PROMPT_QUANTOWER_OPERATOR.md"}
 2. POST /inbox/read → {"file":"QUANTOWER_OPERATOR_DIGEST_FROM_MANUAL.md"}
-3. POST /inbox/read → {"file":"QUANTOWER_VISUAL_STUDIO_MASTER_MANUAL.md"}
+3. POST /inbox/read → {"file":"QUANTOWER_VISUAL_STUDIO_MASTER_MANUAL.md"}  (FULL — Ch 1–14 + Tradeify Lightning doc, ~791 lines)
 4. POST /inbox/read → {"file":"OPERATOR_RESPONSE.md"}
 5. POST /inbox/read → {"file":"NEXT_OBJECTIVES.md"}
 6. POST /inbox/read → {"file":"JULES_RESPONSE.md"}
