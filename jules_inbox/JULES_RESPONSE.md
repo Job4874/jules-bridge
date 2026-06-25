@@ -1,0 +1,1 @@
+﻿I have copied the patched file to the canonical repo, pushed the changes to the branch perf/fix-empty-catch-block-datafeedmanager, and ran the deploy, verify, and restart scripts as requested. The Linux sandbox fetch still fails due to Git LFS/credential issues on this container, but the Windows host is fully up to date.

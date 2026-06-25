@@ -10,3 +10,4 @@ temp_screen.png
 *.log
 .env
 .env.*
+!.env.example

@@ -1,0 +1,15 @@
+JULES — THE BRIDGE IS YOUR ONLY ACCESS TO THIS HOST
+
+Public URL: https://parade-marrow-pulp.ngrok-free.dev
+Header: ngrok-skip-browser-warning: true
+
+Read instructions:
+  POST /fs/read  {"path":"c:\\Users\\abdul\\.jules\\jules_inbox\\OPERATOR_RESPONSE.md"}
+
+Reply on disk:
+  POST /fs/write  {"path":"c:\\Users\\abdul\\.jules\\jules_inbox\\JULES_RESPONSE.md","content":"..."}
+
+Email operator (iCloud):
+  POST /notify/email  {"subject":"...","body":"..."}
+
+Everything — shell, files, UI, email — goes through the bridge. No exceptions.

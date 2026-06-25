@@ -1,6 +1,18 @@
 # Jules Bridge
 
-Local Flask bridge for shell, filesystem, and desktop automation, exposed via ngrok.
+```
+        ~~~  ONE URL  ~~~
+           \   |   /
+    mail -----(O)----- shell
+           /   |   \
+    inbox ----+---- fs read/write
+              |
+         ui / eyes / hand / voice
+```
+
+**The octopus isn't decoration — it's the architecture.**
+
+Jules sits in the cloud. The bridge is the body. Each HTTP route is a **tentacle**: a distinct reach into your Windows host. One ngrok URL grants all of them. No bridge URL, no access.
 
 ## Setup
 
@@ -9,6 +21,8 @@ pip install -r requirements.txt
 ngrok config add-authtoken <YOUR_NGROK_AUTHTOKEN>
 ```
 
+Copy `.env.example` to `.env` and add a Gmail App Password for the **mail** tentacle.
+
 ## Run
 
 ```powershell
@@ -16,14 +30,26 @@ $env:PYTHONIOENCODING='utf-8'
 python start.py
 ```
 
-The bootstrapper starts `bridge.py` on port 5000 and opens an ngrok tunnel.
+## Tentacles (endpoints)
 
-## Endpoints
+| Tentacle | Route | Reach |
+|----------|-------|-------|
+| pulse | `GET /ping` | Health check |
+| manifest | `GET /tentacles` | List all tentacles |
+| shell | `POST /shell` | Run PowerShell |
+| read | `POST /fs/read` | Read a file |
+| write | `POST /fs/write` | Write a file |
+| inbox_read | `POST /inbox/read` | Read `jules_inbox/` message |
+| inbox_write | `POST /inbox/write` | Write `jules_inbox/` reply |
+| eyes | `GET /ui/screenshot` | Desktop screenshot (base64) |
+| hand | `POST /ui/click` | Mouse click |
+| voice | `POST /ui/type` | Keyboard input |
+| mail | `POST /notify/email` | Email operator (Gmail → iCloud) |
 
-- `GET /ping` — health check
-- `POST /shell` — run PowerShell commands
-- `POST /fs/read` — read a local file
-- `POST /fs/write` — write a local file
-- `GET /ui/screenshot` — desktop screenshot (base64)
-- `POST /ui/click` — mouse click
-- `POST /ui/type` — keyboard input
+**Access model:** the public ngrok URL *is* the key. Guard it like a password.
+
+## Inbox (operator ↔ Jules)
+
+- Operator writes: `jules_inbox/OPERATOR_RESPONSE.md`
+- Jules replies: `POST /inbox/write` → `JULES_RESPONSE.md`
+- Or use `/fs/read` and `/fs/write` for any path

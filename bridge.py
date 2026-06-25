@@ -11,6 +11,58 @@ pyautogui.FAILSAFE = True
 app = Flask(__name__)
 CORS(app)
 
+INBOX_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "jules_inbox")
+
+TENTACLES = [
+    {"name": "pulse", "route": "GET /ping", "reach": "Confirm the bridge is alive"},
+    {"name": "shell", "route": "POST /shell", "reach": "Run PowerShell on the host"},
+    {"name": "read", "route": "POST /fs/read", "reach": "Read any file on the host"},
+    {"name": "write", "route": "POST /fs/write", "reach": "Write any file on the host"},
+    {"name": "eyes", "route": "GET /ui/screenshot", "reach": "See the desktop"},
+    {"name": "hand", "route": "POST /ui/click", "reach": "Click the mouse"},
+    {"name": "voice", "route": "POST /ui/type", "reach": "Type on the keyboard"},
+    {"name": "mail", "route": "POST /notify/email", "reach": "Email the operator (Gmail to iCloud)"},
+    {"name": "inbox_read", "route": "POST /inbox/read", "reach": "Read operator/Jules inbox messages"},
+    {"name": "inbox_write", "route": "POST /inbox/write", "reach": "Write Jules inbox replies"},
+    {"name": "manifest", "route": "GET /tentacles", "reach": "List every tentacle (this endpoint)"},
+]
+
+@app.route('/tentacles', methods=['GET'])
+def tentacles():
+    """Octopus manifest — each endpoint is a tentacle: far reach through one URL."""
+    return jsonify({
+        "creature": "Jules Bridge",
+        "meaning": "One ngrok URL. Many tentacles. Each route extends reach to the host.",
+        "access": "Possession of the bridge URL is possession of host access.",
+        "tentacles": TENTACLES,
+    })
+
+@app.route('/inbox/read', methods=['POST'])
+def inbox_read():
+    """Read a file from jules_inbox/ by filename."""
+    name = (request.json or {}).get("file", "OPERATOR_RESPONSE.md")
+    path = os.path.join(INBOX_DIR, os.path.basename(name))
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return jsonify({"file": name, "content": f.read()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/inbox/write', methods=['POST'])
+def inbox_write():
+    """Write a file to jules_inbox/ by filename."""
+    data = request.json or {}
+    name = os.path.basename(data.get("file", "JULES_RESPONSE.md"))
+    content = data.get("content", "")
+    path = os.path.join(INBOX_DIR, name)
+    try:
+        os.makedirs(INBOX_DIR, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return jsonify({"status": "success", "file": name})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/ping', methods=['GET'])
 def ping():
     return jsonify({"status": "Jules Bridge Online"})
@@ -85,6 +137,21 @@ def type_text():
     try:
         pyautogui.write(text, interval=0.01)
         return jsonify({"status": "Typed successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/notify/email', methods=['POST'])
+def notify_email():
+    """Sends email from Gmail to operator iCloud (see .env)"""
+    data = request.json or {}
+    subject = data.get('subject', 'Jules Bridge update')
+    body = data.get('body', '')
+    if not body:
+        return jsonify({"error": "body is required"}), 400
+    try:
+        import notify_email
+        result = notify_email.send_email(subject, body)
+        return jsonify({"status": "sent", **result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
