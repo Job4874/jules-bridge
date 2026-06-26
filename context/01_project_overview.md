@@ -1,7 +1,7 @@
 # Jules Bridge — Project Overview
 
-> Context file 1 of 6. Read before writing any code.
-> Part of the six-file context system (Ghost AI / spec-driven development approach).
+> Context file 1 of 7. Read before writing any code.
+> Part of the seven-file context system (Ghost AI / spec-driven development approach).
 
 ## What Is Jules Bridge?
 

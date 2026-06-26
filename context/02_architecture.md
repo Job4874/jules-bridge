@@ -1,6 +1,6 @@
 # Jules Bridge — Architecture
 
-> Context file 2 of 6. Defines module map, invariants, and boundaries.
+> Context file 2 of 7. Defines module map, invariants, and boundaries.
 
 ## Module Map
 
