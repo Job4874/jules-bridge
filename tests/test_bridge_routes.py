@@ -93,12 +93,12 @@ class TestShellRoute(unittest.TestCase):
     @patch("modules.shell_executor.shutil.which", return_value=None)
     @patch("modules.shell_executor.os.path.exists", return_value=False)
     def test_shell_invalid_git_bash(self, mock_exists, mock_which):
-        # Use a real cwd so bridge's existing_path() check passes;
-        # only shell_executor's bash discovery is mocked out.
-        import os
+        # No cwd provided — bridge uses os.getcwd() for existing_path check
+        # (real os, not mocked). shell_executor.os.path.exists is mocked to
+        # block bash discovery cleanly.
         response = self.client.post(
             "/shell",
-            json={"command": "ls", "shell": "bash", "cwd": os.getcwd()},
+            json={"command": "ls", "shell": "bash"},
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn("bash shell", response.get_json()["details"])
