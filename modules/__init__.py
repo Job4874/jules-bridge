@@ -22,6 +22,15 @@ from .oracle_session import (
     oracle_build_deploy,
     codex_handover_index,
 )
+from .reasoning_module import (
+    HLevelPlan,
+    LLevelAction,
+    HaltDecision,
+    ReasoningTrace,
+    reason,
+    plan_only,
+    execute_step,
+)
 
 __all__ = [
     # fs_service
@@ -55,4 +64,12 @@ __all__ = [
     "oracle_status",
     "oracle_build_deploy",
     "codex_handover_index",
+    # reasoning_module
+    "HLevelPlan",
+    "LLevelAction",
+    "HaltDecision",
+    "ReasoningTrace",
+    "reason",
+    "plan_only",
+    "execute_step",
 ]

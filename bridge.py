@@ -469,6 +469,124 @@ def send_notify_email():
     return jsonify({"status": "sent", **result})
 
 
+# — Reasoning routes (HRM-inspired H/L/ACT) —
+
+@app.route("/reasoning/solve", methods=["POST"])
+@route_errors
+def reasoning_solve():
+    """POST /reasoning/solve — Run hierarchical H→L reasoning with ACT halting.
+
+    Body (JSON):
+        problem  (str, required): The problem to solve
+        context  (str, optional): Additional context / background
+        halt_budget (int, optional, default=8): Max L-module steps
+        model    (str, optional, default="stub"): LLM model identifier
+
+    Returns JSON with plan, actions, halt decision, answer, and feedback.
+    """
+    data = json_payload()
+    problem = string_field(data, "problem")
+    context = string_field(data, "context", default="")
+    halt_budget = int_field(data, "halt_budget", default=8, min_value=1)
+    model = string_field(data, "model", default="stub")
+
+    trace = modules.reason(problem, context=context, halt_budget=halt_budget, model=model)
+
+    return jsonify({
+        "problem": trace.problem,
+        "answer": trace.answer,
+        "succeeded": trace.succeeded,
+        "elapsed_ms": round(trace.elapsed_ms, 1),
+        "plan": {
+            "goal_statement": trace.plan.goal_statement,
+            "steps": trace.plan.steps,
+            "confidence": trace.plan.confidence,
+            "model": trace.plan.model,
+        },
+        "actions": [
+            {
+                "step_index": a.step_index,
+                "step_description": a.step_description,
+                "action_type": a.action_type,
+                "payload": a.payload,
+                "confidence": a.confidence,
+                "executed": a.should_execute,
+            }
+            for a in trace.actions
+        ],
+        "halt": {
+            "reason": trace.halt.reason,
+            "steps_used": trace.halt.steps_used,
+            "steps_budget": trace.halt.steps_budget,
+            "halted_early": trace.halt.halted_early,
+        },
+        "feedback": trace.feedback,
+    })
+
+
+@app.route("/reasoning/plan", methods=["POST"])
+@route_errors
+def reasoning_plan():
+    """POST /reasoning/plan — Run only the H module, return the abstract plan.
+
+    Use this to preview the plan before committing to full execution.
+
+    Body (JSON):
+        problem  (str, required): The problem to plan for
+        context  (str, optional): Additional context
+        model    (str, optional, default="stub"): LLM model identifier
+    """
+    data = json_payload()
+    problem = string_field(data, "problem")
+    context = string_field(data, "context", default="")
+    model = string_field(data, "model", default="stub")
+
+    plan = modules.plan_only(problem, context=context, model=model)
+
+    return jsonify({
+        "goal_statement": plan.goal_statement,
+        "steps": plan.steps,
+        "step_count": plan.step_count,
+        "confidence": plan.confidence,
+        "model": plan.model,
+    })
+
+
+@app.route("/reasoning/execute_step", methods=["POST"])
+@route_errors
+def reasoning_execute_step():
+    """POST /reasoning/execute_step — Run only the L module for one step.
+
+    Use for manual, step-by-step control of the execution.
+
+    Body (JSON):
+        step     (str, required): The step description to execute
+        context  (str, optional): Additional context
+        problem  (str, optional): Original problem for full context
+        step_index (int, optional, default=0): Step index for logging
+        model    (str, optional, default="stub"): LLM model identifier
+    """
+    data = json_payload()
+    step = string_field(data, "step")
+    context = string_field(data, "context", default="")
+    problem = string_field(data, "problem", default="")
+    step_index = int_field(data, "step_index", default=0, min_value=0)
+    model = string_field(data, "model", default="stub")
+
+    action = modules.execute_step(
+        step, context=context, step_index=step_index, problem=problem, model=model
+    )
+
+    return jsonify({
+        "step_index": action.step_index,
+        "step_description": action.step_description,
+        "action_type": action.action_type,
+        "payload": action.payload,
+        "confidence": action.confidence,
+        "should_execute": action.should_execute,
+    })
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
