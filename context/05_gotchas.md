@@ -1,6 +1,6 @@
 # Jules Bridge — Gotchas
 
-> Context file 5 of 6. What goes wrong. Not comprehensive docs — just the landmines.
+> Context file 5 of 7. What goes wrong. Not comprehensive docs — just the landmines.
 > Nick Ni: "I have 553 lines of gotchas. Instead of 10,000 lines of docs."
 
 ## bridge.py

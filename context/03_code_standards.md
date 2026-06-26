@@ -1,6 +1,6 @@
 # Jules Bridge — Code Standards
 
-> Context file 3 of 6. Python conventions for the Jules Bridge codebase.
+> Context file 3 of 7. Python conventions for the Jules Bridge codebase.
 
 ## Language: Python 3.12
 

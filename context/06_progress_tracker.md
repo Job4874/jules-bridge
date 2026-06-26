@@ -1,6 +1,6 @@
 # Jules Bridge — Progress Tracker
 
-> Context file 6 of 6. The ONLY file that updates constantly.
+> Context file 6 of 7. The ONLY file that updates constantly.
 > How the agent picks up exactly where you left off in a single prompt.
 
 ## Current Phase: Phase 4 — Job Pilot Agent Skills ✅
@@ -39,7 +39,7 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 | Evidence storage | SHA-256 in JSON | Cryptographic proof; cannot be faked |
 | LLM stubs | Deterministic | No LLM cost until integration is needed |
 | Module contract | Never raises | Partial data beats exceptions in a harness |
-| Context system | 6-file | Ghost AI spec-driven approach |
+| Context system | 7-file + AGENTS.md | Ghost AI spec-driven approach + orchestrator |
 | Gotchas over docs | ~553 lines | Guides without prescribing; smaller context |
 | Agent Skills | 5 core skills | Systematize planning, continuity, review, recovery, and patterns |
 
@@ -54,7 +54,8 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] `modules/retrospective_module.py` (Nick's Case pattern)
 - [x] `tests/test_reasoning_module.py` — 34 tests
 - [x] `tests/test_retrospective_module.py`
-- [x] `context/` — all 6 files
+- [x] `context/` — all 7 files
+- [x] `.agents/AGENTS.md` — orchestrator (reading order, session protocol, skill triggers)
 - [x] `memory/general.md` + `memory/oracle.md`
 - [x] CDLC artifacts: HRM_AGENTS.md, HRM_UBIQUITOUS_LANGUAGE.md, hrm_context_eval.py
 - [x] Reusable skills: `architect`, `remember`, `review`, `recover`, `imprint`

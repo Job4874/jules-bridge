@@ -21,7 +21,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 │   ├── quantower.md        ← Quantower UI / connection patterns
 │   ├── trading.md          ← Trading domain concepts
 │   └── reasoning.md        ← Reasoning module learnings
-├── context/                ← Six-file context system (this directory)
+├── context/                ← Seven-file context system (this directory)
 ├── tests/                  ← pytest test suite
 │   ├── test_fs_service.py
 │   ├── test_shell_executor.py

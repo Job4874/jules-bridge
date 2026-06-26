@@ -1,6 +1,6 @@
 # Jules Bridge — AI Workflow Rules
 
-> Context file 4 of 6. How AI agents should work with this codebase.
+> Context file 4 of 7. How AI agents should work with this codebase.
 
 ## Session Start Protocol
 
