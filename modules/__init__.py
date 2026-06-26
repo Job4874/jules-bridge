@@ -31,6 +31,16 @@ from .reasoning_module import (
     plan_only,
     execute_step,
 )
+from .retrospective_module import (
+    LogPattern,
+    TestEvidence,
+    DoomLoop,
+    RetrospectiveReport,
+    analyze_session,
+    record_test_evidence,
+    load_test_evidence,
+    load_memory,
+)
 
 __all__ = [
     # fs_service
@@ -72,4 +82,13 @@ __all__ = [
     "reason",
     "plan_only",
     "execute_step",
+    # retrospective_module
+    "LogPattern",
+    "TestEvidence",
+    "DoomLoop",
+    "RetrospectiveReport",
+    "analyze_session",
+    "record_test_evidence",
+    "load_test_evidence",
+    "load_memory",
 ]
