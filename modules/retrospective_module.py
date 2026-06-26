@@ -520,7 +520,7 @@ def record_test_evidence(test_output: str, evidence_path: str) -> TestEvidence:
     os.makedirs(evidence_path, exist_ok=True)
     evidence_file = os.path.join(evidence_path, "test_evidence.json")
     try:
-        with open(evidence_file, "r", encoding="utf-8") as f:
+        with open(evidence_file, "r", encoding="utf-8-sig") as f:
             history = json.load(f)
     except (OSError, json.JSONDecodeError):
         history = []
@@ -556,7 +556,7 @@ def load_test_evidence(evidence_path: str) -> Optional[TestEvidence]:
     """Load the most recent test evidence record."""
     evidence_file = os.path.join(evidence_path, "test_evidence.json")
     try:
-        with open(evidence_file, "r", encoding="utf-8") as f:
+        with open(evidence_file, "r", encoding="utf-8-sig") as f:
             history = json.load(f)
         if not history:
             return None

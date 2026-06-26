@@ -109,10 +109,41 @@ class TestJulesDispatchRoute(unittest.TestCase):
         self.assertIs(mock_launch.call_args.kwargs["dry_run"], True)
         self.assertEqual(mock_launch.call_args.kwargs["packet_files"], [r"C:\tmp\JT-001.md"])
 
+    @patch("modules.launch_packets")
+    def test_jules_launch_passes_force_packet_files_and_preserve_session_ids(self, mock_launch):
+        mock_launch.return_value = {
+            "dry_run": False,
+            "selected_count": 1,
+            "launched_count": 1,
+            "results": [],
+        }
+
+        response = self.client.post(
+            "/jules/launch",
+            json={
+                "packet_dir": r"C:\tmp",
+                "force_packet_files": [r"C:\tmp\JT-001.md"],
+                "preserve_existing_session_ids": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_launch.call_args.kwargs["force_packet_files"], [r"C:\tmp\JT-001.md"])
+        self.assertIs(mock_launch.call_args.kwargs["preserve_existing_session_ids"], True)
+
     def test_jules_launch_rejects_invalid_packet_files(self):
         response = self.client.post(
             "/jules/launch",
             json={"packet_files": "not-a-list"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    def test_jules_launch_rejects_invalid_force_packet_files(self):
+        response = self.client.post(
+            "/jules/launch",
+            json={"force_packet_files": "not-a-list"},
         )
 
         self.assertEqual(response.status_code, 400)
@@ -130,6 +161,176 @@ class TestJulesDispatchRoute(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIs(mock_sessions.call_args.kwargs["dry_run"], True)
+
+    @patch("modules.jules_preflight")
+    def test_jules_preflight_defaults_to_remote_check(self, mock_preflight):
+        mock_preflight.return_value = {
+            "ready": False,
+            "likely_blocker": "remote_timeout",
+        }
+
+        response = self.client.post("/jules/preflight", json={})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_preflight.call_args.kwargs["check_remote"], True)
+        self.assertEqual(mock_preflight.call_args.kwargs["timeout_s"], 8)
+
+    @patch("modules.pull_remote_session")
+    def test_jules_pull_defaults_to_dry_run(self, mock_pull):
+        mock_pull.return_value = {
+            "dry_run": True,
+            "status": "dry_run",
+            "session_id": "123456",
+        }
+
+        response = self.client.post("/jules/pull", json={"session_id": "123456"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_pull.call_args.kwargs["dry_run"], True)
+        self.assertEqual(mock_pull.call_args.kwargs["session_id"], "123456")
+
+    def test_jules_pull_requires_session_id(self):
+        response = self.client.post("/jules/pull", json={})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    @patch("modules.build_cot_ledger")
+    def test_jules_cot_writes_ledger_by_default(self, mock_cot):
+        mock_cot.return_value = {
+            "selected_count": 1,
+            "completed_count": 0,
+            "all_complete": False,
+            "rows": [],
+        }
+
+        response = self.client.post("/jules/cot", json={"packet_dir": r"C:\tmp\dispatch"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_cot.call_args.kwargs["write_ledger"], True)
+        self.assertEqual(mock_cot.call_args.kwargs["packet_dir"], r"C:\tmp\dispatch")
+
+    @patch("modules.run_jules_cycle")
+    def test_jules_cycle_defaults_to_safe_dry_run(self, mock_cycle):
+        mock_cycle.return_value = {
+            "status": "pending",
+            "dry_run": True,
+            "launch_dry_run": True,
+            "cot": {},
+        }
+
+        response = self.client.post(
+            "/jules/cycle",
+            json={"path": r"C:\tmp\queue.txt", "packet_dir": r"C:\tmp\dispatch"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_cycle.call_args.kwargs["dry_run"], True)
+        self.assertIs(mock_cycle.call_args.kwargs["launch"], False)
+        self.assertIs(mock_cycle.call_args.kwargs["require_remote_ready"], True)
+        self.assertEqual(mock_cycle.call_args.kwargs["source_path"], r"C:\tmp\queue.txt")
+
+    def test_jules_cycle_rejects_invalid_session_ids(self):
+        response = self.client.post(
+            "/jules/cycle",
+            json={"session_ids": "123456"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    @patch("modules.run_jules_watch")
+    def test_jules_watch_defaults_to_safe_dry_run(self, mock_watch):
+        mock_watch.return_value = {
+            "status": "dry_run",
+            "dry_run": True,
+            "iterations": [],
+        }
+
+        response = self.client.post(
+            "/jules/watch",
+            json={"packet_dir": r"C:\tmp\dispatch", "max_wait_s": 0},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_watch.call_args.kwargs["dry_run"], True)
+        self.assertEqual(mock_watch.call_args.kwargs["max_wait_s"], 0)
+        self.assertEqual(mock_watch.call_args.kwargs["poll_interval_s"], 30)
+        self.assertEqual(mock_watch.call_args.kwargs["packet_dir"], r"C:\tmp\dispatch")
+
+    @patch("modules.run_jules_fleet")
+    def test_jules_fleet_defaults_to_safe_dry_run(self, mock_fleet):
+        mock_fleet.return_value = {
+            "status": "pending",
+            "dry_run": True,
+            "launch_dry_run": True,
+            "requested_launch_limit": 0,
+        }
+
+        response = self.client.post(
+            "/jules/fleet",
+            json={
+                "path": r"C:\tmp\queue.txt",
+                "packet_dir": r"C:\tmp\dispatch",
+                "max_concurrent": 8,
+                "launch_batch_size": 2,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_fleet.call_args.kwargs["dry_run"], True)
+        self.assertIs(mock_fleet.call_args.kwargs["require_remote_ready"], True)
+        self.assertEqual(mock_fleet.call_args.kwargs["source_path"], r"C:\tmp\queue.txt")
+        self.assertEqual(mock_fleet.call_args.kwargs["packet_dir"], r"C:\tmp\dispatch")
+        self.assertEqual(mock_fleet.call_args.kwargs["max_instances"], 12)
+        self.assertEqual(mock_fleet.call_args.kwargs["max_concurrent"], 8)
+        self.assertEqual(mock_fleet.call_args.kwargs["launch_batch_size"], 2)
+
+    def test_jules_fleet_rejects_invalid_include_statuses(self):
+        response = self.client.post(
+            "/jules/fleet",
+            json={"include_statuses": {"bad": "shape"}},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    @patch("modules.run_jules_fleet_watch")
+    def test_jules_fleet_watch_defaults_to_safe_dry_run(self, mock_fleet_watch):
+        mock_fleet_watch.return_value = {
+            "status": "dry_run",
+            "dry_run": True,
+            "iterations": [],
+        }
+
+        response = self.client.post(
+            "/jules/fleet-watch",
+            json={
+                "path": r"C:\tmp\queue.txt",
+                "packet_dir": r"C:\tmp\dispatch",
+                "max_wait_s": 0,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_fleet_watch.call_args.kwargs["dry_run"], True)
+        self.assertIs(mock_fleet_watch.call_args.kwargs["require_remote_ready"], True)
+        self.assertEqual(mock_fleet_watch.call_args.kwargs["source_path"], r"C:\tmp\queue.txt")
+        self.assertEqual(mock_fleet_watch.call_args.kwargs["packet_dir"], r"C:\tmp\dispatch")
+        self.assertEqual(mock_fleet_watch.call_args.kwargs["max_instances"], 12)
+        self.assertEqual(mock_fleet_watch.call_args.kwargs["max_concurrent"], 6)
+        self.assertEqual(mock_fleet_watch.call_args.kwargs["launch_batch_size"], 2)
+        self.assertEqual(mock_fleet_watch.call_args.kwargs["max_wait_s"], 0)
+        self.assertEqual(mock_fleet_watch.call_args.kwargs["poll_interval_s"], 30)
+
+    def test_jules_fleet_watch_rejects_invalid_include_statuses(self):
+        response = self.client.post(
+            "/jules/fleet-watch",
+            json={"include_statuses": {"bad": "shape"}},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
 
 
 class TestFsRoutes(unittest.TestCase):

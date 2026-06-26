@@ -346,6 +346,13 @@ TENTACLES = [
     {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},
     {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},
     {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},
+    {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},
+    {"name": "jules_pull",      "route": "POST /jules/pull",               "reach": "Pull one remote Jules session with timeout protection"},
+    {"name": "jules_cot",       "route": "POST /jules/cot",                "reach": "Build a completion-of-task ledger from Jules launch and pull artifacts"},
+    {"name": "jules_cycle",     "route": "POST /jules/cycle",              "reach": "Run one dry-run-first Jules dispatch/launch/pull/COT communication cycle"},
+    {"name": "jules_watch",     "route": "POST /jules/watch",              "reach": "Poll Jules sessions, pull completed results, and refresh COT until bounded stop"},
+    {"name": "jules_fleet",     "route": "POST /jules/fleet",              "reach": "Scale Jules workers within max_concurrent and refresh pull/COT state"},
+    {"name": "jules_fleet_watch", "route": "POST /jules/fleet-watch",      "reach": "Loop fleet scale-out, pull, and COT refresh until complete or timed out"},
     # Reasoning routes (HRM-inspired H/L/ACT)
     {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},
     {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},
@@ -496,12 +503,19 @@ def jules_launch():
         jules_command (str, optional, default="jules"): CLI path/name
         write_state   (bool, optional, default=true): Persist launch state JSON
         state_path    (str, optional): Explicit state file path
+        skip_launched (bool, optional, default=false): Skip packets already launched in state
+        force_packet_files (list[str], optional): Explicit packet paths to relaunch
+        preserve_existing_session_ids (bool, optional, default=false): Keep older session ids on duplicate launches
     """
     data = json_payload()
     packet_files = data.get("packet_files")
     if packet_files is not None:
         if not isinstance(packet_files, list) or not all(isinstance(item, str) for item in packet_files):
             raise BridgeHTTPError(400, "Invalid input", details="packet_files must be a list of strings")
+    force_packet_files = data.get("force_packet_files")
+    if force_packet_files is not None:
+        if not isinstance(force_packet_files, list) or not all(isinstance(item, str) for item in force_packet_files):
+            raise BridgeHTTPError(400, "Invalid input", details="force_packet_files must be a list of strings")
 
     result = modules.launch_packets(
         packet_dir=string_field(data, "packet_dir", default="", allow_empty=True, control_safe=True),
@@ -513,6 +527,9 @@ def jules_launch():
         jules_command=string_field(data, "jules_command", default="jules"),
         write_state=bool_field(data, "write_state", default=True),
         state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+        skip_launched=bool_field(data, "skip_launched", default=False),
+        force_packet_files=force_packet_files,
+        preserve_existing_session_ids=bool_field(data, "preserve_existing_session_ids", default=False),
     )
     status = 400 if result.get("error") else 200
     return jsonify(dict(result)), status
@@ -535,6 +552,312 @@ def jules_sessions():
         dry_run=bool_field(data, "dry_run", default=True),
     )
     return jsonify(dict(result))
+
+
+@app.route("/jules/preflight", methods=["POST"])
+@route_errors
+def jules_preflight_route():
+    """POST /jules/preflight - Diagnose Jules CLI readiness.
+
+    Body (JSON):
+        jules_command (str, optional, default="jules"): CLI path/name
+        timeout_s     (int, optional, default=8): Probe timeout
+        check_remote  (bool, optional, default=true): Run remote list probe
+        write_state   (bool, optional, default=true): Persist preflight JSON
+        state_path    (str, optional): Explicit state file path
+    """
+    data = json_payload()
+    result = modules.jules_preflight(
+        jules_command=string_field(data, "jules_command", default="jules"),
+        timeout_s=int_field(data, "timeout_s", default=8, min_value=1, max_value=300),
+        check_remote=bool_field(data, "check_remote", default=True),
+        write_state=bool_field(data, "write_state", default=True),
+        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/pull", methods=["POST"])
+@route_errors
+def jules_pull():
+    """POST /jules/pull - Pull one remote Jules session.
+
+    Body (JSON):
+        session_id    (str, required): Remote Jules session id
+        repo_path     (str, optional): Working directory for pull
+        output_dir    (str, optional): Directory for persisted pull JSON
+        dry_run       (bool, optional, default=true): False invokes the CLI
+        timeout_s     (int, optional, default=120): CLI timeout
+        jules_command (str, optional, default="jules"): CLI path/name
+        write_result  (bool, optional, default=true): Persist pull result JSON
+    """
+    data = json_payload()
+    result = modules.pull_remote_session(
+        session_id=string_field(data, "session_id"),
+        repo_path=string_field(data, "repo_path", default="", allow_empty=True, control_safe=True),
+        output_dir=string_field(data, "output_dir", default="", allow_empty=True, control_safe=True),
+        dry_run=bool_field(data, "dry_run", default=True),
+        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
+        jules_command=string_field(data, "jules_command", default="jules"),
+        write_result=bool_field(data, "write_result", default=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/cot", methods=["POST"])
+@route_errors
+def jules_cot():
+    """POST /jules/cot - Build a completion-of-task ledger.
+
+    Body (JSON):
+        packet_dir         (str, optional): Dispatch packet directory
+        launch_state_path  (str, optional): Explicit launch state JSON path
+        report_dir         (str, optional): Completion report or pull JSON dir
+        output_path        (str, optional): Markdown ledger destination
+        write_ledger       (bool, optional, default=true): Persist ledger files
+    """
+    data = json_payload()
+    result = modules.build_cot_ledger(
+        packet_dir=string_field(data, "packet_dir", default="", allow_empty=True, control_safe=True),
+        launch_state_path=string_field(data, "launch_state_path", default="", allow_empty=True, control_safe=True),
+        report_dir=string_field(data, "report_dir", default="", allow_empty=True, control_safe=True),
+        output_path=string_field(data, "output_path", default="", allow_empty=True, control_safe=True),
+        write_ledger=bool_field(data, "write_ledger", default=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/cycle", methods=["POST"])
+@route_errors
+def jules_cycle():
+    """POST /jules/cycle - Run one Jules communication cycle.
+
+    Body (JSON):
+        content/data          (str, optional): Raw pasted Jules task dump
+        source_path/path      (str, optional): File path containing task dump
+        packet_dir            (str, optional): Packet/state directory
+        repo_path             (str, optional): Repo workers should launch from
+        max_instances         (int, optional, default=4): Max packets
+        include_statuses      (str|list, optional): Statuses to include
+        launch                (bool, optional, default=false): Request launch
+        launch_limit          (int, optional, default=0): Max launches
+        pull                  (bool, optional, default=false): Pull session ids
+        session_ids           (list[str], optional): Explicit session ids
+        dry_run               (bool, optional, default=true): False enables live CLI
+        check_remote          (bool, optional, default=true): Probe remote sessions
+        require_remote_ready  (bool, optional, default=true): Gate live launch/pull
+        timeout_s             (int, optional, default=120): CLI timeout
+        jules_command         (str, optional, default="jules"): CLI path/name
+        write_state           (bool, optional, default=true): Persist cycle JSON
+        cycle_state_path      (str, optional): Explicit cycle state path
+    """
+    data = json_payload()
+    content = ""
+    if "content" in data:
+        content = string_field(data, "content", allow_empty=True)
+    elif "data" in data:
+        content = string_field(data, "data", allow_empty=True)
+
+    source_path = ""
+    if "source_path" in data:
+        source_path = string_field(data, "source_path", allow_empty=True, control_safe=True)
+    elif "path" in data:
+        source_path = string_field(data, "path", allow_empty=True, control_safe=True)
+
+    include_statuses = data.get("include_statuses", "")
+    if include_statuses and not isinstance(include_statuses, (str, list, tuple)):
+        raise BridgeHTTPError(400, "Invalid input", details="include_statuses must be a string or list")
+
+    session_ids = data.get("session_ids")
+    if session_ids is not None:
+        if not isinstance(session_ids, list) or not all(isinstance(item, str) for item in session_ids):
+            raise BridgeHTTPError(400, "Invalid input", details="session_ids must be a list of strings")
+
+    result = modules.run_jules_cycle(
+        content=content,
+        source_path=source_path,
+        packet_dir=string_field(data, "packet_dir", default="", allow_empty=True, control_safe=True),
+        repo_path=string_field(data, "repo_path", default="", allow_empty=True, control_safe=True),
+        max_instances=int_field(data, "max_instances", default=4, min_value=1, max_value=50),
+        include_statuses=include_statuses,
+        write_packets=bool_field(data, "write_packets", default=True),
+        launch=bool_field(data, "launch", default=False),
+        launch_limit=int_field(data, "launch_limit", default=0, min_value=0, max_value=100),
+        pull=bool_field(data, "pull", default=False),
+        session_ids=session_ids,
+        dry_run=bool_field(data, "dry_run", default=True),
+        check_remote=bool_field(data, "check_remote", default=True),
+        require_remote_ready=bool_field(data, "require_remote_ready", default=True),
+        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
+        jules_command=string_field(data, "jules_command", default="jules"),
+        write_state=bool_field(data, "write_state", default=True),
+        cycle_state_path=string_field(data, "cycle_state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/watch", methods=["POST"])
+@route_errors
+def jules_watch():
+    """POST /jules/watch - Watch launched Jules sessions until COT progresses.
+
+    Body (JSON):
+        packet_dir            (str, optional): Packet/state directory
+        repo_path             (str, optional): Repo workers launched from
+        max_wait_s            (int, optional, default=300): Watch time budget
+        poll_interval_s       (int, optional, default=30): Seconds between polls
+        timeout_s             (int, optional, default=120): CLI timeout
+        jules_command         (str, optional, default="jules"): CLI path/name
+        dry_run               (bool, optional, default=true): False enables live pulls
+        require_remote_ready  (bool, optional, default=true): Gate live pull
+        write_state           (bool, optional, default=true): Persist watch JSON
+        watch_state_path      (str, optional): Explicit watch state path
+    """
+    data = json_payload()
+    result = modules.run_jules_watch(
+        packet_dir=string_field(data, "packet_dir", default="", allow_empty=True, control_safe=True),
+        repo_path=string_field(data, "repo_path", default="", allow_empty=True, control_safe=True),
+        max_wait_s=int_field(data, "max_wait_s", default=300, min_value=0, max_value=7200),
+        poll_interval_s=int_field(data, "poll_interval_s", default=30, min_value=1, max_value=600),
+        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
+        jules_command=string_field(data, "jules_command", default="jules"),
+        dry_run=bool_field(data, "dry_run", default=True),
+        require_remote_ready=bool_field(data, "require_remote_ready", default=True),
+        write_state=bool_field(data, "write_state", default=True),
+        watch_state_path=string_field(data, "watch_state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/fleet", methods=["POST"])
+@route_errors
+def jules_fleet():
+    """POST /jules/fleet - Maintain a bounded Jules worker fleet.
+
+    Body (JSON):
+        content/data          (str, optional): Raw pasted Jules task dump
+        source_path/path      (str, optional): File path containing task dump
+        packet_dir            (str, optional): Packet/state directory
+        repo_path             (str, optional): Repo workers should launch from
+        max_instances         (int, optional, default=12): Queue size to maintain
+        max_concurrent        (int, optional, default=6): Max active remote sessions
+        launch_batch_size     (int, optional, default=2): Max launches this cycle
+        include_statuses      (str|list, optional): Statuses to include
+        dry_run               (bool, optional, default=true): False enables live CLI
+        timeout_s             (int, optional, default=120): CLI timeout
+        jules_command         (str, optional, default="jules"): CLI path/name
+        require_remote_ready  (bool, optional, default=true): Gate live launch/pull
+        write_state           (bool, optional, default=true): Persist fleet JSON
+        fleet_state_path      (str, optional): Explicit fleet state path
+    """
+    data = json_payload()
+    content = ""
+    if "content" in data:
+        content = string_field(data, "content", allow_empty=True)
+    elif "data" in data:
+        content = string_field(data, "data", allow_empty=True)
+
+    source_path = ""
+    if "source_path" in data:
+        source_path = string_field(data, "source_path", allow_empty=True, control_safe=True)
+    elif "path" in data:
+        source_path = string_field(data, "path", allow_empty=True, control_safe=True)
+
+    include_statuses = data.get("include_statuses", "")
+    if include_statuses and not isinstance(include_statuses, (str, list, tuple)):
+        raise BridgeHTTPError(400, "Invalid input", details="include_statuses must be a string or list")
+
+    result = modules.run_jules_fleet(
+        content=content,
+        source_path=source_path,
+        packet_dir=string_field(data, "packet_dir", default="", allow_empty=True, control_safe=True),
+        repo_path=string_field(data, "repo_path", default="", allow_empty=True, control_safe=True),
+        max_instances=int_field(data, "max_instances", default=12, min_value=1, max_value=100),
+        max_concurrent=int_field(data, "max_concurrent", default=6, min_value=0, max_value=50),
+        launch_batch_size=int_field(data, "launch_batch_size", default=2, min_value=0, max_value=50),
+        include_statuses=include_statuses,
+        dry_run=bool_field(data, "dry_run", default=True),
+        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
+        jules_command=string_field(data, "jules_command", default="jules"),
+        require_remote_ready=bool_field(data, "require_remote_ready", default=True),
+        write_state=bool_field(data, "write_state", default=True),
+        fleet_state_path=string_field(data, "fleet_state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/fleet-watch", methods=["POST"])
+@route_errors
+def jules_fleet_watch():
+    """POST /jules/fleet-watch - Scale, pull, and watch COT in one loop.
+
+    Body (JSON):
+        content/data             (str, optional): Raw pasted Jules task dump
+        source_path/path         (str, optional): File path containing task dump
+        packet_dir               (str, optional): Packet/state directory
+        repo_path                (str, optional): Repo workers should launch from
+        max_instances            (int, optional, default=12): Queue size to maintain
+        max_concurrent           (int, optional, default=6): Max active remote sessions
+        launch_batch_size        (int, optional, default=2): Max launches per loop
+        include_statuses         (str|list, optional): Statuses to include
+        max_wait_s               (int, optional, default=900): Watch time budget
+        poll_interval_s          (int, optional, default=30): Seconds between loops
+        dry_run                  (bool, optional, default=true): False enables live CLI
+        timeout_s                (int, optional, default=120): CLI timeout
+        jules_command            (str, optional, default="jules"): CLI path/name
+        require_remote_ready     (bool, optional, default=true): Gate live launch/pull
+        write_state              (bool, optional, default=true): Persist state JSON
+        fleet_watch_state_path   (str, optional): Explicit state path
+    """
+    data = json_payload()
+    content = ""
+    if "content" in data:
+        content = string_field(data, "content", allow_empty=True)
+    elif "data" in data:
+        content = string_field(data, "data", allow_empty=True)
+
+    source_path = ""
+    if "source_path" in data:
+        source_path = string_field(data, "source_path", allow_empty=True, control_safe=True)
+    elif "path" in data:
+        source_path = string_field(data, "path", allow_empty=True, control_safe=True)
+
+    include_statuses = data.get("include_statuses", "")
+    if include_statuses and not isinstance(include_statuses, (str, list, tuple)):
+        raise BridgeHTTPError(400, "Invalid input", details="include_statuses must be a string or list")
+
+    result = modules.run_jules_fleet_watch(
+        content=content,
+        source_path=source_path,
+        packet_dir=string_field(data, "packet_dir", default="", allow_empty=True, control_safe=True),
+        repo_path=string_field(data, "repo_path", default="", allow_empty=True, control_safe=True),
+        max_instances=int_field(data, "max_instances", default=12, min_value=1, max_value=100),
+        max_concurrent=int_field(data, "max_concurrent", default=6, min_value=0, max_value=50),
+        launch_batch_size=int_field(data, "launch_batch_size", default=2, min_value=0, max_value=50),
+        include_statuses=include_statuses,
+        max_wait_s=int_field(data, "max_wait_s", default=900, min_value=0, max_value=14400),
+        poll_interval_s=int_field(data, "poll_interval_s", default=30, min_value=1, max_value=600),
+        dry_run=bool_field(data, "dry_run", default=True),
+        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
+        jules_command=string_field(data, "jules_command", default="jules"),
+        require_remote_ready=bool_field(data, "require_remote_ready", default=True),
+        write_state=bool_field(data, "write_state", default=True),
+        fleet_watch_state_path=string_field(
+            data,
+            "fleet_watch_state_path",
+            default="",
+            allow_empty=True,
+            control_safe=True,
+        ),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
 
 
 # Shell route

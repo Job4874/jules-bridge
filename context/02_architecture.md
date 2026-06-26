@@ -93,7 +93,39 @@ Every module has a **simple typed interface** hiding complex implementation:
 - `POST /jules/launch` is also dry-run by default. With `dry_run=false`, it
   launches prepared packet files through the Jules CLI, writes
   `JULES_LAUNCH_STATE.json`, and records stdout/stderr/session ids per packet.
+  Packet input is piped as UTF-8 so Windows console code pages cannot corrupt
+  emoji or other non-ASCII packet text. Repeated launches can skip packets
+  already marked `launched` and merge state so the COT ledger remains cumulative.
+  Speculative duplicate launches can preserve older session ids so COT can pull
+  whichever duplicate finishes first.
+- `POST /jules/preflight` diagnoses the local Jules CLI before launch. It
+  prefers the direct `npm\bin\jules.exe` binary for bare `jules` commands,
+  checks `jules version`, optionally checks `jules remote list --session`, and
+  writes `JULES_PREFLIGHT.json`.
 - `POST /jules/sessions` lists remote Jules sessions through
   `jules remote list --session`; live calls use timeout-protected process-tree
   cleanup so a blocked npm shim does not leave `node`/`jules.exe` children.
+- `POST /jules/pull` is dry-run by default. With `dry_run=false`, it runs
+  `jules remote pull --session <id>` and stores pull stdout/stderr JSON under
+  `jules_inbox/jules_dispatch/JULES_REMOTE_PULLS/`.
+- `POST /jules/cot` builds `JULES_COT_LEDGER.md` and JSON from packet launch
+  state plus pulled completion reports. It tracks completion-of-task evidence
+  summaries only; it never requests private chain-of-thought.
+- `POST /jules/cycle` composes dispatch, remote readiness, gated launch, pull,
+  and COT ledger refresh into one dry-run-first communication cycle. Live launch
+  stays disabled when remote listing times out and `require_remote_ready=true`.
+- `POST /jules/watch` repeatedly runs pull-only cycles inside a bounded watch
+  window, pulls completed sessions, refreshes the COT ledger, and writes
+  `JULES_WATCH_STATE.json`. It reports `Awaiting Plan`/`Awaiting User` rows as
+  attention-required because the current Jules CLI does not expose plan approval.
+- `POST /jules/fleet` maintains a larger Jules worker queue, pulls completed
+  launched sessions, counts active remote sessions, and launches only the next
+  unlaunched packets that fit inside `max_concurrent` and `launch_batch_size`.
+  It is dry-run by default and writes `JULES_FLEET_STATE.json`. Failed rows,
+  stale blank/unknown rows, and `Awaiting Plan` rows are retried by replacing
+  the tracked packet session id when capacity is available.
+- `POST /jules/fleet-watch` repeatedly runs the fleet cycle in a bounded loop,
+  so completed sessions are pulled, COT is refreshed, and newly freed capacity
+  is filled without manually alternating fleet and watch calls. It writes
+  `JULES_FLEET_WATCH_STATE.json`.
 - Observe: `retrospective_module.py` reads logs → writes memory

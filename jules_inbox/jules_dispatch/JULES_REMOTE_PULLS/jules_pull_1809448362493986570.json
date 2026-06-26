@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-06-26T06:41:47.794424+00:00",
+  "dry_run": false,
+  "session_id": "1809448362493986570",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "1809448362493986570"
+  ],
+  "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "status": "pulled",
+  "exit_code": 0,
+  "stdout": "diff --git a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\nindex 99d4acc..30d8a2d 100644\n--- a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n+++ b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n@@ -27,6 +27,7 @@ namespace OracleV5\n \n             TestPositionSizer();\n             TestAccountGuardDrawdown();\n+            TestLiquiditySignals();\n \n             OracleLog.Write(\"SELF_TEST\", \"==================================================\");\n             OracleLog.Write(\"SELF_TEST\", \"   SIM-MODE SELF-TEST COMPLETED                   \");\n@@ -138,5 +139,72 @@ namespace OracleV5\n                 }\n             };\n         }\n+\n+        private void TestLiquiditySignals()\n+        {\n+            OracleLog.Write(\"SELF_TEST\", \">>> TESTING LIQUIDITY SIGNALS\");\n+\n+            // 1. Null state\n+            currentLiquidity = null;\n+            bool res1 = HasConfirmedSellSideRejectionSweep();\n+            OracleLog.Write(\"SELF_TEST\", $\"Liquidity 1 (Null): Result={res1} (Expected: False)\");\n+\n+            // 2. No sweep\n+            currentLiquidity = new LiquiditySnapshot { LastSweep = null };\n+            bool res2 = HasConfirmedSellSideRejectionSweep();\n+            OracleLog.Write(\"SELF_TEST\", $\"Liquidity 2 (No Sweep): Result={res2} (Expected: False)\");\n+\n+            // 3. Wrong EventType\n+            currentLiquidity = new LiquiditySnapshot\n+            {\n+                LastSweep = new LiquiditySweepSignal\n+                {\n+                    IsValid = true,\n+                    EventType = LiquidityEventType.AcceptedSweep,\n+                    SweptSide = LiquiditySide.SellSide\n+                }\n+            };\n+            bool res3 = HasConfirmedSellSideRejectionSweep();\n+            OracleLog.Write(\"SELF_TEST\", $\"Liquidity 3 (Wrong Event): Result={res3} (Expected: False)\");\n+\n+            // 4. Wrong Side\n+            currentLiquidity = new LiquiditySnapshot\n+            {\n+                LastSweep = new LiquiditySweepSignal\n+                {\n+                    IsValid = true,\n+                    EventType = LiquidityEventType.RejectionSweep,\n+                    SweptSide = LiquiditySide.BuySide\n+                }\n+            };\n+            bool res4 = HasConfirmedSellSideRejectionSweep();\n+            OracleLog.Write(\"SELF_TEST\", $\"Liquidity 4 (Wrong Side): Result={res4} (Expected: False)\");\n+\n+            // 5. Invalid Signal\n+            currentLiquidity = new LiquiditySnapshot\n+            {\n+                LastSweep = new LiquiditySweepSignal\n+                {\n+                    IsValid = false,\n+                    EventType = LiquidityEventType.RejectionSweep,\n+                    SweptSide = LiquiditySide.SellSide\n+                }\n+            };\n+            bool res5 = HasConfirmedSellSideRejectionSweep();\n+            OracleLog.Write(\"SELF_TEST\", $\"Liquidity 5 (Invalid): Result={res5} (Expected: False)\");\n+\n+            // 6. Valid SellSide Rejection Sweep (Happy Path)\n+            currentLiquidity = new LiquiditySnapshot\n+            {\n+                LastSweep = new LiquiditySweepSignal\n+                {\n+                    IsValid = true,\n+                    EventType = LiquidityEventType.RejectionSweep,\n+                    SweptSide = LiquiditySide.SellSide\n+                }\n+            };\n+            bool res6 = HasConfirmedSellSideRejectionSweep();\n+            OracleLog.Write(\"SELF_TEST\", $\"Liquidity 6 (Valid Sell Rejection): Result={res6} (Expected: True)\");\n+        }\n     }\n }\n\n",
+  "stderr": "",
+  "timed_out": false,
+  "session_ids": [
+    "1809448362493986570",
+    "100644"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_1809448362493986570.json",
+  "note": "Live pull attempted through the Jules CLI."
+}

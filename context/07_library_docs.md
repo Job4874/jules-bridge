@@ -130,6 +130,9 @@ The executor searches these paths in order:
 
 ### Output Encoding
 All subprocess output is coerced to UTF-8 via `_coerce_text()`: bytes → `decode("utf-8", errors="replace")`.
+`modules.jules_orchestrator._run_cli_command()` also sets `encoding="utf-8"` and
+`errors="replace"` on text pipes so `jules new` can receive packet prompts with
+emoji/non-ASCII text on Windows.
 
 ### Return Contract
 ```python
@@ -172,7 +175,7 @@ ShellResult(exit_code=0, stdout="...", stderr="...", shell="powershell")
 After every test run, the output MUST be recorded for cryptographic proof:
 ```
 POST /retrospective/record_evidence
-Body: { "output": "<raw pytest stdout>" }
+Body: { "test_output": "<raw pytest stdout>" }
 ```
 This stores a SHA-256 hash in `memory/test_evidence.json`.
 

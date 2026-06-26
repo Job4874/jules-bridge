@@ -24,7 +24,12 @@ Bridge: `https://parade-marrow-pulp.ngrok-free.dev`
 | Operator inbox | `POST /inbox/read`, `POST /inbox/write` | Read instructions and write evidence |
 | Jules dispatch | `POST /jules/dispatch` | Convert pasted Jules task queues into worker packets and explicit launch commands |
 | Jules packet launch | `POST /jules/launch` | Dry-run or explicitly launch prepared packets through `jules new` |
+| Jules preflight | `POST /jules/preflight` | Verify direct Jules CLI version and remote readiness before live launch |
 | Jules remote sessions | `POST /jules/sessions` | Dry-run or query `jules remote list --session` with timeout cleanup |
+| Jules remote pull | `POST /jules/pull` | Dry-run or pull one remote session by id into persisted JSON evidence |
+| Jules COT ledger | `POST /jules/cot` | Build the completion-of-task ledger from launch state and pull/report artifacts |
+| Jules cycle | `POST /jules/cycle` | Run one dispatch/remote-check/launch/pull/COT communication cycle |
+| Jules COT watch | `POST /jules/watch` | Poll launched sessions, pull completed results, and refresh COT within a bounded window |
 
 ## Mandatory Session Workflow
 
@@ -157,6 +162,8 @@ Write packet files and launch commands:
 
 `POST /jules/dispatch` does not start remote Jules sessions. Review
 `jules_inbox\\jules_dispatch\\jules_launch_commands.ps1` before any live launch.
+When `JULES_DISPATCH_INDEX.md` exists, `/jules/launch` follows that priority
+order instead of alphabetical packet filenames.
 
 Dry-run prepared launch packets:
 
@@ -188,10 +195,127 @@ Check remote sessions:
 }
 ```
 
-On Windows, the bridge resolves bare `jules` to the npm `jules.cmd` shim and
-kills the process tree on timeout. If `POST /jules/sessions` times out, do not
-attempt live packet launch until CLI auth/connectivity is fixed.
+Preflight the local Jules CLI before live launch:
+
+```json
+{
+  "timeout_s": 8,
+  "check_remote": true,
+  "write_state": true
+}
+```
+
+Pull one completed remote session:
+
+```json
+{
+  "session_id": "123456",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "dry_run": false,
+  "timeout_s": 120
+}
+```
+
+Build or refresh the completion-of-task ledger:
+
+```json
+{
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "write_ledger": true
+}
+```
+
+Run the full safe communication cycle:
+
+```json
+{
+  "path": "C:\\Users\\abdul\\.codex\\attachments\\...\\pasted-text-1.txt",
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "max_instances": 6,
+  "launch": false,
+  "dry_run": true,
+  "check_remote": true,
+  "require_remote_ready": true
+}
+```
+
+For live launch, set both `"launch": true` and `"dry_run": false`. The cycle
+still refuses live launch when remote session listing is not `ok`. Cycle
+launches skip packets already marked `launched`, merge `JULES_LAUNCH_STATE.json`,
+and keep `JULES_COT_LEDGER.md` cumulative across multiple launch batches.
+Pull-only cycles preserve live launch state and auto-pull only session ids that
+remote listing marks `Completed` when no explicit `session_ids` list is provided.
+
+Watch launched sessions until COT progresses or the bounded window ends:
+
+```json
+{
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "max_wait_s": 900,
+  "poll_interval_s": 30,
+  "dry_run": false,
+  "require_remote_ready": true
+}
+```
+
+`/jules/watch` writes `JULES_WATCH_STATE.json`. It cannot approve Jules plans
+because the current Jules CLI exposes no plan-approval command; inspect
+`latest_remote_statuses` for `Awaiting Plan` or `Awaiting User` rows.
+
+Maintain a bounded worker fleet:
+
+```json
+{
+  "path": "C:\\Users\\abdul\\.codex\\attachments\\...\\pasted-text-1.txt",
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "max_instances": 12,
+  "max_concurrent": 8,
+  "launch_batch_size": 2,
+  "dry_run": true,
+  "require_remote_ready": true
+}
+```
+
+For live scale-out, set `"dry_run": false` only after reviewing
+`active_remote_count`, `available_launch_capacity`, and `requested_launch_limit`.
+`/jules/fleet` writes `JULES_FLEET_STATE.json`, pulls completed sessions, and
+launches only unlaunched packets that fit inside the active-session cap.
+
+Run the self-maintaining fleet watch loop:
+
+```json
+{
+  "path": "C:\\Users\\abdul\\.codex\\attachments\\...\\pasted-text-1.txt",
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "max_instances": 12,
+  "max_concurrent": 8,
+  "launch_batch_size": 2,
+  "max_wait_s": 900,
+  "poll_interval_s": 30,
+  "dry_run": false,
+  "require_remote_ready": true
+}
+```
+
+`/jules/fleet-watch` writes `JULES_FLEET_WATCH_STATE.json` and repeats the
+fleet cycle until COT completes or the bounded wait expires. Successful pull
+artifacts under `JULES_REMOTE_PULLS/` are reused instead of re-pulled.
+When remote listing marks a tracked session `Failed`, `/jules/fleet` prioritizes
+relaunching that packet before starting fresh unlaunched packets, if capacity is
+available.
+
+On Windows, the bridge resolves bare `jules` to the direct
+`C:\Users\abdul\AppData\Roaming\npm\bin\jules.exe` when present because the npm
+`jules.cmd` shim can hang. Packet prompts are piped as UTF-8; keep that behavior
+or emoji/non-ASCII packet text can fail before `jules new` receives input.
 Completion evidence should be a concise checklist, not private chain-of-thought.
+If a completed Jules session pulls back a successful unified diff instead of a
+prose report, `/jules/cot` records `pulled_output_reported` and counts that row
+as completion evidence.
 
 ## Codex Handover Access
 

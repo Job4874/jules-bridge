@@ -167,6 +167,27 @@ class TestTestEvidence:
             records = json.load(f)
         assert len(records) == 3
 
+    def test_evidence_accumulates_when_existing_file_has_bom(self):
+        tmp = tempfile.mkdtemp()
+        evidence_file = os.path.join(tmp, "test_evidence.json")
+        existing = [{
+            "output_hash": "abc123",
+            "timestamp_utc": "2026-06-26T00:00:00+00:00",
+            "passed": True,
+            "test_count": 1,
+            "raw_output_tail": "======================= 1 passed in 0.01s ========================",
+        }]
+        with open(evidence_file, "w", encoding="utf-8-sig") as f:
+            json.dump(existing, f)
+
+        record_test_evidence(SAMPLE_PYTEST_OUTPUT, tmp)
+
+        with open(evidence_file, encoding="utf-8") as f:
+            records = json.load(f)
+        assert len(records) == 2
+        assert records[0]["output_hash"] == "abc123"
+        assert records[-1]["test_count"] == 2
+
     def test_evidence_capped_at_50(self):
         tmp = tempfile.mkdtemp()
         for i in range(55):

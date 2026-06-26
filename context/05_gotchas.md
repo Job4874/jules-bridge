@@ -95,8 +95,25 @@
 - **`POST /jules/dispatch`** only prepares worker packets and launch commands; it must not start remote Jules sessions by itself
 - **Packet output** defaults to `jules_inbox/jules_dispatch/`; review `jules_launch_commands.ps1` before running because it calls `jules new`
 - **`POST /jules/launch`** defaults to `dry_run=true`; only `dry_run=false` attempts live `jules new` calls and writes `JULES_LAUNCH_STATE.json`
+- **`POST /jules/launch` duplicate fan-out** can use `force_packet_files` with `preserve_existing_session_ids=true` so a speculative duplicate launch appends the new session id instead of forgetting older active attempts for that packet
+- **`POST /jules/preflight`** should be the live gate before launch; it verifies direct CLI version and remote-session readiness without creating sessions
 - **`POST /jules/sessions`** defaults to `dry_run=true`; live mode calls `jules remote list --session` with process-tree cleanup on timeout
-- **Windows Jules CLI** resolves bare `jules` to the npm `jules.cmd` shim; if session listing times out, do not attempt live packet launch until CLI auth/connectivity is fixed
+- **`POST /jules/pull`** defaults to `dry_run=true`; live mode calls `jules remote pull --session <id>` and persists pull JSON under `JULES_REMOTE_PULLS`
+- **`POST /jules/cot`** writes `JULES_COT_LEDGER.md`/`.json`; completion is only proven when a matching completion report or pull output contains evidence sections
+- **`pulled_output_reported`** means `jules remote pull` returned a successful unified diff artifact; this counts as COT evidence without requesting private chain-of-thought
+- **`POST /jules/cycle`** is the operator-safe orchestration route; it composes dispatch/launch/pull/COT and keeps live launch disabled if remote listing is not `ok`
+- **Windows Jules CLI** should prefer `C:\Users\abdul\AppData\Roaming\npm\bin\jules.exe` for bare `jules`; the npm `jules.cmd` shim can hang while the direct binary returns version and remote sessions cleanly
+- **Launch packet encoding** must stay UTF-8; Windows `charmap` encoding failed on packet emoji and left `jules.exe new` waiting for input
+- **Cumulative COT state** depends on `skip_launched=true` behavior in cycle launches; repeated small launch batches must merge `JULES_LAUNCH_STATE.json` instead of overwriting earlier session ids
+- **Pull-only cycles** must preserve live launch state; when `pull=true` and `launch=false`, `/jules/cycle` only pulls session ids marked `Completed` by remote listing and must not rewrite launched rows to dry-run
+- **`POST /jules/watch`** automates bounded polling/pull/COT refresh, but it cannot approve Jules plans; `Awaiting Plan` and `Awaiting User` statuses are surfaced as attention-required rows
+- **`POST /jules/fleet`** respects `max_concurrent`; `In Progress`, `Planning`, and fresh `unknown` remote statuses consume capacity, while `Completed`, `Failed`, `missing`, stale `unknown`, and `Awaiting Plan` free capacity for retry
+- **`POST /jules/fleet-watch`** is the self-maintaining loop; it alternates fleet scaling and COT refresh until the wait window ends or all COT rows complete
+- **Successful pull artifacts** are not re-pulled on later cycle/fleet loops; delete the corresponding `JULES_REMOTE_PULLS/jules_pull_<session>.json` file only if you intentionally need to force a fresh pull
+- **Failed remote sessions** are relaunched by `/jules/fleet` when capacity is available; the new launch replaces the failed session id for that packet in `JULES_LAUNCH_STATE.json`
+- **Live launch success requires a session id**; Jules can return exit code 0 with `Error:` in stderr, so `launch_packets()` must treat CLI error output or missing session ids as failed, not launched
+- **Worker packets must stay noninteractive**; packet operating rules tell Jules not to stop for plan approval because this CLI only exposes `remote list/new/pull`
+- **Stale blank remote rows** become retryable after 10 minutes; this prevents COT from sticking forever on a row with no terminal status
 - **COT handling** means completion-of-task evidence summaries here, not private chain-of-thought disclosure
 
 ## Windows-specific

@@ -1,0 +1,428 @@
+{
+  "generated_at_utc": "2026-06-26T13:17:42.751249+00:00",
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "launch_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
+  "report_dir": "",
+  "selected_count": 29,
+  "completed_count": 29,
+  "blocked_count": 0,
+  "pending_count": 0,
+  "all_complete": true,
+  "status_counts": {
+    "pulled_output_reported": 29
+  },
+  "rows": [
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-024-389f1d-add-test-for-heartbeatmonitor-isalive.md",
+      "packet_id": "JT-024-389f1d",
+      "launch_status": "launched",
+      "session_ids": [
+        "7933109068325009327"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_7933109068325009327.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-025-9e80e5-add-test-for-vixmonitor-reset.md",
+      "packet_id": "JT-025-9e80e5",
+      "launch_status": "launched",
+      "session_ids": [
+        "9126716179690030352"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_9126716179690030352.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-bbe920-add-test-for-resetselectorcandidates.md",
+      "packet_id": "JT-001-bbe920",
+      "launch_status": "launched",
+      "session_ids": [
+        "15977893485366655852"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_15977893485366655852.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-39436e-serial-execution-of-asynchronous-file-i-o.md",
+      "packet_id": "JT-002-39436e",
+      "launch_status": "launched",
+      "session_ids": [
+        "7309447141457198958"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_7309447141457198958.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-9b62c7-add-test-for-volregimedetector-reset.md",
+      "packet_id": "JT-003-9b62c7",
+      "launch_status": "launched",
+      "session_ids": [
+        "2176039184437417198"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_2176039184437417198.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-006-857c83-add-test-for-secondssincelastpulse.md",
+      "packet_id": "JT-006-857c83",
+      "launch_status": "launched",
+      "session_ids": [
+        "2073294697310640127"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_2073294697310640127.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-007-3bc7a7-add-test-for-heartbeatmonitor-pulse.md",
+      "packet_id": "JT-007-3bc7a7",
+      "launch_status": "launched",
+      "session_ids": [
+        "52491288849365276"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_52491288849365276.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-008-8c4589-add-test-for-getstatusreport.md",
+      "packet_id": "JT-008-8c4589",
+      "launch_status": "launched",
+      "session_ids": [
+        "15670021964742231358"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_15670021964742231358.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-009-f16b0c-add-test-for-trenddetector-reset.md",
+      "packet_id": "JT-009-f16b0c",
+      "launch_status": "launched",
+      "session_ids": [
+        "259272200479968395"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_259272200479968395.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-010-3c72c1-add-test-for-ispanicmode.md",
+      "packet_id": "JT-010-3c72c1",
+      "launch_status": "launched",
+      "session_ids": [
+        "4627866533596226046"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_4627866533596226046.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-011-0cd2ff-method-with-too-many-parameters.md",
+      "packet_id": "JT-011-0cd2ff",
+      "launch_status": "launched",
+      "session_ids": [
+        "16339142350785418820"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_16339142350785418820.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-012-5a0b86-method-with-too-many-parameters.md",
+      "packet_id": "JT-012-5a0b86",
+      "launch_status": "launched",
+      "session_ids": [
+        "3747657005033268025"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_3747657005033268025.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-013-c11719-method-with-too-many-parameters.md",
+      "packet_id": "JT-013-c11719",
+      "launch_status": "launched",
+      "session_ids": [
+        "9633164573254984530"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_9633164573254984530.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-014-25fa82-method-with-too-many-parameters.md",
+      "packet_id": "JT-014-25fa82",
+      "launch_status": "launched",
+      "session_ids": [
+        "5817790581416074741"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_5817790581416074741.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-015-b03f71-method-with-too-many-parameters.md",
+      "packet_id": "JT-015-b03f71",
+      "launch_status": "launched",
+      "session_ids": [
+        "16087150018382239980"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_16087150018382239980.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-016-025faa-add-test-for-isselectortradeallowed.md",
+      "packet_id": "JT-016-025faa",
+      "launch_status": "launched",
+      "session_ids": [
+        "7537886744130045704"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_7537886744130045704.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-017-10800c-add-test-for-isliquiditybullish.md",
+      "packet_id": "JT-017-10800c",
+      "launch_status": "launched",
+      "session_ids": [
+        "17777535020966408974"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_17777535020966408974.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-018-4fbb5d-add-test-for-hasconfirmedbuysiderejectionsweep.md",
+      "packet_id": "JT-018-4fbb5d",
+      "launch_status": "launched",
+      "session_ids": [
+        "4447266481069829658"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_4447266481069829658.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-019-33b8bc-add-test-for-hasconfirmedsellsiderejectionsweep.md",
+      "packet_id": "JT-019-33b8bc",
+      "launch_status": "launched",
+      "session_ids": [
+        "1809448362493986570"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_1809448362493986570.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-020-6d589e-method-with-too-many-parameters.md",
+      "packet_id": "JT-020-6d589e",
+      "launch_status": "launched",
+      "session_ids": [
+        "14836207135451034881"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_14836207135451034881.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-026-bd5ee7-add-test-for-registerselectorcandidate.md",
+      "packet_id": "JT-026-bd5ee7",
+      "launch_status": "launched",
+      "session_ids": [
+        "17249136863160488213"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_17249136863160488213.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-027-9f8047-method-with-too-many-parameters.md",
+      "packet_id": "JT-027-9f8047",
+      "launch_status": "launched",
+      "session_ids": [
+        "5637437879303906986"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_5637437879303906986.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-028-114b6e-method-with-too-many-parameters.md",
+      "packet_id": "JT-028-114b6e",
+      "launch_status": "launched",
+      "session_ids": [
+        "3488814641650708117"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_3488814641650708117.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-030-857e5b-method-with-too-many-parameters.md",
+      "packet_id": "JT-030-857e5b",
+      "launch_status": "launched",
+      "session_ids": [
+        "946220871660003947"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_946220871660003947.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-031-219d0c-method-with-too-many-parameters.md",
+      "packet_id": "JT-031-219d0c",
+      "launch_status": "launched",
+      "session_ids": [
+        "11362832537920300514"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_11362832537920300514.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-032-430a34-method-with-too-many-parameters.md",
+      "packet_id": "JT-032-430a34",
+      "launch_status": "launched",
+      "session_ids": [
+        "12093693687894509543",
+        "16528644010708698533"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_16528644010708698533.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-033-64bc77-method-with-too-many-parameters.md",
+      "packet_id": "JT-033-64bc77",
+      "launch_status": "launched",
+      "session_ids": [
+        "9665335808675428437"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_9665335808675428437.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-034-385f27-method-with-too-many-parameters.md",
+      "packet_id": "JT-034-385f27",
+      "launch_status": "launched",
+      "session_ids": [
+        "12306542764491801820"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_12306542764491801820.json"
+      ]
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-035-7bc0c2-add-test-for-getselectorsummary.md",
+      "packet_id": "JT-035-7bc0c2",
+      "launch_status": "launched",
+      "session_ids": [
+        "10747689874915790980",
+        "5408819866706457101",
+        "13944901608959609572"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "pulled_output_reported",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_5408819866706457101.json"
+      ]
+    }
+  ],
+  "ledger_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.md",
+  "ledger_json_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.json",
+  "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+}

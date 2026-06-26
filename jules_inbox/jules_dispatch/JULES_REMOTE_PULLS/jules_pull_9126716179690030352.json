@@ -1,0 +1,27 @@
+{
+  "generated_at_utc": "2026-06-26T10:22:12.334179+00:00",
+  "dry_run": false,
+  "session_id": "9126716179690030352",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "9126716179690030352"
+  ],
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "status": "pulled",
+  "exit_code": 0,
+  "stdout": "diff --git a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\nindex 99d4acc..dd0703c 100644\n--- a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n+++ b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n@@ -27,6 +27,17 @@ namespace OracleV5\n \n             TestPositionSizer();\n             TestAccountGuardDrawdown();\n+            \n+            try \n+            {\n+                Tests_VIXMonitor.TestReset();\n+                OracleLog.Write(\"SELF_TEST\", \"VIXMonitor.Reset test PASSED\");\n+            }\n+            catch (Exception ex)\n+            {\n+                OracleLog.Write(\"SELF_TEST\", $\"VIXMonitor.Reset test FAILED: {ex.Message}\");\n+                throw;\n+            }\n \n             OracleLog.Write(\"SELF_TEST\", \"==================================================\");\n             OracleLog.Write(\"SELF_TEST\", \"   SIM-MODE SELF-TEST COMPLETED                   \");\ndiff --git a/OracleV5.Strategy/OracleV5.Strategy.csproj b/OracleV5.Strategy/OracleV5.Strategy.csproj\nindex af59c8f..6cd5020 100644\n--- a/OracleV5.Strategy/OracleV5.Strategy.csproj\n+++ b/OracleV5.Strategy/OracleV5.Strategy.csproj\n@@ -109,6 +109,7 @@\n \t<Compile Include=\"Regime\\VolRegimeDetector.cs\" />\n \t<Compile Include=\"Regime\\TrendDetector.cs\" />\n \t<Compile Include=\"Regime\\VIXMonitor.cs\" />\n+\t<Compile Include=\"Tests_VIXMonitor.cs\" />\n \n \t<!-- Context (68-73) - EXCLUDED: All 6 Context files removed (NinjaTrader namespace) -->\n \t<!-- Context files excluded via Compile Remove above -->\ndiff --git a/OracleV5.Strategy/Tests_VIXMonitor.cs b/OracleV5.Strategy/Tests_VIXMonitor.cs\nnew file mode 100644\nindex 0000000..94af9c3\n--- /dev/null\n+++ b/OracleV5.Strategy/Tests_VIXMonitor.cs\n@@ -0,0 +1,51 @@\n+using System;\n+using System.Collections.Generic;\n+using System.Linq;\n+\n+namespace OracleV5\n+{\n+    public static class Tests_VIXMonitor\n+    {\n+        public static void RunTests()\n+        {\n+            Console.WriteLine(\"Running VIXMonitor Tests...\");\n+            TestReset();\n+            Console.WriteLine(\"VIXMonitor Tests Passed!\");\n+        }\n+\n+        public static void TestReset()\n+        {\n+            var monitor = new VIXMonitor(lookback: 20);\n+\n+            // 1. Initial state check\n+            if (monitor.GetFearLevel() != 0.0)\n+                throw new Exception($\"[VIX_TEST] Initial FearLevel should be 0, got {monitor.GetFearLevel()}\");\n+\n+            // 2. Populate and verify state\n+            for (int i = 1; i <= 15; i++)\n+                monitor.Update(20.0 + i);\n+\n+            var midSnapshot = monitor.GetSnapshot();\n+            if (!midSnapshot.IsReady)\n+                throw new Exception(\"[VIX_TEST] Monitor should be ready after 15 updates (min 10)\");\n+\n+            if (midSnapshot.FearLevel != 35.0)\n+                throw new Exception($\"[VIX_TEST] Expected FearLevel 35.0, got {midSnapshot.FearLevel}\");\n+\n+            // 3. Reset and verify\n+            monitor.Reset();\n+\n+            if (monitor.GetFearLevel() != 0.0)\n+                throw new Exception($\"[VIX_TEST] FearLevel should be 0 after Reset, got {monitor.GetFearLevel()}\");\n+\n+            var finalSnapshot = monitor.GetSnapshot();\n+            if (finalSnapshot.IsReady)\n+                throw new Exception(\"[VIX_TEST] Monitor should NOT be ready after Reset\");\n+\n+            if (finalSnapshot.Reason != \"No VIX history\")\n+                throw new Exception($\"[VIX_TEST] Expected 'No VIX history' reason, got '{finalSnapshot.Reason}'\");\n+\n+            Console.WriteLine(\"TestReset: PASSED\");\n+        }\n+    }\n+}\n\n",
+  "stderr": "",
+  "timed_out": false,
+  "session_ids": [
+    "9126716179690030352",
+    "100644",
+    "0000000"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_9126716179690030352.json",
+  "note": "Live pull attempted through the Jules CLI."
+}

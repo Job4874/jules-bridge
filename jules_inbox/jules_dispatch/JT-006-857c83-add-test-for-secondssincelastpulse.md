@@ -18,6 +18,7 @@ Complete exactly this Jules card: Add test for SecondsSinceLastPulse
 
 ## Operating Rules
 - Work on one card only; do not opportunistically refactor unrelated code.
+- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.
 - Preserve existing behavior unless the card explicitly asks for behavior change.
 - Run the narrowest relevant verification first, then the broader suite if practical.
 - Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.
