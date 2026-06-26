@@ -71,12 +71,14 @@ Every module has a **simple typed interface** hiding complex implementation:
 ### Evidence-Based Verification (Nick Ni)
 
 - Tests: `record_test_evidence(output)` → stores SHA-256 hash
+- Oracle evidence gate: soft stale-evidence warning by default; `EVIDENCE_GATE_HARD=1` preempts stale `/oracle/*` route execution with HTTP 423
+- Memory GC: `analyze_session(auto_prune=True)` writes current learnings first, then runs `prune_memory()`
 - UI: screenshots attached to evidence (via `/ui/screenshot`)
 - Builds: build output tails stored in `BuildDeployResult`
 
 ### CDLC (Patrick Debois)
 
 - Generate: AGENTS.md, context/ files, ubiquitous language
-- Evaluate: `hrm_context_eval.py`, pytest suite
+- Evaluate: `hrm_context_eval.py`, pytest suite, `tests/eval_reasoning.py`
 - Distribute: skills in `.agents/skills/`
 - Observe: `retrospective_module.py` reads logs → writes memory

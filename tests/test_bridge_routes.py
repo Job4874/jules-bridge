@@ -5,9 +5,11 @@ Module internals are mocked. For module-level unit tests see test_*_service.py.
 """
 
 import os
+import json
 import subprocess
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import bridge
@@ -223,6 +225,128 @@ class TestAKCRoutes(unittest.TestCase):
         self.assertTrue(payload["ready"])
         self.assertEqual(payload["status"], "ready")
         mock_readiness.assert_called_once()
+
+
+class TestEvidenceGate(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    def _write_evidence(self, root_dir, timestamp):
+        memory_dir = os.path.join(root_dir, "memory")
+        os.makedirs(memory_dir, exist_ok=True)
+        with open(os.path.join(memory_dir, "test_evidence.json"), "w", encoding="utf-8") as handle:
+            json.dump([
+                {
+                    "output_hash": "abc123",
+                    "timestamp_utc": timestamp.isoformat(),
+                    "passed": True,
+                    "test_count": 1,
+                    "raw_output_tail": "1 passed",
+                }
+            ], handle)
+
+    @patch("modules.oracle_status")
+    def test_stale_evidence_soft_mode_warns_only(self, mock_status):
+        mock_status.return_value = {"status": "ok"}
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            stale = datetime.now(timezone.utc) - timedelta(hours=2)
+            self._write_evidence(tmp_dir, stale)
+            with patch.object(bridge, "ROOT_DIR", tmp_dir), patch.dict(os.environ, {"EVIDENCE_GATE_HARD": "0"}):
+                response = self.client.get("/oracle/status")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.headers["X-Evidence-Age-Warning"].startswith("stale:"))
+        self.assertEqual(response.get_json()["status"], "ok")
+
+    @patch("modules.oracle_status")
+    def test_stale_evidence_hard_mode_returns_423(self, mock_status):
+        mock_status.return_value = {"status": "ok"}
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            stale = datetime.now(timezone.utc) - timedelta(hours=2)
+            self._write_evidence(tmp_dir, stale)
+            with patch.object(bridge, "ROOT_DIR", tmp_dir), patch.dict(os.environ, {"EVIDENCE_GATE_HARD": "1"}):
+                response = self.client.get("/oracle/status")
+
+        self.assertEqual(response.status_code, 423)
+        payload = response.get_json()
+        self.assertEqual(payload["error"], "evidence_stale")
+        self.assertGreater(payload["age_s"], 3600)
+        self.assertEqual(payload["threshold_s"], 3600)
+        mock_status.assert_not_called()
+
+    @patch("modules.oracle_status")
+    def test_fresh_evidence_hard_mode_allows_oracle_route(self, mock_status):
+        mock_status.return_value = {"status": "ok"}
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            fresh = datetime.now(timezone.utc)
+            self._write_evidence(tmp_dir, fresh)
+            with patch.object(bridge, "ROOT_DIR", tmp_dir), patch.dict(os.environ, {"EVIDENCE_GATE_HARD": "1"}):
+                response = self.client.get("/oracle/status")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("X-Evidence-Age-Warning", response.headers)
+
+    def test_health_exempt_from_hard_evidence_gate(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            stale = datetime.now(timezone.utc) - timedelta(hours=2)
+            self._write_evidence(tmp_dir, stale)
+            with patch.object(bridge, "ROOT_DIR", tmp_dir), patch.dict(os.environ, {"EVIDENCE_GATE_HARD": "1"}):
+                response = self.client.get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "ok")
+
+    def test_record_evidence_exempt_from_hard_evidence_gate(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            stale = datetime.now(timezone.utc) - timedelta(hours=2)
+            self._write_evidence(tmp_dir, stale)
+            with patch.object(bridge, "ROOT_DIR", tmp_dir), patch.dict(os.environ, {"EVIDENCE_GATE_HARD": "1"}):
+                response = self.client.post(
+                    "/retrospective/record_evidence",
+                    json={"test_output": "================ 1 passed in 0.01s ================", "memory_path": os.path.join(tmp_dir, "memory")},
+                )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["verified"])
+
+
+class TestRetrospectiveRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    def _report(self):
+        report = MagicMock()
+        report.session_id = "session"
+        report.analyzed_at_utc = "2026-06-26T00:00:00+00:00"
+        report.log_lines_analyzed = 0
+        report.patterns = []
+        report.doom_loops = []
+        report.learnings = []
+        report.memory_updates = {}
+        report.has_doom_loops = False
+        report.evidence = None
+        report.to_summary.return_value = "summary"
+        return report
+
+    @patch("modules.analyze_session")
+    def test_analyze_defaults_auto_prune_false(self, mock_analyze):
+        mock_analyze.return_value = self._report()
+
+        response = self.client.post("/retrospective/analyze", json={})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_analyze.call_args.kwargs["auto_prune"], False)
+
+    @patch("modules.analyze_session")
+    def test_analyze_passes_auto_prune_true(self, mock_analyze):
+        mock_analyze.return_value = self._report()
+
+        response = self.client.post("/retrospective/analyze", json={"auto_prune": True})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_analyze.call_args.kwargs["auto_prune"], True)
 
 
 if __name__ == "__main__":

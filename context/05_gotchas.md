@@ -41,10 +41,13 @@
 - **Quantower process name** — `Starter.exe` (check via `Get-Process -Name Starter`)
 - **DLL path** — `C:\Quantower\Settings\Scripts\Strategies\OracleV5.Strategy.dll` (hardcoded in `oracle_session.py`)
 - **Build config** — always `-c Release -a x64`; Debug builds won't load in Quantower
+- **Quantower UI memory** — read `memory/quantower.md` before UI automation; it records Strategy Manager, connection dialog, screenshot evidence, and failure-mode patterns
 
 ## reasoning_module
 
 - **Model aliases** — use `"stub"` (tests), `"fast"` (gemini-2.0-flash), `"smart"` (gemini-2.5-pro). Never pass raw model strings unless the alias doesn't exist yet.
+- **`tests/eval_reasoning.py`** — CDLC eval harness for `reasoning_module`; run `python tests/eval_reasoning.py --model stub` for offline proof, or `--model fast` when a live Gemini eval is explicitly desired
+- **Eval results** — `memory/eval_results.json` is structured JSON, not markdown memory; do not append prose to it by hand
 - **`GEMINI_API_KEY`** — must be set in environment for `model="fast"` or `model="smart"`; if missing, falls back to stub output with a WARNING log (does NOT raise)
 - **`reason(problem, budget=10)`** — budget is max L-level steps; keep under 20 to avoid token bloat
 - **`ReasoningTrace.to_inbox_summary()`** — call this, not `.inbox_summary()` (no such method)
@@ -57,11 +60,15 @@
 - **`analyze_session()`** — reads bridge.log from `LOG_PATH`; if log doesn't exist, returns empty report
 - **Memory files** — written to `memory/` in project root; create this dir manually or call `analyze_session` once
 - **`record_test_evidence(output)`** — takes raw pytest stdout as string; pipe via `result.stdout`
-- **Evidence path** — `memory/test_evidence.json` is the evidence store; `memory/` dir must exist
+- **Evidence path** — `memory/test_evidence.json` is a capped list of evidence records; middleware must read the latest record, not treat the file as a single object
 - **Domain classification** — if the word "oracle" appears in a learning, it goes to `memory/oracle.md`
 - **`prune_memory(max_age_days=30)`** — DESTRUCTIVE; rewrites memory files in place. Always commit `memory/` to git before pruning.
 - **prune_memory timestamp pattern** — looks for `## Session 20250601T143022` format in headings; sections with no timestamp are kept (conservative)
-- **Evidence gating** — `/oracle/*` routes return `X-Evidence-Age-Warning: stale:{N}s` header if `test_evidence.json` is > 1h old; not a hard block
+- **`analyze_session(auto_prune=True)`** — prunes only after the current session learning is written; default is `False` and `/retrospective/analyze` must receive a boolean `auto_prune`
+- **Evidence gating** — `/oracle/*` routes return `X-Evidence-Age-Warning: stale:{N}s` when evidence is > 1h old; `EVIDENCE_GATE_HARD=1` uses a pre-route hard gate so stale Oracle route bodies are not invoked and callers get HTTP 423 with `{error, age_s, threshold_s}`
+- **Evidence gate exemptions** — `GET /health` and all `/retrospective/*` routes must pass even when hard mode is on, so evidence can always be refreshed
+- **HTTP status parsing** — match exact route status codes (`-> 500`, `"HTTP/1.1" 500`); never count `:5000` ports or `5000ms` thresholds as 500 errors
+- **Doom-loop memory** — dedupe repeated streaks by route and keep the largest streak so analyze output remains actionable
 
 ## akc_module
 

@@ -70,3 +70,48 @@ has gone wrong before and what to avoid.
 - Added `check_akc_readiness()` and `GET /akc/readiness` as the session-start gate for AKC: it verifies checkpoint existence, `status: ready`, and required operating rules before agents trust the checkpoint.
 - Added AKC vocabulary, gotchas, architecture entries, TENTACLES entries, tests, and agent loading order so future sessions load AKC before daily work.
 - Hardened `record_test_evidence()` after a false-negative: pytest test names containing `failed` no longer mark a passing run as failed. Latest test proof is stored in `memory/test_evidence.json`.
+
+## Session 20260626T031500 — Reasoning Eval Harness
+
+- Completed Ticket 001: added `tests/eval_reasoning.py`, a CDLC eval harness for `reasoning_module.reason()`.
+- Offline eval command: `python tests/eval_reasoning.py --model stub`; it writes `memory/eval_results.json`.
+- Report rows include problem id/text, model, full `ReasoningTrace`, simple scoring fields, and `stub_baseline` comparison.
+- Current stub eval generated 3 representative Jules Bridge problems with average score `0.95`.
+
+## Session 20260626T031910 — Quantower UI Memory
+
+- Completed Ticket 002: created `memory/quantower.md` from bridge log references and existing `qw_*.png` screenshot evidence.
+- The Quantower memory now documents DOM surface title patterns, connection dialog indicators, Strategy Manager `Oracle V5` loaded/created evidence, blank Symbol/Account binding gotcha, and known failure modes.
+- Future Oracle/Quantower UI automation should read `memory/quantower.md` before clicking or claiming strategy readiness.
+
+## Session ticket005_baseline — 2026-06-26T03:27:13.708432+00:00
+
+- DOOM LOOP: POST /fs/read called 6x consecutively. Route 'POST /fs/read' called 6x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /fs/write called 3x consecutively. Route 'POST /fs/write' called 3x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /inbox/read called 4x consecutively. Route 'POST /inbox/read' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /shell called 10x consecutively. Route 'POST /shell' called 10x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /ui/click called 4x consecutively. Route 'POST /ui/click' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /ping called 4x consecutively. Route 'GET /ping' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /fs/tail called 8x consecutively. Route 'POST /fs/tail' called 8x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /health called 32x consecutively. Route 'GET /health' called 32x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /akc/context called 5x consecutively. Route 'POST /akc/context' called 5x consecutively. Add a circuit breaker or cache the last response.
+- TIMEOUT: Subprocess/PowerShell calls timing out (60x). Increase timeout or add async handling.
+- HARNESS BUG: Internal server errors (6x). Check module exception handling — add defensive try/except.
+- PERFORMANCE: Route 'POST /shell' averaged 26424ms over 4 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- RETROSPECTIVE BASELINE: analyze_session found 8 log patterns. Use the domain memories before the next bridge/runtime work.
+
+## Session 20260626T033304 — Evidence Gate Hard Mode
+
+- Completed Ticket 003: `_evidence_age_check()` now reads the latest record from `memory/test_evidence.json` list history instead of treating it as a single object.
+- Default behavior remains soft: stale `/oracle/*` evidence adds `X-Evidence-Age-Warning: stale:{age}s`.
+- Setting `EVIDENCE_GATE_HARD=1` uses a pre-route hard gate and returns HTTP 423 with `{error: "evidence_stale", age_s, threshold_s}` for stale `/oracle/*` evidence.
+- `GET /health` and `/retrospective/*` are exempt because the gate only applies to `/oracle/*`, keeping evidence refresh routes available.
+- Evidence: `python -m pytest tests/ -v` passed 168 tests, SHA-256 `a8ed044e641040c333364aba801a262224ae55a56cf1affef2e41e64ed58fecb`.
+
+## Session 20260626T033540 — Auto-Prune Analyze Option
+
+- Completed Ticket 004: `analyze_session()` now accepts `auto_prune=False` by default, preserving existing callers.
+- `auto_prune=True` runs `prune_memory(memory_path=...)` only after writing current session learnings, so the new session is not pruned before it lands.
+- `POST /retrospective/analyze` accepts boolean `auto_prune` and rejects non-boolean values via `bool_field()`.
+- The `retrospective` logger emits `auto_prune removed N sections` when the opt-in prune path runs.
+- Evidence: `python -m pytest tests/ -v` passed 172 tests, SHA-256 `fef2f1a64eca37d63e39f2c0aaba16788b5f02effde6bcd72328d4cb9111d8ac`.

@@ -1,6 +1,8 @@
 # Ticket 001 — Eval Harness for reasoning_module
 
-**Status**: TODO
+**Status**: DONE
+**Completed**: 2026-06-26T03:15:00Z
+**Evidence SHA-256**: 8e5b84fc116c2187d58a4b7c8520906721f619ce960398f9f323601e964d0f80
 **Priority**: HIGH (blocks measuring plan quality)
 **Phase**: Phase 6
 
@@ -12,14 +14,14 @@ signal on whether real Gemini calls produce *better* plans than the stub.
 
 ## Acceptance Criteria
 
-- [ ] A script `tests/eval_reasoning.py` (or similar) that:
+- [x] A script `tests/eval_reasoning.py` (or similar) that:
   - Calls `reason(problem, model="fast")` with at least 3 representative Jules Bridge problems
   - Records the `ReasoningTrace` for each
   - Scores each trace on: steps taken, confidence achieved, halted-early flag, plan coherence (simple heuristic OK)
   - Writes a JSON report to `memory/eval_results.json`
-- [ ] Running the eval does NOT require a live Quantower — use mock problems
-- [ ] Eval report includes a `stub_baseline` column for comparison
-- [ ] Evidence recorded via `POST /retrospective/record_evidence` after eval run
+- [x] Running the eval does NOT require a live Quantower — use mock problems
+- [x] Eval report includes a `stub_baseline` column for comparison
+- [x] Evidence recorded via `POST /retrospective/record_evidence` after eval run
 
 ## Implementation Notes
 

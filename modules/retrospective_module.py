@@ -30,12 +30,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+
+LOGGER = logging.getLogger("retrospective")
 
 
 # ---------------------------------------------------------------------------
@@ -131,13 +135,20 @@ _DOOM_LOOP_RE = re.compile(
     r"POST /(?P<route>\w+/\w+)", re.IGNORECASE
 )
 _ERROR_LINE_RE = re.compile(
-    r"(ERROR|WARN|500|504|400|403|404)", re.IGNORECASE
+    r"\b(ERROR|WARN(?:ING)?)\b", re.IGNORECASE
+)
+_HTTP_STATUS_RE = re.compile(
+    r'(?:->\s*|HTTP/\d(?:\.\d)?"\s+)(?P<status>400|403|404|500|504)(?!\d)',
+    re.IGNORECASE,
 )
 _SLOW_ROUTE_RE = re.compile(
-    r"ms=(?P<ms>\d+)", re.IGNORECASE
+    r"(?:ms=|->\s+\d+\s+)(?P<ms>\d+(?:\.\d+)?)ms", re.IGNORECASE
 )
 _ROUTE_RE = re.compile(
     r'(?:"|^|\s)(?P<method>GET|POST|PUT|DELETE|PATCH)\s+(?P<path>/[^\s"]+)', re.IGNORECASE
+)
+_JULES_SHELL_RE = re.compile(
+    r"\[JULES SHELL\].*?command=(?P<command>.+)$", re.IGNORECASE
 )
 
 
@@ -187,37 +198,45 @@ def _detect_doom_loops(log_lines: List[str]) -> List[DoomLoop]:
             ),
         ))
 
-    return doom_loops
+    deduped: Dict[str, DoomLoop] = {}
+    for loop in doom_loops:
+        existing = deduped.get(loop.tool_name)
+        if existing is None or loop.call_count > existing.call_count:
+            deduped[loop.tool_name] = loop
+
+    return list(deduped.values())
 
 
 def _detect_error_patterns(log_lines: List[str]) -> List[LogPattern]:
     """Detect recurring error patterns in the log."""
     error_counts: Dict[str, int] = {}
     error_examples: Dict[str, List[str]] = {}
+    status_to_key = {
+        "500": "internal_error_500",
+        "504": "timeout_504",
+        "404": "not_found_404",
+        "403": "access_denied_403",
+        "400": "bad_request_400",
+    }
 
     for line in log_lines:
-        if _ERROR_LINE_RE.search(line):
-            # Categorize by error type
-            if "500" in line:
-                key = "internal_error_500"
-            elif "504" in line:
-                key = "timeout_504"
-            elif "404" in line:
-                key = "not_found_404"
-            elif "403" in line:
-                key = "access_denied_403"
-            elif "400" in line:
-                key = "bad_request_400"
-            elif "ERROR" in line:
-                key = "general_error"
-            else:
-                key = "warning"
+        status_match = _HTTP_STATUS_RE.search(line)
+        error_match = _ERROR_LINE_RE.search(line)
 
-            error_counts[key] = error_counts.get(key, 0) + 1
-            if key not in error_examples:
-                error_examples[key] = []
-            if len(error_examples[key]) < 3:
-                error_examples[key].append(line.strip()[:120])
+        if status_match:
+            key = status_to_key[status_match.group("status")]
+        elif error_match and error_match.group(1).upper() == "ERROR":
+            key = "general_error"
+        elif error_match and "jules_bridge:" in line:
+            key = "warning"
+        else:
+            continue
+
+        error_counts[key] = error_counts.get(key, 0) + 1
+        if key not in error_examples:
+            error_examples[key] = []
+        if len(error_examples[key]) < 3:
+            error_examples[key].append(line.strip()[:120])
 
     patterns = []
     for key, count in error_counts.items():
@@ -240,9 +259,9 @@ def _detect_slow_routes(log_lines: List[str]) -> List[LogPattern]:
         ms_match = _SLOW_ROUTE_RE.search(line)
         route_match = _ROUTE_RE.search(line)
         if ms_match and route_match:
-            ms = int(ms_match.group("ms"))
+            ms = int(float(ms_match.group("ms")))
             if ms > 5000:
-                route = route_match.group("path")
+                route = f"{route_match.group('method').upper()} {route_match.group('path')}"
                 slow_routes.setdefault(route, []).append(ms)
 
     patterns = []
@@ -257,6 +276,71 @@ def _detect_slow_routes(log_lines: List[str]) -> List[LogPattern]:
             ))
 
     return patterns
+
+
+def _detect_route_frequency(log_lines: List[str]) -> List[LogPattern]:
+    """Detect high-frequency status polling that can hide stale-state loops."""
+    route_counts: Dict[str, int] = {}
+    route_examples: Dict[str, List[str]] = {}
+
+    for line in log_lines:
+        route_match = _ROUTE_RE.search(line)
+        if not route_match:
+            continue
+
+        route = f"{route_match.group('method').upper()} {route_match.group('path')}"
+        route_counts[route] = route_counts.get(route, 0) + 1
+        route_examples.setdefault(route, [])
+        if len(route_examples[route]) < 3:
+            route_examples[route].append(line.strip()[:120])
+
+    patterns: List[LogPattern] = []
+    for route, count in route_counts.items():
+        if route == "GET /oracle/status" and count >= 5:
+            patterns.append(LogPattern(
+                pattern_type="route_frequency",
+                description=f"Route '{route}' called {count} times in one log",
+                count=count,
+                examples=route_examples.get(route, []),
+            ))
+
+    return patterns
+
+
+def _detect_host_operations(log_lines: List[str]) -> List[LogPattern]:
+    """Detect shell commands that mutate the host Oracle/Quantower runtime."""
+    command_examples: List[str] = []
+
+    for line in log_lines:
+        command_match = _JULES_SHELL_RE.search(line)
+        if not command_match:
+            continue
+
+        command = command_match.group("command").strip()
+        lower = command.lower()
+        if any(term in lower for term in (
+            "quantower",
+            "oracle",
+            "run_starter",
+            "starter",
+            "build-deploy",
+            "deploy-oracle",
+        )):
+            if len(command_examples) < 5:
+                command_examples.append(command[:160])
+
+    if not command_examples:
+        return []
+
+    return [LogPattern(
+        pattern_type="host_operation",
+        description=(
+            "Oracle/Quantower host shell operations detected "
+            f"({len(command_examples)} examples captured)"
+        ),
+        count=len(command_examples),
+        examples=command_examples,
+    )]
 
 
 # ---------------------------------------------------------------------------
@@ -295,6 +379,22 @@ def _extract_learnings(
                 f"PERFORMANCE: {pattern.description}. "
                 "Consider caching or reducing subprocess overhead."
             )
+        elif pattern.pattern_type == "route_frequency":
+            learnings.append(
+                f"STATUS POLLING: {pattern.description}. "
+                "High-frequency status polling should be paired with changed-state checks and fresh evidence."
+            )
+        elif pattern.pattern_type == "host_operation":
+            learnings.append(
+                f"ORACLE/QUANTOWER AUTOMATION: {pattern.description}. "
+                "Treat shell restarts/build/deploy commands as host mutations and pair them with /oracle/status plus screenshot or verify evidence."
+            )
+
+    if patterns:
+        learnings.append(
+            f"RETROSPECTIVE BASELINE: analyze_session found {len(patterns)} log patterns. "
+            "Use the domain memories before the next bridge/runtime work."
+        )
 
     if not learnings:
         learnings.append("No significant harness issues detected in this session.")
@@ -468,6 +568,7 @@ def analyze_session(
     log_path: Optional[str] = None,
     memory_path: Optional[str] = None,
     session_id: Optional[str] = None,
+    auto_prune: bool = False,
 ) -> RetrospectiveReport:
     """Analyze a Jules Bridge session and write learnings to memory.
 
@@ -480,6 +581,7 @@ def analyze_session(
         log_path: Path to bridge.log (defaults to bridge.log in cwd)
         memory_path: Path to memory/ directory (defaults to memory/ in cwd)
         session_id: Identifier for this session (defaults to timestamp)
+        auto_prune: If True, run prune_memory() after writing this session
 
     Returns:
         RetrospectiveReport with all findings
@@ -500,13 +602,24 @@ def analyze_session(
     doom_loops = _detect_doom_loops(log_lines)
     error_patterns = _detect_error_patterns(log_lines)
     slow_patterns = _detect_slow_routes(log_lines)
-    all_patterns = error_patterns + slow_patterns
+    route_frequency_patterns = _detect_route_frequency(log_lines)
+    host_operation_patterns = _detect_host_operations(log_lines)
+    all_patterns = (
+        error_patterns
+        + slow_patterns
+        + route_frequency_patterns
+        + host_operation_patterns
+    )
 
     # Extract learnings
     learnings = _extract_learnings(all_patterns, doom_loops)
 
     # Write to memory
     memory_updates = _update_memory_with_learnings(memory_path, learnings, session_id)
+
+    if auto_prune:
+        prune_result = prune_memory(memory_path=memory_path)
+        LOGGER.info("auto_prune removed %s sections", prune_result["pruned_count"])
 
     # Load any existing test evidence
     evidence = load_test_evidence(memory_path)

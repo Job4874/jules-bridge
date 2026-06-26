@@ -42,8 +42,8 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 | Context system | 7-file + AGENTS.md | Ghost AI spec-driven approach + orchestrator |
 | Gotchas over docs | ~553 lines | Guides without prescribing; smaller context |
 | Agent Skills | 5 core skills | Systematize planning, continuity, review, recovery, and patterns |
-| Evidence gating | Warning header | `X-Evidence-Age-Warning` on `/oracle/*`; soft enforcement first |
-| Memory pruning | Age-based (30 days) | Shippable without LLM; conservative (keeps undated sections) |
+| Evidence gating | Soft default, opt-in hard mode | `X-Evidence-Age-Warning` on stale `/oracle/*`; `EVIDENCE_GATE_HARD=1` returns 423 |
+| Memory pruning | Age-based, opt-in auto-prune | `analyze_session(auto_prune=True)` writes current memory first, then prunes stale dated sections |
 
 ## What's Complete
 
@@ -63,13 +63,18 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] Reusable skills: `architect`, `remember`, `review`, `recover`, `imprint`
 - [x] `GET /health` — fixes 404 storm; returns uptime; listed in TENTACLES
 - [x] Gemini wired to `reasoning_module` via `_MODEL_ALIASES` (`fast`/`smart`/`stub`)
-- [x] Evidence gating — `X-Evidence-Age-Warning` header on `/oracle/*` routes
+- [x] Evidence gating — `X-Evidence-Age-Warning` header on stale `/oracle/*` routes, with opt-in `EVIDENCE_GATE_HARD=1` HTTP 423 hard mode
 - [x] `POST /retrospective/prune_memory` — age-based pruning, 30-day default
 - [x] All missing routes added to TENTACLES manifest
 - [x] `modules/akc_module.py` — Agent Knowledge Context checkpoint builder with source inventory, path-ref masking, operating rules, and `/akc/context` routes
 - [x] `GET /akc/readiness` — session-start gate that verifies the AKC checkpoint exists, is `ready`, and contains required operating rules
 - [x] `context/08_akc_context_checkpoint.md` — generated from 5 pasted transcript sources; status `ready`, readable=5, missing=0, operating_rule_count=9
 - [x] Evidence parser hardened — pytest output with test names containing `failed` no longer records false failed evidence
+- [x] `doc/tickets/001_eval_harness.md` — `tests/eval_reasoning.py` writes `memory/eval_results.json` with 3 representative reasoning problems, trace rows, scoring heuristics, and `stub_baseline`
+- [x] `doc/tickets/002_quantower_memory.md` — `memory/quantower.md` now records Quantower window patterns, Strategy Manager evidence, connection indicators, screenshot refs, and failure modes
+- [x] `doc/tickets/005_analyze_baseline.md` — `POST /retrospective/analyze` seeded real `bridge.log` learnings into `memory/general.md` and `memory/oracle.md`; evidence `d8a29098bcb0195ae05c03f940372e2b2e59b92337fa001122047b58e0f220a0`
+- [x] `doc/tickets/003_harden_evidence_gating.md` — stale `/oracle/*` evidence can return HTTP 423 when `EVIDENCE_GATE_HARD=1`; evidence `a8ed044e641040c333364aba801a262224ae55a56cf1affef2e41e64ed58fecb`
+- [x] `doc/tickets/004_auto_prune_memory.md` — `POST /retrospective/analyze` accepts boolean `auto_prune` and prunes stale memory after writing current learnings; evidence `fef2f1a64eca37d63e39f2c0aaba16788b5f02effde6bcd72328d4cb9111d8ac`
 
 ## Phase 6 — Ralph Loop Infrastructure ✅ (Just Added)
 
@@ -80,10 +85,6 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 
 ## What's Next (Phase 6 — Active Tickets)
 
-- [ ] `doc/tickets/001_eval_harness.md` — Eval harness for reasoning_module (HIGH)
-- [ ] `doc/tickets/002_quantower_memory.md` — Quantower memory file with UI gotchas (HIGH)
-- [ ] `doc/tickets/003_harden_evidence_gating.md` — Harden evidence gating to 423 (MEDIUM, depends on 001)
-- [ ] `doc/tickets/004_auto_prune_memory.md` — Auto-schedule prune_memory (MEDIUM)
-- [ ] `doc/tickets/005_analyze_baseline.md` — Analyze baseline from real bridge.log (HIGH)
+- [x] No active Phase 6 tickets remain in `doc/tickets/`.
 
 **To run the loop**: `.\Run-RalphLoop.ps1` from the project root.

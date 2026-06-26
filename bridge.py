@@ -186,6 +186,17 @@ def int_field(data, key, default=MISSING, min_value=None, max_value=None):
     return value
 
 
+def bool_field(data, key, default=MISSING):
+    if key not in data or data.get(key) is None:
+        if default is MISSING:
+            raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
+        return default
+    value = data.get(key)
+    if not isinstance(value, bool):
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a boolean")
+    return value
+
+
 def path_field(data, key="path", default=MISSING):
     return string_field(data, key, default=default, control_safe=True)
 
@@ -235,6 +246,44 @@ def _start_timer():
     g.request_start = datetime.now(timezone.utc)
 
 
+def _stale_evidence_state():
+    evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
+    threshold_s = 3600
+    try:
+        import json as _json
+        with open(evidence_path, encoding="utf-8") as _f:
+            ev = _json.load(_f)
+        if isinstance(ev, list):
+            ev = ev[-1] if ev else {}
+        if not isinstance(ev, dict):
+            return None
+        ts = ev.get("timestamp_utc", "")
+        if not ts:
+            return None
+        age_s = round((datetime.now(timezone.utc) - datetime.fromisoformat(ts)).total_seconds())
+        if age_s <= threshold_s:
+            return None
+        return {"age_s": age_s, "threshold_s": threshold_s}
+    except Exception:  # noqa: BLE001
+        return None  # evidence file missing or malformed — proceed without warning
+
+
+@app.before_request
+def _evidence_hard_gate():
+    if not request.path.startswith("/oracle/"):
+        return None
+    if os.environ.get("EVIDENCE_GATE_HARD") != "1":
+        return None
+    stale = _stale_evidence_state()
+    if not stale:
+        return None
+    return jsonify({
+        "error": "evidence_stale",
+        "age_s": stale["age_s"],
+        "threshold_s": stale["threshold_s"],
+    }), 423
+
+
 @app.after_request
 def _finalize_request(response):
     started = getattr(g, "request_start", None)
@@ -258,27 +307,15 @@ def _finalize_request(response):
 
 @app.after_request
 def _evidence_age_check(response):
-    """Attach X-Evidence-Age-Warning on /oracle/* when test evidence is stale (>1h).
+    """Attach stale-evidence warning headers on /oracle/* responses.
 
-    Soft gating: warns callers that tests haven't been run recently.
-    Does NOT block (no 423) — add hard enforcement later if needed.
+    Hard mode is enforced before the route runs by _evidence_hard_gate().
     """
-    if not request.path.startswith("/oracle"):
+    if not request.path.startswith("/oracle/"):
         return response
-    evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
-    try:
-        import json as _json
-        with open(evidence_path, encoding="utf-8") as _f:
-            ev = _json.load(_f)
-        ts = ev.get("timestamp_utc", "")
-        if ts:
-            age_s = round(
-                (datetime.now(timezone.utc) - datetime.fromisoformat(ts)).total_seconds()
-            )
-            if age_s > 3600:
-                response.headers["X-Evidence-Age-Warning"] = f"stale:{age_s}s"
-    except Exception:  # noqa: BLE001
-        pass  # evidence file missing or malformed — proceed without warning
+    stale = _stale_evidence_state()
+    if stale:
+        response.headers["X-Evidence-Age-Warning"] = f"stale:{stale['age_s']}s"
     return response
 
 
@@ -663,6 +700,7 @@ def retrospective_analyze():
         log_path     (str, optional): Override path to bridge.log
         memory_path  (str, optional): Override path to memory/ dir
         session_id   (str, optional): Label for this session
+        auto_prune   (bool, optional): Run prune_memory after analysis
 
     Returns JSON with patterns, doom_loops, learnings, memory_updates.
     """
@@ -670,11 +708,13 @@ def retrospective_analyze():
     log_path = string_field(data, "log_path", default=LOG_PATH)
     memory_path = string_field(data, "memory_path", default=os.path.join(ROOT_DIR, "memory"))
     session_id = string_field(data, "session_id", default="")
+    auto_prune = bool_field(data, "auto_prune", default=False)
 
     report = modules.analyze_session(
         log_path=log_path,
         memory_path=memory_path,
         session_id=session_id or None,
+        auto_prune=auto_prune,
     )
 
     return jsonify({

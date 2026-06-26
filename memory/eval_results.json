@@ -1,0 +1,311 @@
+{
+  "generated_at_utc": "2026-06-26T03:16:22.721231+00:00",
+  "model": "stub",
+  "problem_count": 3,
+  "average_score": 0.95,
+  "results": [
+    {
+      "problem_id": "akc_readiness",
+      "problem": "Verify AKC readiness before a Jules Bridge coding session.",
+      "model": "stub",
+      "goal_statement": "Resolve: Verify AKC readiness before a Jules Bridge coding session.",
+      "halt_reason": "goal_reached",
+      "answer_present": true,
+      "feedback": {
+        "plan_confidence": 0.8,
+        "steps_planned": 4,
+        "steps_executed": 4,
+        "halt_reason": "goal_reached",
+        "halted_early": true,
+        "mean_action_confidence": 0.7
+      },
+      "trace": {
+        "problem": "Verify AKC readiness before a Jules Bridge coding session.",
+        "plan": {
+          "steps": [
+            "Understand the current state",
+            "Identify what needs to change",
+            "Make the change",
+            "Verify the result"
+          ],
+          "goal_statement": "Resolve: Verify AKC readiness before a Jules Bridge coding session.",
+          "confidence": 0.8,
+          "reasoning": "[H module stub \u2014 replace with real LLM call]",
+          "model": "stub"
+        },
+        "actions": [
+          {
+            "step_index": 0,
+            "step_description": "Understand the current state",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 0: Understand the current state]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 1,
+            "step_description": "Identify what needs to change",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 1: Identify what needs to change]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 2,
+            "step_description": "Make the change",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 2: Make the change]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 3,
+            "step_description": "Verify the result",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 3: Verify the result]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          }
+        ],
+        "halt": {
+          "should_halt": true,
+          "reason": "goal_reached",
+          "steps_used": 4,
+          "steps_budget": 8
+        },
+        "answer": "[Stub execution of step 3: Verify the result]",
+        "elapsed_ms": 0.04949999856762588,
+        "feedback": {
+          "plan_confidence": 0.8,
+          "steps_planned": 4,
+          "steps_executed": 4,
+          "halt_reason": "goal_reached",
+          "halted_early": true,
+          "mean_action_confidence": 0.7
+        }
+      },
+      "stub_baseline": {
+        "steps_taken": 4,
+        "confidence": 0.8,
+        "halted_early": true,
+        "plan_coherence": true,
+        "score": 0.95
+      },
+      "steps_taken": 4,
+      "confidence": 0.8,
+      "halted_early": true,
+      "plan_coherence": true,
+      "score": 0.95
+    },
+    {
+      "problem_id": "oracle_blocker",
+      "problem": "Diagnose why Oracle V5 is not ready for Quantower replay.",
+      "model": "stub",
+      "goal_statement": "Resolve: Diagnose why Oracle V5 is not ready for Quantower replay.",
+      "halt_reason": "goal_reached",
+      "answer_present": true,
+      "feedback": {
+        "plan_confidence": 0.8,
+        "steps_planned": 4,
+        "steps_executed": 4,
+        "halt_reason": "goal_reached",
+        "halted_early": true,
+        "mean_action_confidence": 0.7
+      },
+      "trace": {
+        "problem": "Diagnose why Oracle V5 is not ready for Quantower replay.",
+        "plan": {
+          "steps": [
+            "Understand the current state",
+            "Identify what needs to change",
+            "Make the change",
+            "Verify the result"
+          ],
+          "goal_statement": "Resolve: Diagnose why Oracle V5 is not ready for Quantower replay.",
+          "confidence": 0.8,
+          "reasoning": "[H module stub \u2014 replace with real LLM call]",
+          "model": "stub"
+        },
+        "actions": [
+          {
+            "step_index": 0,
+            "step_description": "Understand the current state",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 0: Understand the current state]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 1,
+            "step_description": "Identify what needs to change",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 1: Identify what needs to change]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 2,
+            "step_description": "Make the change",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 2: Make the change]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 3,
+            "step_description": "Verify the result",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 3: Verify the result]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          }
+        ],
+        "halt": {
+          "should_halt": true,
+          "reason": "goal_reached",
+          "steps_used": 4,
+          "steps_budget": 8
+        },
+        "answer": "[Stub execution of step 3: Verify the result]",
+        "elapsed_ms": 0.024100008886307478,
+        "feedback": {
+          "plan_confidence": 0.8,
+          "steps_planned": 4,
+          "steps_executed": 4,
+          "halt_reason": "goal_reached",
+          "halted_early": true,
+          "mean_action_confidence": 0.7
+        }
+      },
+      "stub_baseline": {
+        "steps_taken": 4,
+        "confidence": 0.8,
+        "halted_early": true,
+        "plan_coherence": true,
+        "score": 0.95
+      },
+      "steps_taken": 4,
+      "confidence": 0.8,
+      "halted_early": true,
+      "plan_coherence": true,
+      "score": 0.95
+    },
+    {
+      "problem_id": "ticket_loop",
+      "problem": "Pick the next ticket and implement it with TDD.",
+      "model": "stub",
+      "goal_statement": "Resolve: Pick the next ticket and implement it with TDD.",
+      "halt_reason": "goal_reached",
+      "answer_present": true,
+      "feedback": {
+        "plan_confidence": 0.8,
+        "steps_planned": 4,
+        "steps_executed": 4,
+        "halt_reason": "goal_reached",
+        "halted_early": true,
+        "mean_action_confidence": 0.7
+      },
+      "trace": {
+        "problem": "Pick the next ticket and implement it with TDD.",
+        "plan": {
+          "steps": [
+            "Understand the current state",
+            "Identify what needs to change",
+            "Make the change",
+            "Verify the result"
+          ],
+          "goal_statement": "Resolve: Pick the next ticket and implement it with TDD.",
+          "confidence": 0.8,
+          "reasoning": "[H module stub \u2014 replace with real LLM call]",
+          "model": "stub"
+        },
+        "actions": [
+          {
+            "step_index": 0,
+            "step_description": "Understand the current state",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 0: Understand the current state]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 1,
+            "step_description": "Identify what needs to change",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 1: Identify what needs to change]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 2,
+            "step_description": "Make the change",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 2: Make the change]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          },
+          {
+            "step_index": 3,
+            "step_description": "Verify the result",
+            "action_type": "answer",
+            "payload": {
+              "text": "[Stub execution of step 3: Verify the result]"
+            },
+            "confidence": 0.7,
+            "reasoning": "[L module stub \u2014 replace with real LLM call]"
+          }
+        ],
+        "halt": {
+          "should_halt": true,
+          "reason": "goal_reached",
+          "steps_used": 4,
+          "steps_budget": 8
+        },
+        "answer": "[Stub execution of step 3: Verify the result]",
+        "elapsed_ms": 0.016400008462369442,
+        "feedback": {
+          "plan_confidence": 0.8,
+          "steps_planned": 4,
+          "steps_executed": 4,
+          "halt_reason": "goal_reached",
+          "halted_early": true,
+          "mean_action_confidence": 0.7
+        }
+      },
+      "stub_baseline": {
+        "steps_taken": 4,
+        "confidence": 0.8,
+        "halted_early": true,
+        "plan_coherence": true,
+        "score": 0.95
+      },
+      "steps_taken": 4,
+      "confidence": 0.8,
+      "halted_early": true,
+      "plan_coherence": true,
+      "score": 0.95
+    }
+  ]
+}
