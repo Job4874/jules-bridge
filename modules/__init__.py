@@ -14,6 +14,16 @@ from .shell_executor import (
 )
 from .ui_automation import ScreenshotResult, ClickResult, screenshot, click, type_text
 from .inbox_service import InboxMessage, inbox_read, inbox_write
+from .jules_orchestrator import (
+    JulesTask,
+    JulesDispatchResult,
+    JulesLaunchResult,
+    JulesRemoteResult,
+    parse_task_dump,
+    build_dispatch,
+    launch_packets,
+    list_remote_sessions,
+)
 from .oracle_session import (
     OracleStatus,
     BuildDeployResult,
@@ -76,6 +86,15 @@ __all__ = [
     "InboxMessage",
     "inbox_read",
     "inbox_write",
+    # jules_orchestrator
+    "JulesTask",
+    "JulesDispatchResult",
+    "JulesLaunchResult",
+    "JulesRemoteResult",
+    "parse_task_dump",
+    "build_dispatch",
+    "launch_packets",
+    "list_remote_sessions",
     # oracle_session
     "OracleStatus",
     "BuildDeployResult",

@@ -1,0 +1,98 @@
+{
+  "generated_at_utc": "2026-06-26T04:18:00.937806+00:00",
+  "dry_run": true,
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "selected_count": 6,
+  "launched_count": 0,
+  "timeout_count": 0,
+  "jules_command": "jules",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "results": [
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-bbe920-add-test-for-resetselectorcandidates.md",
+      "command": [
+        "jules",
+        "new"
+      ],
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-39436e-serial-execution-of-asynchronous-file-i-o.md",
+      "command": [
+        "jules",
+        "new"
+      ],
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-9b62c7-add-test-for-volregimedetector-reset.md",
+      "command": [
+        "jules",
+        "new"
+      ],
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-006-857c83-add-test-for-secondssincelastpulse.md",
+      "command": [
+        "jules",
+        "new"
+      ],
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-024-389f1d-add-test-for-heartbeatmonitor-isalive.md",
+      "command": [
+        "jules",
+        "new"
+      ],
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-025-9e80e5-add-test-for-vixmonitor-reset.md",
+      "command": [
+        "jules",
+        "new"
+      ],
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    }
+  ],
+  "state_path": "",
+  "note": "Dry run only; no remote Jules sessions were started."
+}

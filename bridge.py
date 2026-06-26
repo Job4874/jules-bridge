@@ -343,6 +343,9 @@ TENTACLES = [
     {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},
     {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},
     {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
+    {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},
+    {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},
+    {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},
     # Reasoning routes (HRM-inspired H/L/ACT)
     {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},
     {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},
@@ -430,7 +433,111 @@ def inbox_write():
     return jsonify(result)
 
 
-# — Shell route —
+# Jules dispatch route
+
+@app.route("/jules/dispatch", methods=["POST"])
+@route_errors
+def jules_dispatch():
+    """POST /jules/dispatch - Build dry-run Jules worker packets.
+
+    Body (JSON):
+        content/data       (str, optional): Raw pasted Jules task dump
+        source_path/path   (str, optional): File path containing a task dump
+        max_instances      (int, optional, default=4): Max packets to select
+        include_statuses   (str|list, optional): Statuses to include
+        write_packets      (bool, optional, default=false): Write packet files
+        output_dir         (str, optional): Packet destination directory
+        repo_path          (str, optional): Repo workers should launch from
+
+    Returns a dispatch preview. It never launches remote Jules sessions.
+    """
+    data = json_payload()
+    content = ""
+    if "content" in data:
+        content = string_field(data, "content", allow_empty=True)
+    elif "data" in data:
+        content = string_field(data, "data", allow_empty=True)
+
+    source_path = ""
+    if "source_path" in data:
+        source_path = string_field(data, "source_path", allow_empty=True, control_safe=True)
+    elif "path" in data:
+        source_path = string_field(data, "path", allow_empty=True, control_safe=True)
+
+    include_statuses = data.get("include_statuses", "")
+    if include_statuses and not isinstance(include_statuses, (str, list, tuple)):
+        raise BridgeHTTPError(400, "Invalid input", details="include_statuses must be a string or list")
+
+    result = modules.build_dispatch(
+        content=content,
+        source_path=source_path,
+        max_instances=int_field(data, "max_instances", default=4, min_value=1, max_value=50),
+        include_statuses=include_statuses,
+        write_packets=bool_field(data, "write_packets", default=False),
+        output_dir=string_field(data, "output_dir", default="", allow_empty=True, control_safe=True),
+        repo_path=string_field(data, "repo_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/launch", methods=["POST"])
+@route_errors
+def jules_launch():
+    """POST /jules/launch - Launch prepared Jules worker packets.
+
+    Body (JSON):
+        packet_dir    (str, optional): Directory containing JT-*.md packets
+        packet_files  (list[str], optional): Explicit packet paths
+        repo_path     (str, optional): Working directory for `jules new`
+        limit         (int, optional, default=0): Max packets; 0 means all
+        dry_run       (bool, optional, default=true): False starts sessions
+        timeout_s     (int, optional, default=120): Per-packet timeout
+        jules_command (str, optional, default="jules"): CLI path/name
+        write_state   (bool, optional, default=true): Persist launch state JSON
+        state_path    (str, optional): Explicit state file path
+    """
+    data = json_payload()
+    packet_files = data.get("packet_files")
+    if packet_files is not None:
+        if not isinstance(packet_files, list) or not all(isinstance(item, str) for item in packet_files):
+            raise BridgeHTTPError(400, "Invalid input", details="packet_files must be a list of strings")
+
+    result = modules.launch_packets(
+        packet_dir=string_field(data, "packet_dir", default="", allow_empty=True, control_safe=True),
+        packet_files=packet_files,
+        repo_path=string_field(data, "repo_path", default="", allow_empty=True, control_safe=True),
+        limit=int_field(data, "limit", default=0, min_value=0, max_value=100),
+        dry_run=bool_field(data, "dry_run", default=True),
+        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
+        jules_command=string_field(data, "jules_command", default="jules"),
+        write_state=bool_field(data, "write_state", default=True),
+        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/sessions", methods=["POST"])
+@route_errors
+def jules_sessions():
+    """POST /jules/sessions - List remote Jules sessions.
+
+    Body (JSON):
+        dry_run       (bool, optional, default=true): False invokes the CLI
+        timeout_s     (int, optional, default=30): CLI timeout
+        jules_command (str, optional, default="jules"): CLI path/name
+    """
+    data = json_payload()
+    result = modules.list_remote_sessions(
+        jules_command=string_field(data, "jules_command", default="jules"),
+        timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=300),
+        dry_run=bool_field(data, "dry_run", default=True),
+    )
+    return jsonify(dict(result))
+
+
+# Shell route
 
 @app.route("/shell", methods=["POST"])
 @route_errors

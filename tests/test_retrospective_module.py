@@ -126,6 +126,16 @@ class TestTestEvidence:
         assert evidence.passed is True
         assert evidence.test_count == 141
 
+    def test_passed_evidence_handles_nul_padded_powershell_capture(self):
+        output = "======================= 181 passed, 1 warning in 2.58s ========================"
+        nul_padded = "\x00".join(output) + "\x00"
+
+        evidence = record_test_evidence(nul_padded, tempfile.mkdtemp())
+
+        assert evidence.passed is True
+        assert evidence.test_count == 181
+        assert "\x00" not in evidence.raw_output_tail
+
     def test_hash_is_deterministic(self):
         tmp = tempfile.mkdtemp()
         e1 = record_test_evidence(SAMPLE_PYTEST_OUTPUT, tmp)

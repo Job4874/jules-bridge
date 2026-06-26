@@ -50,6 +50,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/shell/` | shell_executor | Command execution |
 | `/ui/` | ui_automation | Screenshot and click |
 | `/inbox/` | inbox_service | Message passing |
+| `/jules/` | jules_orchestrator | Jules task dispatch, worker packets, and explicit launch commands |
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |
 | `/reasoning/` | reasoning_module | H/L/ACT reasoning (Gemini or stub) |
 | `/retrospective/` | retrospective_module | Log analysis + memory + pruning |
@@ -81,4 +82,11 @@ Every module has a **simple typed interface** hiding complex implementation:
 - Generate: AGENTS.md, context/ files, ubiquitous language
 - Evaluate: `hrm_context_eval.py`, pytest suite, `tests/eval_reasoning.py`
 - Distribute: skills in `.agents/skills/`
+
+### Jules Dispatch
+
+- `modules/jules_orchestrator.py` parses pasted Jules task dumps, classifies task
+  cards by status/type, and builds worker packets plus explicit launch commands.
+- `POST /jules/dispatch` is dry-run by default. It can write packet files under
+  `jules_inbox/jules_dispatch/`, but it never starts remote Jules sessions.
 - Observe: `retrospective_module.py` reads logs → writes memory

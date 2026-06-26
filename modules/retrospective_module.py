@@ -489,23 +489,24 @@ def record_test_evidence(test_output: str, evidence_path: str) -> TestEvidence:
         TestEvidence with hash, pass status, and test count
     """
     output_hash = hashlib.sha256(test_output.encode("utf-8")).hexdigest()
+    parse_output = _normalize_test_output_for_parse(test_output)
     passed = False
     test_count = 0
 
     # Parse pytest output for test count
-    count_match = re.search(r"(\d+) passed", test_output)
+    count_match = re.search(r"(\d+) passed", parse_output)
     if count_match:
         test_count = int(count_match.group(1))
         passed = True
-    fail_match = re.search(r"(\d+) failed", test_output)
+    fail_match = re.search(r"(\d+) failed", parse_output)
     if fail_match:
         passed = False
-    error_match = re.search(r"(\d+) errors?", test_output)
+    error_match = re.search(r"(\d+) errors?", parse_output)
     if error_match:
         passed = False
 
-    lines = test_output.strip().splitlines()
-    raw_tail = "\n".join(lines[-5:]) if len(lines) >= 5 else test_output
+    lines = parse_output.strip().splitlines()
+    raw_tail = "\n".join(lines[-5:]) if len(lines) >= 5 else parse_output
 
     evidence = TestEvidence(
         output_hash=output_hash,
@@ -538,6 +539,17 @@ def record_test_evidence(test_output: str, evidence_path: str) -> TestEvidence:
         json.dump(history, f, indent=2)
 
     return evidence
+
+
+def _normalize_test_output_for_parse(test_output: str) -> str:
+    """Normalize captured test output before regex parsing.
+
+    PowerShell 5.1 `Tee-Object` can create UTF-16-like text that reaches Python
+    as interleaved NUL characters when read as UTF-8. The hash still covers the
+    original bytes-as-read string; this cleaned copy is only for status parsing
+    and human-readable tails.
+    """
+    return (test_output or "").replace("\x00", "")
 
 
 def load_test_evidence(evidence_path: str) -> Optional[TestEvidence]:

@@ -69,6 +69,8 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] `modules/akc_module.py` — Agent Knowledge Context checkpoint builder with source inventory, path-ref masking, operating rules, and `/akc/context` routes
 - [x] `GET /akc/readiness` — session-start gate that verifies the AKC checkpoint exists, is `ready`, and contains required operating rules
 - [x] `context/08_akc_context_checkpoint.md` — generated from 5 pasted transcript sources; status `ready`, readable=5, missing=0, operating_rule_count=9
+- [x] `modules/jules_orchestrator.py` + `POST /jules/dispatch` - parse pasted Jules review/task queues into dry-run worker packets, explicit launch commands, and completion-of-task evidence summaries without exposing private chain-of-thought
+- [x] `Run-JulesDispatch.ps1` - operator wrapper that writes Jules dispatch packets and only starts remote sessions when `-Launch` is explicitly passed
 - [x] Evidence parser hardened — pytest output with test names containing `failed` no longer records false failed evidence
 - [x] `doc/tickets/001_eval_harness.md` — `tests/eval_reasoning.py` writes `memory/eval_results.json` with 3 representative reasoning problems, trace rows, scoring heuristics, and `stub_baseline`
 - [x] `doc/tickets/002_quantower_memory.md` — `memory/quantower.md` now records Quantower window patterns, Strategy Manager evidence, connection indicators, screenshot refs, and failure modes

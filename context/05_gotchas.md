@@ -90,6 +90,12 @@
 - **Message format** — each message is a markdown file; first `##` heading is the subject
 - **`inbox_write()`** — creates new file with timestamp; does NOT overwrite existing messages
 
+## jules_orchestrator
+
+- **`POST /jules/dispatch`** only prepares worker packets and launch commands; it must not start remote Jules sessions by itself
+- **Packet output** defaults to `jules_inbox/jules_dispatch/`; review `jules_launch_commands.ps1` before running because it calls `jules new`
+- **COT handling** means completion-of-task evidence summaries here, not private chain-of-thought disclosure
+
 ## Windows-specific
 
 - **Paths** — always use raw strings `r"C:\path"` or forward slashes `"C:/path"` (avoid backslash escaping bugs)

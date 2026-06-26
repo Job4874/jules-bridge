@@ -22,6 +22,7 @@ Bridge: `https://parade-marrow-pulp.ngrok-free.dev`
 | One-shot Oracle build | `POST /oracle/build-deploy` | Use only when code changed |
 | Codex handover index | `GET /codex/handover` | Locate host handover files |
 | Operator inbox | `POST /inbox/read`, `POST /inbox/write` | Read instructions and write evidence |
+| Jules dispatch | `POST /jules/dispatch` | Convert pasted Jules task queues into worker packets and explicit launch commands |
 
 ## Mandatory Session Workflow
 
@@ -124,6 +125,37 @@ Do not request `wsl`; this host exposes `wsl.exe` but has no installed WSL distr
 - Click coordinates must fit within the current display bounds.
 - `button` must be `left`, `right`, or `middle`.
 - `/ui/click` and `/ui/type` affect the real desktop, not a simulation.
+
+## Jules Dispatch Packets
+
+Use `POST /jules/dispatch` when the operator provides a pasted queue of Jules
+cards with statuses such as `Needs review`, `Ready for review`, `Failed`, or
+`Complete`.
+
+Preview only:
+
+```json
+{
+  "path": "C:\\Users\\abdul\\.codex\\attachments\\...\\pasted-text-1.txt",
+  "max_instances": 4,
+  "repo_path": "C:\\aotp\\projects\\OracleV5"
+}
+```
+
+Write packet files and launch commands:
+
+```json
+{
+  "path": "C:\\Users\\abdul\\.codex\\attachments\\...\\pasted-text-1.txt",
+  "max_instances": 4,
+  "write_packets": true,
+  "repo_path": "C:\\aotp\\projects\\OracleV5"
+}
+```
+
+The route does not start remote Jules sessions. Review
+`jules_inbox\\jules_dispatch\\jules_launch_commands.ps1` before running it.
+Completion evidence should be a concise checklist, not private chain-of-thought.
 
 ## Codex Handover Access
 

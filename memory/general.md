@@ -115,3 +115,12 @@ has gone wrong before and what to avoid.
 - `POST /retrospective/analyze` accepts boolean `auto_prune` and rejects non-boolean values via `bool_field()`.
 - The `retrospective` logger emits `auto_prune removed N sections` when the opt-in prune path runs.
 - Evidence: `python -m pytest tests/ -v` passed 172 tests, SHA-256 `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`.
+
+## Session 20260626T041243 — Jules Dispatch Orchestration
+
+- Added `modules/jules_orchestrator.py` as a deep module for pasted Jules task queues: it parses task cards, normalizes statuses, dedupes repeated file/issue fingerprints, and prepares worker packets plus explicit `jules new` launch commands.
+- Added `POST /jules/dispatch` to the bridge and TENTACLES manifest. The route is dry-run by default and never starts remote Jules sessions; `write_packets=true` writes under `jules_inbox/jules_dispatch/`.
+- Added `Run-JulesDispatch.ps1` as the operator wrapper. It calls `/jules/dispatch`, writes packet files, and only launches remote sessions when `-Launch` is explicitly passed.
+- Ran the dispatcher against `C:\Users\abdul\.codex\attachments\0c875dac-3076-454f-bf1d-24b611cb0a40\pasted-text-1.txt`: parsed 37 cards and generated 6 deduped worker packets for OracleV5.
+- Hardened `record_test_evidence()` for PowerShell `Tee-Object` captures that arrive with interleaved NUL characters; parsing now uses cleaned text while the SHA-256 still covers the original captured string.
+- Evidence: `python -m pytest tests/ -v` passed 182 tests, SHA-256 `c04d9ae3a3faf5cb63664e8b3acf2bf27c754eb4ca84c28b40df959c4ca519a3`.

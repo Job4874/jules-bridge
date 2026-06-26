@@ -31,6 +31,107 @@ class TestInboxRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()["error"], "Invalid input")
 
 
+class TestJulesDispatchRoute(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    @patch("modules.build_dispatch")
+    def test_jules_dispatch_passes_payload_to_module(self, mock_dispatch):
+        mock_dispatch.return_value = {
+            "task_count": 2,
+            "selected_count": 1,
+            "selected_tasks": [{"id": "JT-001"}],
+            "packet_files": [],
+            "launch_commands": ["jules new 'JT-001'"],
+        }
+
+        response = self.client.post(
+            "/jules/dispatch",
+            json={
+                "content": "Testing Improvement Task",
+                "max_instances": 1,
+                "include_statuses": ["failed", "ready_for_review"],
+                "repo_path": r"C:\aotp\projects\OracleV5",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["selected_count"], 1)
+        self.assertEqual(
+            mock_dispatch.call_args.kwargs["repo_path"],
+            r"C:\aotp\projects\OracleV5",
+        )
+        self.assertEqual(mock_dispatch.call_args.kwargs["max_instances"], 1)
+        self.assertEqual(
+            mock_dispatch.call_args.kwargs["include_statuses"],
+            ["failed", "ready_for_review"],
+        )
+
+    @patch("modules.build_dispatch")
+    def test_jules_dispatch_returns_module_error_as_400(self, mock_dispatch):
+        mock_dispatch.return_value = {
+            "error": "content or source_path is required",
+            "task_count": 0,
+            "selected_count": 0,
+        }
+
+        response = self.client.post("/jules/dispatch", json={})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "content or source_path is required")
+
+    def test_jules_dispatch_rejects_invalid_include_statuses(self):
+        response = self.client.post(
+            "/jules/dispatch",
+            json={"content": "x", "include_statuses": {"bad": "shape"}},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    @patch("modules.launch_packets")
+    def test_jules_launch_defaults_to_dry_run(self, mock_launch):
+        mock_launch.return_value = {
+            "dry_run": True,
+            "selected_count": 1,
+            "launched_count": 0,
+            "results": [],
+        }
+
+        response = self.client.post(
+            "/jules/launch",
+            json={"packet_files": [r"C:\tmp\JT-001.md"]},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_launch.call_args.kwargs["dry_run"], True)
+        self.assertEqual(mock_launch.call_args.kwargs["packet_files"], [r"C:\tmp\JT-001.md"])
+
+    def test_jules_launch_rejects_invalid_packet_files(self):
+        response = self.client.post(
+            "/jules/launch",
+            json={"packet_files": "not-a-list"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    @patch("modules.list_remote_sessions")
+    def test_jules_sessions_defaults_to_dry_run(self, mock_sessions):
+        mock_sessions.return_value = {
+            "dry_run": True,
+            "status": "dry_run",
+            "session_ids": [],
+        }
+
+        response = self.client.post("/jules/sessions", json={})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(mock_sessions.call_args.kwargs["dry_run"], True)
+
+
 class TestFsRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
