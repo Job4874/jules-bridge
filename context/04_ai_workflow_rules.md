@@ -65,15 +65,12 @@ The agent MAY:
 4. Update the gotchas file (`context/05_gotchas.md`) if a new pattern is found
 5. Patch the module, not the route handler
 
-## Retrospective Trigger
+## Retrospective & Agent Skills Protocol
 
-Run retrospective at the end of every session or after any test failure:
-```
-POST /retrospective/analyze {}
-GET /retrospective/memory?domain=general
-```
+In addition to API-driven retrospectives, the agent must run the 5 core agent skills from `.agents/skills/`:
 
-The retrospective output shows:
-- Which routes were called N times consecutively (doom loops)
-- Which error types recurred (harness bugs)
-- Which routes were slow (performance issues)
+1. **`architect`**: Run before implementing any new route, module, or complex feature to align with the developer on design choices and establish a clear plan.
+2. **`imprint`**: Run after building or modifying endpoints/modules to capture design/API patterns into `context/05_gotchas.md` or `modules/__init__.py`.
+3. **`review`**: Run after the code is written to verify compliance with boundaries and standards, reporting issues by severity.
+4. **`recover`**: Run when tests fail repeatedly, a crash occurs, or the agent is caught in a doom loop.
+5. **`remember`**: Run at the end of the session to synthesize choices, commit to git, and update `context/06_progress_tracker.md`.

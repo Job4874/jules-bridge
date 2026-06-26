@@ -3,7 +3,7 @@
 > Context file 6 of 6. The ONLY file that updates constantly.
 > How the agent picks up exactly where you left off in a single prompt.
 
-## Current Phase: Phase 3 — Harness Engineering ✅
+## Current Phase: Phase 4 — Job Pilot Agent Skills ✅
 
 ## Phase History
 
@@ -19,12 +19,17 @@ Applied Hierarchical Reasoning Model architecture (Sapient Inc, June 2025).
 - Integrated reasoning_module.py with H/L/ACT pattern
 - 34/34 tests passing
 
-### Phase 3 — Harness Engineering ✅ (Current)
+### Phase 3 — Harness Engineering ✅
 Applied Nick Ni's "Case" harness principles (AI Engineer World Fair 2025).
 - retrospective_module.py: reads bridge.log, detects doom loops, writes memory
 - Six-file context system: context/01-06
 - memory/ directory with per-domain markdown files
 - 3 new retrospective routes
+
+### Phase 4 — Job Pilot Agent Skills ✅ (Current)
+Applied JSM/Job Pilot Agent Skills to Jules Bridge.
+- Created 5 core agent skills: architect, remember, review, recover, imprint in `.agents/skills/`
+- Updated workflow rules in `context/04_ai_workflow_rules.md`
 
 ## Active Architectural Decisions
 
@@ -36,6 +41,7 @@ Applied Nick Ni's "Case" harness principles (AI Engineer World Fair 2025).
 | Module contract | Never raises | Partial data beats exceptions in a harness |
 | Context system | 6-file | Ghost AI spec-driven approach |
 | Gotchas over docs | ~553 lines | Guides without prescribing; smaller context |
+| Agent Skills | 5 core skills | Systematize planning, continuity, review, recovery, and patterns |
 
 ## What's Complete
 
@@ -51,8 +57,9 @@ Applied Nick Ni's "Case" harness principles (AI Engineer World Fair 2025).
 - [x] `context/` — all 6 files
 - [x] `memory/general.md` + `memory/oracle.md`
 - [x] CDLC artifacts: HRM_AGENTS.md, HRM_UBIQUITOUS_LANGUAGE.md, hrm_context_eval.py
+- [x] Reusable skills: `architect`, `remember`, `review`, `recover`, `imprint`
 
-## What's Next (Phase 4 ideas)
+## What's Next (Phase 5 ideas)
 
 - [ ] Wire `_h_module_call()` / `_l_module_call()` to real LLM provider (Gemini / Anthropic)
 - [ ] Add eval harness for reasoning_module (measure plan quality with/without context)
