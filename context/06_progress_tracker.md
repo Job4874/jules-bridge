@@ -67,10 +67,19 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] `POST /retrospective/prune_memory` — age-based pruning, 30-day default
 - [x] All missing routes added to TENTACLES manifest
 
-## What's Next (Phase 6 ideas)
+## Phase 6 — Ralph Loop Infrastructure ✅ (Just Added)
 
-- [ ] Eval harness for reasoning_module (measure plan quality with real Gemini calls)
-- [ ] Quantower memory file with UI-specific gotchas
-- [ ] Harden evidence gating to 423 (after test-first discipline is established)
-- [ ] Auto-schedule `prune_memory` via cron or on `analyze_session` completion
-- [ ] `POST /retrospective/analyze` baseline — run on existing bridge.log to seed memory with real learnings
+Added a Ralph Loop agentic framework to Jules Bridge:
+- Created `doc/tickets/` with 5 Phase 6 tickets (eval harness, Quantower memory, evidence gating, auto-prune, analyze baseline)
+- Created `.agents/skills/ralph-loop/SKILL.md` — full loop protocol as a reusable Claude skill
+- Created `Run-RalphLoop.ps1` — Windows PowerShell autonomous loop runner
+
+## What's Next (Phase 6 — Active Tickets)
+
+- [ ] `doc/tickets/001_eval_harness.md` — Eval harness for reasoning_module (HIGH)
+- [ ] `doc/tickets/002_quantower_memory.md` — Quantower memory file with UI gotchas (HIGH)
+- [ ] `doc/tickets/003_harden_evidence_gating.md` — Harden evidence gating to 423 (MEDIUM, depends on 001)
+- [ ] `doc/tickets/004_auto_prune_memory.md` — Auto-schedule prune_memory (MEDIUM)
+- [ ] `doc/tickets/005_analyze_baseline.md` — Analyze baseline from real bridge.log (HIGH)
+
+**To run the loop**: `.\Run-RalphLoop.ps1` from the project root.
