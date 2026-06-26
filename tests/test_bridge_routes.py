@@ -446,6 +446,37 @@ class TestUIRoutes(unittest.TestCase):
         pag.moveTo.assert_not_called()
         pag.click.assert_not_called()
 
+    @patch("modules.drive_quantower_login")
+    def test_ui_drive_quantower_login_route_is_thin(self, mock_drive):
+        mock_drive.return_value = {
+            "status": "unknown",
+            "state": "unknown",
+            "acted": False,
+            "message": "State unknown",
+            "error": None,
+        }
+
+        response = self.client.post(
+            "/ui/drive_quantower_login",
+            json={
+                "ocr_text": "unknown",
+                "submit_x": 100,
+                "submit_y": 200,
+                "allow_secret_use": False,
+                "notify": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "unknown")
+        mock_drive.assert_called_once()
+        kwargs = mock_drive.call_args.kwargs
+        self.assertEqual(kwargs["ocr_text"], "unknown")
+        self.assertEqual(kwargs["submit_x"], 100)
+        self.assertEqual(kwargs["submit_y"], 200)
+        self.assertFalse(kwargs["allow_secret_use"])
+        self.assertIsNone(kwargs["notify_func"])
+
 
 class TestAKCRoutes(unittest.TestCase):
     def setUp(self):

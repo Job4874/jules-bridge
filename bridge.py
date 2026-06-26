@@ -356,6 +356,7 @@ TENTACLES = [
     {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
+    {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},
     {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},
     {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},
     {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
@@ -998,6 +999,44 @@ def type_text_route():
     text = string_field(data, "text", allow_empty=True)
     result = modules.type_text(text)
     return jsonify(result)
+
+
+@app.route("/ui/drive_quantower_login", methods=["POST"])
+@route_errors
+def drive_quantower_login_route():
+    """POST /ui/drive_quantower_login — Run guarded Quantower login ACT loop.
+
+    Body (JSON):
+        ocr_text         (str, optional): OCR text from the current screen
+        submit_x         (int, required): Submit button x-coordinate
+        submit_y         (int, required): Submit button y-coordinate
+        allow_secret_use (bool, optional): Runtime credential-use gate
+        notify           (bool, optional): Send operator email on completion/failure
+
+    Returns JSON with status, detected state, action flag, and message.
+    """
+    data = json_payload()
+    ocr_text = string_field(data, "ocr_text", default="", allow_empty=True)
+    submit_x = int_field(data, "submit_x", min_value=0)
+    submit_y = int_field(data, "submit_y", min_value=0)
+    allow_secret_use = bool_field(data, "allow_secret_use", default=False)
+    notify = bool_field(data, "notify", default=False)
+
+    notifier = None
+    if notify:
+        notifier = lambda subject, body: email_service.send_email(
+            f"[Jules Bridge] {subject}",
+            body,
+        )
+
+    result = modules.drive_quantower_login(
+        ocr_text=ocr_text,
+        submit_x=submit_x,
+        submit_y=submit_y,
+        allow_secret_use=allow_secret_use,
+        notify_func=notifier,
+    )
+    return jsonify(dict(result))
 
 
 # — Notify route —

@@ -135,3 +135,11 @@
 - **`os.path.join` on Windows** — produces backslashes; Flask routes need forward slashes
 - **PowerShell execution policy** — if scripts fail with "not digitally signed", add `-ExecutionPolicy Bypass`
 - **File locking** — Windows locks files that are open; `oracle_status()` uses `try/except` on file reads
+
+
+## human_mimic_driver
+
+- Keep H/L/ACT desktop-driving loops in `modules/human_mimic_driver.py`; `bridge.py` routes must only validate request fields, optionally build notification callbacks, call the module, and return JSON.
+- `drive_quantower_login(...)` must never receive or return plaintext passwords. It types only non-secret username metadata from `get_secret(...)`; real OS-backed secret providers must keep secret material inside the provider/action boundary.
+- On Academic/Local Node setups, treat `/ui/drive_quantower_login` as a Local Node executor route. Policy decisions belong in the Cloud Node prompt/code path; the school computer must not host bridge OS-file installs or credential storage.
+- Notifications for Human-Mimic tasks are best-effort callbacks. Email failures must not crash the UI driver or leak secret material into error text.
