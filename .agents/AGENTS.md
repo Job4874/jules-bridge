@@ -69,3 +69,14 @@ Five core skills are installed in `.agents/skills/`. Use them at these exact mom
 9. **Load the gotchas file** before touching any module — the landmines are there for a reason
 10. **Never modify bridge.py header or middleware** (lines 1–230) without explicit human approval
 11. **Never delete existing module files** or change public function signatures without human approval
+
+## Cursor Cloud specific instructions
+
+The startup update script already refreshes Python deps; do not reinstall as a routine step.
+
+- **Run the bridge:** `python3 bridge.py` (serves the Flask API on `0.0.0.0:5000`). Verify with `curl http://127.0.0.1:5000/health`.
+- **Do NOT use `start.py` in cloud.** It wraps `bridge.py` with a pyngrok tunnel bound to a reserved domain (`parade-marrow-pulp.ngrok-free.dev`) that needs an ngrok authtoken; the tunnel step fails here. It does fall back to local-only mode, but running `bridge.py` directly is cleaner.
+- **Tests:** `python3 -m pytest tests/ -v` (240 passing). `pytest` is not in `requirements.txt`; the update script installs it.
+- **`pyautogui` is headless-incompatible at call time.** It is lazily imported, so importing `modules`/`bridge.py` and running the server all work without a display. The `/ui/*` routes (screenshot/click/type) require an X display and will error in cloud — this is expected, not a regression.
+- **Console scripts (`pytest`, `flask`) install to `~/.local/bin`, which is not on PATH.** Always invoke via `python3 -m pytest` / `python3 bridge.py`.
+- **Offline-safe routes:** reasoning routes work with `{"model":"stub"}`. `{"model":"fast|smart"}` needs `GEMINI_API_KEY`; `/notify/email` needs `GMAIL_USER`/`GMAIL_APP_PASSWORD` (see `.env.example`). Without these, those specific features degrade/stub but the bridge still runs.
