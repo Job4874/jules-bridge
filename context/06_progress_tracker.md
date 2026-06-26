@@ -83,6 +83,7 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] `doc/tickets/005_analyze_baseline.md` — `POST /retrospective/analyze` seeded real `bridge.log` learnings into `memory/general.md` and `memory/oracle.md`; evidence `d8a29098bcb0195ae05c03f940372e2b2e59b92337fa001122047b58e0f220a0`
 - [x] `doc/tickets/003_harden_evidence_gating.md` — stale `/oracle/*` evidence can preempt route execution with HTTP 423 when `EVIDENCE_GATE_HARD=1`; evidence `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`
 - [x] `doc/tickets/004_auto_prune_memory.md` — `POST /retrospective/analyze` accepts boolean `auto_prune` and prunes stale memory after writing current learnings; evidence `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`
+- [x] `doc/tickets/006_replay_restart_orchestration.md` — `hard_index_host_paths()` + `oracle_restart_replay()` H/L/ACT cycle; routes `GET /oracle/hard-index`, `POST /oracle/restart-replay`; evidence `884c12c9a702be4ffdde246eee70152128f2c54e12839753408c7fb6795f879a`
 
 ## Phase 6 — Ralph Loop Infrastructure ✅ (Just Added)
 

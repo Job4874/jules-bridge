@@ -38,6 +38,8 @@
 
 - **`oracle_status()`** — NEVER raises; always returns dict with `error` key if something failed
 - **Info XML path** — must exist before `oracle_build_deploy()` is called; verify with `Verify-OracleReplayReady.ps1`
+- **Hard index before replay restart** — call `GET /oracle/hard-index` (or `hard_index_host_paths()`) before `POST /oracle/restart-replay`; aborts with `halt.reason=hard_index_failed` if `C:\aotp\projects\OracleV5` or `C:\Quantower\TradingPlatform` missing
+- **Replay restart is destructive** — `Restart-QuantowerLoadOracle.ps1` logs out Quantower; use `force_close=true` only when operator-approved
 - **Quantower process name** — `Starter.exe` (check via `Get-Process -Name Starter`)
 - **DLL path** — `C:\Quantower\Settings\Scripts\Strategies\OracleV5.Strategy.dll` (hardcoded in `oracle_session.py`)
 - **Build config** — always `-c Release -a x64`; Debug builds won't load in Quantower

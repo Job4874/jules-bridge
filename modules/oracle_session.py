@@ -46,6 +46,15 @@ _CODEX_HANDOVER_ROOT = os.environ.get(
     r"C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover"
     r"\TIBIN_CODEX_MASTER_HANDOVER_V2",
 )
+_QUANTOWER_TRADING_PLATFORM = os.environ.get(
+    "QUANTOWER_TRADING_PLATFORM",
+    r"C:\Quantower\TradingPlatform",
+)
+
+_HOST_PATH_INDEX = {
+    "oracle_repo": _ORACLE_REPO,
+    "quantower_trading_platform": _QUANTOWER_TRADING_PLATFORM,
+}
 
 def _script(name: str) -> str:
     return os.path.join(_ORACLE_REPO, "Tools", name)
@@ -95,6 +104,16 @@ class BuildDeployResult(dict):
 class HandoverIndex(dict):
     """Codex handover folder index.
     Keys: exists, path, file_count?, files?, read_via?, message?
+    """
+
+class HostPathIndex(dict):
+    """Hard-index of canonical Windows host paths.
+    Keys: paths (dict), all_required_exist (bool), error?
+    """
+
+class ReplayRestartResult(dict):
+    """H/L/ACT replay restart cycle result.
+    Keys: plan, restart, verify, halt, status, succeeded, error?
     """
 
 
@@ -313,6 +332,113 @@ def oracle_status() -> OracleStatus:
             "POST /inbox/write with screenshot + verify evidence",
         ],
     )
+
+
+def hard_index_host_paths() -> HostPathIndex:
+    """Verify canonical Windows host paths before replay orchestration.
+
+    Hard-indexes Oracle repo and Quantower TradingPlatform roots.
+    Never raises.
+    """
+    try:
+        paths: dict = {}
+        for name, path in _HOST_PATH_INDEX.items():
+            exists = os.path.isdir(path)
+            entry: dict = {"path": path, "exists": exists}
+            if exists:
+                try:
+                    entry["sample_entries"] = sorted(os.listdir(path))[:10]
+                except OSError as exc:
+                    entry["list_error"] = str(exc)
+            paths[name] = entry
+        return HostPathIndex(
+            paths=paths,
+            all_required_exist=all(entry["exists"] for entry in paths.values()),
+        )
+    except Exception as exc:
+        return HostPathIndex(
+            paths={},
+            all_required_exist=False,
+            error=str(exc),
+        )
+
+
+def oracle_restart_replay(force_close: bool = False) -> ReplayRestartResult:
+    """Run H/L/ACT replay restart: hard index → restart script → verify halt.
+
+    H (plan): confirm host paths and info.xml exist.
+    L (execute): Restart-QuantowerLoadOracle.ps1 with optional -ForceClose.
+    ACT (halt): post-restart verify + status snapshot; stop on verify pass/fail.
+
+    Never raises.
+    """
+    try:
+        hard_index = hard_index_host_paths()
+        info = _info_xml_settings(_INFO_XML)
+        plan = {
+            "hard_index": hard_index,
+            "info_xml": {"exists": info.get("exists"), "path": _INFO_XML},
+            "force_close": force_close,
+        }
+
+        if not hard_index.get("all_required_exist"):
+            return ReplayRestartResult(
+                plan=plan,
+                restart=None,
+                verify=None,
+                halt={"reason": "hard_index_failed", "continuing": False},
+                status=None,
+                succeeded=False,
+            )
+
+        if not info.get("exists"):
+            return ReplayRestartResult(
+                plan=plan,
+                restart=None,
+                verify=None,
+                halt={"reason": "info_xml_missing", "continuing": False},
+                status=None,
+                succeeded=False,
+            )
+
+        extra_args = ["-ForceClose"] if force_close else None
+        restart = _run_ps(_script("Restart-QuantowerLoadOracle.ps1"), extra_args, timeout=300)
+        verify_raw = _run_ps(
+            _script("Verify-OracleReplayReady.ps1"),
+            ["-InfoXmlPath", _INFO_XML],
+        )
+        verify = VerifyResult(
+            code=verify_raw["code"],
+            checks=_parse_verify(verify_raw["stdout"]),
+            stderr=verify_raw.get("stderr", "").strip(),
+        )
+        status = oracle_status()
+
+        if verify["code"] == 0:
+            halt = {"reason": "verify_passed", "continuing": False}
+            succeeded = True
+        else:
+            halt = {"reason": "verify_failed", "continuing": False}
+            succeeded = False
+
+        return ReplayRestartResult(
+            plan=plan,
+            restart=restart,
+            verify=verify,
+            halt=halt,
+            status=status,
+            succeeded=succeeded,
+        )
+    except Exception as exc:
+        return ReplayRestartResult(
+            plan={},
+            restart=None,
+            verify=None,
+            halt={"reason": "error", "continuing": False},
+            status=None,
+            succeeded=False,
+            error=str(exc),
+        )
 
 
 def oracle_build_deploy() -> BuildDeployResult:

@@ -42,9 +42,13 @@ from .oracle_session import (
     OracleStatus,
     BuildDeployResult,
     HandoverIndex,
+    HostPathIndex,
+    ReplayRestartResult,
     oracle_status,
     oracle_build_deploy,
     codex_handover_index,
+    hard_index_host_paths,
+    oracle_restart_replay,
 )
 from .reasoning_module import (
     HLevelPlan,
@@ -134,9 +138,13 @@ __all__ = [
     "OracleStatus",
     "BuildDeployResult",
     "HandoverIndex",
+    "HostPathIndex",
+    "ReplayRestartResult",
     "oracle_status",
     "oracle_build_deploy",
     "codex_handover_index",
+    "hard_index_host_paths",
+    "oracle_restart_replay",
     # reasoning_module
     "HLevelPlan",
     "LLevelAction",

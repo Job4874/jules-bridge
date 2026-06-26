@@ -123,5 +123,124 @@ class TestCodexHandoverIndex(unittest.TestCase):
         self.assertIn("a.md", paths)
 
 
+class TestHardIndexHostPaths(unittest.TestCase):
+    def setUp(self):
+        from modules import oracle_session
+        self.os_mod = oracle_session
+
+    @patch("modules.oracle_session.os.path.isdir")
+    @patch("modules.oracle_session.os.listdir")
+    def test_hard_index_reports_both_paths_when_present(self, mock_listdir, mock_isdir):
+        mock_isdir.return_value = True
+        mock_listdir.return_value = ["v1.146.13", "Starter.exe"]
+
+        result = self.os_mod.hard_index_host_paths()
+
+        self.assertTrue(result["all_required_exist"])
+        self.assertTrue(result["paths"]["oracle_repo"]["exists"])
+        self.assertTrue(result["paths"]["quantower_trading_platform"]["exists"])
+        self.assertIn("v1.146.13", result["paths"]["quantower_trading_platform"]["sample_entries"])
+
+    @patch("modules.oracle_session.os.path.isdir")
+    def test_hard_index_fails_when_quantower_missing(self, mock_isdir):
+        def isdir_side_effect(path):
+            return "OracleV5" in path
+
+        mock_isdir.side_effect = isdir_side_effect
+
+        result = self.os_mod.hard_index_host_paths()
+
+        self.assertFalse(result["all_required_exist"])
+        self.assertFalse(result["paths"]["quantower_trading_platform"]["exists"])
+
+
+class TestOracleRestartReplay(unittest.TestCase):
+    def setUp(self):
+        from modules import oracle_session
+        self.os_mod = oracle_session
+
+    @patch("modules.oracle_session.oracle_status")
+    @patch("modules.oracle_session._run_ps")
+    @patch("modules.oracle_session.hard_index_host_paths")
+    @patch("modules.oracle_session._info_xml_settings")
+    def test_restart_replay_aborts_when_hard_index_fails(
+        self, mock_info, mock_hard_index, mock_run_ps, mock_status
+    ):
+        mock_hard_index.return_value = {
+            "all_required_exist": False,
+            "paths": {"quantower_trading_platform": {"exists": False, "path": "C:\\Quantower\\TradingPlatform"}},
+        }
+        mock_info.return_value = {"exists": True}
+
+        result = self.os_mod.oracle_restart_replay(force_close=False)
+
+        mock_run_ps.assert_not_called()
+        self.assertFalse(result["succeeded"])
+        self.assertEqual(result["halt"]["reason"], "hard_index_failed")
+        mock_status.assert_not_called()
+
+    @patch("modules.oracle_session.oracle_status")
+    @patch("modules.oracle_session._run_ps")
+    @patch("modules.oracle_session.hard_index_host_paths")
+    @patch("modules.oracle_session._info_xml_settings")
+    def test_restart_replay_runs_script_and_halts_on_verify_pass(
+        self, mock_info, mock_hard_index, mock_run_ps, mock_status
+    ):
+        mock_hard_index.return_value = {"all_required_exist": True, "paths": {}}
+        mock_info.return_value = {"exists": True, "symbol_bound": True, "account_bound": True}
+        mock_run_ps.side_effect = [
+            {"stdout": "Quantower restarted", "stderr": "", "code": 0},
+            {"stdout": "All replay checks passed", "stderr": "", "code": 0},
+        ]
+        mock_status.return_value = {
+            "blockers": [],
+            "gates": {"g2_dll_deployed": True},
+            "quantower": {"running": True},
+        }
+
+        result = self.os_mod.oracle_restart_replay(force_close=False)
+
+        self.assertTrue(result["succeeded"])
+        self.assertEqual(result["halt"]["reason"], "verify_passed")
+        restart_call = mock_run_ps.call_args_list[0]
+        self.assertIn("Restart-QuantowerLoadOracle.ps1", restart_call[0][0])
+        if len(restart_call[0]) > 1:
+            self.assertIsNone(restart_call[0][1])
+        else:
+            self.assertNotIn("extra_args", restart_call[1])
+
+    @patch("modules.oracle_session.oracle_status")
+    @patch("modules.oracle_session._run_ps")
+    @patch("modules.oracle_session.hard_index_host_paths")
+    @patch("modules.oracle_session._info_xml_settings")
+    def test_restart_replay_passes_force_close_flag(
+        self, mock_info, mock_hard_index, mock_run_ps, mock_status
+    ):
+        mock_hard_index.return_value = {"all_required_exist": True, "paths": {}}
+        mock_info.return_value = {"exists": True}
+        mock_run_ps.side_effect = [
+            {"stdout": "", "stderr": "", "code": 0},
+            {"stdout": "ACTION: bind symbol", "stderr": "", "code": 1},
+        ]
+        mock_status.return_value = {"blockers": ["Symbol not bound"], "gates": {"g2_dll_deployed": False}}
+
+        result = self.os_mod.oracle_restart_replay(force_close=True)
+
+        restart_call = mock_run_ps.call_args_list[0]
+        extra = restart_call[0][1] if len(restart_call[0]) > 1 else restart_call[1].get("extra_args")
+        self.assertEqual(extra, ["-ForceClose"])
+        self.assertFalse(result["succeeded"])
+        self.assertEqual(result["halt"]["reason"], "verify_failed")
+
+    @patch("modules.oracle_session.hard_index_host_paths")
+    def test_restart_replay_never_raises_on_bad_input_path(self, mock_hard_index):
+        mock_hard_index.side_effect = RuntimeError("unexpected")
+
+        result = self.os_mod.oracle_restart_replay(force_close=False)
+
+        self.assertFalse(result["succeeded"])
+        self.assertIn("error", result)
+
+
 if __name__ == "__main__":
     unittest.main()

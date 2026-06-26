@@ -352,6 +352,8 @@ TENTACLES = [
     {"name": "grep",         "route": "POST /fs/grep",           "reach": "Search file contents for gate/log strings"},
     {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
+    {"name": "oracle_hard_index", "route": "GET /oracle/hard-index", "reach": "Verify canonical Windows host paths before orchestration"},
+    {"name": "oracle_restart_replay", "route": "POST /oracle/restart-replay", "reach": "H/L/ACT replay restart via Restart-QuantowerLoadOracle.ps1"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
     {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
@@ -962,6 +964,26 @@ def oracle_status():
 @route_errors
 def oracle_build_deploy():
     return jsonify(dict(modules.oracle_build_deploy()))
+
+
+@app.route("/oracle/hard-index", methods=["GET"])
+@route_errors
+def oracle_hard_index():
+    """GET /oracle/hard-index — Verify canonical Windows host paths exist."""
+    return jsonify(dict(modules.hard_index_host_paths()))
+
+
+@app.route("/oracle/restart-replay", methods=["POST"])
+@route_errors
+def oracle_restart_replay():
+    """POST /oracle/restart-replay — H/L/ACT replay restart cycle.
+
+    Body (optional):
+        force_close (bool, default false): pass -ForceClose to restart script
+    """
+    data = request.get_json(silent=True) or {}
+    force_close = bool(data.get("force_close", False))
+    return jsonify(dict(modules.oracle_restart_replay(force_close=force_close)))
 
 
 @app.route("/codex/handover", methods=["GET"])
