@@ -23,6 +23,8 @@ Bridge: `https://parade-marrow-pulp.ngrok-free.dev`
 | Codex handover index | `GET /codex/handover` | Locate host handover files |
 | Operator inbox | `POST /inbox/read`, `POST /inbox/write` | Read instructions and write evidence |
 | Jules dispatch | `POST /jules/dispatch` | Convert pasted Jules task queues into worker packets and explicit launch commands |
+| Jules packet launch | `POST /jules/launch` | Dry-run or explicitly launch prepared packets through `jules new` |
+| Jules remote sessions | `POST /jules/sessions` | Dry-run or query `jules remote list --session` with timeout cleanup |
 
 ## Mandatory Session Workflow
 
@@ -153,8 +155,42 @@ Write packet files and launch commands:
 }
 ```
 
-The route does not start remote Jules sessions. Review
-`jules_inbox\\jules_dispatch\\jules_launch_commands.ps1` before running it.
+`POST /jules/dispatch` does not start remote Jules sessions. Review
+`jules_inbox\\jules_dispatch\\jules_launch_commands.ps1` before any live launch.
+
+Dry-run prepared launch packets:
+
+```json
+{
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "repo_path": "C:\\aotp\\projects\\OracleV5"
+}
+```
+
+Live launch requires an explicit opt-in:
+
+```json
+{
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "dry_run": false,
+  "limit": 1,
+  "timeout_s": 120
+}
+```
+
+Check remote sessions:
+
+```json
+{
+  "dry_run": false,
+  "timeout_s": 30
+}
+```
+
+On Windows, the bridge resolves bare `jules` to the npm `jules.cmd` shim and
+kills the process tree on timeout. If `POST /jules/sessions` times out, do not
+attempt live packet launch until CLI auth/connectivity is fixed.
 Completion evidence should be a concise checklist, not private chain-of-thought.
 
 ## Codex Handover Access

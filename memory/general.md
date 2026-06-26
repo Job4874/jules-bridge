@@ -124,3 +124,10 @@ has gone wrong before and what to avoid.
 - Ran the dispatcher against `C:\Users\abdul\.codex\attachments\0c875dac-3076-454f-bf1d-24b611cb0a40\pasted-text-1.txt`: parsed 37 cards and generated 6 deduped worker packets for OracleV5.
 - Hardened `record_test_evidence()` for PowerShell `Tee-Object` captures that arrive with interleaved NUL characters; parsing now uses cleaned text while the SHA-256 still covers the original captured string.
 - Evidence: `python -m pytest tests/ -v` passed 182 tests, SHA-256 `c04d9ae3a3faf5cb63664e8b3acf2bf27c754eb4ca84c28b40df959c4ca519a3`.
+
+## Session 20260626T042300 — Jules Launch And Remote Session Control
+
+- Added `POST /jules/launch` and `POST /jules/sessions` plus `launch_packets()` and `list_remote_sessions()` in `modules/jules_orchestrator.py`.
+- Launch/session routes default to `dry_run=true`; live mode requires explicit `dry_run=false` and writes `JULES_LAUNCH_STATE.json` for packet launch attempts.
+- Hardened Windows CLI execution: bare `jules` resolves to the npm `jules.cmd` shim, and timeout handling kills the process tree so blocked `node`/`jules.exe` children do not linger.
+- Current live boundary: on 2026-06-25, dry-run launch selected 6 packets, but `POST /jules/sessions` with `dry_run=false` returned `timeout` after about 8 seconds. Do not attempt live packet launch until remote session listing succeeds.

@@ -94,6 +94,9 @@
 
 - **`POST /jules/dispatch`** only prepares worker packets and launch commands; it must not start remote Jules sessions by itself
 - **Packet output** defaults to `jules_inbox/jules_dispatch/`; review `jules_launch_commands.ps1` before running because it calls `jules new`
+- **`POST /jules/launch`** defaults to `dry_run=true`; only `dry_run=false` attempts live `jules new` calls and writes `JULES_LAUNCH_STATE.json`
+- **`POST /jules/sessions`** defaults to `dry_run=true`; live mode calls `jules remote list --session` with process-tree cleanup on timeout
+- **Windows Jules CLI** resolves bare `jules` to the npm `jules.cmd` shim; if session listing times out, do not attempt live packet launch until CLI auth/connectivity is fixed
 - **COT handling** means completion-of-task evidence summaries here, not private chain-of-thought disclosure
 
 ## Windows-specific

@@ -6,7 +6,7 @@ builds worker packets/launch commands without starting remote sessions.
 
 import os
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from modules.jules_orchestrator import build_dispatch, launch_packets, list_remote_sessions, parse_task_dump
 
@@ -147,7 +147,7 @@ def test_launch_packets_dry_run_uses_packet_files_without_subprocess():
         with open(packet, "w", encoding="utf-8") as handle:
             handle.write("# Packet\nDo useful work.")
 
-        with patch("modules.jules_orchestrator.subprocess.run") as mock_run:
+        with patch("modules.jules_orchestrator._run_cli_command") as mock_run:
             result = launch_packets(packet_files=[packet], repo_path=tmp_dir, dry_run=True)
 
         mock_run.assert_not_called()
@@ -155,15 +155,19 @@ def test_launch_packets_dry_run_uses_packet_files_without_subprocess():
         assert result["selected_count"] == 1
         assert result["launched_count"] == 0
         assert result["results"][0]["status"] == "dry_run"
+        assert result["state_path"] == os.path.join(tmp_dir, "JULES_LAUNCH_STATE.json")
+        assert os.path.isfile(result["state_path"])
 
 
-@patch("modules.jules_orchestrator.subprocess.run")
-def test_launch_packets_live_posts_packet_to_jules_new(mock_run):
-    mock_run.return_value = MagicMock(
-        returncode=0,
-        stdout="Created session 123456789",
-        stderr="",
-    )
+@patch("modules.jules_orchestrator.shutil.which", return_value=None)
+@patch("modules.jules_orchestrator._run_cli_command")
+def test_launch_packets_live_posts_packet_to_jules_new(mock_run, mock_which):
+    mock_run.return_value = {
+        "exit_code": 0,
+        "stdout": "Created session 123456789",
+        "stderr": "",
+        "timed_out": False,
+    }
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         packet = os.path.join(tmp_dir, "JT-001-test.md")
@@ -174,26 +178,36 @@ def test_launch_packets_live_posts_packet_to_jules_new(mock_run):
 
     assert result["dry_run"] is False
     assert result["launched_count"] == 1
+    assert result["resolved_jules_command"] == "jules"
     assert result["results"][0]["exit_code"] == 0
     assert result["results"][0]["session_ids"] == ["123456789"]
     assert mock_run.call_args.args[0] == ["jules", "new"]
-    assert mock_run.call_args.kwargs["input"].startswith("# Packet")
+    assert mock_run.call_args.kwargs["input_text"].startswith("# Packet")
+    mock_which.assert_called_with("jules")
 
 
-@patch("modules.jules_orchestrator.subprocess.run")
-def test_list_remote_sessions_captures_cli_output(mock_run):
-    mock_run.return_value = MagicMock(returncode=0, stdout="123456 running\n", stderr="")
+@patch("modules.jules_orchestrator.shutil.which", return_value=r"C:\tools\jules.cmd")
+@patch("modules.jules_orchestrator._run_cli_command")
+def test_list_remote_sessions_captures_cli_output(mock_run, mock_which):
+    mock_run.return_value = {
+        "exit_code": 0,
+        "stdout": "123456 running\n",
+        "stderr": "",
+        "timed_out": False,
+    }
 
     result = list_remote_sessions(dry_run=False)
 
     assert result["dry_run"] is False
     assert result["exit_code"] == 0
     assert result["session_ids"] == ["123456"]
-    assert mock_run.call_args.args[0] == ["jules", "remote", "list", "--session"]
+    assert result["resolved_jules_command"] == r"C:\tools\jules.cmd"
+    assert mock_run.call_args.args[0] == [r"C:\tools\jules.cmd", "remote", "list", "--session"]
+    mock_which.assert_called_with("jules")
 
 
 def test_list_remote_sessions_dry_run_does_not_call_cli():
-    with patch("modules.jules_orchestrator.subprocess.run") as mock_run:
+    with patch("modules.jules_orchestrator._run_cli_command") as mock_run:
         result = list_remote_sessions(dry_run=True)
 
     mock_run.assert_not_called()

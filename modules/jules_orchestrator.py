@@ -1,8 +1,8 @@
 """Jules task dispatch orchestration.
 
 This module turns pasted Jules review/task dumps into deterministic worker
-packets. It does not launch remote Jules sessions; callers can review the
-generated launch commands and run them explicitly.
+packets and can launch those packets through the Jules CLI when explicitly
+called with dry_run=False.
 
 Public interface:
     parse_task_dump(content) -> list[JulesTask]
@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -249,8 +250,9 @@ def launch_packets(
         if limit and limit > 0:
             packets = packets[:limit]
         results = []
+        resolved_jules_command = _resolve_cli_command(jules_command)
         for packet in packets:
-            command = [jules_command, "new"]
+            command = [resolved_jules_command, "new"]
             result = {
                 "packet": str(packet),
                 "command": command,
@@ -265,22 +267,26 @@ def launch_packets(
             if not dry_run:
                 packet_text = packet.read_text(encoding="utf-8", errors="replace")
                 try:
-                    completed = subprocess.run(
+                    completed = _run_cli_command(
                         command,
+                        timeout_s=timeout_s,
                         cwd=repo_path or None,
-                        input=packet_text,
-                        capture_output=True,
-                        text=True,
-                        timeout=max(1, int(timeout_s or 1)),
-                        check=False,
+                        input_text=packet_text,
                     )
+                    timed_out = bool(completed.get("timed_out"))
+                    exit_code = completed.get("exit_code")
                     result.update(
-                        status="launched" if completed.returncode == 0 else "failed",
-                        exit_code=completed.returncode,
-                        stdout=completed.stdout or "",
-                        stderr=completed.stderr or "",
+                        status=(
+                            "timeout"
+                            if timed_out
+                            else "launched" if exit_code == 0 else "failed"
+                        ),
+                        exit_code=exit_code,
+                        stdout=completed.get("stdout", ""),
+                        stderr=completed.get("stderr", ""),
+                        timed_out=timed_out,
                         session_ids=_extract_session_ids(
-                            f"{completed.stdout or ''}\n{completed.stderr or ''}"
+                            f"{completed.get('stdout', '')}\n{completed.get('stderr', '')}"
                         ),
                     )
                 except subprocess.TimeoutExpired as exc:
@@ -304,6 +310,7 @@ def launch_packets(
             launched_count=launched_count,
             timeout_count=timeout_count,
             jules_command=jules_command,
+            resolved_jules_command=resolved_jules_command,
             repo_path=repo_path,
             results=results,
             state_path="",
@@ -314,7 +321,11 @@ def launch_packets(
             ),
         )
         if write_state:
-            destination = _state_path_for(packet_dir=packet_dir, state_path=state_path)
+            destination = _state_path_for(
+                packet_dir=packet_dir,
+                state_path=state_path,
+                packet_files=packets,
+            )
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             payload["state_path"] = str(destination)
@@ -346,7 +357,8 @@ def list_remote_sessions(
     Returns:
         JulesRemoteResult. Never raises.
     """
-    command = [jules_command, "remote", "list", "--session"]
+    resolved_jules_command = _resolve_cli_command(jules_command)
+    command = [resolved_jules_command, "remote", "list", "--session"]
     if dry_run:
         return JulesRemoteResult(
             dry_run=True,
@@ -357,25 +369,28 @@ def list_remote_sessions(
             stderr="",
             timed_out=False,
             session_ids=[],
+            jules_command=jules_command,
+            resolved_jules_command=resolved_jules_command,
         )
     try:
-        completed = subprocess.run(
+        completed = _run_cli_command(
             command,
-            capture_output=True,
-            text=True,
-            timeout=max(1, int(timeout_s or 1)),
-            check=False,
+            timeout_s=timeout_s,
         )
-        combined = f"{completed.stdout or ''}\n{completed.stderr or ''}"
+        combined = f"{completed.get('stdout', '')}\n{completed.get('stderr', '')}"
+        timed_out = bool(completed.get("timed_out"))
+        exit_code = completed.get("exit_code")
         return JulesRemoteResult(
             dry_run=False,
             command=command,
-            status="ok" if completed.returncode == 0 else "failed",
-            exit_code=completed.returncode,
-            stdout=completed.stdout or "",
-            stderr=completed.stderr or "",
-            timed_out=False,
+            status="timeout" if timed_out else "ok" if exit_code == 0 else "failed",
+            exit_code=exit_code,
+            stdout=completed.get("stdout", ""),
+            stderr=completed.get("stderr", ""),
+            timed_out=timed_out,
             session_ids=_extract_session_ids(combined),
+            jules_command=jules_command,
+            resolved_jules_command=resolved_jules_command,
         )
     except subprocess.TimeoutExpired as exc:
         return JulesRemoteResult(
@@ -387,6 +402,8 @@ def list_remote_sessions(
             stderr=_coerce_text(exc.stderr),
             timed_out=True,
             session_ids=[],
+            jules_command=jules_command,
+            resolved_jules_command=resolved_jules_command,
         )
     except Exception as exc:  # noqa: BLE001
         return JulesRemoteResult(
@@ -398,6 +415,8 @@ def list_remote_sessions(
             stderr=str(exc),
             timed_out=False,
             session_ids=[],
+            jules_command=jules_command,
+            resolved_jules_command=resolved_jules_command,
         )
 
 
@@ -645,6 +664,10 @@ def _clear_previous_dispatch(output_dir: Path) -> None:
     for path in output_dir.glob("JT-*.md"):
         if path.is_file():
             path.unlink()
+    for name in ("JULES_DISPATCH_INDEX.md", "jules_launch_commands.ps1"):
+        path = output_dir / name
+        if path.is_file():
+            path.unlink()
 
 
 def _resolve_packet_files(
@@ -659,10 +682,20 @@ def _resolve_packet_files(
     return [path for path in paths if path.is_file()]
 
 
-def _state_path_for(packet_dir: str, state_path: str) -> Path:
+def _state_path_for(
+    packet_dir: str,
+    state_path: str,
+    packet_files: Iterable[Path] | None = None,
+) -> Path:
     if state_path:
         return Path(state_path)
-    base = Path(packet_dir) if packet_dir else _DEFAULT_OUTPUT_DIR
+    if packet_dir:
+        base = Path(packet_dir)
+    elif packet_files:
+        first_packet = next(iter(packet_files), None)
+        base = first_packet.parent if first_packet else _DEFAULT_OUTPUT_DIR
+    else:
+        base = _DEFAULT_OUTPUT_DIR
     return base / _DEFAULT_STATE_FILE
 
 
@@ -677,16 +710,84 @@ def _extract_session_ids(text: str) -> list[str]:
     return result
 
 
+def _resolve_cli_command(command: str) -> str:
+    candidate = (command or "").strip() or "jules"
+    return shutil.which(candidate) or candidate
+
+
+def _run_cli_command(
+    command: list[str],
+    timeout_s: int,
+    cwd: str | None = None,
+    input_text: str | None = None,
+) -> dict:
+    timeout = max(1, int(timeout_s or 1))
+    creationflags = 0
+    if os.name == "nt" and hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):
+        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        creationflags=creationflags,
+    )
+    try:
+        stdout, stderr = process.communicate(input=input_text, timeout=timeout)
+        return {
+            "exit_code": process.returncode,
+            "stdout": stdout or "",
+            "stderr": stderr or "",
+            "timed_out": False,
+        }
+    except subprocess.TimeoutExpired as exc:
+        _terminate_process_tree(process)
+        stdout = _coerce_text(getattr(exc, "stdout", None) or getattr(exc, "output", None))
+        stderr = _coerce_text(getattr(exc, "stderr", None))
+        try:
+            recovered_stdout, recovered_stderr = process.communicate(timeout=5)
+            stdout += _coerce_text(recovered_stdout)
+            stderr += _coerce_text(recovered_stderr)
+        except Exception as cleanup_exc:  # noqa: BLE001
+            stderr = (stderr + "\n" + f"cleanup_after_timeout_failed: {cleanup_exc}").strip()
+        return {
+            "exit_code": None,
+            "stdout": stdout,
+            "stderr": stderr,
+            "timed_out": True,
+        }
+
+
+def _terminate_process_tree(process: subprocess.Popen) -> None:
+    if process.poll() is not None:
+        return
+    if os.name == "nt":
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(process.pid)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            return
+        except Exception:
+            pass
+    try:
+        process.kill()
+    except Exception:
+        pass
+
+
 def _coerce_text(value) -> str:
     if value is None:
         return ""
     if isinstance(value, bytes):
         return value.decode("utf-8", errors="replace")
     return str(value)
-    for name in ("JULES_DISPATCH_INDEX.md", "jules_launch_commands.ps1"):
-        path = output_dir / name
-        if path.is_file():
-            path.unlink()
 
 
 def _dispatch_index(

@@ -15,6 +15,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 │   ├── oracle_session.py   ← Oracle V5 + Quantower health/build/deploy
 │   ├── reasoning_module.py ← HRM-inspired H/L/ACT hierarchical reasoning
 │   ├── retrospective_module.py ← Log analysis, memory writes, test evidence
+│   ├── jules_orchestrator.py ← Jules task packets, launch state, remote session checks
 │   └── akc_module.py       ← Agent Knowledge Context checkpoints from source files
 ├── memory/                 ← Per-domain markdown memory files
 │   ├── general.md          ← General harness learnings
@@ -50,7 +51,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/shell/` | shell_executor | Command execution |
 | `/ui/` | ui_automation | Screenshot and click |
 | `/inbox/` | inbox_service | Message passing |
-| `/jules/` | jules_orchestrator | Jules task dispatch, worker packets, and explicit launch commands |
+| `/jules/` | jules_orchestrator | Jules task dispatch, worker packets, launch state, and remote session checks |
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |
 | `/reasoning/` | reasoning_module | H/L/ACT reasoning (Gemini or stub) |
 | `/retrospective/` | retrospective_module | Log analysis + memory + pruning |
@@ -89,4 +90,10 @@ Every module has a **simple typed interface** hiding complex implementation:
   cards by status/type, and builds worker packets plus explicit launch commands.
 - `POST /jules/dispatch` is dry-run by default. It can write packet files under
   `jules_inbox/jules_dispatch/`, but it never starts remote Jules sessions.
+- `POST /jules/launch` is also dry-run by default. With `dry_run=false`, it
+  launches prepared packet files through the Jules CLI, writes
+  `JULES_LAUNCH_STATE.json`, and records stdout/stderr/session ids per packet.
+- `POST /jules/sessions` lists remote Jules sessions through
+  `jules remote list --session`; live calls use timeout-protected process-tree
+  cleanup so a blocked npm shim does not leave `node`/`jules.exe` children.
 - Observe: `retrospective_module.py` reads logs → writes memory

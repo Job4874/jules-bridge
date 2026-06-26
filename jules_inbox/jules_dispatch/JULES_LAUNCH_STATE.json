@@ -1,17 +1,18 @@
 {
-  "generated_at_utc": "2026-06-26T04:19:03.995592+00:00",
+  "generated_at_utc": "2026-06-26T04:24:21.253143+00:00",
   "dry_run": true,
   "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
   "selected_count": 6,
   "launched_count": 0,
   "timeout_count": 0,
   "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
   "repo_path": "C:\\aotp\\projects\\OracleV5",
   "results": [
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-bbe920-add-test-for-resetselectorcandidates.md",
       "command": [
-        "jules",
+        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
         "new"
       ],
       "repo_path": "C:\\aotp\\projects\\OracleV5",
@@ -25,7 +26,7 @@
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-39436e-serial-execution-of-asynchronous-file-i-o.md",
       "command": [
-        "jules",
+        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
         "new"
       ],
       "repo_path": "C:\\aotp\\projects\\OracleV5",
@@ -39,7 +40,7 @@
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-9b62c7-add-test-for-volregimedetector-reset.md",
       "command": [
-        "jules",
+        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
         "new"
       ],
       "repo_path": "C:\\aotp\\projects\\OracleV5",
@@ -53,7 +54,7 @@
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-006-857c83-add-test-for-secondssincelastpulse.md",
       "command": [
-        "jules",
+        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
         "new"
       ],
       "repo_path": "C:\\aotp\\projects\\OracleV5",
@@ -67,7 +68,7 @@
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-024-389f1d-add-test-for-heartbeatmonitor-isalive.md",
       "command": [
-        "jules",
+        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
         "new"
       ],
       "repo_path": "C:\\aotp\\projects\\OracleV5",
@@ -81,7 +82,7 @@
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-025-9e80e5-add-test-for-vixmonitor-reset.md",
       "command": [
-        "jules",
+        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
         "new"
       ],
       "repo_path": "C:\\aotp\\projects\\OracleV5",
