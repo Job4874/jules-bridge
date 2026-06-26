@@ -549,6 +549,8 @@ class TestAKCRoutes(unittest.TestCase):
                 "head_chars": 120,
                 "tail_chars": 120,
                 "max_packet_chars": 4000,
+                "context_window_chars": 10000,
+                "max_context_utilization_percent": 35,
             },
         )
 
@@ -557,6 +559,8 @@ class TestAKCRoutes(unittest.TestCase):
         self.assertEqual(mock_subagents.call_args.kwargs["roles"], ["implementation_planner"])
         self.assertEqual(mock_subagents.call_args.kwargs["head_chars"], 120)
         self.assertEqual(mock_subagents.call_args.kwargs["task"], "Optimize context handling")
+        self.assertEqual(mock_subagents.call_args.kwargs["context_window_chars"], 10000)
+        self.assertEqual(mock_subagents.call_args.kwargs["max_context_utilization"], 0.35)
 
     def test_akc_subagents_requires_content_or_sources(self):
         response = self.client.post("/akc/subagents", json={})

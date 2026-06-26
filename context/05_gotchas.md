@@ -88,10 +88,14 @@
 
 - **`build_context_subagents(...)`** — source context planning only; it must not call Jules CLI, list remote sessions, or launch workers.
 - **Smart truncation** — packets keep source head/tail excerpts and hash the omitted middle. Do not treat omitted middle as irrelevant; retrieve it only when a role needs it.
+- **Context memory store** — `context_memory_store` stores retrieval refs and hashes, not raw omitted text. Use it to decide what survives outside active prompt context without bloating every packet.
+- **Long-session evals** — `long_session_eval_plan` follows the 10-turn preload / 11th-turn probe pattern so late context loss is testable before calling a long workflow complete.
 - **Path handling** — public source rows and packet text use `path_ref:*`/`inline`, not raw source paths. `packet_files` can be raw paths because those are generated local artifacts.
 - **Role ids** — supported defaults are `context_cartographer`, `memory_curator`, `implementation_planner`, and `verification_agent`; unknown requested roles fall back to the default role set.
 - **`POST /akc/subagents`** — requires either inline `content`/`data` or at least one `source_paths` entry; empty requests are rejected at the route layer.
-- **Packet output** — defaults to `jules_inbox/context_subagents/` and writes `CONTEXT_SUBAGENT_INDEX.md` plus `CONTEXT_SUBAGENT_STATE.json` when `write_packets=true`.
+- **No-slop workflow** — `no_slop_workflow` must keep `research -> plan -> implement` phases and the review gates `review_research_before_plan`, `review_plan_before_code`, and `record_evidence_before_done`.
+- **Context budget** — default target is 40% of a 170k-character window. If `context_budget.over_budget=true`, write/update compaction artifacts before implementation instead of pushing more source text into packets.
+- **Packet output** — defaults to `jules_inbox/context_subagents/` and writes `CONTEXT_SUBAGENT_INDEX.md`, `NO_SLOP_WORKFLOW.md`, `CONTEXT_MEMORY_STORE.json`, `CONTEXT_QUALITY_EVAL.md`, and `CONTEXT_SUBAGENT_STATE.json` when `write_packets=true`.
 
 ## inbox_service
 

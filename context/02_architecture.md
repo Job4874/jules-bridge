@@ -91,8 +91,18 @@ Every module has a **simple typed interface** hiding complex implementation:
 - `POST /akc/subagents` accepts inline `content` or explicit `source_paths`,
   keeps source heads/tails in active context, hashes omitted middles, and reports
   context metrics for budget checks.
+- Omitted middles are indexed in `context_memory_store` and
+  `CONTEXT_MEMORY_STORE.json` as retrieval refs and hashes, not copied into every
+  packet. This keeps the parent prompt lean while preserving a retrieval path.
+- It also emits a spec-first no-slop workflow: `research -> plan -> implement`,
+  review gates before code, and a context-utilization target that defaults to
+  40% of a 170k-character window.
+- `long_session_eval_plan` and `CONTEXT_QUALITY_EVAL.md` use the 10-turn
+  preload / 11th-turn probe pattern to catch late context loss.
 - `write_packets=true` writes markdown packets under
-  `jules_inbox/context_subagents/`; it never calls `jules new`.
+  `jules_inbox/context_subagents/` plus `NO_SLOP_WORKFLOW.md`,
+  `CONTEXT_MEMORY_STORE.json`, and `CONTEXT_QUALITY_EVAL.md`; it never calls
+  `jules new`.
 - Keep this distinct from `/jules/dispatch`: AKC subagents handle source
   context, Jules dispatch handles executable Jules task cards.
 

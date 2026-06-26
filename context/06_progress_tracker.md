@@ -178,3 +178,18 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Added route helper `string_list_field(...)` for optional `list[str]` request fields.
 - Added `tests/test_context_orchestrator.py` and route tests for `/akc/subagents`.
 - Evidence: `python -m pytest tests/ -q` passed 237 tests with 1 existing warning, SHA-256 `6148ccf5d6d3e00a2bf4dda03ea5cfad92251f0f5bfd0576abb267d63159eb21`.
+
+## Session 20260626T173000 - No-Slop Spec-First Workflow
+
+- Re-read `C:\Users\abdul\.codex\attachments\5b03d348-1286-4601-b5a0-691647b1e89f\pasted-text-1.txt`; key requirements were spec-first development, frequent intentional compaction, subagents as context control, and keeping context utilization under about 40%.
+- Extended `build_context_subagents(...)` with `context_budget` and `no_slop_workflow` outputs. The workflow is explicitly `research -> plan -> implement` with review gates before plan/code and evidence before done.
+- `POST /akc/subagents` now accepts `context_window_chars` and `max_context_utilization_percent`; defaults are 170000 and 40.
+- `write_packets=true` now writes `NO_SLOP_WORKFLOW.md` alongside context sub-agent packets.
+
+## Session 20260626T173600 - Context Memory Store And Long-Session Eval
+
+- Re-read `C:\Users\abdul\.codex\attachments\3d874cb7-b9a3-4271-bb07-cc7210c4d88c\pasted-text-1.txt` and `C:\Users\abdul\.codex\attachments\3d874cb7-b9a3-4271-bb07-cc7210c4d88c\pasted-text-2.txt`; the newer context-engineering transcript added context-vs-memory separation, smart truncation with memory refs, 10-turn/11th-turn long-session evals, and subagents for heavy context.
+- `build_context_subagents(...)` now returns `context_memory_store` and `long_session_eval_plan`. The memory store keeps retrieval refs and hashes, not raw omitted text; the eval plan pins `preload_turns=10` and `probe_turn=11`.
+- `write_packets=true` now writes `CONTEXT_MEMORY_STORE.json` and `CONTEXT_QUALITY_EVAL.md` alongside role packets, `CONTEXT_SUBAGENT_INDEX.md`, `CONTEXT_SUBAGENT_STATE.json`, and `NO_SLOP_WORKFLOW.md`.
+- Regenerated `jules_inbox/context_subagents/` from the two current pasted sources: 2 readable sources, 4 role packets, 2 memory refs, `context_budget.over_budget=false`, and no raw attachment paths in generated packet artifacts.
+- Evidence: `python -m py_compile bridge.py modules\context_orchestrator.py modules\__init__.py` passed; `python -m pytest tests/ -q` passed 240 tests with 1 existing warning, SHA-256 `7e42a3ecdcad29604d56efef9775d577985e939d8a503cbb9ef5a1c21c9e1d4c`.

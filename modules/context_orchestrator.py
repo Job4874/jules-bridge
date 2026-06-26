@@ -46,6 +46,10 @@ _DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent.parent / "jules_inbox" / "
 _DEFAULT_HEAD_CHARS = 800
 _DEFAULT_TAIL_CHARS = 800
 _DEFAULT_PACKET_CHARS = 12000
+_DEFAULT_CONTEXT_WINDOW_CHARS = 170000
+_DEFAULT_MAX_CONTEXT_UTILIZATION = 0.4
+_DEFAULT_LONG_SESSION_PRELOAD_TURNS = 10
+_DEFAULT_LONG_SESSION_PROBE_TURN = 11
 _MIN_EXCERPT_CHARS = 80
 _DEFAULT_ROLES = (
     {
@@ -114,6 +118,8 @@ def build_context_subagents(
     head_chars: int = _DEFAULT_HEAD_CHARS,
     tail_chars: int = _DEFAULT_TAIL_CHARS,
     max_packet_chars: int = _DEFAULT_PACKET_CHARS,
+    context_window_chars: int = _DEFAULT_CONTEXT_WINDOW_CHARS,
+    max_context_utilization: float = _DEFAULT_MAX_CONTEXT_UTILIZATION,
     write_packets: bool = False,
     output_dir: str = "",
 ) -> ContextSubagentPlan:
@@ -128,6 +134,8 @@ def build_context_subagents(
         head_chars: Characters to keep from each source head.
         tail_chars: Characters to keep from each source tail.
         max_packet_chars: Per-packet character budget.
+        context_window_chars: Estimated parent context window size.
+        max_context_utilization: Target max utilization, e.g. 0.4 for 40%.
         write_packets: If true, write markdown packets and an index.
         output_dir: Destination directory. Defaults to jules_inbox/context_subagents.
 
@@ -177,12 +185,23 @@ def build_context_subagents(
             for row in readable_rows
         ]
         metrics = _context_metrics(capsules)
+        context_budget = _context_budget(
+            metrics,
+            context_window_chars=context_window_chars,
+            max_context_utilization=max_context_utilization,
+        )
+        memory_store = _context_memory_store(capsules)
+        eval_plan = _long_session_eval_plan(metrics=metrics, context_budget=context_budget)
+        workflow = _no_slop_workflow(task=task, context_budget=context_budget)
         subagents = [
             _subagent_for_role(
                 role=role,
                 task=task,
                 capsules=capsules,
                 metrics=metrics,
+                workflow=workflow,
+                memory_store=memory_store,
+                eval_plan=eval_plan,
                 max_packet_chars=packet_budget,
             )
             for role in selected_roles
@@ -197,6 +216,10 @@ def build_context_subagents(
                 generated_at=generated_at,
                 task=task,
                 metrics=metrics,
+                context_budget=context_budget,
+                workflow=workflow,
+                memory_store=memory_store,
+                eval_plan=eval_plan,
             )
         plan_markdown = _plan_markdown(
             generated_at=generated_at,
@@ -204,6 +227,10 @@ def build_context_subagents(
             task=task,
             sources=_public_sources(source_rows),
             metrics=metrics,
+            context_budget=context_budget,
+            workflow=workflow,
+            memory_store=memory_store,
+            eval_plan=eval_plan,
             subagents=subagents,
             packet_files=packet_files,
         )
@@ -221,6 +248,10 @@ def build_context_subagents(
             sources=_public_sources(source_rows),
             capsules=capsules,
             context_metrics=metrics,
+            context_budget=context_budget,
+            context_memory_store=memory_store,
+            long_session_eval_plan=eval_plan,
+            no_slop_workflow=workflow,
             subagents=subagents,
             write_packets=write_packets,
             output_dir=str(output),
@@ -367,7 +398,13 @@ def _extract_signals(text: str) -> list[str]:
 
 
 def _redact_local_paths(text: str) -> str:
-    return _LOCAL_PATH_RE.sub("path-redacted", text or "")
+    redacted = _LOCAL_PATH_RE.sub("path-redacted", text or "")
+    return _clean_generated_text(redacted)
+
+
+def _clean_generated_text(text: str) -> str:
+    normalized = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    return "\n".join(line.rstrip() for line in normalized.split("\n"))
 
 
 def _context_metrics(capsules: Iterable[ContextCapsule]) -> dict:
@@ -393,6 +430,119 @@ def _context_metrics(capsules: Iterable[ContextCapsule]) -> dict:
     }
 
 
+def _context_memory_store(capsules: Iterable[ContextCapsule]) -> dict:
+    entries = []
+    for index, capsule in enumerate(capsules, start=1):
+        omitted_sha = str(capsule.get("omitted_middle_sha256", ""))
+        path_ref = str(capsule.get("path_ref", ""))
+        entries.append({
+            "id": f"CM-{index:03d}",
+            "name": capsule.get("name", ""),
+            "path_ref": path_ref,
+            "source_sha256": capsule.get("sha256", ""),
+            "active_head_chars": int(capsule.get("head_char_count") or 0),
+            "active_tail_chars": int(capsule.get("tail_char_count") or 0),
+            "omitted_middle_chars": int(capsule.get("omitted_middle_char_count") or 0),
+            "omitted_middle_sha256": omitted_sha,
+            "stored_text": False,
+            "retrieval_key": f"{path_ref}:{omitted_sha[:12]}" if omitted_sha else path_ref,
+            "retrieval_instruction": (
+                "Retrieve the original source by path_ref and source_sha256 before "
+                "treating omitted middle context as known."
+            ),
+        })
+    return {
+        "strategy": "head_tail_active_context_middle_memory_refs",
+        "stores_raw_text": False,
+        "entry_count": len(entries),
+        "entries": entries,
+        "policy": (
+            "Active packets carry source heads/tails only. Omitted middles survive "
+            "as hashed retrieval refs so the main conversation stays small."
+        ),
+    }
+
+
+def _context_budget(
+    metrics: dict,
+    context_window_chars: int,
+    max_context_utilization: float,
+) -> dict:
+    window = max(1, int(context_window_chars or _DEFAULT_CONTEXT_WINDOW_CHARS))
+    target_ratio = max(0.01, min(1.0, float(max_context_utilization or _DEFAULT_MAX_CONTEXT_UTILIZATION)))
+    target_chars = int(window * target_ratio)
+    active_chars = int(metrics.get("active_prompt_chars") or 0)
+    utilization = round(active_chars / window, 4)
+    over_budget = active_chars > target_chars
+    recommendation = (
+        "intentional_compaction_required: write/update research and plan files before implementation"
+        if over_budget
+        else "within_budget: keep research, plan, and implementation phases explicit"
+    )
+    return {
+        "context_window_chars": window,
+        "target_utilization_ratio": round(target_ratio, 4),
+        "target_active_chars": target_chars,
+        "active_prompt_chars": active_chars,
+        "utilization_ratio": utilization,
+        "over_budget": over_budget,
+        "recommendation": recommendation,
+    }
+
+
+def _long_session_eval_plan(metrics: dict, context_budget: dict) -> dict:
+    return {
+        "name": "ten_turn_preload_probe_turn_11",
+        "signal": "long_session_evals",
+        "preload_turns": _DEFAULT_LONG_SESSION_PRELOAD_TURNS,
+        "probe_turn": _DEFAULT_LONG_SESSION_PROBE_TURN,
+        "purpose": (
+            "Expose late context failures by preloading 10 turns and checking "
+            "whether probe turn 11 still uses the retained context correctly."
+        ),
+        "active_prompt_chars": int(metrics.get("active_prompt_chars") or 0),
+        "context_over_budget": bool(context_budget.get("over_budget")),
+        "release_gate": (
+            "For long-running workflows, run or document this eval before marking "
+            "context handling complete."
+        ),
+    }
+
+
+def _no_slop_workflow(task: str, context_budget: dict) -> dict:
+    return {
+        "mode": "spec_first",
+        "task": task,
+        "target_context_utilization_ratio": context_budget.get("target_utilization_ratio", 0.4),
+        "compaction_required": bool(context_budget.get("over_budget")),
+        "phases": [
+            {
+                "id": "research",
+                "goal": "Find how the system works and identify exact files, flows, and line references.",
+                "artifact": "RESEARCH.md",
+                "done_when": "Reviewer can understand the system path without re-searching the repo.",
+            },
+            {
+                "id": "plan",
+                "goal": "Specify every intended change, file target, test, and rollback concern before editing code.",
+                "artifact": "IMPLEMENTATION_PLAN.md",
+                "done_when": "Plan is shorter than the change and catches design mistakes before code.",
+            },
+            {
+                "id": "implement",
+                "goal": "Make the planned changes, keep context under budget, and update the plan as phases complete.",
+                "artifact": "CODE_AND_EVIDENCE",
+                "done_when": "Tests, route smoke, hashes, or runtime evidence prove the requested behavior.",
+            },
+        ],
+        "review_gates": [
+            "review_research_before_plan",
+            "review_plan_before_code",
+            "record_evidence_before_done",
+        ],
+    }
+
+
 def _select_roles(roles: Iterable[str] | None) -> list[dict]:
     by_id = {role["id"]: role for role in _DEFAULT_ROLES}
     requested = [str(role).strip() for role in roles or [] if str(role).strip()]
@@ -412,15 +562,18 @@ def _subagent_for_role(
     task: str,
     capsules: list[ContextCapsule],
     metrics: dict,
+    workflow: dict,
+    memory_store: dict,
+    eval_plan: dict,
     max_packet_chars: int,
 ) -> ContextSubagent:
     excerpt_chars = min(_DEFAULT_HEAD_CHARS, _DEFAULT_TAIL_CHARS)
-    packet = _packet_text(role, task, capsules, metrics, excerpt_chars)
+    packet = _packet_text(role, task, capsules, metrics, workflow, memory_store, eval_plan, excerpt_chars)
     while len(packet) > max_packet_chars and excerpt_chars > _MIN_EXCERPT_CHARS:
         excerpt_chars = max(_MIN_EXCERPT_CHARS, excerpt_chars // 2)
-        packet = _packet_text(role, task, capsules, metrics, excerpt_chars)
+        packet = _packet_text(role, task, capsules, metrics, workflow, memory_store, eval_plan, excerpt_chars)
     if len(packet) > max_packet_chars:
-        packet = _packet_text(role, task, capsules, metrics, 0)
+        packet = _packet_text(role, task, capsules, metrics, workflow, memory_store, eval_plan, 0)
     return ContextSubagent({
         "id": f"CA-{role['id']}",
         "role_id": role["id"],
@@ -440,6 +593,9 @@ def _packet_text(
     task: str,
     capsules: list[ContextCapsule],
     metrics: dict,
+    workflow: dict,
+    memory_store: dict,
+    eval_plan: dict,
     excerpt_chars: int,
 ) -> str:
     lines = [
@@ -453,6 +609,24 @@ def _packet_text(
         f"- active_prompt_chars: {metrics.get('active_prompt_chars', 0)}",
         f"- omitted_middle_chars: {metrics.get('omitted_middle_chars', 0)}",
         f"- compression_ratio: {metrics.get('compression_ratio', 0)}",
+        "",
+        "## No Slop Workflow",
+        f"- mode: {workflow.get('mode', 'spec_first')}",
+        f"- compaction_required: {workflow.get('compaction_required', False)}",
+        "- phases: research -> plan -> implement",
+        "- gates: review research before plan; review plan before code; record evidence before done",
+        "",
+        "## Context Handling Policy",
+        "- active_context: source head/tail excerpts only",
+        f"- memory_store: {memory_store.get('strategy', 'middle refs')} ({memory_store.get('entry_count', 0)} refs)",
+        "- retrieve omitted middles before assuming missing details are irrelevant",
+        "- subagent_boundary: keep heavy source analysis inside role packets",
+        (
+            "- long_session_eval: preload {preload} turns; probe turn {probe}"
+        ).format(
+            preload=eval_plan.get("preload_turns", _DEFAULT_LONG_SESSION_PRELOAD_TURNS),
+            probe=eval_plan.get("probe_turn", _DEFAULT_LONG_SESSION_PROBE_TURN),
+        ),
         "",
         "## Operating Rules",
         "- Keep the main conversation light; do heavy source analysis inside this packet.",
@@ -479,6 +653,7 @@ def _packet_text(
 
 
 def _capsule_lines(capsule: ContextCapsule, excerpt_chars: int) -> list[str]:
+    omitted_sha = str(capsule.get("omitted_middle_sha256", ""))
     lines = [
         "",
         f"### {capsule.get('name', 'source')}",
@@ -486,7 +661,7 @@ def _capsule_lines(capsule: ContextCapsule, excerpt_chars: int) -> list[str]:
         f"- sha256: {capsule.get('sha256', '')}",
         f"- chars: {capsule.get('char_count', 0)}",
         f"- omitted_middle_chars: {capsule.get('omitted_middle_char_count', 0)}",
-        f"- omitted_middle_sha256: {capsule.get('omitted_middle_sha256', '')}",
+        f"- omitted_middle_sha256: {omitted_sha}" if omitted_sha else "- omitted_middle_sha256:",
         f"- signals: {', '.join(capsule.get('signals', [])) or '(none)'}",
     ]
     if excerpt_chars <= 0:
@@ -518,6 +693,10 @@ def _write_packets(
     generated_at: str,
     task: str,
     metrics: dict,
+    context_budget: dict,
+    workflow: dict,
+    memory_store: dict,
+    eval_plan: dict,
 ) -> list[str]:
     output_dir.mkdir(parents=True, exist_ok=True)
     for path in output_dir.glob("CA-*.md"):
@@ -530,16 +709,88 @@ def _write_packets(
         packet_files.append(str(path))
     index = _index_markdown(generated_at, task, metrics, subagents, packet_files)
     (output_dir / "CONTEXT_SUBAGENT_INDEX.md").write_text(index, encoding="utf-8")
+    (output_dir / "NO_SLOP_WORKFLOW.md").write_text(
+        _workflow_markdown(generated_at, task, context_budget, workflow),
+        encoding="utf-8",
+    )
+    (output_dir / "CONTEXT_MEMORY_STORE.json").write_text(
+        json.dumps(memory_store, indent=2),
+        encoding="utf-8",
+    )
+    (output_dir / "CONTEXT_QUALITY_EVAL.md").write_text(
+        _eval_plan_markdown(generated_at, task, eval_plan),
+        encoding="utf-8",
+    )
     (output_dir / "CONTEXT_SUBAGENT_STATE.json").write_text(
         json.dumps({
             "generated_at_utc": generated_at,
             "task": task,
             "context_metrics": metrics,
+            "context_budget": context_budget,
+            "context_memory_store": memory_store,
+            "long_session_eval_plan": eval_plan,
+            "no_slop_workflow": workflow,
             "packet_files": packet_files,
         }, indent=2),
         encoding="utf-8",
     )
     return packet_files
+
+
+def _workflow_markdown(
+    generated_at: str,
+    task: str,
+    context_budget: dict,
+    workflow: dict,
+) -> str:
+    lines = [
+        "# No Slop Workflow",
+        "",
+        f"- generated_at_utc: {generated_at}",
+        f"- task: {task or '(not specified)'}",
+        f"- mode: {workflow.get('mode', 'spec_first')}",
+        f"- context_window_chars: {context_budget.get('context_window_chars', 0)}",
+        f"- target_utilization_ratio: {context_budget.get('target_utilization_ratio', 0)}",
+        f"- active_prompt_chars: {context_budget.get('active_prompt_chars', 0)}",
+        f"- over_budget: {context_budget.get('over_budget', False)}",
+        f"- recommendation: {context_budget.get('recommendation', '')}",
+        "",
+        "## Phases",
+        "",
+    ]
+    for phase in workflow.get("phases", []):
+        lines.extend([
+            f"### {phase.get('id', '')}",
+            f"- artifact: {phase.get('artifact', '')}",
+            f"- goal: {phase.get('goal', '')}",
+            f"- done_when: {phase.get('done_when', '')}",
+            "",
+        ])
+    lines.extend([
+        "## Review Gates",
+        "",
+    ])
+    lines.extend(f"- {gate}" for gate in workflow.get("review_gates", []))
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _eval_plan_markdown(generated_at: str, task: str, eval_plan: dict) -> str:
+    lines = [
+        "# Context Quality Eval",
+        "",
+        f"- generated_at_utc: {generated_at}",
+        f"- task: {task or '(not specified)'}",
+        f"- name: {eval_plan.get('name', '')}",
+        f"- signal: {eval_plan.get('signal', '')}",
+        f"- preload_turns: {eval_plan.get('preload_turns', 0)}",
+        f"- probe_turn: {eval_plan.get('probe_turn', 0)}",
+        f"- context_over_budget: {eval_plan.get('context_over_budget', False)}",
+        f"- purpose: {eval_plan.get('purpose', '')}",
+        f"- release_gate: {eval_plan.get('release_gate', '')}",
+        "",
+    ]
+    return "\n".join(lines)
 
 
 def _index_markdown(
@@ -581,6 +832,10 @@ def _plan_markdown(
     task: str,
     sources: list[ContextSource],
     metrics: dict,
+    context_budget: dict,
+    workflow: dict,
+    memory_store: dict,
+    eval_plan: dict,
     subagents: list[ContextSubagent],
     packet_files: list[str],
 ) -> str:
@@ -594,12 +849,33 @@ def _plan_markdown(
         f"- active_prompt_chars: {metrics.get('active_prompt_chars', 0)}",
         f"- omitted_middle_chars: {metrics.get('omitted_middle_chars', 0)}",
         f"- compression_ratio: {metrics.get('compression_ratio', 0)}",
+        f"- context_window_chars: {context_budget.get('context_window_chars', 0)}",
+        f"- target_context_utilization_ratio: {context_budget.get('target_utilization_ratio', 0)}",
+        f"- context_over_budget: {context_budget.get('over_budget', False)}",
+        f"- memory_store_strategy: {memory_store.get('strategy', '')}",
+        f"- memory_store_refs: {memory_store.get('entry_count', 0)}",
+        f"- long_session_eval: preload {eval_plan.get('preload_turns', 0)} turns, probe turn {eval_plan.get('probe_turn', 0)}",
+        "",
+        "## No Slop Workflow",
+        "",
+        "| phase | artifact | done_when |",
+        "|---|---|---|",
+    ]
+    for phase in workflow.get("phases", []):
+        lines.append(
+            "| {id} | {artifact} | {done} |".format(
+                id=phase.get("id", ""),
+                artifact=phase.get("artifact", ""),
+                done=str(phase.get("done_when", "")).replace("|", "\\|"),
+            )
+        )
+    lines.extend([
         "",
         "## Sources",
         "",
         "| name | path_ref | readable | chars | sha256 |",
         "|---|---|---:|---:|---|",
-    ]
+    ])
     for source in sources:
         sha = str(source.get("sha256", ""))[:16]
         lines.append(

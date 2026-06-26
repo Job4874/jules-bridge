@@ -1388,6 +1388,11 @@ def akc_subagents_post():
         head_chars=int_field(data, "head_chars", default=800, min_value=80, max_value=10000),
         tail_chars=int_field(data, "tail_chars", default=800, min_value=80, max_value=10000),
         max_packet_chars=int_field(data, "max_packet_chars", default=12000, min_value=1000, max_value=200000),
+        context_window_chars=int_field(data, "context_window_chars", default=170000, min_value=1000),
+        max_context_utilization=(
+            int_field(data, "max_context_utilization_percent", default=40, min_value=1, max_value=100)
+            / 100.0
+        ),
         write_packets=bool_field(data, "write_packets", default=False),
         output_dir=string_field(data, "output_dir", default="", allow_empty=True, control_safe=True),
     )

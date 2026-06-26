@@ -229,3 +229,11 @@ has gone wrong before and what to avoid.
 - Capsule excerpts redact Windows local paths found inside source text as `path-redacted`, while public source inventory uses `path_ref:*`. Generated packet file paths remain local artifact paths.
 - Added `string_list_field(...)` in `bridge.py` for optional `list[str]` route fields.
 - Evidence: `python -m pytest tests/ -q` passed 237 tests with 1 existing warning, SHA-256 `6148ccf5d6d3e00a2bf4dda03ea5cfad92251f0f5bfd0576abb267d63159eb21`.
+
+## Session 20260626T173600 - Context Memory Store And Long-Session Eval
+
+- `build_context_subagents(...)` now implements the context-engineering transcript contract beyond head/tail capsules: `context_memory_store` keeps hashed retrieval refs for omitted middles without storing raw omitted text, and `long_session_eval_plan` pins the 10-turn preload / 11th-turn probe eval pattern.
+- `write_packets=true` now emits `CONTEXT_MEMORY_STORE.json` and `CONTEXT_QUALITY_EVAL.md` in `jules_inbox/context_subagents/`, alongside role packets, index/state, and `NO_SLOP_WORKFLOW.md`.
+- Packet text includes a Context Handling Policy section: active context is head/tail only, omitted middles must be retrieved before assumptions, heavy source analysis stays in subagent packets, and long-session evals are an evidence gate.
+- Generated packet excerpts now normalize CR/CRLF and trim trailing line whitespace so pasted transcripts do not make `git diff --check` noisy.
+- Evidence: `/akc/subagents` route smoke on the two current pasted sources returned 2 readable sources, 4 role packets, 2 memory refs, and `context_budget.over_budget=false`; `python -m pytest tests/ -q` passed 240 tests with 1 existing warning, SHA-256 `7e42a3ecdcad29604d56efef9775d577985e939d8a503cbb9ef5a1c21c9e1d4c`.
