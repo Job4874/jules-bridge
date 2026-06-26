@@ -36,10 +36,15 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 
 LOGGER = logging.getLogger("retrospective")
+
+# Canonical memory domains — single source of truth for memory file routing and
+# for validating /retrospective/memory requests. "valid to read" is a superset
+# of "ever written": analyze_session only produces general/oracle/quantower/reasoning.
+MEMORY_DOMAINS = ("general", "oracle", "quantower", "trading", "reasoning")
 
 
 # ---------------------------------------------------------------------------
@@ -74,6 +79,22 @@ class TestEvidence:
         """One-line summary suitable for a memory file."""
         status = "PASSED" if self.passed else "FAILED"
         return f"[{self.timestamp_utc}] Tests: {status} ({self.test_count} tests) sha256:{self.output_hash[:12]}"
+
+
+@dataclass
+class EvidenceStaleness:
+    """Why the latest test evidence is not usable for gating a sensitive route.
+
+    reason is one of: "stale" | "clock_skew" | "malformed".
+    age_s is seconds since the recorded evidence timestamp (negative => future,
+    i.e. clock skew). A missing evidence file or an empty history is NOT
+    staleness — those return None (no evidence recorded yet), preserving the
+    first-run path. Unlike the legacy bridge helper, a present-but-corrupt file
+    or a future-dated timestamp is reported as a distinct, fail-closed signal.
+    """
+    age_s: int
+    threshold_s: int
+    reason: str
 
 
 @dataclass
@@ -570,6 +591,89 @@ def load_test_evidence(evidence_path: str) -> Optional[TestEvidence]:
         )
     except (OSError, json.JSONDecodeError, KeyError):
         return None
+
+
+# ---------------------------------------------------------------------------
+# Evidence-gating policy (Initiative C)
+#
+# Staleness detection, the hard-gate toggle, and memory-domain validation live
+# here so bridge.py stays presentation-only (map result -> header or HTTP 423).
+# ---------------------------------------------------------------------------
+
+def is_evidence_hard_gate_enabled(env: Optional[Mapping[str, str]] = None) -> bool:
+    """Whether the hard evidence gate (pre-route HTTP 423 preempt) is enabled.
+
+    Reads EVIDENCE_GATE_HARD. Defaults to os.environ; pass an explicit mapping
+    in tests so policy stays pure and needs no environment monkeypatching.
+    """
+    source = os.environ if env is None else env
+    return source.get("EVIDENCE_GATE_HARD") == "1"
+
+
+def validate_memory_domain(domain: str) -> Optional[str]:
+    """Return None if domain is a known memory domain, else an error message."""
+    if domain in MEMORY_DOMAINS:
+        return None
+    return "domain must be one of: " + ", ".join(MEMORY_DOMAINS)
+
+
+def _evidence_history_is_empty(evidence_file: str) -> bool:
+    """True when the evidence file parses but holds no records (empty list/dict).
+
+    A corrupt/unreadable file is NOT "empty" — it returns False so the caller
+    classifies it as malformed (fail-closed) rather than a clean first run.
+    """
+    try:
+        with open(evidence_file, "r", encoding="utf-8-sig") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return False
+    if isinstance(data, (list, dict)):
+        return len(data) == 0
+    return False
+
+
+def check_test_evidence_staleness(
+    evidence_path: str, threshold_s: int = 3600
+) -> Optional[EvidenceStaleness]:
+    """Classify whether the latest test evidence is usable for route gating.
+
+    Option A (Initiative C): the well-formed-record parse path reuses
+    load_test_evidence, so there is a single contract for a valid record. The
+    classification is fail-CLOSED: a present-but-corrupt evidence file, a record
+    with an unparseable timestamp, or a future-dated (clock-skew) timestamp is
+    reported as a distinct signal instead of being silently treated as fresh.
+
+    Args:
+        evidence_path: Directory containing test_evidence.json.
+        threshold_s: Maximum age in seconds before evidence is considered stale.
+
+    Returns:
+        None when evidence is fresh, or when no evidence has been recorded yet
+        (file missing / empty history). Otherwise an EvidenceStaleness with
+        reason in {"stale", "clock_skew", "malformed"}.
+    """
+    evidence_file = os.path.join(evidence_path, "test_evidence.json")
+    if not os.path.exists(evidence_file):
+        return None  # no evidence recorded yet — first-run path, proceed
+
+    evidence = load_test_evidence(evidence_path)
+    if evidence is None:
+        if _evidence_history_is_empty(evidence_file):
+            return None
+        return EvidenceStaleness(age_s=0, threshold_s=threshold_s, reason="malformed")
+
+    try:
+        recorded = datetime.fromisoformat(evidence.timestamp_utc)
+    except (ValueError, TypeError):
+        return EvidenceStaleness(age_s=0, threshold_s=threshold_s, reason="malformed")
+
+    age_s = round((datetime.now(timezone.utc) - recorded).total_seconds())
+    if age_s < 0:
+        return EvidenceStaleness(age_s=age_s, threshold_s=threshold_s, reason="clock_skew")
+    if age_s > threshold_s:
+        return EvidenceStaleness(age_s=age_s, threshold_s=threshold_s, reason="stale")
+    return None
 
 
 # ---------------------------------------------------------------------------
