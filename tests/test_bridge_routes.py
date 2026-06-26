@@ -91,15 +91,21 @@ class TestShellRoute(unittest.TestCase):
         self.assertEqual(mock_run.call_args.args[0][:4], ["cmd.exe", "/d", "/s", "/c"])
 
     @patch("modules.shell_executor.shutil.which", return_value=None)
-    @patch("modules.shell_executor.os.path.exists", return_value=False)
-    def test_shell_invalid_git_bash(self, mock_exists, mock_which):
-        # No cwd provided — bridge uses os.getcwd() for existing_path check
-        # (real os, not mocked). shell_executor.os.path.exists is mocked to
-        # block bash discovery cleanly.
-        response = self.client.post(
-            "/shell",
-            json={"command": "ls", "shell": "bash"},
-        )
+    def test_shell_invalid_git_bash(self, mock_which):
+        # Patch os.path.exists with a side_effect so real directories
+        # (cwd check in bridge) pass, but bash candidate paths fail.
+        real_exists = os.path.exists
+
+        def fake_exists(p):
+            if "Git" in str(p) or "bash" in str(p).lower():
+                return False
+            return real_exists(p)
+
+        with patch("modules.shell_executor.os.path.exists", side_effect=fake_exists):
+            response = self.client.post(
+                "/shell",
+                json={"command": "ls", "shell": "bash"},
+            )
         self.assertEqual(response.status_code, 400)
         self.assertIn("bash shell", response.get_json()["details"])
 
