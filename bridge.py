@@ -34,6 +34,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 INBOX_DIR = os.path.join(ROOT_DIR, "jules_inbox")
 LOG_PATH = os.path.join(ROOT_DIR, "bridge.log")
 REQUEST_LOG: deque = deque(maxlen=200)
+_BRIDGE_START_UTC = datetime.now(timezone.utc)  # set once at import time for uptime tracking
 
 
 def configure_logging():
@@ -254,11 +255,39 @@ def _finalize_request(response):
                 entry["method"], entry["path"], entry["status"], entry["ms"], entry["remote"])
     return response
 
+
+@app.after_request
+def _evidence_age_check(response):
+    """Attach X-Evidence-Age-Warning on /oracle/* when test evidence is stale (>1h).
+
+    Soft gating: warns callers that tests haven't been run recently.
+    Does NOT block (no 423) — add hard enforcement later if needed.
+    """
+    if not request.path.startswith("/oracle"):
+        return response
+    evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
+    try:
+        import json as _json
+        with open(evidence_path, encoding="utf-8") as _f:
+            ev = _json.load(_f)
+        ts = ev.get("timestamp_utc", "")
+        if ts:
+            age_s = round(
+                (datetime.now(timezone.utc) - datetime.fromisoformat(ts)).total_seconds()
+            )
+            if age_s > 3600:
+                response.headers["X-Evidence-Age-Warning"] = f"stale:{age_s}s"
+    except Exception:  # noqa: BLE001
+        pass  # evidence file missing or malformed — proceed without warning
+    return response
+
+
 # ---------------------------------------------------------------------------
 # Tentacle manifest
 # ---------------------------------------------------------------------------
 
 TENTACLES = [
+    {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
     {"name": "session_log",  "route": "GET /session/log",        "reach": "Audit which tools Jules used recently"},
@@ -282,6 +311,24 @@ TENTACLES = [
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+@app.route("/health", methods=["GET"])
+def health():
+    """GET /health — Liveness + uptime check for monitoring tools and ngrok.
+
+    Returns uptime since the bridge process started. This route stops
+    monitoring tools (ngrok health checks, agents) from flooding the log
+    with 404s when polling for bridge availability.
+    """
+    uptime_s = round(
+        (datetime.now(timezone.utc) - _BRIDGE_START_UTC).total_seconds(), 1
+    )
+    return jsonify({
+        "status": "ok",
+        "bridge": "Jules Bridge",
+        "uptime_s": uptime_s,
+    })
+
 
 @app.route("/ping", methods=["GET"])
 def ping():

@@ -25,9 +25,23 @@ Public interface:
 from __future__ import annotations
 
 import json
+import logging
+import os
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+_LOGGER = logging.getLogger("jules_bridge.reasoning")
+
+# ---------------------------------------------------------------------------
+# Model alias table — callers use aliases, not raw provider model strings
+# ---------------------------------------------------------------------------
+# Swap the right-hand values to change models without touching call sites.
+_MODEL_ALIASES: Dict[str, Optional[str]] = {
+    "stub":  None,                    # deterministic stub — for unit tests
+    "fast":  "gemini-2.0-flash",      # cheap, fast reasoning
+    "smart": "gemini-2.5-pro",        # high-quality planning
+}
 
 
 # ---------------------------------------------------------------------------
@@ -126,32 +140,13 @@ class ReasoningTrace:
 
 
 # ---------------------------------------------------------------------------
-# LLM call stubs — replace with real LLM calls in production
+# LLM call stubs — used when model="stub" (tests, offline mode)
 # ---------------------------------------------------------------------------
 # These stubs make the module testable without a live LLM.
-# In production, swap _h_module_call and _l_module_call with actual calls
-# to your preferred LLM API (OpenAI, Anthropic, Gemini, etc.)
+# For real inference, pass model="fast" or model="smart" (see _MODEL_ALIASES).
 
-def _h_module_call(problem: str, context: str, model: str = "stub") -> Dict[str, Any]:
-    """H module: high-level planning call.
-
-    In production: replace with LLM API call using a planning-focused system prompt.
-
-    System prompt template (H module):
-        You are a strategic planner. Break the problem into 3-7 high-level steps.
-        Do NOT include implementation details — those come later.
-        For each step, write one clear action sentence.
-        Return JSON: {goal_statement, steps: [], confidence, reasoning}
-
-    Args:
-        problem: The problem to solve
-        context: Relevant background context
-        model: LLM model identifier
-
-    Returns:
-        JSON-parseable dict with goal_statement, steps, confidence, reasoning
-    """
-    # Stub: returns a deterministic plan for testing
+def _h_stub(problem: str, model: str) -> Dict[str, Any]:
+    """Deterministic H-module stub for unit tests."""
     return {
         "goal_statement": f"Resolve: {problem[:60]}",
         "steps": [
@@ -166,6 +161,145 @@ def _h_module_call(problem: str, context: str, model: str = "stub") -> Dict[str,
     }
 
 
+def _l_stub(step: str, step_index: int, model: str) -> Dict[str, Any]:
+    """Deterministic L-module stub for unit tests."""
+    return {
+        "action_type": "answer",
+        "payload": {"text": f"[Stub execution of step {step_index}: {step[:40]}]"},
+        "confidence": 0.7,
+        "reasoning": "[L module stub — replace with real LLM call]",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Gemini helpers — only imported/called when model != "stub"
+# ---------------------------------------------------------------------------
+
+def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
+    """Call Gemini and return the raw text response.
+
+    Requires GEMINI_API_KEY in the environment.
+    Falls back to a JSON error string if the key is missing or the call fails.
+    """
+    try:
+        import google.generativeai as genai  # type: ignore
+    except ImportError:
+        _LOGGER.warning("google-generativeai not installed; falling back to stub output")
+        return json.dumps({"error": "google-generativeai not installed"})
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        _LOGGER.warning("GEMINI_API_KEY not set in environment; falling back to stub output")
+        return json.dumps({"error": "GEMINI_API_KEY not set"})
+
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            model_name=model_name,
+            system_instruction=system_prompt,
+        )
+        response = model.generate_content(
+            user_prompt,
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json",
+                temperature=0.2,
+            ),
+        )
+        return response.text
+    except Exception as exc:  # noqa: BLE001
+        _LOGGER.error("Gemini call failed: %s", exc)
+        return json.dumps({"error": str(exc)})
+
+
+_H_SYSTEM_PROMPT = """\
+You are a strategic planner for a software engineering harness called Jules Bridge.
+Your job is to break a given problem into 3-7 high-level steps.
+Do NOT include implementation details — those come from the L module later.
+For each step, write one clear, actionable sentence.
+Return ONLY valid JSON in this exact shape:
+{"goal_statement": "<one sentence>", "steps": ["<step1>", ...], "confidence": 0.0-1.0, "reasoning": "<chain of thought>"}
+"""
+
+_L_SYSTEM_PROMPT = """\
+You are a precise executor for Jules Bridge. You receive one high-level step and must decide the concrete action.
+action_type must be exactly one of: "tool_call" | "answer" | "observe" | "skip"
+- tool_call: payload has {"tool": "<name>", "args": {...}}
+- answer: payload has {"text": "<answer>"}
+- observe: payload has {"what_to_check": "<description>"}
+- skip: payload has {"reason": "<why skipped>"}
+Return ONLY valid JSON:
+{"action_type": "<type>", "payload": {...}, "confidence": 0.0-1.0, "reasoning": "<brief rationale>"}
+"""
+
+
+def _h_gemini_call(problem: str, context: str, model_name: str) -> Dict[str, Any]:
+    """H module backed by Gemini."""
+    user_prompt = f"Problem: {problem}"
+    if context:
+        user_prompt += f"\n\nContext:\n{context}"
+    raw = _gemini_chat(_H_SYSTEM_PROMPT, user_prompt, model_name)
+    try:
+        data = json.loads(raw)
+        if "error" in data:
+            _LOGGER.warning("Gemini H-module error: %s — using stub fallback", data["error"])
+            return _h_stub(problem, model_name)
+        data.setdefault("model", model_name)
+        return data
+    except json.JSONDecodeError:
+        _LOGGER.warning("Gemini H-module returned non-JSON — using stub fallback")
+        return _h_stub(problem, model_name)
+
+
+def _l_gemini_call(step: str, step_index: int, problem: str, context: str, model_name: str) -> Dict[str, Any]:
+    """L module backed by Gemini."""
+    user_prompt = (
+        f"Original problem: {problem}\n"
+        f"Step {step_index}: {step}"
+    )
+    if context:
+        user_prompt += f"\nContext: {context}"
+    raw = _gemini_chat(_L_SYSTEM_PROMPT, user_prompt, model_name)
+    try:
+        data = json.loads(raw)
+        if "error" in data:
+            _LOGGER.warning("Gemini L-module error: %s — using stub fallback", data["error"])
+            return _l_stub(step, step_index, model_name)
+        return data
+    except json.JSONDecodeError:
+        _LOGGER.warning("Gemini L-module returned non-JSON — using stub fallback")
+        return _l_stub(step, step_index, model_name)
+
+
+# ---------------------------------------------------------------------------
+# Public dispatch functions — route stub vs. Gemini based on model alias
+# ---------------------------------------------------------------------------
+
+def _h_module_call(problem: str, context: str, model: str = "stub") -> Dict[str, Any]:
+    """H module: high-level planning call.
+
+    Dispatches to Gemini when model is a known alias ("fast" or "smart").
+    Falls back to deterministic stub when model="stub" or alias is unknown.
+
+    System prompt template (H module):
+        You are a strategic planner. Break the problem into 3-7 high-level steps.
+        Do NOT include implementation details — those come later.
+        For each step, write one clear action sentence.
+        Return JSON: {goal_statement, steps: [], confidence, reasoning}
+
+    Args:
+        problem: The problem to solve
+        context: Relevant background context
+        model: "stub" | "fast" | "smart" | raw Gemini model string
+
+    Returns:
+        JSON-parseable dict with goal_statement, steps, confidence, reasoning
+    """
+    resolved = _MODEL_ALIASES.get(model, model)  # unknown alias treated as raw model name
+    if resolved is None:
+        return _h_stub(problem, model)
+    return _h_gemini_call(problem, context, resolved)
+
+
 def _l_module_call(
     step: str,
     step_index: int,
@@ -175,7 +309,8 @@ def _l_module_call(
 ) -> Dict[str, Any]:
     """L module: low-level execution planning for one H step.
 
-    In production: replace with LLM API call using an execution-focused system prompt.
+    Dispatches to Gemini when model is a known alias ("fast" or "smart").
+    Falls back to deterministic stub when model="stub" or alias is unknown.
 
     System prompt template (L module):
         You are a precise executor. You have one task to complete.
@@ -188,18 +323,15 @@ def _l_module_call(
         step_index: Index of this step in the plan
         problem: The original problem (full context)
         context: Additional context
-        model: LLM model identifier
+        model: "stub" | "fast" | "smart" | raw Gemini model string
 
     Returns:
         JSON-parseable dict with action_type, payload, confidence, reasoning
     """
-    # Stub: returns a deterministic action for testing
-    return {
-        "action_type": "answer",
-        "payload": {"text": f"[Stub execution of step {step_index}: {step[:40]}]"},
-        "confidence": 0.7,
-        "reasoning": "[L module stub — replace with real LLM call]",
-    }
+    resolved = _MODEL_ALIASES.get(model, model)
+    if resolved is None:
+        return _l_stub(step, step_index, model)
+    return _l_gemini_call(step, step_index, problem, context, resolved)
 
 
 def _halt_check(
