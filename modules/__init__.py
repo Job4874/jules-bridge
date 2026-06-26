@@ -12,7 +12,19 @@ from .shell_executor import (
     execute,
     available_shells,
 )
-from .ui_automation import ScreenshotResult, ClickResult, screenshot, click, type_text
+from .ui_automation import (
+    ScreenshotResult,
+    ClickResult,
+    screenshot,
+    click,
+    type_text,
+    SecretAccessError,
+    get_secret,
+    detect_ui_state,
+)
+from .browser_agent import init_browser, verify_quantower_login
+from .vm_manager import VMBootResult, VMBootError, get_local_memory_percent, boot_secondary_vm
+from .router import RouteResult, dispatch
 from .inbox_service import InboxMessage, inbox_read, inbox_write
 from .jules_orchestrator import (
     JulesTask,
@@ -107,6 +119,20 @@ __all__ = [
     "screenshot",
     "click",
     "type_text",
+    "SecretAccessError",
+    "get_secret",
+    "detect_ui_state",
+    # browser_agent
+    "init_browser",
+    "verify_quantower_login",
+    # vm_manager
+    "VMBootResult",
+    "VMBootError",
+    "get_local_memory_percent",
+    "boot_secondary_vm",
+    # router
+    "RouteResult",
+    "dispatch",
     # inbox_service
     "InboxMessage",
     "inbox_read",

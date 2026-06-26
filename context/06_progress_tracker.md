@@ -3,7 +3,7 @@
 > Context file 6 of 7. The ONLY file that updates constantly.
 > How the agent picks up exactly where you left off in a single prompt.
 
-## Current Phase: Phase 5 — LLM Integration + Self-Improvement 🔄
+## Current Phase: Phase 6 — Distributed Orchestrator Daemon 🔄
 
 ## Phase History
 
@@ -84,6 +84,11 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] `doc/tickets/003_harden_evidence_gating.md` — stale `/oracle/*` evidence can preempt route execution with HTTP 423 when `EVIDENCE_GATE_HARD=1`; evidence `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`
 - [x] `doc/tickets/004_auto_prune_memory.md` — `POST /retrospective/analyze` accepts boolean `auto_prune` and prunes stale memory after writing current learnings; evidence `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`
 - [x] `doc/tickets/006_replay_restart_orchestration.md` — `hard_index_host_paths()` + `oracle_restart_replay()` H/L/ACT cycle; routes `GET /oracle/hard-index`, `POST /oracle/restart-replay`; evidence `884c12c9a702be4ffdde246eee70152128f2c54e12839753408c7fb6795f879a`
+- [x] `modules/vm_manager.py` — `boot_secondary_vm(dry_run, allow_vm_boot)`; memory pressure via psutil; live boot gated by `JULES_ALLOW_VM_BOOT=1`
+- [x] `modules/router.py` — `dispatch(task_packet)` routes `Code/Dev`, `Compute/Scale`, `Routine/UI`
+- [x] `modules/browser_agent.py` — Edge profile launch + Quantower login-state detection
+- [x] `main_loop.py` — permanent orchestrator daemon; 30s loop, `/inbox/read` polling, router dispatch, watchdog heartbeat every 60s
+- [x] Daemon tests: `tests/test_vm_manager.py`, `tests/test_router.py`, `tests/test_browser_agent.py`, `tests/test_main_loop.py` — 275 tests passing
 
 ## Phase 6 — Ralph Loop Infrastructure ✅ (Just Added)
 
@@ -92,9 +97,13 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Created `.agents/skills/ralph-loop/SKILL.md` — full loop protocol as a reusable Claude skill
 - Created `Run-RalphLoop.ps1` — Windows PowerShell autonomous loop runner
 
-## What's Next (Phase 6 — Active Tickets)
+## What's Next (Phase 7 — Distributed Orchestrator)
 
-- [x] No active Phase 6 tickets remain in `doc/tickets/`.
+- [ ] Operator cleanup: remove `_extracted_jules_session/` directory and `_send_operator_message.py` temp files
+- [ ] Operator start daemon: `python -m main_loop` (foreground test) then `Start-Process ... -WindowStyle Hidden`
+- [ ] Operator configure env: `JULES_ALLOW_VM_BOOT=1` only when live Azure VM boot is desired; default is dry-run
+- [ ] Add `POST /daemon/status` route (optional) to report last heartbeat and inbox status
+- [ ] Wire `main_loop` into Windows Task Scheduler or `nssm` for auto-start on boot
 
 **To run the loop**: `.\Run-RalphLoop.ps1` from the project root.
 
@@ -186,6 +195,39 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Extended `build_context_subagents(...)` with `context_budget` and `no_slop_workflow` outputs. The workflow is explicitly `research -> plan -> implement` with review gates before plan/code and evidence before done.
 - `POST /akc/subagents` now accepts `context_window_chars` and `max_context_utilization_percent`; defaults are 170000 and 40.
 - `write_packets=true` now writes `NO_SLOP_WORKFLOW.md` alongside context sub-agent packets.
+
+## Session 20260626T230000 - Two-Node Zero-Trust Orchestrator Daemon
+
+- Deployed permanent orchestrator daemon: `main_loop.py` at repo root.
+- Added `modules/vm_manager.py` with `boot_secondary_vm(dry_run, allow_vm_boot)` — monitors local memory via psutil and triggers Azure VM boot only when `JULES_ALLOW_VM_BOOT=1` is set.
+- Added `modules/router.py` with `dispatch(task_packet)` — routes `Code/Dev`, `Compute/Scale`, and `Routine/UI` task types.
+- Added `modules/browser_agent.py` — launches Edge with the local user profile and verifies Quantower login state via `detect_ui_state()`.
+- Extended `modules/ui_automation.py` with `get_secret()` and `detect_ui_state()` for OS-backed secret gating and UI-state detection.
+- `main_loop.py` runs a 30-second loop: memory check + gated VM boot, `POST /inbox/read` polling, router dispatch, and watchdog heartbeat to `memory/system_heartbeat.md` every 60 seconds.
+- Updated `modules/__init__.py` exports for all new symbols.
+- Added tests: `tests/test_vm_manager.py`, `tests/test_router.py`, `tests/test_browser_agent.py`, `tests/test_main_loop.py`.
+- Full test evidence: `python -m pytest tests/ -q` passed 275 tests with 1 existing warning.
+
+## What's Next
+
+- Clean up temp files: `_extracted_jules_session/` directory and `_send_operator_message.py` (created during deployment; blocked by security filter).
+- Operator to start daemon with PowerShell command below and set `JULES_ALLOW_VM_BOOT=1` only when live VM boot is desired.
+
+## Daemon Run Command
+
+```powershell
+# Foreground (for testing)
+python -m main_loop
+
+# Background daemon (PowerShell 5+)
+$env:JULES_ALLOW_VM_BOOT="0"
+Start-Process -FilePath python -ArgumentList "-m", "main_loop" -WindowStyle Hidden
+
+# Or with explicit bridge URL and VM boot enabled
+$env:JULES_BRIDGE_URL="http://127.0.0.1:5000"
+$env:JULES_ALLOW_VM_BOOT="1"
+Start-Process -FilePath python -ArgumentList "-m", "main_loop" -WindowStyle Hidden
+```
 
 ## Session 20260626T173600 - Context Memory Store And Long-Session Eval
 

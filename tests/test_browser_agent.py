@@ -28,7 +28,7 @@ class TestDetectUIState:
 
 
 class TestBrowserAgent:
-    @patch("modules.browser_agent.sync_playwright")
+    @patch("playwright.sync_api.sync_playwright")
     def test_init_browser_launches_persistent_context(self, mock_sync_playwright):
         mock_playwright = MagicMock()
         mock_context = MagicMock()
@@ -46,7 +46,7 @@ class TestBrowserAgent:
         )
 
     @patch("modules.browser_agent.init_browser")
-    @patch("modules.browser_agent.detect_ui_state")
+    @patch("modules.ui_automation.detect_ui_state")
     def test_verify_quantower_login_detects_state(
         self, mock_detect, mock_init_browser
     ):

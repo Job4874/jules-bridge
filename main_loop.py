@@ -149,12 +149,8 @@ def write_heartbeat(force: bool = False) -> str:
     last_ts: float | None = None
     if os.path.isfile(_HEARTBEAT_PATH):
         try:
-            with open(_HEARTBEAT_PATH, "r", encoding="utf-8", errors="replace") as fh:
-                for line in reversed(fh.read().splitlines()):
-                    if line.startswith("- "):
-                        last_ts = datetime.fromisoformat(line[2:22]).timestamp()
-                        break
-        except Exception:  # noqa: BLE001
+            last_ts = os.path.getmtime(_HEARTBEAT_PATH)
+        except OSError:
             last_ts = None
 
     if not force and last_ts is not None:
