@@ -1,0 +1,25 @@
+{
+  "generated_at_utc": "2026-06-26T22:47:46.836059+00:00",
+  "dry_run": false,
+  "session_id": "2850298912153410087",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "2850298912153410087"
+  ],
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "",
+  "status": "pulled",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "Error: api error: status 404, content: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"Requested entity was not found.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n\n",
+  "timed_out": false,
+  "session_ids": [
+    "2850298912153410087"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_2850298912153410087.json",
+  "note": "Live pull attempted through the Jules CLI."
+}
