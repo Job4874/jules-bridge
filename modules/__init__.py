@@ -5,7 +5,13 @@ bridge.py imports from here and does nothing but HTTP routing.
 """
 
 from .fs_service import FSResult, ListEntry, read, write, tail, grep, list_dir
-from .shell_executor import ShellResult, execute, available_shells
+from .shell_executor import (
+    ShellResult,
+    ShellNotAvailableError,
+    UnsupportedShellError,
+    execute,
+    available_shells,
+)
 from .ui_automation import ScreenshotResult, ClickResult, screenshot, click, type_text
 from .inbox_service import InboxMessage, inbox_read, inbox_write
 from .oracle_session import (
@@ -28,6 +34,8 @@ __all__ = [
     "list_dir",
     # shell_executor
     "ShellResult",
+    "ShellNotAvailableError",
+    "UnsupportedShellError",
     "execute",
     "available_shells",
     # ui_automation
