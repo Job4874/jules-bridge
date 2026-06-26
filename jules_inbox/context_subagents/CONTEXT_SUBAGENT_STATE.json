@@ -1,0 +1,25 @@
+{
+  "generated_at_utc": "2026-06-26T17:18:13.459469+00:00",
+  "task": "Optimize Jules context handling from the active goal attachments.",
+  "context_metrics": {
+    "source_count": 2,
+    "total_source_chars": 30450,
+    "active_prompt_chars": 1924,
+    "omitted_middle_chars": 28450,
+    "compression_ratio": 0.0632,
+    "signal_counts": {
+      "long_session_evals": 2,
+      "evidence": 1,
+      "context_engineering": 1,
+      "smart_truncation": 1,
+      "memory_store": 1,
+      "subagents": 1
+    }
+  },
+  "packet_files": [
+    "C:\\Users\\abdul\\.jules\\jules_inbox\\context_subagents\\CA-context_cartographer.md",
+    "C:\\Users\\abdul\\.jules\\jules_inbox\\context_subagents\\CA-memory_curator.md",
+    "C:\\Users\\abdul\\.jules\\jules_inbox\\context_subagents\\CA-implementation_planner.md",
+    "C:\\Users\\abdul\\.jules\\jules_inbox\\context_subagents\\CA-verification_agent.md"
+  ]
+}

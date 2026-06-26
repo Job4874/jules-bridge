@@ -197,6 +197,22 @@ def bool_field(data, key, default=MISSING):
     return value
 
 
+def string_list_field(data, key, default=None, control_safe=False):
+    if key not in data or data.get(key) is None:
+        return list(default or [])
+    value = data.get(key)
+    if not isinstance(value, list):
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a list of strings")
+    items = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a list of non-empty strings")
+        if control_safe and CONTROL_CHAR_RE.search(item):
+            raise BridgeHTTPError(400, "Invalid input", details=f"{key} contains illegal control characters")
+        items.append(item)
+    return items
+
+
 def path_field(data, key="path", default=MISSING):
     return string_field(data, key, default=default, control_safe=True)
 
@@ -366,6 +382,7 @@ TENTACLES = [
     {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},
     {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},
     {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},
+    {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},
 ]
 
 # ---------------------------------------------------------------------------
@@ -1336,6 +1353,46 @@ def akc_context_post():
     )
     result = modules.build_akc_context(source_paths, checkpoint_path=checkpoint_path)
     return jsonify(dict(result))
+
+
+@app.route("/akc/subagents", methods=["POST"])
+@route_errors
+def akc_subagents_post():
+    """POST /akc/subagents - Build budgeted context sub-agent packets.
+
+    Body (JSON):
+        content / data    (str, optional): Inline source material
+        source_paths      (list[str], optional): Source files to capsule
+        task              (str, optional): Operator goal
+        roles             (list[str], optional): Context role ids
+        write_packets     (bool, optional, default=false): Write packet files
+
+    Returns JSON with source capsules, role packets, and context metrics.
+    """
+    data = json_payload()
+    content = ""
+    if "content" in data:
+        content = string_field(data, "content", allow_empty=True)
+    elif "data" in data:
+        content = string_field(data, "data", allow_empty=True)
+
+    source_paths = string_list_field(data, "source_paths", default=[], control_safe=True)
+    if not content and not source_paths:
+        raise BridgeHTTPError(400, "Invalid input", details="content or source_paths is required")
+
+    result = modules.build_context_subagents(
+        content=content,
+        source_paths=source_paths,
+        task=string_field(data, "task", default="", allow_empty=True),
+        roles=string_list_field(data, "roles", default=[]),
+        head_chars=int_field(data, "head_chars", default=800, min_value=80, max_value=10000),
+        tail_chars=int_field(data, "tail_chars", default=800, min_value=80, max_value=10000),
+        max_packet_chars=int_field(data, "max_packet_chars", default=12000, min_value=1000, max_value=200000),
+        write_packets=bool_field(data, "write_packets", default=False),
+        output_dir=string_field(data, "output_dir", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
 
 
 # ---------------------------------------------------------------------------

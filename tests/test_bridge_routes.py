@@ -528,6 +528,52 @@ class TestAKCRoutes(unittest.TestCase):
         self.assertEqual(payload["status"], "ready")
         mock_readiness.assert_called_once()
 
+    @patch("modules.build_context_subagents")
+    def test_akc_subagents_builds_context_plan(self, mock_subagents):
+        mock_subagents.return_value = {
+            "status": "ready",
+            "source_count": 1,
+            "readable_count": 1,
+            "missing_count": 0,
+            "context_strategy": "smart_truncation_head_tail_memory_store",
+            "subagents": [{"role_id": "implementation_planner"}],
+            "packet_files": [],
+        }
+
+        response = self.client.post(
+            "/akc/subagents",
+            json={
+                "content": "context engineering",
+                "task": "Optimize context handling",
+                "roles": ["implementation_planner"],
+                "head_chars": 120,
+                "tail_chars": 120,
+                "max_packet_chars": 4000,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "ready")
+        self.assertEqual(mock_subagents.call_args.kwargs["roles"], ["implementation_planner"])
+        self.assertEqual(mock_subagents.call_args.kwargs["head_chars"], 120)
+        self.assertEqual(mock_subagents.call_args.kwargs["task"], "Optimize context handling")
+
+    def test_akc_subagents_requires_content_or_sources(self):
+        response = self.client.post("/akc/subagents", json={})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+        self.assertIn("content or source_paths", response.get_json()["details"])
+
+    def test_akc_subagents_rejects_invalid_roles(self):
+        response = self.client.post(
+            "/akc/subagents",
+            json={"content": "x", "roles": "implementation_planner"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
 
 class TestEvidenceGate(unittest.TestCase):
     def setUp(self):

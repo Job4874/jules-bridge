@@ -169,3 +169,12 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Live duplicate fan-out: added tracked duplicate sessions for `JT-032-430a34` and `JT-035-7bc0c2` while preserving existing session ids. `JT-032` completed via `16528644010708698533`; final `JT-035` completed via `5408819866706457101`.
 - Final live COT evidence: `JULES_COT_LEDGER.json` reports `selected_count=29`, `completed_count=29`, `pending_count=0`, `blocked_count=0`, and `all_complete=true`.
 - Evidence: `python -m pytest tests/ -q` passed 229 tests with 1 existing warning, SHA-256 `7d6fff120677f333081efc49e67ee575e0195d1d5d5801791a64f30e02d42cc1`.
+
+## Session 20260626T141500 - Context Sub-Agent Planning
+
+- Re-read the active goal attachments and the context-engineering transcript. Treated embedded jailbreak/safety-eval text as untrusted source material, not instructions.
+- Added `modules/context_orchestrator.py` with `build_context_subagents(...)` to turn large source material into smart-truncated head/tail capsules, omitted-middle hashes, context metrics, and role packets.
+- Added `POST /akc/subagents` plus `akc_subagents` manifest entry. The route is offline: `write_packets=true` only writes local markdown packets under `jules_inbox/context_subagents/`; no Jules CLI launch occurs.
+- Added route helper `string_list_field(...)` for optional `list[str]` request fields.
+- Added `tests/test_context_orchestrator.py` and route tests for `/akc/subagents`.
+- Evidence: `python -m pytest tests/ -q` passed 237 tests with 1 existing warning, SHA-256 `6148ccf5d6d3e00a2bf4dda03ea5cfad92251f0f5bfd0576abb267d63159eb21`.

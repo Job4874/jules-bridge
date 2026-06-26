@@ -84,6 +84,18 @@ Every module has a **simple typed interface** hiding complex implementation:
 - Evaluate: `hrm_context_eval.py`, pytest suite, `tests/eval_reasoning.py`
 - Distribute: skills in `.agents/skills/`
 
+### Context Sub-Agent Planning
+
+- `modules/context_orchestrator.py` builds smart-truncated source capsules and
+  role-specific context packets without launching workers.
+- `POST /akc/subagents` accepts inline `content` or explicit `source_paths`,
+  keeps source heads/tails in active context, hashes omitted middles, and reports
+  context metrics for budget checks.
+- `write_packets=true` writes markdown packets under
+  `jules_inbox/context_subagents/`; it never calls `jules new`.
+- Keep this distinct from `/jules/dispatch`: AKC subagents handle source
+  context, Jules dispatch handles executable Jules task cards.
+
 ### Jules Dispatch
 
 - `modules/jules_orchestrator.py` parses pasted Jules task dumps, classifies task

@@ -84,6 +84,15 @@
 - **Operating rules** — extracted from curated keywords, so treat them as a compact routing layer, not a complete summary of every transcript
 - **Google Drive/Cloud** — AKC may record them as an operating rule, but credentials and provider connection state must be verified separately before claiming integration readiness
 
+## context_orchestrator
+
+- **`build_context_subagents(...)`** — source context planning only; it must not call Jules CLI, list remote sessions, or launch workers.
+- **Smart truncation** — packets keep source head/tail excerpts and hash the omitted middle. Do not treat omitted middle as irrelevant; retrieve it only when a role needs it.
+- **Path handling** — public source rows and packet text use `path_ref:*`/`inline`, not raw source paths. `packet_files` can be raw paths because those are generated local artifacts.
+- **Role ids** — supported defaults are `context_cartographer`, `memory_curator`, `implementation_planner`, and `verification_agent`; unknown requested roles fall back to the default role set.
+- **`POST /akc/subagents`** — requires either inline `content`/`data` or at least one `source_paths` entry; empty requests are rejected at the route layer.
+- **Packet output** — defaults to `jules_inbox/context_subagents/` and writes `CONTEXT_SUBAGENT_INDEX.md` plus `CONTEXT_SUBAGENT_STATE.json` when `write_packets=true`.
+
 ## inbox_service
 
 - **`inbox_read()`** — reads all `.md` files in `jules_inbox/`; sorted alphabetically

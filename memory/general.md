@@ -221,3 +221,11 @@ has gone wrong before and what to avoid.
 - The last two long-tail packets were completed after duplicate fan-out. `JT-032-430a34` completed via `16528644010708698533`; `JT-035-7bc0c2` completed via `5408819866706457101`.
 - Final COT state: `JULES_COT_LEDGER.json` shows 29 selected, 29 completed, 0 pending, 0 blocked, `all_complete=true`.
 - Evidence: `python -m pytest tests/ -q` passed 229 tests with 1 existing warning, SHA-256 `7d6fff120677f333081efc49e67ee575e0195d1d5d5801791a64f30e02d42cc1`.
+
+## Session 20260626T141500 - Context Sub-Agent Planning
+
+- Added `modules/context_orchestrator.py` and `POST /akc/subagents` for offline context handling: large sources become head/tail capsules with omitted-middle SHA-256 hashes, context metrics, and role packets (`context_cartographer`, `memory_curator`, `implementation_planner`, `verification_agent`).
+- `/akc/subagents` is not a Jules launch route. `write_packets=true` writes local markdown under `jules_inbox/context_subagents/`; it never calls `jules new`, remote list, or pull.
+- Capsule excerpts redact Windows local paths found inside source text as `path-redacted`, while public source inventory uses `path_ref:*`. Generated packet file paths remain local artifact paths.
+- Added `string_list_field(...)` in `bridge.py` for optional `list[str]` route fields.
+- Evidence: `python -m pytest tests/ -q` passed 237 tests with 1 existing warning, SHA-256 `6148ccf5d6d3e00a2bf4dda03ea5cfad92251f0f5bfd0576abb267d63159eb21`.

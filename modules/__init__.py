@@ -74,6 +74,13 @@ from .akc_module import (
     load_akc_checkpoint,
     check_akc_readiness,
 )
+from .context_orchestrator import (
+    ContextSource,
+    ContextCapsule,
+    ContextSubagent,
+    ContextSubagentPlan,
+    build_context_subagents,
+)
 
 __all__ = [
     # fs_service
@@ -155,4 +162,10 @@ __all__ = [
     "build_akc_context",
     "load_akc_checkpoint",
     "check_akc_readiness",
+    # context_orchestrator
+    "ContextSource",
+    "ContextCapsule",
+    "ContextSubagent",
+    "ContextSubagentPlan",
+    "build_context_subagents",
 ]
