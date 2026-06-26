@@ -69,7 +69,7 @@ def my_function(arg: str, optional: str = "") -> MyResult:
 ## Naming Conventions
 
 | Thing | Convention | Example |
-|-------|-----------|---------|
+| ------- | ----------- | --------- |
 | Module files | `snake_case_module.py` | `oracle_session.py` |
 | Classes | `PascalCase` | `OracleStatus` |
 | Functions | `snake_case` | `oracle_status()` |

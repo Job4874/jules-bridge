@@ -9,6 +9,7 @@ description: >
 # Grill Me Skill
 
 ## Purpose
+
 Reach a **shared design concept** — a mutual understanding between you (the AI) and the user — before producing any plan, PRD, or code.
 
 This prevents the most common failure mode: the AI eagerly producing a plan based on incomplete understanding, then spending many tokens implementing the wrong thing.
@@ -45,6 +46,7 @@ Inspired by Frederick P. Brooks (*The Design of Design*): when collaborators bui
 7. **When complete**: Summarise all decisions made during the session. This summary becomes the input to `/write-prd`.
 
 ## Rules
+
 - Ask ONE question at a time
 - Always provide a recommended answer with brief rationale
 - Never rush to produce a plan
@@ -53,6 +55,7 @@ Inspired by Frederick P. Brooks (*The Design of Design*): when collaborators bui
 - Treat the conversation history as a valuable asset — it IS the design concept
 
 ## Example Opening
+
 > "I've explored the codebase and have a good picture of the existing architecture. Let me ask you some questions to make sure we're fully aligned before we plan anything.
 >
 > **Question 1: [Most fundamental decision about the feature]**

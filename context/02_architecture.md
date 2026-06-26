@@ -4,7 +4,7 @@
 
 ## Module Map
 
-```
+```text
 bridge.py                   ← Thin HTTP routing only. NO business logic.
 ├── modules/
 │   ├── __init__.py         ← Package exports (single public API surface)
@@ -43,7 +43,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 ## Route Namespace Map
 
 | Prefix | Module | Purpose |
-|--------|--------|---------|
+| -------- | -------- | --------- |
 | `/health` | bridge.py | Liveness + uptime — no module backing |
 | `/fs/` | fs_service | File system operations |
 | `/shell/` | shell_executor | Command execution |
@@ -57,17 +57,21 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 ## Key Design Patterns
 
 ### Deep Module Pattern (Matt Pocco)
+
 Every module has a **simple typed interface** hiding complex implementation:
+
 - `oracle_status()` → one call returns full health snapshot (hides XML parsing, PS invocation, DLL hashing)
 - `reason(problem)` → one call runs full H/L/ACT cycle (hides LLM calls, halting logic)
 - `analyze_session()` → one call reads logs, detects patterns, writes memory (hides regex, file I/O, pattern matching)
 
 ### Evidence-Based Verification (Nick Ni)
+
 - Tests: `record_test_evidence(output)` → stores SHA-256 hash
 - UI: screenshots attached to evidence (via `/ui/screenshot`)
 - Builds: build output tails stored in `BuildDeployResult`
 
 ### CDLC (Patrick Debois)
+
 - Generate: AGENTS.md, context/ files, ubiquitous language
 - Evaluate: `hrm_context_eval.py`, pytest suite
 - Distribute: skills in `.agents/skills/`
