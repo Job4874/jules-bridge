@@ -389,15 +389,19 @@ def record_test_evidence(test_output: str, evidence_path: str) -> TestEvidence:
         TestEvidence with hash, pass status, and test count
     """
     output_hash = hashlib.sha256(test_output.encode("utf-8")).hexdigest()
-    passed = "passed" in test_output.lower() and "failed" not in test_output.lower()
+    passed = False
     test_count = 0
 
     # Parse pytest output for test count
     count_match = re.search(r"(\d+) passed", test_output)
     if count_match:
         test_count = int(count_match.group(1))
+        passed = True
     fail_match = re.search(r"(\d+) failed", test_output)
     if fail_match:
+        passed = False
+    error_match = re.search(r"(\d+) errors?", test_output)
+    if error_match:
         passed = False
 
     lines = test_output.strip().splitlines()

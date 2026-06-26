@@ -315,6 +315,10 @@ TENTACLES = [
     {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},
     {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},
     {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},
+    # Agent Knowledge Context routes
+    {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},
+    {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},
+    {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},
 ]
 
 # ---------------------------------------------------------------------------
@@ -790,6 +794,78 @@ def retrospective_prune_memory():
         "domains_affected": result["domains_affected"],
         "max_age_days": max_age_days,
     })
+
+
+# - AKC routes (Agent Knowledge Context) -
+
+@app.route("/akc/context", methods=["GET"])
+@route_errors
+def akc_context_get():
+    """GET /akc/context - Load the current Agent Knowledge Context checkpoint.
+
+    Query params:
+        checkpoint_path (str, optional): Override markdown checkpoint path
+    """
+    checkpoint_path = request.args.get(
+        "checkpoint_path",
+        os.path.join(ROOT_DIR, "context", "08_akc_context_checkpoint.md"),
+    )
+    if CONTROL_CHAR_RE.search(checkpoint_path):
+        raise BridgeHTTPError(400, "Invalid input", details="checkpoint_path contains illegal control characters")
+
+    result = modules.load_akc_checkpoint(checkpoint_path=checkpoint_path)
+    return jsonify(dict(result))
+
+
+@app.route("/akc/readiness", methods=["GET"])
+@route_errors
+def akc_readiness_get():
+    """GET /akc/readiness - Check AKC readiness for session start.
+
+    Query params:
+        checkpoint_path (str, optional): Override markdown checkpoint path
+    """
+    checkpoint_path = request.args.get(
+        "checkpoint_path",
+        os.path.join(ROOT_DIR, "context", "08_akc_context_checkpoint.md"),
+    )
+    if CONTROL_CHAR_RE.search(checkpoint_path):
+        raise BridgeHTTPError(400, "Invalid input", details="checkpoint_path contains illegal control characters")
+
+    result = modules.check_akc_readiness(checkpoint_path=checkpoint_path)
+    return jsonify(dict(result))
+
+
+@app.route("/akc/context", methods=["POST"])
+@route_errors
+def akc_context_post():
+    """POST /akc/context - Build a source-backed AKC checkpoint.
+
+    Body (JSON):
+        source_paths     (list[str], required): Transcript/context files to inventory
+        checkpoint_path  (str, optional): Markdown checkpoint destination
+    """
+    data = json_payload()
+    source_paths = data.get("source_paths", [])
+    if source_paths is None:
+        source_paths = []
+    if not isinstance(source_paths, list):
+        raise BridgeHTTPError(400, "Invalid input", details="source_paths must be a list of strings")
+    if not source_paths:
+        raise BridgeHTTPError(400, "Invalid input", details="source_paths must include at least one file")
+    if any(not isinstance(path, str) or not path.strip() for path in source_paths):
+        raise BridgeHTTPError(400, "Invalid input", details="source_paths must be a list of non-empty strings")
+    if any(CONTROL_CHAR_RE.search(path) for path in source_paths):
+        raise BridgeHTTPError(400, "Invalid input", details="source_paths contains illegal control characters")
+
+    checkpoint_path = string_field(
+        data,
+        "checkpoint_path",
+        default=os.path.join(ROOT_DIR, "context", "08_akc_context_checkpoint.md"),
+        control_safe=True,
+    )
+    result = modules.build_akc_context(source_paths, checkpoint_path=checkpoint_path)
+    return jsonify(dict(result))
 
 
 # ---------------------------------------------------------------------------

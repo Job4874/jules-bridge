@@ -113,6 +113,18 @@ class TestTestEvidence:
         evidence = record_test_evidence(SAMPLE_PYTEST_FAIL, tempfile.mkdtemp())
         assert evidence.passed is False
 
+    def test_passed_evidence_ignores_failed_word_in_test_name(self):
+        output = textwrap.dedent("""\
+            tests/test_retrospective_module.py::TestTestEvidence::test_failed_evidence PASSED
+            tests/test_akc_module.py::TestBuildAKCContext::test_missing_sources_are_reported_not_raised PASSED
+            ======================= 141 passed, 1 warning in 2.08s ========================
+        """)
+
+        evidence = record_test_evidence(output, tempfile.mkdtemp())
+
+        assert evidence.passed is True
+        assert evidence.test_count == 141
+
     def test_hash_is_deterministic(self):
         tmp = tempfile.mkdtemp()
         e1 = record_test_evidence(SAMPLE_PYTEST_OUTPUT, tmp)

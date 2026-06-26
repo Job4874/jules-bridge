@@ -14,16 +14,18 @@ Before any implementation, read these files **in this exact order**:
 5. `context/05_gotchas.md` — module-level landmines, Windows-specific traps, edge cases
 6. `context/06_progress_tracker.md` — what's complete, what's next, active architectural decisions
 7. `context/07_library_docs.md` — how each dependency is used in this specific project
-8. `UBIQUITOUS_LANGUAGE.md` — shared vocabulary, use these exact terms in code and conversation
+8. `context/08_akc_context_checkpoint.md` — source-backed operating rules from uploaded transcripts/context
+9. `UBIQUITOUS_LANGUAGE.md` — shared vocabulary, use these exact terms in code and conversation
 
 ## Session Start Protocol
 
 Every session MUST begin with:
 
-1. Read all context files in the order above
-2. Load memory: read `memory/general.md` (and domain-specific files if relevant)
-3. Check the progress tracker to understand current phase and what's next
-4. Only then proceed to the task
+1. Check AKC readiness: `GET /akc/readiness`
+2. Read all context files in the order above
+3. Load memory: read `memory/general.md` (and domain-specific files if relevant)
+4. Check the progress tracker to understand current phase and what's next
+5. Only then proceed to the task
 
 ## Session End Protocol
 

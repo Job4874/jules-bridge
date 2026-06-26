@@ -42,6 +42,14 @@ from .retrospective_module import (
     load_memory,
     prune_memory,
 )
+from .akc_module import (
+    AKCContext,
+    AKCCheckpoint,
+    AKCReadiness,
+    build_akc_context,
+    load_akc_checkpoint,
+    check_akc_readiness,
+)
 
 __all__ = [
     # fs_service
@@ -93,4 +101,11 @@ __all__ = [
     "load_test_evidence",
     "load_memory",
     "prune_memory",
+    # akc_module
+    "AKCContext",
+    "AKCCheckpoint",
+    "AKCReadiness",
+    "build_akc_context",
+    "load_akc_checkpoint",
+    "check_akc_readiness",
 ]

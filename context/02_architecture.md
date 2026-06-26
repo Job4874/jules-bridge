@@ -14,7 +14,8 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 │   ├── inbox_service.py    ← Message files in jules_inbox/ dir
 │   ├── oracle_session.py   ← Oracle V5 + Quantower health/build/deploy
 │   ├── reasoning_module.py ← HRM-inspired H/L/ACT hierarchical reasoning
-│   └── retrospective_module.py ← Log analysis, memory writes, test evidence
+│   ├── retrospective_module.py ← Log analysis, memory writes, test evidence
+│   └── akc_module.py       ← Agent Knowledge Context checkpoints from source files
 ├── memory/                 ← Per-domain markdown memory files
 │   ├── general.md          ← General harness learnings
 │   ├── oracle.md           ← Oracle V5 / Quantower specific
@@ -52,6 +53,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |
 | `/reasoning/` | reasoning_module | H/L/ACT reasoning (Gemini or stub) |
 | `/retrospective/` | retrospective_module | Log analysis + memory + pruning |
+| `/akc/` | akc_module | Agent Knowledge Context source inventory, checkpoint loading, and readiness gating |
 | `/notify/` | notify_email | Email notifications |
 
 ## Key Design Patterns
@@ -63,6 +65,8 @@ Every module has a **simple typed interface** hiding complex implementation:
 - `oracle_status()` → one call returns full health snapshot (hides XML parsing, PS invocation, DLL hashing)
 - `reason(problem)` → one call runs full H/L/ACT cycle (hides LLM calls, halting logic)
 - `analyze_session()` → one call reads logs, detects patterns, writes memory (hides regex, file I/O, pattern matching)
+- `build_akc_context(source_paths)` → one call reads sources, masks paths, hashes files, extracts operating rules, and writes a checkpoint
+- `check_akc_readiness()` → one call verifies the checkpoint exists, is `ready`, and contains required operating rules before session start
 
 ### Evidence-Based Verification (Nick Ni)
 

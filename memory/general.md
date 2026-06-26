@@ -62,3 +62,11 @@ has gone wrong before and what to avoid.
 5. Export from `modules/__init__.py` if new module function added
 6. Run `python -m pytest tests/ -v` → record evidence with `POST /retrospective/record_evidence`
 
+## Session 20260626T025625 — AKC/TDD/Grill Integration
+
+- Added `modules/akc_module.py` as a deep module for Agent Knowledge Context checkpoints: it inventories explicit source files, computes SHA-256 hashes, masks local paths as `path-ref:*`, extracts compact operating rules, and writes `context/08_akc_context_checkpoint.md`.
+- Added `/akc/context` routes: `GET` loads the current checkpoint; `POST` builds a source-backed checkpoint from explicit transcript/context file paths.
+- Generated the current AKC checkpoint from 5 pasted transcript sources: status `ready`, readable=5, missing=0, operating_rule_count=9.
+- Added `check_akc_readiness()` and `GET /akc/readiness` as the session-start gate for AKC: it verifies checkpoint existence, `status: ready`, and required operating rules before agents trust the checkpoint.
+- Added AKC vocabulary, gotchas, architecture entries, TENTACLES entries, tests, and agent loading order so future sessions load AKC before daily work.
+- Hardened `record_test_evidence()` after a false-negative: pytest test names containing `failed` no longer mark a passing run as failed. Latest test proof is stored in `memory/test_evidence.json`.

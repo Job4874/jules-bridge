@@ -6,10 +6,11 @@
 
 At the start of every Jules Bridge coding session:
 
-1. **Load memory**: `GET /retrospective/memory?domain=general`
-2. **Check oracle status**: `GET /oracle/status` (understand current system state)
-3. **Check inbox**: `GET /inbox/read` (any pending messages from human?)
-4. **Read the relevant context files** before touching any module
+1. **Check AKC readiness**: `GET /akc/readiness` (verify source-backed operating rules are ready)
+2. **Load memory**: `GET /retrospective/memory?domain=general`
+3. **Check oracle status**: `GET /oracle/status` (understand current system state)
+4. **Check inbox**: `GET /inbox/read` (any pending messages from human?)
+5. **Read the relevant context files** before touching any module
 
 ## Scope Discipline
 

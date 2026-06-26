@@ -66,6 +66,10 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] Evidence gating — `X-Evidence-Age-Warning` header on `/oracle/*` routes
 - [x] `POST /retrospective/prune_memory` — age-based pruning, 30-day default
 - [x] All missing routes added to TENTACLES manifest
+- [x] `modules/akc_module.py` — Agent Knowledge Context checkpoint builder with source inventory, path-ref masking, operating rules, and `/akc/context` routes
+- [x] `GET /akc/readiness` — session-start gate that verifies the AKC checkpoint exists, is `ready`, and contains required operating rules
+- [x] `context/08_akc_context_checkpoint.md` — generated from 5 pasted transcript sources; status `ready`, readable=5, missing=0, operating_rule_count=9
+- [x] Evidence parser hardened — pytest output with test names containing `failed` no longer records false failed evidence
 
 ## Phase 6 — Ralph Loop Infrastructure ✅ (Just Added)
 

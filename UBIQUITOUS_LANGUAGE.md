@@ -105,6 +105,19 @@
 
 ---
 
+## Bounded Context: AKC (Agent Knowledge Context)
+
+| Term | Definition | Module | Synonyms to Avoid |
+|------|-----------|--------|-------------------|
+| **AKC** | Agent Knowledge Context: a source-backed checkpoint that turns transcripts, project context, and runtime learnings into compact operating rules | `modules/akc_module.py` | "random memory", "summary" |
+| **AKC checkpoint** | Markdown file containing source inventory, path refs, extracted operating rules, and the daily loop | `context/08_akc_context_checkpoint.md` | "notes", "dump" |
+| **AKC readiness** | Session-start gate that verifies the AKC checkpoint exists, has `status: ready`, and includes required operating rules | `modules/akc_module.py` | "context check", "preflight" |
+| **Source inventory** | List of source files with readability, SHA-256, line counts, and redacted path references | `modules/akc_module.py` | "file list" |
+| **path-ref** | Stable redacted local path identifier returned instead of raw absolute paths | `modules/akc_module.py` | "path", "filename" |
+| **Operating rule** | Compact rule extracted from source material that guides future agent behavior | `modules/akc_module.py` | "summary bullet" |
+
+---
+
 ## Anti-Patterns (Terms to Never Use)
 
 | Wrong Term | Correct Term | Why |

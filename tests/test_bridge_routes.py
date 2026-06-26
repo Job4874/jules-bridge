@@ -143,5 +143,87 @@ class TestUIRoutes(unittest.TestCase):
         pag.click.assert_not_called()
 
 
+class TestAKCRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    @patch("modules.build_akc_context")
+    def test_akc_context_post_validates_and_returns_checkpoint(self, mock_build):
+        mock_build.return_value = {
+            "status": "ready",
+            "source_count": 1,
+            "readable_count": 1,
+            "missing_count": 0,
+            "sources": [{"path_ref": "path-ref:abc", "readable": True}],
+            "operating_rules": [{"key": "tdd_feedback", "summary": "Use TDD."}],
+            "checkpoint_path": "path-ref:checkpoint",
+            "checkpoint_markdown": "# AKC Context Checkpoint\n",
+        }
+
+        response = self.client.post(
+            "/akc/context",
+            json={"source_paths": [r"C:\safe\source.txt"], "checkpoint_path": r"C:\safe\akc.md"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["status"], "ready")
+        self.assertEqual(payload["sources"][0]["path_ref"], "path-ref:abc")
+        mock_build.assert_called_once()
+
+    def test_akc_context_post_rejects_non_list_sources(self):
+        response = self.client.post("/akc/context", json={"source_paths": "not-a-list"})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    def test_akc_context_post_requires_at_least_one_source(self):
+        response = self.client.post("/akc/context", json={"source_paths": []})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("at least one", response.get_json()["details"])
+
+    @patch("modules.load_akc_checkpoint")
+    def test_akc_context_get_loads_checkpoint(self, mock_load):
+        mock_load.return_value = {
+            "exists": True,
+            "checkpoint_path": "path-ref:checkpoint",
+            "content": "# AKC Context Checkpoint\n",
+            "char_count": 25,
+        }
+
+        response = self.client.get("/akc/context")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["exists"])
+        mock_load.assert_called_once()
+
+    @patch("modules.check_akc_readiness")
+    def test_akc_readiness_get_checks_session_start_gate(self, mock_readiness):
+        mock_readiness.return_value = {
+            "status": "ready",
+            "ready": True,
+            "checkpoint_exists": True,
+            "checkpoint_status": "ready",
+            "checkpoint_path": "path-ref:checkpoint",
+            "char_count": 120,
+            "required_rules": ["context_system", "tdd_feedback"],
+            "present_rules": ["context_system", "tdd_feedback"],
+            "missing_required_rules": [],
+            "gates": [
+                {"name": "checkpoint_exists", "passed": True, "detail": "present"},
+                {"name": "checkpoint_ready", "passed": True, "detail": "status=ready"},
+                {"name": "required_rules_present", "passed": True, "detail": "all present"},
+            ],
+        }
+
+        response = self.client.get("/akc/readiness")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload["ready"])
+        self.assertEqual(payload["status"], "ready")
+        mock_readiness.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()

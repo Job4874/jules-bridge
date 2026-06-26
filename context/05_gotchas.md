@@ -63,6 +63,20 @@
 - **prune_memory timestamp pattern** — looks for `## Session 20250601T143022` format in headings; sections with no timestamp are kept (conservative)
 - **Evidence gating** — `/oracle/*` routes return `X-Evidence-Age-Warning: stale:{N}s` header if `test_evidence.json` is > 1h old; not a hard block
 
+## akc_module
+
+- **AKC means Agent Knowledge Context** — source-backed checkpoint, not a vague memory note
+- **`build_akc_context(source_paths)`** — never returns raw local paths; API and markdown use `path-ref:*` masking
+- **Source inventory** — missing or unreadable sources are reported in `sources[]` and status becomes `blocked` or `partial`; the module should not crash on missing transcripts
+- **Unreadable source errors** — keep `error` generic (`OSError: unreadable source` style); do not return raw OS exception strings because they can include local paths
+- **`POST /akc/context`** — requires at least one `source_paths` entry so an empty POST cannot overwrite the durable checkpoint with an empty blocked file
+- **Checkpoint path** — default route destination is `context/08_akc_context_checkpoint.md`
+- **`GET /akc/readiness`** — session-start gate; verifies checkpoint exists, checkpoint status is `ready`, and required operating rules are present
+- **Default required rules** — include the Google Drive/Cloud operating rule so the source requirement stays visible; readiness still does not prove provider credentials or integration state
+- **Readiness status** — missing checkpoint returns `blocked`; present checkpoint with missing required rules returns `partial`; only all gates passing returns `ready`
+- **Operating rules** — extracted from curated keywords, so treat them as a compact routing layer, not a complete summary of every transcript
+- **Google Drive/Cloud** — AKC may record them as an operating rule, but credentials and provider connection state must be verified separately before claiming integration readiness
+
 ## inbox_service
 
 - **`inbox_read()`** — reads all `.md` files in `jules_inbox/`; sorted alphabetically
