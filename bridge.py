@@ -262,41 +262,29 @@ def _start_timer():
     g.request_start = datetime.now(timezone.utc)
 
 
-def _stale_evidence_state():
-    evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
-    threshold_s = 3600
-    try:
-        import json as _json
-        with open(evidence_path, encoding="utf-8") as _f:
-            ev = _json.load(_f)
-        if isinstance(ev, list):
-            ev = ev[-1] if ev else {}
-        if not isinstance(ev, dict):
-            return None
-        ts = ev.get("timestamp_utc", "")
-        if not ts:
-            return None
-        age_s = round((datetime.now(timezone.utc) - datetime.fromisoformat(ts)).total_seconds())
-        if age_s <= threshold_s:
-            return None
-        return {"age_s": age_s, "threshold_s": threshold_s}
-    except Exception:  # noqa: BLE001
-        return None  # evidence file missing or malformed — proceed without warning
+def _evidence_memory_dir():
+    return os.path.join(ROOT_DIR, "memory")
 
 
 @app.before_request
 def _evidence_hard_gate():
+    """Pre-route HTTP 423 preempt for /oracle/* when evidence is unusable.
+
+    Policy (staleness detection, threshold, hard-gate toggle) lives in
+    retrospective_module. This hook only maps the module result to HTTP.
+    """
     if not request.path.startswith("/oracle/"):
         return None
-    if os.environ.get("EVIDENCE_GATE_HARD") != "1":
+    if not modules.is_evidence_hard_gate_enabled():
         return None
-    stale = _stale_evidence_state()
+    stale = modules.check_test_evidence_staleness(_evidence_memory_dir())
     if not stale:
         return None
     return jsonify({
         "error": "evidence_stale",
-        "age_s": stale["age_s"],
-        "threshold_s": stale["threshold_s"],
+        "reason": stale.reason,
+        "age_s": stale.age_s,
+        "threshold_s": stale.threshold_s,
     }), 423
 
 
@@ -329,9 +317,9 @@ def _evidence_age_check(response):
     """
     if not request.path.startswith("/oracle/"):
         return response
-    stale = _stale_evidence_state()
+    stale = modules.check_test_evidence_staleness(_evidence_memory_dir())
     if stale:
-        response.headers["X-Evidence-Age-Warning"] = f"stale:{stale['age_s']}s"
+        response.headers["X-Evidence-Age-Warning"] = f"{stale.reason}:{stale.age_s}s"
     return response
 
 
@@ -1242,8 +1230,9 @@ def retrospective_memory():
     domain = request.args.get("domain", "general")
     memory_path = request.args.get("memory_path", os.path.join(ROOT_DIR, "memory"))
 
-    if domain not in ("general", "oracle", "quantower", "trading", "reasoning"):
-        raise BridgeHTTPError(400, "Invalid input", details=f"domain must be one of: general, oracle, quantower, trading, reasoning")
+    domain_error = modules.validate_memory_domain(domain)
+    if domain_error:
+        raise BridgeHTTPError(400, "Invalid input", details=domain_error)
 
     memory_content = modules.load_memory(memory_path=memory_path, domain=domain)
 
