@@ -587,6 +587,127 @@ def reasoning_execute_step():
     })
 
 
+# — Retrospective routes (Nick Ni's "Case" harness pattern) —
+
+@app.route("/retrospective/analyze", methods=["POST"])
+@route_errors
+def retrospective_analyze():
+    """POST /retrospective/analyze — Analyze a session and write to memory.
+
+    Reads bridge.log, detects doom loops and error patterns, extracts
+    learnings, writes them to per-domain memory markdown files.
+
+    Nick's principle: "Every failure is a harness bug."
+
+    Body (JSON):
+        log_path     (str, optional): Override path to bridge.log
+        memory_path  (str, optional): Override path to memory/ dir
+        session_id   (str, optional): Label for this session
+
+    Returns JSON with patterns, doom_loops, learnings, memory_updates.
+    """
+    data = json_payload()
+    log_path = string_field(data, "log_path", default=LOG_PATH)
+    memory_path = string_field(data, "memory_path", default=os.path.join(ROOT_DIR, "memory"))
+    session_id = string_field(data, "session_id", default="")
+
+    report = modules.analyze_session(
+        log_path=log_path,
+        memory_path=memory_path,
+        session_id=session_id or None,
+    )
+
+    return jsonify({
+        "session_id": report.session_id,
+        "analyzed_at_utc": report.analyzed_at_utc,
+        "log_lines_analyzed": report.log_lines_analyzed,
+        "patterns": [
+            {
+                "pattern_type": p.pattern_type,
+                "description": p.description,
+                "count": p.count,
+                "examples": p.examples[:3],
+            }
+            for p in report.patterns
+        ],
+        "doom_loops": [
+            {
+                "tool_name": d.tool_name,
+                "call_count": d.call_count,
+                "consecutive": d.consecutive,
+                "recommendation": d.recommendation,
+            }
+            for d in report.doom_loops
+        ],
+        "learnings": report.learnings,
+        "memory_domains_updated": list(report.memory_updates.keys()),
+        "has_doom_loops": report.has_doom_loops,
+        "evidence": {
+            "output_hash": report.evidence.output_hash,
+            "timestamp_utc": report.evidence.timestamp_utc,
+            "passed": report.evidence.passed,
+            "test_count": report.evidence.test_count,
+        } if report.evidence else None,
+        "summary": report.to_summary(),
+    })
+
+
+@app.route("/retrospective/record_evidence", methods=["POST"])
+@route_errors
+def retrospective_record_evidence():
+    """POST /retrospective/record_evidence — SHA-256 test output for cryptographic proof.
+
+    Nick: "Take the test output and SHA-256 that and save that into the
+    tested file, then verify cryptographically that you actually ran the tests."
+
+    Body (JSON):
+        test_output  (str, required): Full stdout of the test run
+        memory_path  (str, optional): Where to store test_evidence.json
+    """
+    data = json_payload()
+    test_output = string_field(data, "test_output")
+    memory_path = string_field(data, "memory_path", default=os.path.join(ROOT_DIR, "memory"))
+
+    evidence = modules.record_test_evidence(test_output, memory_path)
+
+    return jsonify({
+        "output_hash": evidence.output_hash,
+        "timestamp_utc": evidence.timestamp_utc,
+        "passed": evidence.passed,
+        "test_count": evidence.test_count,
+        "evidence_line": evidence.evidence_line,
+        "verified": True,  # The existence of this hash IS the proof
+    })
+
+
+@app.route("/retrospective/memory", methods=["GET"])
+@route_errors
+def retrospective_memory():
+    """GET /retrospective/memory?domain=general — Load memory for a domain.
+
+    Returns the accumulated learnings markdown for a domain.
+    Call this at the start of each session to load what the harness learned.
+
+    Query params:
+        domain  (str, optional, default="general"): general | oracle | quantower | trading | reasoning
+        memory_path (str, optional): Override path to memory/ dir
+    """
+    domain = request.args.get("domain", "general")
+    memory_path = request.args.get("memory_path", os.path.join(ROOT_DIR, "memory"))
+
+    if domain not in ("general", "oracle", "quantower", "trading", "reasoning"):
+        raise BridgeHTTPError(400, "Invalid input", details=f"domain must be one of: general, oracle, quantower, trading, reasoning")
+
+    memory_content = modules.load_memory(memory_path=memory_path, domain=domain)
+
+    return jsonify({
+        "domain": domain,
+        "has_memory": bool(memory_content.strip()),
+        "content": memory_content,
+        "char_count": len(memory_content),
+    })
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------

@@ -137,7 +137,7 @@ _SLOW_ROUTE_RE = re.compile(
     r"ms=(?P<ms>\d+)", re.IGNORECASE
 )
 _ROUTE_RE = re.compile(
-    r'"(?P<method>GET|POST|PUT|DELETE|PATCH)\s+(?P<path>/[^\s"]+)"', re.IGNORECASE
+    r'(?:"|^|\s)(?P<method>GET|POST|PUT|DELETE|PATCH)\s+(?P<path>/[^\s"]+)', re.IGNORECASE
 )
 
 
