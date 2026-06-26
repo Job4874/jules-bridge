@@ -193,3 +193,22 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - `write_packets=true` now writes `CONTEXT_MEMORY_STORE.json` and `CONTEXT_QUALITY_EVAL.md` alongside role packets, `CONTEXT_SUBAGENT_INDEX.md`, `CONTEXT_SUBAGENT_STATE.json`, and `NO_SLOP_WORKFLOW.md`.
 - Regenerated `jules_inbox/context_subagents/` from the two current pasted sources: 2 readable sources, 4 role packets, 2 memory refs, `context_budget.over_budget=false`, and no raw attachment paths in generated packet artifacts.
 - Evidence: `python -m py_compile bridge.py modules\context_orchestrator.py modules\__init__.py` passed; `python -m pytest tests/ -q` passed 240 tests with 1 existing warning, SHA-256 `7e42a3ecdcad29604d56efef9775d577985e939d8a503cbb9ef5a1c21c9e1d4c`.
+
+## In Progress — Human-Mimic UI & VM Driver
+
+- Security architecture locked: operator-authorized OS-backed secrets only, no plaintext credential persistence, and `allow_secret_use=true` required for runtime secret use.
+- H/L/ACT architecture plan captured in `implementation_plan.md`.
+- First TDD red tests added for mock secret provider boundaries and OCR/UI state detection in `tests/test_ui_secret_and_detection.py`.
+
+## Session 20260626T203837 - Human-Mimic UI Green Phase
+
+- Implemented minimal green-phase `ui_automation.get_secret(...)` and `ui_automation.detect_ui_state(...)`.
+- Exported `SecretResult`, `UIDetectionResult`, `get_secret`, and `detect_ui_state` from `modules/__init__.py`.
+- Evidence: `python -m pytest tests/ -q` passed 244 tests with 1 existing warning, SHA-256 `8de1babe4bdad5b8fbc168813686c348a5073fdf758f71cd4b4dd788fddf7007`.
+
+## Session 20260626T204200 - Human-Mimic Quantower ACT Driver
+
+- Added `modules/human_mimic_driver.py` and exported `HumanMimicResult` plus `drive_quantower_login(...)`.
+- Added `POST /ui/drive_quantower_login` to run a guarded Quantower login H/L/ACT loop through the Local Node bridge.
+- Documented Two-Node Zero-Trust mode and Human-Mimic driver gotchas.
+- Evidence: `python -m pytest tests/ -q` passed 248 tests with 1 existing warning, SHA-256 `770defafb30620443caac2e1948960ca262a7699951fc8eb49ccc88065acde10`.

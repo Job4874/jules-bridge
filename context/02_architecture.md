@@ -10,7 +10,8 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 │   ├── __init__.py         ← Package exports (single public API surface)
 │   ├── fs_service.py       ← File read/write/grep/tail/list_dir
 │   ├── shell_executor.py   ← PowerShell/cmd execution with timeout
-│   ├── ui_automation.py    ← Screenshot/click/type via pyautogui
+│   ├── ui_automation.py    ← Screenshot/click/type, guarded secrets, UI state detection
+│   ├── human_mimic_driver.py ← H/L/ACT UI driver loops built from ui_automation primitives
 │   ├── inbox_service.py    ← Message files in jules_inbox/ dir
 │   ├── oracle_session.py   ← Oracle V5 + Quantower health/build/deploy
 │   ├── reasoning_module.py ← HRM-inspired H/L/ACT hierarchical reasoning
@@ -49,7 +50,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/health` | bridge.py | Liveness + uptime — no module backing |
 | `/fs/` | fs_service | File system operations |
 | `/shell/` | shell_executor | Command execution |
-| `/ui/` | ui_automation | Screenshot and click |
+| `/ui/` | ui_automation + human_mimic_driver | Screenshot, click, type, UI detection, and guarded Human-Mimic ACT loops |
 | `/inbox/` | inbox_service | Message passing |
 | `/jules/` | jules_orchestrator | Jules task dispatch, worker packets, launch state, and remote session checks |
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |

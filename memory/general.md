@@ -237,3 +237,26 @@ has gone wrong before and what to avoid.
 - Packet text includes a Context Handling Policy section: active context is head/tail only, omitted middles must be retrieved before assumptions, heavy source analysis stays in subagent packets, and long-session evals are an evidence gate.
 - Generated packet excerpts now normalize CR/CRLF and trim trailing line whitespace so pasted transcripts do not make `git diff --check` noisy.
 - Evidence: `/akc/subagents` route smoke on the two current pasted sources returned 2 readable sources, 4 role packets, 2 memory refs, and `context_budget.over_budget=false`; `python -m pytest tests/ -q` passed 240 tests with 1 existing warning, SHA-256 `7e42a3ecdcad29604d56efef9775d577985e939d8a503cbb9ef5a1c21c9e1d4c`.
+
+## Session 20260626T000000 - Human-Mimic UI Driver Architecture Red Tests
+
+- Security lock accepted for future UI/VM automation: operator-authorized OS-backed secrets only, no plaintext persistence, no secret leakage in logs/screenshots/evidence/PR text, and runtime `allow_secret_use=true` required before any secret retrieval or typing.
+- Added `implementation_plan.md` with H/L/ACT plan for secure `ui_automation` expansion and future `vm_manager` module.
+- Added first red TDD tests in `tests/test_ui_secret_and_detection.py` for `get_secret(...)` redaction/authorization behavior and `detect_ui_state(...)` Quantower OCR state classification.
+- Targeted evidence: `python -m pytest tests/test_ui_secret_and_detection.py -q` failed as expected because `modules.ui_automation` does not yet export `get_secret` or `detect_ui_state`.
+
+## Session 20260626T203837 - Human-Mimic UI Driver Green Phase
+
+- Implemented minimal `ui_automation.get_secret(...)` and `ui_automation.detect_ui_state(...)` to satisfy the Human-Mimic UI red tests.
+- `get_secret(...)` enforces `allow_secret_use`, supports injected OS-backed/mock providers, returns non-secret username metadata only, and never returns plaintext password fields.
+- Secret-provider failures use sanitized error text so provider exception strings cannot leak credential material.
+- `detect_ui_state(...)` classifies deterministic OCR/template signals for `quantower_login`, `quantower_loading`, `quantower_ready`, and `unknown`.
+- Evidence: `python -m pytest tests/ -q` passed 244 tests with 1 existing warning, SHA-256 `8de1babe4bdad5b8fbc168813686c348a5073fdf758f71cd4b4dd788fddf7007`.
+
+## Session 20260626T204200 - Human-Mimic Quantower ACT Driver
+
+- Added `modules/human_mimic_driver.py` as the H/L/ACT driver layer over `ui_automation.detect_ui_state(...)`, `get_secret(...)`, `type_text(...)`, and `click(...)`.
+- Added `drive_quantower_login(...)` with injectable type/click/secret-provider/notification callbacks for testability and Local Node execution. It never returns plaintext secret material and treats notifications as best-effort.
+- Added `POST /ui/drive_quantower_login` as a thin bridge route: validate OCR text, submit coordinates, `allow_secret_use`, and `notify`; optionally build an email callback; call the module; return JSON.
+- Documented Two-Node Zero-Trust mode: Cloud Node owns policy logic, Local Windows Node is the bridge executor, and Academic Nodes must not host bridge OS-file installs or credential storage.
+- Evidence: `python -m pytest tests/ -q` passed 248 tests with 1 existing warning, SHA-256 `770defafb30620443caac2e1948960ca262a7699951fc8eb49ccc88065acde10`.

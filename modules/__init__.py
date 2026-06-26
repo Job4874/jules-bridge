@@ -12,8 +12,22 @@ from .shell_executor import (
     execute,
     available_shells,
 )
-from .ui_automation import ScreenshotResult, ClickResult, screenshot, click, type_text
+from .ui_automation import (
+    ScreenshotResult,
+    ClickResult,
+    SecretResult,
+    UIDetectionResult,
+    screenshot,
+    click,
+    type_text,
+    get_secret,
+    detect_ui_state,
+)
 from .inbox_service import InboxMessage, inbox_read, inbox_write
+from .human_mimic_driver import (
+    HumanMimicResult,
+    drive_quantower_login,
+)
 from .jules_orchestrator import (
     JulesTask,
     JulesDispatchResult,
@@ -100,9 +114,16 @@ __all__ = [
     # ui_automation
     "ScreenshotResult",
     "ClickResult",
+    "SecretResult",
+    "UIDetectionResult",
     "screenshot",
     "click",
     "type_text",
+    "get_secret",
+    "detect_ui_state",
+    # human_mimic_driver
+    "HumanMimicResult",
+    "drive_quantower_login",
     # inbox_service
     "InboxMessage",
     "inbox_read",
