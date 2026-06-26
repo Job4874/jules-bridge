@@ -187,6 +187,13 @@ def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
         _LOGGER.warning("google-generativeai not installed; falling back to stub output")
         return json.dumps({"error": "google-generativeai not installed"})
 
+    try:
+        from notify_email import load_env
+
+        load_env()
+    except ImportError:
+        pass
+
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         _LOGGER.warning("GEMINI_API_KEY not set in environment; falling back to stub output")
