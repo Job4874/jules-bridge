@@ -1,3 +1,9 @@
+"""Integration tests for bridge.py HTTP routes.
+
+These test the HTTP surface — validate → call module → JSON response.
+Module internals are mocked. For module-level unit tests see test_*_service.py.
+"""
+
 import os
 import subprocess
 import tempfile
@@ -7,7 +13,7 @@ from unittest.mock import MagicMock, patch
 import bridge
 
 
-class TestJulesBridgeAPI(unittest.TestCase):
+class TestInboxRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = bridge.app.test_client()
@@ -21,6 +27,12 @@ class TestJulesBridgeAPI(unittest.TestCase):
         response = self.client.post("/inbox/read", json={"file": ["OPERATOR_RESPONSE.md"]})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "Invalid input")
+
+
+class TestFsRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
 
     def test_fs_read_invalid_input(self):
         response = self.client.post("/fs/read", json={})
@@ -50,9 +62,15 @@ class TestJulesBridgeAPI(unittest.TestCase):
             with open(path, "r", encoding="utf-8") as handle:
                 self.assertEqual(handle.read(), "ok")
 
-    @patch("bridge.subprocess.run")
+
+class TestShellRoute(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    @patch("modules.shell_executor.subprocess.run")
     def test_shell_powershell_default(self, mock_run):
-        mock_run.return_value = MagicMock(returncode=0, stdout=b"Success", stderr=b"")
+        mock_run.return_value = MagicMock(returncode=0, stdout="Success", stderr="")
         response = self.client.post("/shell", json={"command": "echo 1"})
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
@@ -64,7 +82,7 @@ class TestJulesBridgeAPI(unittest.TestCase):
             ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command"],
         )
 
-    @patch("bridge.subprocess.run")
+    @patch("modules.shell_executor.subprocess.run")
     def test_shell_cmd_selector(self, mock_run):
         mock_run.return_value = MagicMock(returncode=0, stdout="OK", stderr="")
         response = self.client.post("/shell", json={"command": "echo OK", "shell": "cmd"})
@@ -72,8 +90,8 @@ class TestJulesBridgeAPI(unittest.TestCase):
         self.assertEqual(response.get_json()["shell"], "cmd")
         self.assertEqual(mock_run.call_args.args[0][:4], ["cmd.exe", "/d", "/s", "/c"])
 
-    @patch("bridge.shutil.which", return_value=None)
-    @patch("bridge.os.path.exists", return_value=False)
+    @patch("modules.shell_executor.shutil.which", return_value=None)
+    @patch("modules.shell_executor.os.path.exists", return_value=False)
     def test_shell_invalid_git_bash(self, mock_exists, mock_which):
         response = self.client.post("/shell", json={"command": "ls", "shell": "bash"})
         self.assertEqual(response.status_code, 400)
@@ -84,25 +102,33 @@ class TestJulesBridgeAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("WSL", response.get_json()["details"])
 
-    @patch("bridge.subprocess.run")
+    @patch("modules.shell_executor.subprocess.run")
     def test_shell_timeout_maps_to_504(self, mock_run):
         mock_run.side_effect = subprocess.TimeoutExpired(cmd="echo 1", timeout=1)
         response = self.client.post("/shell", json={"command": "echo 1", "timeout": 1})
         self.assertEqual(response.status_code, 504)
         self.assertIn("timed out", response.get_json()["error"])
 
-    def test_ui_click_coordinate_out_of_bounds(self):
+
+class TestUIRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    def test_ui_click_negative_coordinate(self):
         response = self.client.post("/ui/click", json={"x": -10, "y": 500})
         self.assertEqual(response.status_code, 400)
 
-    @patch("bridge.pyautogui.click")
-    @patch("bridge.pyautogui.moveTo")
-    @patch("bridge.pyautogui.size", return_value=(1920, 1080))
-    def test_ui_click_validates_display_bounds(self, mock_size, mock_move, mock_click):
+    @patch("modules.ui_automation._pyautogui")
+    def test_ui_click_validates_display_bounds(self, mock_pag_factory):
+        pag = MagicMock()
+        pag.size.return_value = (1920, 1080)
+        mock_pag_factory.return_value = pag
+
         response = self.client.post("/ui/click", json={"x": 5000, "y": 500})
         self.assertEqual(response.status_code, 400)
-        mock_move.assert_not_called()
-        mock_click.assert_not_called()
+        pag.moveTo.assert_not_called()
+        pag.click.assert_not_called()
 
 
 if __name__ == "__main__":
