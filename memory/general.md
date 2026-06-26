@@ -106,7 +106,7 @@ has gone wrong before and what to avoid.
 - Default behavior remains soft: stale `/oracle/*` evidence adds `X-Evidence-Age-Warning: stale:{age}s`.
 - Setting `EVIDENCE_GATE_HARD=1` uses a pre-route hard gate and returns HTTP 423 with `{error: "evidence_stale", age_s, threshold_s}` for stale `/oracle/*` evidence.
 - `GET /health` and `/retrospective/*` are exempt because the gate only applies to `/oracle/*`, keeping evidence refresh routes available.
-- Evidence: `python -m pytest tests/ -v` passed 168 tests, SHA-256 `a8ed044e641040c333364aba801a262224ae55a56cf1affef2e41e64ed58fecb`.
+- Evidence: `python -m pytest tests/ -v` passed 172 tests, SHA-256 `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`.
 
 ## Session 20260626T033540 — Auto-Prune Analyze Option
 
@@ -114,4 +114,4 @@ has gone wrong before and what to avoid.
 - `auto_prune=True` runs `prune_memory(memory_path=...)` only after writing current session learnings, so the new session is not pruned before it lands.
 - `POST /retrospective/analyze` accepts boolean `auto_prune` and rejects non-boolean values via `bool_field()`.
 - The `retrospective` logger emits `auto_prune removed N sections` when the opt-in prune path runs.
-- Evidence: `python -m pytest tests/ -v` passed 172 tests, SHA-256 `fef2f1a64eca37d63e39f2c0aaba16788b5f02effde6bcd72328d4cb9111d8ac`.
+- Evidence: `python -m pytest tests/ -v` passed 172 tests, SHA-256 `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`.

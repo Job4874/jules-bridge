@@ -2,7 +2,7 @@
 
 **Status**: DONE
 **Completed**: 2026-06-26T03:35:40Z
-**Evidence SHA-256**: fef2f1a64eca37d63e39f2c0aaba16788b5f02effde6bcd72328d4cb9111d8ac
+**Evidence SHA-256**: 5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4
 **Priority**: MEDIUM
 **Phase**: Phase 6
 
@@ -28,7 +28,7 @@ self-maintain. Pruning is the "garbage collection" of the memory system.
 - The route parses `auto_prune` as a boolean and passes it through from `POST /retrospective/analyze`.
 - `retrospective` logger emits `auto_prune removed N sections` when auto-prune runs.
 - Added tests for default no-prune behavior, opt-in prune-after-write behavior, and route passthrough.
-- Full evidence run: `python -m pytest tests/ -v` -> 172 passed, 1 warning.
+- Final evidence run: `python -m pytest tests/ -v` -> 172 passed, 1 warning.
 
 ## Implementation Notes
 

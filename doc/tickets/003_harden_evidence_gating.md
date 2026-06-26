@@ -2,7 +2,7 @@
 
 **Status**: DONE
 **Completed**: 2026-06-26T03:33:04Z
-**Evidence SHA-256**: a8ed044e641040c333364aba801a262224ae55a56cf1affef2e41e64ed58fecb
+**Evidence SHA-256**: 5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4
 **Priority**: MEDIUM (soft enforcement first; harden after test discipline established)
 **Phase**: Phase 6
 **Depends on**: Ticket 001 (eval harness — need test-first confidence before hardening)
@@ -30,7 +30,7 @@ The goal is to eventually block with HTTP 423 (Locked) when evidence is stale.
 - `EVIDENCE_GATE_HARD=1` uses a pre-route hard gate and returns HTTP 423 with `{error: "evidence_stale", age_s, threshold_s}` for stale `/oracle/*` evidence.
 - `GET /health` and `/retrospective/*` remain exempt because only `/oracle/*` is gated.
 - Added bridge route tests for soft warning, hard 423, fresh hard-mode pass, health exemption, and record-evidence exemption.
-- Full evidence run: `python -m pytest tests/ -v` -> 168 passed, 1 warning.
+- Final evidence run: `python -m pytest tests/ -v` -> 172 passed, 1 warning.
 
 ## Implementation Notes
 
