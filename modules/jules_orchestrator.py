@@ -678,8 +678,31 @@ def _resolve_packet_files(
         paths = [Path(path) for path in packet_files if str(path).strip()]
     else:
         base = Path(packet_dir) if packet_dir else _DEFAULT_OUTPUT_DIR
-        paths = sorted(base.glob("JT-*.md"))
+        paths = _packet_files_from_index(base) or sorted(base.glob("JT-*.md"))
     return [path for path in paths if path.is_file()]
+
+
+def _packet_files_from_index(packet_dir: Path) -> list[Path]:
+    index_path = packet_dir / "JULES_DISPATCH_INDEX.md"
+    if not index_path.is_file():
+        return []
+    ordered: list[Path] = []
+    seen: set[str] = set()
+    try:
+        for line in index_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if not line.startswith("| JT-"):
+                continue
+            columns = [column.strip() for column in line.split("|")]
+            if len(columns) < 7:
+                continue
+            packet = Path(columns[6])
+            key = str(packet).lower()
+            if key not in seen and packet.is_file():
+                ordered.append(packet)
+                seen.add(key)
+    except Exception:
+        return []
+    return ordered
 
 
 def _state_path_for(
