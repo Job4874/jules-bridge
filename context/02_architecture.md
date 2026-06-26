@@ -44,13 +44,14 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 
 | Prefix | Module | Purpose |
 |--------|--------|---------|
+| `/health` | bridge.py | Liveness + uptime — no module backing |
 | `/fs/` | fs_service | File system operations |
 | `/shell/` | shell_executor | Command execution |
 | `/ui/` | ui_automation | Screenshot and click |
 | `/inbox/` | inbox_service | Message passing |
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |
-| `/reasoning/` | reasoning_module | H/L/ACT reasoning |
-| `/retrospective/` | retrospective_module | Log analysis + memory |
+| `/reasoning/` | reasoning_module | H/L/ACT reasoning (Gemini or stub) |
+| `/retrospective/` | retrospective_module | Log analysis + memory + pruning |
 | `/notify/` | notify_email | Email notifications |
 
 ## Key Design Patterns

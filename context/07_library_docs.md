@@ -40,6 +40,50 @@ Always return `jsonify(dict(result))` where `result` is a typed dict/dataclass f
 
 ---
 
+## google-generativeai (Gemini API)
+
+Used exclusively by `modules/reasoning_module.py` for H-module and L-module LLM calls.
+
+### Configuration
+- **Env var required**: `GEMINI_API_KEY` must be set before the bridge starts
+- **Package**: `google-generativeai` — install with `pip install google-generativeai`
+- **Lazy import**: imported inside `_gemini_chat()` — never at module level. This keeps tests working without the package installed.
+
+### Model Alias System
+Never pass raw model strings to reasoning routes. Use aliases:
+```python
+# In route body:
+{"problem": "...", "model": "fast"}    # → gemini-2.0-flash  (cheap, low latency)
+{"problem": "...", "model": "smart"}   # → gemini-2.5-pro    (high quality)
+{"problem": "...", "model": "stub"}    # → deterministic stub (unit tests, offline)
+```
+Alias mapping lives in `_MODEL_ALIASES` at the top of `reasoning_module.py`. Change the right-hand value there to update the model, not the call sites.
+
+### Fallback Behavior
+If Gemini call fails for any reason (missing key, network error, quota, non-JSON response), the module **silently falls back to stub output** and logs a `WARNING` to `jules_bridge.reasoning`. It does NOT raise. This is intentional — the bridge must never crash due to LLM failure.
+
+### Usage Pattern
+```python
+# Direct module call (for testing):
+from modules.reasoning_module import _h_gemini_call
+result = _h_gemini_call("My problem", context="", model_name="gemini-2.0-flash")
+
+# Via bridge route:
+POST /reasoning/solve
+{"problem": "My problem", "model": "fast"}
+
+# Plan-only (H module, no execution):
+POST /reasoning/plan
+{"problem": "My problem", "model": "smart"}
+```
+
+### Rules
+- Never call `genai.configure()` outside of `_gemini_chat()` — it's a global side effect
+- Always use `response_mime_type="application/json"` and `temperature=0.2` for structured outputs
+- Never pass `model="fast"` or `model="smart"` in unit tests — use `model="stub"` to avoid network calls
+
+---
+
 ## pyautogui
 
 ### Configuration

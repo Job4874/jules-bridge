@@ -535,3 +535,101 @@ def load_memory(memory_path: Optional[str] = None, domain: str = "general") -> s
     if memory_path is None:
         memory_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "memory")
     return _load_existing_memory(memory_path, domain)
+
+
+def prune_memory(
+    memory_path: Optional[str] = None,
+    max_age_days: int = 30,
+) -> Dict[str, Any]:
+    """Remove learnings older than max_age_days from all memory files.
+
+    Claude's autodream idea: auto-prune old/redundant learnings so memory
+    stays focused and doesn't grow without bound.
+
+    Strategy: age-based pruning. Each learning section is headed by a
+    session datestamp (e.g. ## Session 20250601T...). Sections whose
+    datestamp is older than max_age_days are removed. Sections with no
+    parseable datestamp are kept (conservative default).
+
+    Header sections ('## How to use', '## Initial Notes') are always preserved.
+
+    Args:
+        memory_path: Path to memory/ directory. Defaults to {root}/memory/.
+        max_age_days: Drop sections whose datestamp is older than this. Default 30.
+
+    Returns:
+        Dict with keys: pruned_count (int), domains_affected (list[str])
+    """
+    if memory_path is None:
+        memory_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "memory")
+
+    # ISO 8601 compact timestamp pattern embedded in session headers
+    # e.g. "## Session 20250601T143022" or "## Analysis 20260101T000000"
+    _TS_RE = re.compile(r"(\d{8}T\d{6})")
+    _PRESERVE_PREFIXES = ("## How to use", "## Initial Notes")
+
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None)
+    from datetime import timedelta
+    cutoff -= timedelta(days=max_age_days)
+
+    total_pruned = 0
+    domains_affected: List[str] = []
+
+    memory_dir = Path(memory_path)
+    if not memory_dir.is_dir():
+        return {"pruned_count": 0, "domains_affected": []}
+
+    for md_file in sorted(memory_dir.glob("*.md")):
+        text = md_file.read_text(encoding="utf-8")
+        lines = text.splitlines(keepends=True)
+
+        # Split into sections at "## " boundaries
+        sections: List[List[str]] = []
+        current: List[str] = []
+        for line in lines:
+            if line.startswith("## ") and current:
+                sections.append(current)
+                current = [line]
+            else:
+                current.append(line)
+        if current:
+            sections.append(current)
+
+        kept: List[List[str]] = []
+        pruned_in_file = 0
+
+        for section in sections:
+            heading = section[0].rstrip() if section else ""
+
+            # Always preserve non-session headers
+            if any(heading.startswith(p) for p in _PRESERVE_PREFIXES):
+                kept.append(section)
+                continue
+
+            # Try to parse a timestamp from the heading
+            m = _TS_RE.search(heading)
+            if not m:
+                # No timestamp found — keep conservatively
+                kept.append(section)
+                continue
+
+            try:
+                ts = datetime.strptime(m.group(1), "%Y%m%dT%H%M%S")
+                if ts < cutoff:
+                    pruned_in_file += 1
+                else:
+                    kept.append(section)
+            except ValueError:
+                kept.append(section)  # unparseable timestamp — keep
+
+        if pruned_in_file > 0:
+            new_text = "".join("".join(s) for s in kept)
+            md_file.write_text(new_text, encoding="utf-8")
+            total_pruned += pruned_in_file
+            domains_affected.append(md_file.stem)
+
+    return {
+        "pruned_count": total_pruned,
+        "domains_affected": domains_affected,
+    }
+

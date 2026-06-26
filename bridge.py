@@ -303,9 +303,18 @@ TENTACLES = [
     {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
-    {"name": "mail",         "route": "POST /notify/email",      "reach": "Email the operator (Gmail to iCloud)"},
-    {"name": "inbox_read",   "route": "POST /inbox/read",        "reach": "Read operator/Jules inbox messages"},
-    {"name": "inbox_write",  "route": "POST /inbox/write",       "reach": "Write Jules inbox replies"},
+    {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},
+    {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},
+    {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
+    # Reasoning routes (HRM-inspired H/L/ACT)
+    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},
+    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},
+    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},
+    # Retrospective routes (self-improving memory)
+    {"name": "retro_analyze",   "route": "POST /retrospective/analyze",    "reach": "Analyze bridge.log and write learnings to memory"},
+    {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},
+    {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},
+    {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},
 ]
 
 # ---------------------------------------------------------------------------
@@ -752,6 +761,34 @@ def retrospective_memory():
         "has_memory": bool(memory_content.strip()),
         "content": memory_content,
         "char_count": len(memory_content),
+    })
+
+
+@app.route("/retrospective/prune_memory", methods=["POST"])
+@route_errors
+def retrospective_prune_memory():
+    """POST /retrospective/prune_memory — Age-based pruning of memory files.
+
+    Removes learning sections older than max_age_days from all memory/*.md files.
+    Sections with no parseable datestamp are kept (conservative default).
+    Header sections (Initial Notes, How to use) are always preserved.
+
+    Body (JSON):
+        memory_path   (str, optional): Override path to memory/ dir
+        max_age_days  (int, optional, default=30): Drop sections older than this
+
+    Returns JSON with pruned_count and domains_affected.
+    """
+    data = json_payload()
+    memory_path = string_field(data, "memory_path", default=os.path.join(ROOT_DIR, "memory"))
+    max_age_days = int_field(data, "max_age_days", default=30, min_value=1)
+
+    result = modules.prune_memory(memory_path=memory_path, max_age_days=max_age_days)
+
+    return jsonify({
+        "pruned_count": result["pruned_count"],
+        "domains_affected": result["domains_affected"],
+        "max_age_days": max_age_days,
     })
 
 

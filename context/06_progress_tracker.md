@@ -3,7 +3,7 @@
 > Context file 6 of 7. The ONLY file that updates constantly.
 > How the agent picks up exactly where you left off in a single prompt.
 
-## Current Phase: Phase 4 — Job Pilot Agent Skills ✅
+## Current Phase: Phase 5 — LLM Integration + Self-Improvement 🔄
 
 ## Phase History
 
@@ -37,11 +37,13 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 |---|---|---|
 | Memory format | Markdown files | Human + agent readable; matches Nick's Case |
 | Evidence storage | SHA-256 in JSON | Cryptographic proof; cannot be faked |
-| LLM stubs | Deterministic | No LLM cost until integration is needed |
+| LLM integration | Gemini via alias system | No new API key; `fast`/`smart` aliases hide provider details |
 | Module contract | Never raises | Partial data beats exceptions in a harness |
 | Context system | 7-file + AGENTS.md | Ghost AI spec-driven approach + orchestrator |
 | Gotchas over docs | ~553 lines | Guides without prescribing; smaller context |
 | Agent Skills | 5 core skills | Systematize planning, continuity, review, recovery, and patterns |
+| Evidence gating | Warning header | `X-Evidence-Age-Warning` on `/oracle/*`; soft enforcement first |
+| Memory pruning | Age-based (30 days) | Shippable without LLM; conservative (keeps undated sections) |
 
 ## What's Complete
 
@@ -50,8 +52,8 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] `modules/ui_automation.py`
 - [x] `modules/inbox_service.py`
 - [x] `modules/oracle_session.py`
-- [x] `modules/reasoning_module.py` (HRM H/L/ACT)
-- [x] `modules/retrospective_module.py` (Nick's Case pattern)
+- [x] `modules/reasoning_module.py` (HRM H/L/ACT + Gemini integration)
+- [x] `modules/retrospective_module.py` (Nick's Case pattern + `prune_memory`)
 - [x] `tests/test_reasoning_module.py` — 34 tests
 - [x] `tests/test_retrospective_module.py`
 - [x] `context/` — all 7 files
@@ -59,11 +61,16 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] `memory/general.md` + `memory/oracle.md`
 - [x] CDLC artifacts: HRM_AGENTS.md, HRM_UBIQUITOUS_LANGUAGE.md, hrm_context_eval.py
 - [x] Reusable skills: `architect`, `remember`, `review`, `recover`, `imprint`
+- [x] `GET /health` — fixes 404 storm; returns uptime; listed in TENTACLES
+- [x] Gemini wired to `reasoning_module` via `_MODEL_ALIASES` (`fast`/`smart`/`stub`)
+- [x] Evidence gating — `X-Evidence-Age-Warning` header on `/oracle/*` routes
+- [x] `POST /retrospective/prune_memory` — age-based pruning, 30-day default
+- [x] All missing routes added to TENTACLES manifest
 
-## What's Next (Phase 5 ideas)
+## What's Next (Phase 6 ideas)
 
-- [ ] Wire `_h_module_call()` / `_l_module_call()` to real LLM provider (Gemini / Anthropic)
-- [ ] Add eval harness for reasoning_module (measure plan quality with/without context)
+- [ ] Eval harness for reasoning_module (measure plan quality with real Gemini calls)
 - [ ] Quantower memory file with UI-specific gotchas
-- [ ] `POST /retrospective/prune_memory` — auto-prune old/redundant learnings (Claude's autodream idea)
-- [ ] Evidence gating — route returns 423 if test evidence is stale (> 1h old)
+- [ ] Harden evidence gating to 423 (after test-first discipline is established)
+- [ ] Auto-schedule `prune_memory` via cron or on `analyze_session` completion
+- [ ] `POST /retrospective/analyze` baseline — run on existing bridge.log to seed memory with real learnings

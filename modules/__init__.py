@@ -40,6 +40,7 @@ from .retrospective_module import (
     record_test_evidence,
     load_test_evidence,
     load_memory,
+    prune_memory,
 )
 
 __all__ = [
@@ -91,4 +92,5 @@ __all__ = [
     "record_test_evidence",
     "load_test_evidence",
     "load_memory",
+    "prune_memory",
 ]

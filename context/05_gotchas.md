@@ -9,9 +9,10 @@
 - **`json_payload()`** — raises BridgeHTTPError(400) if body is not valid JSON; always wrap with `@route_errors`
 - **`@route_errors`** — MUST be the first decorator after `@app.route` (innermost position)
 - **`jsonify(dict(some_dataclass))`** — dataclasses are NOT auto-serializable; convert to dict first
-- **Adding a new route** — must also add to the Postman collection and to `context/02_architecture.md` route table
+- **Adding a new route** — must also add to the TENTACLES list and to `context/02_architecture.md` route table
 - **`ROOT_DIR`** is the Jules Bridge project root — use it for all default paths
 - **`LOG_PATH`** is defined at module level — don't redefine it in route handlers
+- **`GET /health`** — exists since Phase 5; returns `{status, bridge, uptime_s}`; used by ngrok/monitoring
 
 ## modules/__init__.py
 
@@ -43,11 +44,13 @@
 
 ## reasoning_module
 
-- **LLM stubs** — `_h_module_call()` and `_l_module_call()` return deterministic stubs; swap with real LLM at integration
+- **Model aliases** — use `"stub"` (tests), `"fast"` (gemini-2.0-flash), `"smart"` (gemini-2.5-pro). Never pass raw model strings unless the alias doesn't exist yet.
+- **`GEMINI_API_KEY`** — must be set in environment for `model="fast"` or `model="smart"`; if missing, falls back to stub output with a WARNING log (does NOT raise)
 - **`reason(problem, budget=10)`** — budget is max L-level steps; keep under 20 to avoid token bloat
 - **`ReasoningTrace.to_inbox_summary()`** — call this, not `.inbox_summary()` (no such method)
 - **ACT halting** — if confidence > 0.85, halts early; this is intentional, not a bug
 - **`plan_only()`** — does NOT run L module; use this for previewing plans without executing
+- **Gemini fallback** — if Gemini call fails (network, quota, JSON parse error), falls back to stub output silently; check logs for `WARNING jules_bridge.reasoning`
 
 ## retrospective_module
 
@@ -56,6 +59,9 @@
 - **`record_test_evidence(output)`** — takes raw pytest stdout as string; pipe via `result.stdout`
 - **Evidence path** — `memory/test_evidence.json` is the evidence store; `memory/` dir must exist
 - **Domain classification** — if the word "oracle" appears in a learning, it goes to `memory/oracle.md`
+- **`prune_memory(max_age_days=30)`** — DESTRUCTIVE; rewrites memory files in place. Always commit `memory/` to git before pruning.
+- **prune_memory timestamp pattern** — looks for `## Session 20250601T143022` format in headings; sections with no timestamp are kept (conservative)
+- **Evidence gating** — `/oracle/*` routes return `X-Evidence-Age-Warning: stale:{N}s` header if `test_evidence.json` is > 1h old; not a hard block
 
 ## inbox_service
 
