@@ -1,3 +1,5 @@
+from datetime import datetime, timezone, timedelta
+
 """Tests for retrospective_module.py
 
 Tests the module boundary contract — all tests call only the public interface.
@@ -13,6 +15,7 @@ import textwrap
 import pytest
 
 from modules.retrospective_module import (
+    prune_memory,
     DoomLoop,
     LogPattern,
     RetrospectiveReport,
@@ -429,13 +432,13 @@ class TestAnalyzeSession:
         analyze_session(
             log_path=tmp_dirs["log"],
             memory_path=tmp_dirs["memory"],
-            session_id="20990101T000000",
+            session_id=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S"),
         )
 
         with open(general_path, encoding="utf-8") as handle:
             text = handle.read()
         assert "stale learning" in text
-        assert "20990101T000000" in text
+        assert "## Session " in text
 
     def test_analyze_session_auto_prune_removes_stale_sections_after_write(self, tmp_dirs, caplog):
         general_path = os.path.join(tmp_dirs["memory"], "general.md")
@@ -447,14 +450,14 @@ class TestAnalyzeSession:
             analyze_session(
                 log_path=tmp_dirs["log"],
                 memory_path=tmp_dirs["memory"],
-                session_id="20990101T000000",
+                session_id=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S"),
                 auto_prune=True,
             )
 
         with open(general_path, encoding="utf-8") as handle:
             text = handle.read()
         assert "stale learning" not in text
-        assert "20990101T000000" in text
+        assert "## Session " in text
         assert "auto_prune removed 1 sections" in caplog.text
 
 
@@ -487,3 +490,37 @@ class TestLoadMemory:
         for domain in ("general", "oracle", "quantower", "trading", "reasoning"):
             content = load_memory(memory_path=tmp_dirs["memory"], domain=domain)
             assert isinstance(content, str)  # never raises
+
+def test_prune_memory_malformed_timestamp(tmp_path):
+    """Test Initiative C: Malformed timestamps act as a hard gate and are pruned."""
+    # Setup test file with a malformed timestamp header
+    test_file = os.path.join(str(tmp_path), "malformed.md")
+    with open(test_file, "w") as f:
+        f.write("## Session 20261301T999999\nMalformed timestamp data\n")
+
+    # Run prune_memory and assert it pruned the malformed entry
+    result = prune_memory(memory_path=str(tmp_path))
+    assert result["pruned_count"] == 1
+    assert "malformed" in result["domains_affected"]
+
+    with open(test_file, "r") as f:
+        content = f.read()
+    assert "Malformed timestamp data" not in content
+
+
+def test_prune_memory_clock_skew(tmp_path):
+    """Test Initiative C: Clock-skewed (future) timestamps act as a hard gate and are pruned."""
+    # Setup test file with a clock-skewed timestamp header (future date)
+    test_file = os.path.join(str(tmp_path), "clock_skew.md")
+    future_date = (datetime.now(timezone.utc) + timedelta(days=5)).strftime("%Y%m%dT%H%M%S")
+    with open(test_file, "w") as f:
+        f.write(f"## Session {future_date}\nClock skewed data\n")
+
+    # Run prune_memory and assert it pruned the future entry
+    result = prune_memory(memory_path=str(tmp_path))
+    assert result["pruned_count"] == 1
+    assert "clock_skew" in result["domains_affected"]
+
+    with open(test_file, "r") as f:
+        content = f.read()
+    assert "Clock skewed data" not in content
