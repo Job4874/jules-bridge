@@ -39,7 +39,7 @@ Every session MUST end with:
 Five core skills are installed in `.agents/skills/`. Use them at these exact moments:
 
 | Skill | When to Run | What It Does |
-|-------|-------------|--------------|
+| --- | --- | --- |
 | **`architect`** | Before any new route, module, or complex feature | Reads context, asks focused questions, surfaces unmade decisions, produces a plan |
 | **`imprint`** | After building or modifying endpoints/modules | Captures API patterns into gotchas and module registry so future features stay consistent |
 | **`review`** | After any feature is implemented | Checks implementation against plan, architecture boundaries, and code standards. Reports issues by severity. Never auto-fixes. |
@@ -49,7 +49,7 @@ Five core skills are installed in `.agents/skills/`. Use them at these exact mom
 ### Bonus Skills
 
 | Skill | When to Run |
-|-------|-------------|
+| --- | --- |
 | **`grill-me`** | Before starting any new feature or non-trivial task — interactive interview to reach alignment |
 | **`write-prd`** | After a grill-me session — distill conversation into a Product Requirements Document |
 | **`prd-to-issues`** | After writing a PRD — break it into independently grabbable implementation tickets |

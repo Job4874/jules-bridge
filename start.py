@@ -1,19 +1,32 @@
+"""Launch Jules Bridge locally and expose it through the reserved ngrok domain."""
 import atexit
 import logging
-from logging.handlers import RotatingFileHandler
+import subprocess
 import sys
 import time
-import subprocess
+import urllib.request
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from pyngrok import ngrok
+from pyngrok.exception import PyngrokError
 
 ROOT = Path(__file__).resolve().parent
 LOG_PATH = ROOT / "bridge.log"
 NGROK_DOMAIN = "parade-marrow-pulp.ngrok-free.dev"
 
 
-def configure_logging():
+class _BridgeState:
+    """Mutable launcher state shared by startup and shutdown hooks."""
+
+    flask_process: subprocess.Popen | None = None
+
+
+STATE = _BridgeState()
+
+
+def configure_logging() -> logging.Logger:
+    """Configure rotating file and stdout logging for the launcher."""
     logger = logging.getLogger("jules_bridge_start")
     logger.setLevel(logging.INFO)
     if logger.handlers:
@@ -40,40 +53,43 @@ def configure_logging():
 LOGGER = configure_logging()
 
 
-def log(message):
+def log(message: str) -> None:
+    """Write an INFO log line through the launcher logger."""
     LOGGER.info(message)
 
 
-def ping_local():
+def ping_local() -> bool:
+    """Return True when the local bridge responds on /ping."""
     try:
-        import urllib.request
-
         with urllib.request.urlopen("http://127.0.0.1:5000/ping", timeout=2) as resp:
             return resp.status == 200
     except OSError:
         return False
 
 
-flask_process = None
-
-
-def stop_flask():
-    global flask_process
-    if flask_process and flask_process.poll() is None:
-        flask_process.terminate()
+def stop_flask() -> None:
+    """Terminate the bridge subprocess if it is still running."""
+    if STATE.flask_process and STATE.flask_process.poll() is None:
+        STATE.flask_process.terminate()
         try:
-            flask_process.wait(timeout=5)
+            STATE.flask_process.wait(timeout=5)
         except subprocess.TimeoutExpired:
-            flask_process.kill()
+            STATE.flask_process.kill()
+
+
+def start_flask() -> subprocess.Popen:
+    """Start bridge.py and return the subprocess handle."""
+    STATE.flask_process = subprocess.Popen(
+        [sys.executable, str(ROOT / "bridge.py")],
+        cwd=str(ROOT),
+    )
+    return STATE.flask_process
 
 
 atexit.register(stop_flask)
 
 log("Starting Jules Bridge locally...")
-flask_process = subprocess.Popen(
-    [sys.executable, str(ROOT / "bridge.py")],
-    cwd=str(ROOT),
-)
+start_flask()
 
 for _ in range(20):
     if ping_local():
@@ -92,10 +108,10 @@ try:
     log("========================================")
     log(f"NGROK URL: {public_url.public_url}")
     log("========================================")
-except Exception as exc:
+except PyngrokError as exc:
     if ping_local():
         log(f"ngrok connect failed ({exc}) but local bridge is UP.")
-        log(f"Try reopening tunnel or use: http://127.0.0.1:5000")
+        log("Try reopening tunnel or use: http://127.0.0.1:5000")
         log(f"Expected public URL: https://{NGROK_DOMAIN}")
     else:
         log(f"FATAL: ngrok and local bridge both unavailable: {exc}")
@@ -106,9 +122,9 @@ log("Keeping process alive. Do not close this window.")
 
 try:
     while True:
-        if flask_process.poll() is not None:
-            log(f"ERROR: bridge.py exited with code {flask_process.returncode}")
-            sys.exit(flask_process.returncode or 1)
+        if STATE.flask_process and STATE.flask_process.poll() is not None:
+            log(f"ERROR: bridge.py exited with code {STATE.flask_process.returncode}")
+            sys.exit(STATE.flask_process.returncode or 1)
         time.sleep(2)
 except KeyboardInterrupt:
     log("Shutting down...")
