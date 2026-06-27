@@ -15,7 +15,7 @@ from pathlib import Path
 from flask import Flask, request, jsonify
 
 # Load env
-env_file = Path("/home/julesadmin/.jules_worker.env")
+env_file = Path(os.path.expanduser("~/.jules_worker.env"))
 if env_file.exists():
     for line in env_file.read_text().splitlines():
         if "=" in line and not line.startswith("#"):
