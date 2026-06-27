@@ -288,19 +288,20 @@ def _gcloud_access_token() -> str:
 
     Uses the interactive gcloud login (ya29.*) which has full API scopes,
     including generativelanguage.googleapis.com. Returns empty string on failure.
+    On Windows, gcloud is a .cmd batch file so shell=True is required.
     """
     import subprocess  # noqa: PLC0415
-    try:
-        result = subprocess.run(
-            ["gcloud", "auth", "print-access-token"],
-            capture_output=True, text=True, timeout=10,
-        )
-        token = result.stdout.strip()
-        if result.returncode == 0 and token.startswith("ya29"):
-            return token
-        _LOGGER.warning("gcloud token fetch failed: %s", result.stderr.strip())
-    except Exception as exc:  # noqa: BLE001
-        _LOGGER.warning("gcloud not available: %s", exc)
+    for cmd in (["gcloud", "auth", "print-access-token"], ["gcloud.cmd", "auth", "print-access-token"]):
+        try:
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=15, shell=True,
+            )
+            token = result.stdout.strip()
+            if result.returncode == 0 and token.startswith("ya29"):
+                return token
+        except Exception:  # noqa: BLE001
+            continue
+    _LOGGER.warning("gcloud token fetch failed — ensure gcloud is installed and `gcloud auth login` has been run")
     return ""
 
 
