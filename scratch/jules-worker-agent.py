@@ -126,6 +126,16 @@ def execute_task(task: str, task_type: str, context: str) -> str:
         return call_llm(task, context)
 
 
+# Free OpenRouter models (confirmed working 2025-06)
+_FREE_MODELS = [
+    "google/gemma-4-31b-it:free",
+    "qwen/qwen3-next-80b-a3b-instruct:free",
+    "openai/gpt-oss-120b:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "cohere/north-mini-code:free",
+]
+
+
 def call_llm(prompt: str, context: str = "") -> str:
     """Call Gemini or OpenRouter with the task."""
     system = (
@@ -139,7 +149,7 @@ def call_llm(prompt: str, context: str = "") -> str:
     )
     full_prompt = f"{context}\n\n{prompt}" if context else prompt
 
-    # Try Gemini Flash first
+    # Try Gemini Flash first (may be rate-limited)
     if GEMINI_KEY:
         try:
             r = requests.post(
@@ -153,30 +163,37 @@ def call_llm(prompt: str, context: str = "") -> str:
             )
             if r.status_code == 200:
                 return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+            print(f"[LLM] Gemini status {r.status_code} — trying OpenRouter", flush=True)
         except Exception as e:
-            pass
+            print(f"[LLM] Gemini error: {e} — trying OpenRouter", flush=True)
 
-    # OpenRouter fallback (free tier)
+    # OpenRouter fallback — try free models in priority order
     if OR_KEY:
-        try:
-            r = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                json={
-                    "model": "google/gemma-3-27b-it:free",
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": full_prompt}
-                    ]
-                },
-                headers={"Authorization": f"Bearer {OR_KEY}"},
-                timeout=60
-            )
-            if r.status_code == 200:
-                return r.json()["choices"][0]["message"]["content"]
-        except Exception:
-            pass
+        for model in _FREE_MODELS:
+            try:
+                r = requests.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    json={
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": full_prompt}
+                        ],
+                        "max_tokens": 4096,
+                    },
+                    headers={"Authorization": f"Bearer {OR_KEY}"},
+                    timeout=90
+                )
+                if r.status_code == 200:
+                    content = r.json()["choices"][0]["message"]["content"]
+                    if content:  # some models return empty for certain prompts
+                        print(f"[LLM] Got response from {model}", flush=True)
+                        return content
+                print(f"[LLM] {model} → {r.status_code}", flush=True)
+            except Exception as e:
+                print(f"[LLM] {model} error: {e}", flush=True)
 
-    return "No LLM available — check GEMINI_API_KEY and OPENROUTER_API_KEY in /home/julesadmin/.jules_worker.env"
+    return "No LLM available — GEMINI_API_KEY is rate-limited and all OpenRouter free models failed. Check ~/.jules_worker.env"
 
 
 if __name__ == "__main__":

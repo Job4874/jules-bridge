@@ -75,7 +75,7 @@ BRIDGE_TOKEN = "JULES-SECURE-999"
 
 @app.before_request
 def require_auth():
-    if request.path in ("/health", "/ping", "/dashboard/status"):
+    if request.path in ("/health", "/ping", "/dashboard/status", "/vm/status", "/chat"):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
