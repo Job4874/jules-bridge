@@ -75,7 +75,7 @@ BRIDGE_TOKEN = "JULES-SECURE-999"
 
 @app.before_request
 def require_auth():
-    if request.path in ("/health", "/ping", "/dashboard/status", "/vm/status", "/chat"):
+    if request.path in ("/health", "/ping", "/dashboard/status", "/vm/status", "/chat", "/chat/test"):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -405,6 +405,10 @@ TENTACLES = [
     {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},
     {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},
     {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},
+    # Dashboard + Chat routes
+    {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},
+    {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},
+    {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},
 ]
 
 # ---------------------------------------------------------------------------
@@ -1700,8 +1704,61 @@ def vm_relay_status():
 
 
 # ---------------------------------------------------------------------------
-# Chat — multi-provider conversational endpoint
+# Chat — multi-provider conversational endpoint + diagnostics
 # ---------------------------------------------------------------------------
+
+@app.route("/chat/test", methods=["GET"])
+@route_errors
+def chat_test():
+    """GET /chat/test — probe each LLM provider with a minimal request.
+
+    Returns per-provider status so operators can debug which keys work.
+    """
+    import time as _time
+    import requests as _req
+
+    results = {}
+
+    # --- Gemini ---
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if api_key:
+        t0 = _time.monotonic()
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+            payload = {"contents": [{"role": "user", "parts": [{"text": "Say OK"}]}]}
+            r = _req.post(url, json=payload, timeout=15)
+            elapsed = int((_time.monotonic() - t0) * 1000)
+            if r.status_code == 200:
+                results["gemini"] = {"status": "ok", "model": "gemini-2.0-flash", "ms": elapsed}
+            else:
+                results["gemini"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}
+        except Exception as exc:
+            elapsed = int((_time.monotonic() - t0) * 1000)
+            results["gemini"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
+    else:
+        results["gemini"] = {"status": "no_key", "detail": "GEMINI_API_KEY not set"}
+
+    # --- OpenRouter ---
+    or_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if or_key:
+        t0 = _time.monotonic()
+        try:
+            or_url = "https://openrouter.ai/api/v1/chat/completions"
+            r = _req.post(or_url, json={"model": "google/gemma-3-27b-it:free", "messages": [{"role": "user", "content": "Say OK"}]},
+                          headers={"Authorization": f"Bearer {or_key}"}, timeout=20)
+            elapsed = int((_time.monotonic() - t0) * 1000)
+            if r.status_code == 200:
+                results["openrouter"] = {"status": "ok", "model": "google/gemma-3-27b-it:free", "ms": elapsed}
+            else:
+                results["openrouter"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}
+        except Exception as exc:
+            elapsed = int((_time.monotonic() - t0) * 1000)
+            results["openrouter"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
+    else:
+        results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY not set"}
+
+    any_ok = any(v.get("status") == "ok" for v in results.values())
+    return jsonify({"healthy": any_ok, "providers": results}), 200
 
 @app.route("/chat", methods=["POST"])
 @route_errors
