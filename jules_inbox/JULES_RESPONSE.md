@@ -6,6 +6,36 @@
 - This checkout does not contain an `orchestrator_daemon` module or daemon config to edit. Do not claim `allow_vm_boot=False` was flipped globally.
 - VM boot is intentionally still dry-run-first. Real boot requires an explicit request to `POST /vm/boot_secondary` with both `dry_run=false` and `allow_vm_boot=true`, plus an allowlisted script from `JULES_VM_SCRIPT_DIR`.
 - Edge launch is hardened to resolve `JULES_EDGE_PATH`, PATH entries, and standard Windows Edge install paths before falling back to the `msedge` app alias.
+- The current execution blocker is incomplete JSON payloads. For live work, send the explicit live flags in the POST body; do not expect the bridge to infer live mode.
+
+## Required Live Payload Overrides
+
+```json
+{
+  "script_name": "Start-SecondaryVM.ps1",
+  "allow_vm_boot": true,
+  "dry_run": false
+}
+```
+
+```json
+{
+  "url": "https://quantower.com",
+  "allow_launch": true
+}
+```
+
+```json
+{
+  "path": "C:\\tmp\\queue.txt",
+  "packet_dir": "C:\\tmp\\dispatch",
+  "dry_run": false,
+  "launch": true
+}
+```
+
+For fleet/watch/launch/pull/session routes, include `"dry_run": false` when
+the operator has approved live operation. Missing live flags mean safe preview.
 
 ## Root Cause
 

@@ -126,6 +126,45 @@ Do not request `wsl`; this host exposes `wsl.exe` but has no installed WSL distr
 - Shell timeouts return `504`.
 - Unexpected runtime failures return `500` without raw stack traces.
 
+## Live Actuation Flags
+
+The bridge is safe by default. A Jules worker must not assume intent from the
+task title; it must put live intent into the JSON body.
+
+Use these fields when the operator has approved live actuation:
+
+```json
+POST /vm/boot_secondary
+{
+  "script_name": "Start-SecondaryVM.ps1",
+  "allow_vm_boot": true,
+  "dry_run": false
+}
+```
+
+```json
+POST /apps/launch_browser
+{
+  "url": "https://quantower.com",
+  "allow_launch": true
+}
+```
+
+```json
+POST /jules/cycle
+{
+  "path": "C:\\tmp\\queue.txt",
+  "packet_dir": "C:\\tmp\\dispatch",
+  "dry_run": false,
+  "launch": true
+}
+```
+
+For `/jules/fleet`, `/jules/fleet-watch`, `/jules/watch`, `/jules/launch`,
+`/jules/sessions`, and `/jules/pull`, include `"dry_run": false` when the
+operator has approved live operation. Without the explicit flag, these routes
+remain in safe preview mode by design.
+
 ## UI Safety Rules
 
 - Always run `GET /ui/screenshot?save=true` before `POST /ui/click`.

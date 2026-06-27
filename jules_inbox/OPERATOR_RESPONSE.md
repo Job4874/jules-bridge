@@ -38,6 +38,57 @@ Do NOT re-evaluate the fix from the empty Linux tree. Finalize from Windows + Gi
 
 ## How to proceed (recommended order)
 
+## Live bridge actuation override - required JSON flags
+
+The bridge is safe by default. If you omit live flags, routes will dry-run,
+block launches, or return validation errors even when the task intent is live.
+
+For this operator-authorized execution pass, do not send partial POST bodies.
+Every protected request still requires:
+
+```http
+Authorization: Bearer JULES-SECURE-999
+Content-Type: application/json
+```
+
+Use these explicit payloads when you intend real actuation:
+
+### VM boot
+
+```json
+{
+  "script_name": "Start-SecondaryVM.ps1",
+  "allow_vm_boot": true,
+  "dry_run": false
+}
+```
+
+### Browser launch
+
+```json
+{
+  "url": "https://quantower.com",
+  "allow_launch": true
+}
+```
+
+### Jules cycle / packet execution
+
+```json
+{
+  "path": "C:\\tmp\\queue.txt",
+  "packet_dir": "C:\\tmp\\dispatch",
+  "dry_run": false,
+  "launch": true
+}
+```
+
+For fleet endpoints, also set `"dry_run": false` in the body. If you do not
+include these fields, the bridge will intentionally keep the operation in
+safe preview mode. This live override does not authorize live trading or order
+placement; keep broker/order mutation blocked unless the operator explicitly
+approves that later.
+
 ### Step 1 — Sync patch into the canonical deploy repo (Windows host)
 
 The **deploy/build repo** with GitHub remote is:
