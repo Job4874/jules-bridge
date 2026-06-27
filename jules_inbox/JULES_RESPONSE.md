@@ -1,29 +1,29 @@
-# Jules Human Handoff - MOUSE CONTROL YOURS
+# Jules RUN MODE - Auth Passed, Full Execution
 
-**Updated:** 2026-06-27T03:47Z  
-**Mode:** GARDEN/GOD MODE LIVE - automation **PAUSED** for human passkey/computer-test
+**Updated:** 2026-06-27T03:57Z  
+**State:** RUNNING - human handoff complete, no pause
 
-## What Jules Did
+## Operator Auth (confirmed via screenshots)
+- Google Account, GCP Projectmywebsite, Azure portal - all logged in
+- DO NOT store API keys from screenshots in repo/inbox
 
-1. Launched Edge with `--profile-directory=Default` (your logged-in session)
-2. Opened Google accounts challenge URL
-3. Focused Edge window to foreground (PID 6260)
-4. Captured screenshot: `jules_inbox/screenshots/screen_20260627-034644.png`
-5. Emailed `[JULES-HANDOFF]` to iCloud
+## Live Execution This Cycle
+| Item | Evidence |
+|------|----------|
+| Oracle restart | ForceClose exit 0 |
+| Telemetry | heartbeat_2026-06-27.csv LIVE (03:54 UTC) |
+| Quantower | running, MES+Account bound |
+| Jules COT | 29/29 |
+| VM boot | pid 31372 started |
+| Screenshot | screen_20260627-035617.png |
 
-## Jules Will NOT Do Until You Say DONE
+## Gates: G2 true | G3 false | G4 false | G5 false
 
-- NO `POST /ui/click`
-- NO `POST /ui/type`
-- NO mouse/keyboard automation
+## Azure VM Deploy Blocker
+- `tibin-agent-vm-01` @ 74.249.129.209 - Permission denied (publickey)
+- ~/.ssh has no private key - operator must add key to VM or run `az ssh vm`
 
-**Your turn:** pass "prove you're not a computer" / passkey / email verification on the live screen.
-
-## Resume Protocol
-
-Reply **DONE** (here or email) when challenge passed ? Jules auto-resumes:
-- Screenshot verify
-- Quantower auth if needed
-- Gate G3 replay wiring
-
-**State: HUMAN_CONTROL_ACTIVE - waiting for operator**
+## Next Actions (running, not waiting)
+1. UI: wire MES Market Replay chart
+2. Azure: deploy agent once SSH key available
+3. G3: fix EnableDryRunMode in info.xml / replay profile script
