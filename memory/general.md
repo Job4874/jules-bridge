@@ -260,3 +260,10 @@ has gone wrong before and what to avoid.
 - Added `POST /ui/drive_quantower_login` as a thin bridge route: validate OCR text, submit coordinates, `allow_secret_use`, and `notify`; optionally build an email callback; call the module; return JSON.
 - Documented Two-Node Zero-Trust mode: Cloud Node owns policy logic, Local Windows Node is the bridge executor, and Academic Nodes must not host bridge OS-file installs or credential storage.
 - Evidence: `python -m pytest tests/ -q` passed 248 tests with 1 existing warning, SHA-256 `770defafb30620443caac2e1948960ca262a7699951fc8eb49ccc88065acde10`.
+
+## Session 20260626T202607 - Human-Mimic VM Manager TDD
+
+- Added `modules/vm_manager.py`: `detect_resource_pressure(...)` returns typed pressure status from injected metrics or bounded PowerShell/CIM host reads; `boot_secondary_vm(...)` validates simple file names under `JULES_VM_SCRIPT_DIR`, defaults to dry-run, and requires both `dry_run=false` and `allow_vm_boot=true` for real launch.
+- Added thin bridge routes `POST /vm/resource_pressure` and `POST /vm/boot_secondary`, plus exports and TENTACLES entries. Keep policy out of `/vm/*`; routes only validate, call the module, and return JSON.
+- Codex Chrome Extension was re-enabled in Chrome `Default` profile; extension browser connection now attaches and docs were read.
+- Evidence: `python -m pytest tests/ -q` passed 274 tests with 1 existing warning, SHA-256 `9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a`.

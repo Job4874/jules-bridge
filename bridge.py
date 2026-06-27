@@ -373,6 +373,8 @@ TENTACLES = [
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
     {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},
+    {"name": "vm_pressure",       "route": "POST /vm/resource_pressure", "reach": "Detect CPU/memory pressure before local VM actions"},
+    {"name": "vm_boot_secondary", "route": "POST /vm/boot_secondary",    "reach": "Dry-run-first allowlisted secondary VM boot script"},
     {"name": "app_browser",       "route": "POST /apps/launch_browser",      "reach": "Explicitly launch Edge to an approved http(s) URL"},
     {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},
     {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},
@@ -1135,7 +1137,57 @@ def drive_quantower_login_route():
     return jsonify(dict(result))
 
 
-# — App launcher routes —
+# - VM routes -
+
+@app.route("/vm/resource_pressure", methods=["POST"])
+@route_errors
+def vm_resource_pressure_route():
+    """POST /vm/resource_pressure - Detect local CPU/memory pressure.
+
+    Body (JSON):
+        cpu_percent      (int, optional): Injected CPU percent
+        memory_percent   (int, optional): Injected memory percent
+        cpu_threshold    (int, optional): CPU pressure threshold, default 90
+        memory_threshold (int, optional): Memory pressure threshold, default 90
+    """
+    data = json_payload()
+    result = modules.detect_resource_pressure(
+        cpu_percent=int_field(data, "cpu_percent", default=None, min_value=0, max_value=100),
+        memory_percent=int_field(data, "memory_percent", default=None, min_value=0, max_value=100),
+        thresholds={
+            "cpu_percent": int_field(data, "cpu_threshold", default=90, min_value=1, max_value=100),
+            "memory_percent": int_field(
+                data,
+                "memory_threshold",
+                default=90,
+                min_value=1,
+                max_value=100,
+            ),
+        },
+    )
+    return jsonify(dict(result))
+
+
+@app.route("/vm/boot_secondary", methods=["POST"])
+@route_errors
+def vm_boot_secondary_route():
+    """POST /vm/boot_secondary - Dry-run-first secondary VM boot.
+
+    Body (JSON):
+        script_name    (str, required): Allowlisted script file name
+        allow_vm_boot  (bool, optional): Required for real boot, default false
+        dry_run        (bool, optional): Validate only, default true
+    """
+    data = json_payload()
+    result = modules.boot_secondary_vm(
+        string_field(data, "script_name", control_safe=True),
+        allow_vm_boot=bool_field(data, "allow_vm_boot", default=False),
+        dry_run=bool_field(data, "dry_run", default=True),
+    )
+    return jsonify(dict(result))
+
+
+# - App launcher routes -
 
 @app.route("/apps/launch_browser", methods=["POST"])
 @route_errors

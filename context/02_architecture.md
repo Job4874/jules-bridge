@@ -12,6 +12,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 │   ├── shell_executor.py   ← PowerShell/cmd execution with timeout
 │   ├── ui_automation.py    ← Screenshot/click/type, guarded secrets, UI state detection
 │   ├── human_mimic_driver.py ← H/L/ACT UI driver loops built from ui_automation primitives
+│   ├── vm_manager.py      ← CPU/memory pressure and dry-run-first VM boot gating
 │   ├── inbox_service.py    ← Message files in jules_inbox/ dir
 │   ├── oracle_session.py   ← Oracle V5 + Quantower health/build/deploy
 │   ├── reasoning_module.py ← HRM-inspired H/L/ACT hierarchical reasoning
@@ -51,6 +52,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/fs/` | fs_service | File system operations |
 | `/shell/` | shell_executor | Command execution |
 | `/ui/` | ui_automation + human_mimic_driver | Screenshot, click, type, UI detection, and guarded Human-Mimic ACT loops |
+| `/vm/` | vm_manager | Resource pressure checks and allowlisted secondary-VM boot dry-runs |
 | `/inbox/` | inbox_service | Message passing |
 | `/jules/` | jules_orchestrator | Jules task dispatch, worker packets, launch state, and remote session checks |
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |
@@ -70,6 +72,7 @@ Every module has a **simple typed interface** hiding complex implementation:
 - `analyze_session()` → one call reads logs, detects patterns, writes memory (hides regex, file I/O, pattern matching)
 - `build_akc_context(source_paths)` → one call reads sources, masks paths, hashes files, extracts operating rules, and writes a checkpoint
 - `check_akc_readiness()` → one call verifies the checkpoint exists, is `ready`, and contains required operating rules before session start
+- `boot_secondary_vm(script_name)` → one call validates allowlisted VM boot scripts and defaults to dry-run
 
 ### Evidence-Based Verification (Nick Ni)
 

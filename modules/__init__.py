@@ -29,6 +29,12 @@ from .human_mimic_driver import (
     HumanMimicResult,
     drive_quantower_login,
 )
+from .vm_manager import (
+    ResourcePressureResult,
+    VMBootResult,
+    detect_resource_pressure,
+    boot_secondary_vm,
+)
 from .windows_secret_provider import (
     WindowsSecretProvider,
     build_windows_secret_provider,
@@ -131,6 +137,11 @@ __all__ = [
     # human_mimic_driver
     "HumanMimicResult",
     "drive_quantower_login",
+    # vm_manager
+    "ResourcePressureResult",
+    "VMBootResult",
+    "detect_resource_pressure",
+    "boot_secondary_vm",
     # windows_secret_provider
     "WindowsSecretProvider",
     "build_windows_secret_provider",

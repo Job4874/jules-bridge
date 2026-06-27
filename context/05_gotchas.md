@@ -143,3 +143,10 @@
 - `drive_quantower_login(...)` must never receive or return plaintext passwords. It types only non-secret username metadata from `get_secret(...)`; real OS-backed secret providers must keep secret material inside the provider/action boundary.
 - On Academic/Local Node setups, treat `/ui/drive_quantower_login` as a Local Node executor route. Policy decisions belong in the Cloud Node prompt/code path; the school computer must not host bridge OS-file installs or credential storage.
 - Notifications for Human-Mimic tasks are best-effort callbacks. Email failures must not crash the UI driver or leak secret material into error text.
+
+## vm_manager
+
+- `detect_resource_pressure(...)` accepts injected `cpu_percent` and `memory_percent` for deterministic tests; when omitted it uses a bounded PowerShell/CIM host metric read and returns `status="error"` instead of raising if metrics cannot be collected.
+- `boot_secondary_vm(...)` is dry-run by default. Real launch requires both `dry_run=false` and `allow_vm_boot=true`.
+- VM scripts must live under `JULES_VM_SCRIPT_DIR` and `script_name` must be a simple file name, not a path. Allowed extensions are `.ps1`, `.cmd`, and `.bat`.
+- `/vm/*` routes are Local Node executor routes. They should validate fields, call `modules.vm_manager`, and return typed JSON without policy logic in `bridge.py`.

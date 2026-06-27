@@ -862,6 +862,64 @@ class TestAppLauncherRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()["error"], "Invalid input")
 
 
+class TestVMRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.detect_resource_pressure")
+    def test_vm_resource_pressure_route_is_thin(self, mock_pressure):
+        mock_pressure.return_value = {
+            "status": "maxed_out",
+            "cpu_percent": 92.0,
+            "memory_percent": 71.0,
+            "maxed_out": True,
+            "reasons": ["cpu_percent 92.0 >= 90.0"],
+            "error": None,
+        }
+
+        response = self.client.post(
+            "/vm/resource_pressure",
+            json={
+                "cpu_percent": 92,
+                "memory_percent": 71,
+                "cpu_threshold": 90,
+                "memory_threshold": 85,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "maxed_out")
+        mock_pressure.assert_called_once_with(
+            cpu_percent=92,
+            memory_percent=71,
+            thresholds={"cpu_percent": 90, "memory_percent": 85},
+        )
+
+    @patch("modules.boot_secondary_vm")
+    def test_vm_boot_secondary_route_defaults_to_dry_run(self, mock_boot):
+        mock_boot.return_value = {
+            "status": "dry_run",
+            "selected_script": r"C:\vm\Start-SecondaryVM.ps1",
+            "started": False,
+            "dry_run": True,
+            "error": None,
+        }
+
+        response = self.client.post(
+            "/vm/boot_secondary",
+            json={"script_name": "Start-SecondaryVM.ps1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "dry_run")
+        mock_boot.assert_called_once_with(
+            "Start-SecondaryVM.ps1",
+            allow_vm_boot=False,
+            dry_run=True,
+        )
+
+
 class TestBridgeTokenAuth(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True

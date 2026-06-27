@@ -50,6 +50,7 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] `modules/fs_service.py`
 - [x] `modules/shell_executor.py`
 - [x] `modules/ui_automation.py`
+- [x] `modules/vm_manager.py` (resource pressure + dry-run-first VM boot gating)
 - [x] `modules/inbox_service.py`
 - [x] `modules/oracle_session.py`
 - [x] `modules/reasoning_module.py` (HRM H/L/ACT + Gemini integration)
@@ -62,6 +63,7 @@ Applied JSM/Job Pilot Agent Skills to Jules Bridge.
 - [x] CDLC artifacts: HRM_AGENTS.md, HRM_UBIQUITOUS_LANGUAGE.md, hrm_context_eval.py
 - [x] Reusable skills: `architect`, `remember`, `review`, `recover`, `imprint`
 - [x] `GET /health` — fixes 404 storm; returns uptime; listed in TENTACLES
+- [x] `POST /vm/resource_pressure` + `POST /vm/boot_secondary` - Local Node VM pressure and allowlisted boot control
 - [x] Gemini wired to `reasoning_module` via `_MODEL_ALIASES` (`fast`/`smart`/`stub`)
 - [x] Evidence gating — `X-Evidence-Age-Warning` header on stale `/oracle/*` routes, with opt-in `EVIDENCE_GATE_HARD=1` HTTP 423 hard mode
 - [x] `POST /retrospective/prune_memory` — age-based pruning, 30-day default
@@ -218,3 +220,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Created Global Verdent Rule handoff files: `PROJECT_STATE.md`, `docs/HANDOFF_PROTOCOL.md`, `docs/NEXT_PROFILE_PROMPT.md`, `docs/CLAIM_AUDIT.md`.
 - `docs/CLAIM_AUDIT.md` begins 8-target verification; all targets located in OracleV5 source (`C:\aotp\projects\OracleV5`); runtime telemetry cross-check pending.
 - Evidence: `python -m pytest tests/ -q` passed 265 tests with 1 existing warning.
+
+## Session 20260626T202607 - Human-Mimic VM Manager TDD
+
+- Re-enabled and verified the Codex Chrome Extension in the selected Chrome `Default` profile; the extension browser connection now attaches and its documentation was read.
+- Added `modules/vm_manager.py` with `detect_resource_pressure(...)` and `boot_secondary_vm(...)`. The module never raises from public functions, supports injected metrics for tests, uses bounded PowerShell/CIM host metrics when needed, and keeps real VM boot behind `dry_run=false` plus `allow_vm_boot=true`.
+- Added `POST /vm/resource_pressure` and `POST /vm/boot_secondary` as thin bridge routes plus TENTACLES manifest entries.
+- Added `tests/test_vm_manager.py` and `/vm/*` route tests. Red state was missing module/export/routes; green state passed targeted tests and full suite.
+- Evidence: `python -m pytest tests/ -q` passed 274 tests with 1 existing warning, SHA-256 `9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a`.
