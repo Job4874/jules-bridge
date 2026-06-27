@@ -1029,12 +1029,16 @@ def drive_quantower_login_route():
             body,
         )
 
+    secret_provider = None
+    if allow_secret_use:
+        secret_provider = modules.build_windows_secret_provider()
+
     result = modules.drive_quantower_login(
         ocr_text=ocr_text,
         submit_x=submit_x,
         submit_y=submit_y,
         allow_secret_use=allow_secret_use,
-        secret_provider=type("LocalProvider", (), {"get_secret": lambda self, t: {"username": "ABDUL487417@Icloud.com"}})(),
+        secret_provider=secret_provider,
         notify_func=notifier,
     )
     return jsonify(dict(result))

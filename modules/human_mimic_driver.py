@@ -63,6 +63,7 @@ def drive_quantower_login(
     secret_provider: object | None = None,
     type_func: Callable[[str], Any] = type_text,
     click_func: Callable[[int, int], Any] = click,
+    press_key_func: Callable[[str], Any] | None = None,
     notify_func: Callable[[str, str], Any] | None = None,
 ) -> HumanMimicResult:
     """Run the Quantower login H/L/ACT loop.
@@ -75,6 +76,7 @@ def drive_quantower_login(
         secret_provider: OS-backed secret provider, or mock provider in tests.
         type_func: Injectable keyboard action function.
         click_func: Injectable mouse action function.
+        press_key_func: Injectable keyboard key press function (defaults to Tab).
         notify_func: Optional notification callback accepting subject and body.
 
     Returns:
@@ -83,6 +85,18 @@ def drive_quantower_login(
     """
     state_result = detect_ui_state(ocr_text=ocr_text)
     state = str(state_result.get("state", "unknown"))
+
+    if press_key_func is None:
+        def _press_key(key: str) -> dict[str, str]:
+            try:
+                import pyautogui  # type: ignore
+
+                pyautogui.press(key)
+                return {"status": f"Pressed {key}"}
+            except Exception:
+                return {"status": "press failed"}
+    else:
+        _press_key = press_key_func
 
     if state != "quantower_login":
         message = "State unknown"
@@ -114,6 +128,12 @@ def drive_quantower_login(
     try:
         username = str(secret.get("username", ""))
         type_func(username)
+        if secret_provider is not None and hasattr(secret_provider, "type_password"):
+            secret_provider.type_password(
+                "quantower_login",
+                type_func,
+                _press_key,
+            )
         click_func(submit_x, submit_y)
         message = "Login sequence initiated"
         _notify(notify_func, "Quantower login action", message)

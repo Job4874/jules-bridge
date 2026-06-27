@@ -28,6 +28,10 @@ from .human_mimic_driver import (
     HumanMimicResult,
     drive_quantower_login,
 )
+from .windows_secret_provider import (
+    WindowsSecretProvider,
+    build_windows_secret_provider,
+)
 from .jules_orchestrator import (
     JulesTask,
     JulesDispatchResult,
@@ -124,6 +128,9 @@ __all__ = [
     # human_mimic_driver
     "HumanMimicResult",
     "drive_quantower_login",
+    # windows_secret_provider
+    "WindowsSecretProvider",
+    "build_windows_secret_provider",
     # inbox_service
     "InboxMessage",
     "inbox_read",
