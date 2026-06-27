@@ -13,12 +13,17 @@ class MockSecretProvider:
             "password": "never-return-this",
         }
 
+    def type_password(self, target: str, type_func, press_key_func) -> None:
+        press_key_func("tab")
+        type_func("never-return-this")
+
 
 def test_drive_quantower_login_types_username_and_clicks_on_login_state():
     from modules.human_mimic_driver import drive_quantower_login
 
     typed: list[str] = []
     clicks: list[tuple[int, int]] = []
+    keys: list[str] = []
     notifier = Mock()
 
     result = drive_quantower_login(
@@ -29,6 +34,7 @@ def test_drive_quantower_login_types_username_and_clicks_on_login_state():
         secret_provider=MockSecretProvider(),
         type_func=lambda text: typed.append(text) or {"status": "typed"},
         click_func=lambda x, y: clicks.append((x, y)) or {"status": "clicked"},
+        press_key_func=lambda key: keys.append(key) or {"status": "pressed"},
         notify_func=notifier,
     )
 
@@ -36,7 +42,8 @@ def test_drive_quantower_login_types_username_and_clicks_on_login_state():
     assert result["state"] == "quantower_login"
     assert result["acted"] is True
     assert result["message"] == "Login sequence initiated"
-    assert typed == ["operator@example.test"]
+    assert typed == ["operator@example.test", "never-return-this"]
+    assert keys == ["tab"]
     assert clicks == [(640, 480)]
     assert "never-return-this" not in repr(result)
     notifier.assert_called_once()
