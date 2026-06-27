@@ -164,7 +164,8 @@ def _get_local_ip() -> str:
 
 def send_task_to_vm(task: str, task_type: str = "build", context: str = "") -> dict[str, Any]:
     """
-    Send a task packet to the jules-worker-agent on the VM.
+    Send a task packet to the jules-worker-agent on the VM via direct HTTP.
+    The VM agent listens on port 6000 (firewall rule: jules-agent-port).
     Returns the agent's response dict.
     """
     import requests as _req
@@ -174,17 +175,18 @@ def send_task_to_vm(task: str, task_type: str = "build", context: str = "") -> d
         "context": context,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
-    _log(f"Sending task to VM: {task[:80]}")
+    _log(f"Sending task to VM http://{VM_IP}:{VM_PORT}/task: {task[:80]}")
     try:
         r = _req.post(
             f"http://{VM_IP}:{VM_PORT}/task",
-            json=payload, timeout=120,
+            json=payload, timeout=30,
             headers={"Authorization": "Bearer JULES-VM-WORKER-999"}
         )
         return r.json()
     except Exception as exc:
         _log(f"Task send failed: {exc}")
         return {"ok": False, "error": str(exc)}
+
 
 
 def get_vm_status() -> dict[str, Any]:
