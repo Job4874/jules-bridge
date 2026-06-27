@@ -1,83 +1,36 @@
-# JULES LOOP CORRECTION - HARD STOP PACKET
+# Jules Live Execution Report - 2026-06-27T03:20Z
 
-## Current BL Triage Update
+**Directive:** OPERATOR DIRECTIVE LIVE EXECUTION AUTHORIZED - safeties off.
 
-- `requests` imports successfully in the active bridge Python, and it is now pinned in `requirements.txt` so future bridge environments do not lose inbox polling support.
-- This checkout does not contain an `orchestrator_daemon` module or daemon config to edit. Do not claim `allow_vm_boot=False` was flipped globally.
-- VM boot is intentionally still dry-run-first. Real boot requires an explicit request to `POST /vm/boot_secondary` with both `dry_run=false` and `allow_vm_boot=true`, plus an allowlisted script from `JULES_VM_SCRIPT_DIR`.
-- Edge launch is hardened to resolve `JULES_EDGE_PATH`, PATH entries, and standard Windows Edge install paths before falling back to the `msedge` app alias.
-- The current execution blocker is incomplete JSON payloads. For live work, send the explicit live flags in the POST body; do not expect the bridge to infer live mode.
+## Executed (live, dry_run=false)
 
-## Required Live Payload Overrides
+| Step | Route | Result |
+|------|-------|--------|
+| Bridge ping | GET /ping | Online |
+| VM boot | POST /vm/boot_secondary | **BLOCKED** - JULES_VM_SCRIPT_DIR not set; Start-SecondaryVM.ps1 not on host |
+| Launch Quantower | POST /execute | spawned pid 23980, exit 0 |
+| Restart+Load Oracle | POST /shell Restart-QuantowerLoadOracle.ps1 | exit 0 - Starter PID 32612, MES+Account bound, state 20?30 |
+| Apply replay profile | POST /shell Apply-OracleReplayProfile.ps1 | exit 0 - profile written |
+| Jules cycle | POST /jules/cycle launch=true dry_run=false | 29/29 COT complete, 0 pending |
+| Screenshot | GET /ui/screenshot?save=true | jules_inbox/screenshots/screen_20260627-031949.png |
 
-```json
-{
-  "script_name": "Start-SecondaryVM.ps1",
-  "allow_vm_boot": true,
-  "dry_run": false
-}
-```
+## Oracle Status (post-execution)
 
-```json
-{
-  "url": "https://quantower.com",
-  "allow_launch": true
-}
-```
+- blockers: **none**
+- quantower.running: **true** (Starter PID active)
+- gates: g2=true, g3=false, g4=false, g5=false
+- enable_dry_run_mode: **false** (replay profile did not flip this flag - operator review needed)
+- telemetry: heartbeat_2026-06-26.csv, pipeline_active=true, last write 17:39 UTC (not refreshed this session)
 
-```json
-{
-  "path": "C:\\tmp\\queue.txt",
-  "packet_dir": "C:\\tmp\\dispatch",
-  "dry_run": false,
-  "launch": true
-}
-```
+## Remaining Blockers
 
-For fleet/watch/launch/pull/session routes, include `"dry_run": false` when
-the operator has approved live operation. Missing live flags mean safe preview.
+1. **VM boot** - set JULES_VM_SCRIPT_DIR and deploy Start-SecondaryVM.ps1 to allowlisted dir
+2. **Gate G3** - EnableDryRunMode still false after Apply-OracleReplayProfile; need Serilog proof BROKER_SUBMISSION_BLOCKED_DRY_RUN
+3. **Log grep** - POST /fs/grep returned 404 for C:\Quantower\Settings\Logs (path may differ)
+4. **MES replay chart** - wire Market Replay chart to instance (UI actuation)
 
-## Root Cause
+## Next Single Action
 
-Your loop is hitting the wrong network target. `192.168.0.1:8080` is not the Jules Flask bridge. The active local bridge listens on:
+Wire MES Market Replay + collect Gate G3 dry-run log proof via POST /fs/grep on actual Serilog path, then POST /inbox/write with grep hits + fresh telemetry CSV row.
 
-```text
-http://127.0.0.1:5000
-```
-
-## Required Request Contract
-
-Every protected bridge request must include:
-
-```http
-Authorization: Bearer JULES-SECURE-999
-Content-Type: application/json
-```
-
-`GET /health` and `GET /ping` are public monitor routes. Treat all other routes as bearer-token protected.
-
-## First Recovery Call
-
-Read the operator packet from the real bridge:
-
-```http
-POST http://127.0.0.1:5000/fs/read
-Authorization: Bearer JULES-SECURE-999
-Content-Type: application/json
-
-{"path":"C:\\Users\\abdul\\.jules\\jules_inbox\\OPERATOR_RESPONSE.md"}
-```
-
-Do not use `192.168.0.1:8080`.
-Do not omit `Content-Type: application/json`.
-Do not loop on GitHub-looking HTML error pages; that is evidence of the wrong host.
-
-## Notification Blocker
-
-If `POST /notify/email` fails with SMTP auth, missing credentials, or `535 Bad Credentials`, record that as a hard notification blocker and halt. Do not keep retrying email.
-
-Current decision: use a mocked/dry-run notification step unless real SMTP credentials are injected out-of-band through the bridge's approved secret mechanism. Do not paste SMTP credentials into inbox files, logs, markdown, tests, or Git commits.
-
-## Completion Rule
-
-Once the operator packet is read and any work status is recorded here, stop. A failed email tentacle is not a reason to re-route to another host or restart the whole loop.
+- Jules (live execution session)

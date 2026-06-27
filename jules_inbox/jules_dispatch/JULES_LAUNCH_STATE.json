@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-26T13:17:42.737350+00:00",
+  "generated_at_utc": "2026-06-27T03:18:48.957846+00:00",
   "dry_run": false,
   "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
   "selected_count": 29,
@@ -482,6 +482,7 @@
   "attempted_count": 0,
   "skipped_launched_count": 29,
   "force_packet_count": 0,
+  "preserve_existing_session_ids": false,
   "note": "Live launch attempted through the Jules CLI.",
   "tracked_count": 29
 }
