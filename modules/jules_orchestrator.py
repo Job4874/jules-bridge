@@ -87,12 +87,9 @@ _DEFAULT_FLEET_STATE = "JULES_FLEET_STATE.json"
 _DEFAULT_FLEET_WATCH_STATE = "JULES_FLEET_WATCH_STATE.json"
 _STALE_UNKNOWN_REMOTE_SECONDS = 10 * 60
 _DEFAULT_INCLUDED_STATUSES = ("failed", "needs_review", "ready_for_review", "unknown")
-_DEFAULT_ANTIGRAVITY_PROMPT_DIR = Path(
-    os.environ.get(
-        "JULES_ANTIGRAVITY_PROMPT_DIR",
-        r"C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover"
-        r"\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS",
-    )
+_DEFAULT_ANTIGRAVITY_PROMPT_DIR = (
+    r"C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover"
+    r"\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS"
 )
 _ANTIGRAVITY_LINE_RE = re.compile(
     r"^(?P<status>[^|]+)\|\s*Antigravity offload:\s*(?P<prompt>[^|]+?)\s*\|\s*repo=(?P<repo>.+?)\s*$",
@@ -185,7 +182,7 @@ def parse_antigravity_queue(
         List of JulesTask dictionaries. Never raises.
     """
     try:
-        prompt_root = Path(prompt_dir) if prompt_dir else _DEFAULT_ANTIGRAVITY_PROMPT_DIR
+        prompt_root = _antigravity_prompt_dir(prompt_dir)
         tasks: list[JulesTask] = []
         ordinal = 0
         for raw_line in (content or "").replace("\r\n", "\n").replace("\r", "\n").split("\n"):
@@ -288,7 +285,11 @@ def build_dispatch(
             for index, task in enumerate(selected)
         ]
         commands = [
-            _launch_command(packet_path=None, task=task, repo_path=repo_path)
+            _launch_command(
+                packet_path=None,
+                task=task,
+                repo_path=str(task.get("repo_path") or repo_path),
+            )
             for task in selected
         ]
 
@@ -1521,6 +1522,22 @@ def run_jules_fleet_watch(
 # Private helpers
 # ---------------------------------------------------------------------------
 
+def _antigravity_prompt_dir(prompt_dir: str = "") -> Path:
+    if prompt_dir:
+        return Path(prompt_dir)
+    configured = os.environ.get("JULES_ANTIGRAVITY_PROMPT_DIR", "").strip()
+    if configured:
+        return Path(configured)
+    return Path(_DEFAULT_ANTIGRAVITY_PROMPT_DIR)
+
+
+def _is_antigravity_queue(content: str) -> bool:
+    for raw_line in (content or "").replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        if _ANTIGRAVITY_LINE_RE.match(raw_line.strip()):
+            return True
+    return False
+
+
 def _heading_type(line: str) -> str | None:
     for task_type, phrase in _TASK_HEADINGS:
         if phrase in line:
@@ -1671,6 +1688,11 @@ def _slug(text: str) -> str:
 
 def _packet_text(task: JulesTask, repo_path: str, instance_index: int) -> str:
     title = task.get("title", "Jules task")
+    objective = (
+        f"Execute this Antigravity Codex handover prompt: {title}"
+        if task.get("task_type") == "antigravity"
+        else f"Complete exactly this Jules card: {title}"
+    )
     lines = [
         f"# Jules Worker Packet {task.get('id')}",
         "",
@@ -1682,7 +1704,7 @@ def _packet_text(task: JulesTask, repo_path: str, instance_index: int) -> str:
         f"- repo_path: {repo_path or '(use current repository)'}",
         "",
         "## Objective",
-        f"Complete exactly this Jules card: {title}",
+        objective,
         "",
         "## Task Details",
         f"- File: {task.get('file', '') or '(not provided)'}",
@@ -1739,6 +1761,8 @@ def _write_dispatch_files(
     source_label: str,
     source_hash: str,
 ) -> tuple[list[str], list[str]]:
+    if not selected:
+        return [], []
     output_dir.mkdir(parents=True, exist_ok=True)
     _clear_previous_dispatch(output_dir)
     packet_files: list[str] = []
@@ -1748,7 +1772,9 @@ def _write_dispatch_files(
         path = output_dir / filename
         path.write_text(packet, encoding="utf-8")
         packet_files.append(str(path))
-        packet_commands.append(_launch_command(str(path), task, repo_path))
+        packet_commands.append(
+            _launch_command(str(path), task, str(task.get("repo_path") or repo_path))
+        )
 
     index = _dispatch_index(selected, packet_files, source_label, source_hash, repo_path)
     (output_dir / "JULES_DISPATCH_INDEX.md").write_text(index, encoding="utf-8")

@@ -17,6 +17,7 @@ from modules.jules_orchestrator import (
     jules_preflight,
     launch_packets,
     list_remote_sessions,
+    parse_antigravity_queue,
     parse_task_dump,
     pull_remote_session,
     run_jules_cycle,
@@ -56,6 +57,73 @@ Rationale: Straightforward state reset test.
 
 Complete
 """
+
+
+ANTIGRAVITY_QUEUE = """Needs review | Antigravity offload: CODEX_PHASE0_REPOSITORY_ARCHAEOLOGY_PROMPT.md | repo=C:\\aotp\\projects\\OracleV5
+Needs review | Antigravity offload: CODEX_PHASE1_STABILIZATION_PROMPT.md | repo=C:\\aotp\\projects\\OracleV5
+"""
+
+
+def test_parse_antigravity_queue_extracts_prompt_tasks(tmp_path):
+    prompt_dir = tmp_path / "prompts"
+    prompt_dir.mkdir()
+    (prompt_dir / "CODEX_PHASE0_REPOSITORY_ARCHAEOLOGY_PROMPT.md").write_text(
+        "# Phase 0 prompt\nDo archaeology only.",
+        encoding="utf-8",
+    )
+
+    tasks = parse_antigravity_queue(
+        ANTIGRAVITY_QUEUE,
+        source_name="queue.txt",
+        prompt_dir=str(prompt_dir),
+    )
+
+    assert len(tasks) == 2
+    assert tasks[0]["task_type"] == "antigravity"
+    assert tasks[0]["status"] == "needs_review"
+    assert tasks[0]["repo_path"] == r"C:\aotp\projects\OracleV5"
+    assert "Phase 0 prompt" in tasks[0]["raw_excerpt"]
+
+
+def test_build_dispatch_antigravity_queue_writes_packets_without_clearing_on_empty(tmp_path, monkeypatch):
+    prompt_dir = tmp_path / "prompts"
+    prompt_dir.mkdir()
+    (prompt_dir / "CODEX_PHASE0_REPOSITORY_ARCHAEOLOGY_PROMPT.md").write_text(
+        "# Phase 0 prompt\nDo archaeology only.",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("JULES_ANTIGRAVITY_PROMPT_DIR", str(prompt_dir))
+    output_dir = tmp_path / "dispatch"
+    output_dir.mkdir()
+    keep = output_dir / "JT-999-keep-existing-task.md"
+    keep.write_text("# keep", encoding="utf-8")
+    queue_path = tmp_path / "queue.txt"
+    queue_path.write_text(ANTIGRAVITY_QUEUE.splitlines()[0] + "\n", encoding="utf-8")
+
+    result = build_dispatch(
+        source_path=str(queue_path),
+        max_instances=1,
+        write_packets=True,
+        output_dir=str(output_dir),
+        repo_path=r"C:\fallback\repo",
+    )
+
+    assert result["task_count"] == 1
+    assert result["selected_count"] == 1
+    assert len(result["packet_files"]) == 1
+    assert not keep.exists()
+    with open(result["packet_files"][0], encoding="utf-8") as handle:
+        packet_text = handle.read()
+    assert "Execute this Antigravity Codex handover prompt" in packet_text
+    assert "Phase 0 prompt" in packet_text
+
+    empty_result = build_dispatch(
+        content="not a valid dump",
+        write_packets=True,
+        output_dir=str(output_dir),
+    )
+    assert empty_result["selected_count"] == 0
+    assert len(list(output_dir.glob("JT-*.md"))) == 1
 
 
 def test_parse_task_dump_extracts_cards_and_statuses():
