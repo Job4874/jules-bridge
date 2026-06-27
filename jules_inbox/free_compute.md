@@ -1,0 +1,5 @@
+**Free‑compute platforms that can run a 24/7 Python Flask agent (as of 2025)**  
+
+| Platform | Free RAM | Free vCPU | Always Free? | Deploy Command (typical) | Notes |
+|----------|----------|-----------|--------------|--------------------------|-------|
+| **Oracle Cloud Always Free** | 1 GB per VM (up to 2 VMs) | 0.125 vCPU per VM (≈ 1/8 OCPU on AMD/Arm) | ✅ Yes – the “Always Free” tier never expires | ```bash\n# Create a micro VM (example for AMD)\noci compute instance launch \\\n  --availability-domain <AD> \\\n  --shape VM.Standard.E2.1.Micro \\\n  --image-id <ocid-canonic-ubuntu-22-04> \\\n  --subnet-id <subnet-ocid> \\\n  --assign-public-ip true \\\n  --ssh-authorized-keys-file ~/.ssh/id_rsa.pub\n# SSH in and run your Flask app:\nssh ubuntu@<public-ip> 'docker run -d -p 8080:8080 yourflaskimage'\n``` | Includes 2 × VM.Standard.E2.1.Micro (or Ampere A1.Flex), 2 × Block Volumes up to 200 GB total, 10 TB outbound data/month. Ideal for a persistent agent – you get full root access and
