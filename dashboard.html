@@ -333,6 +333,10 @@ function setGauge(barId, cardId, pct) {
 
 function renderVMs(vms) {
   const g = document.getElementById('vmGrid');
+  if(!vms.length){g.innerHTML='<div class="vmc"><div class="vm-loading">No VMs configured</div></div>';return;}
+  g.innerHTML = vms.map(vm=>{
+    const s = vm.status==='online'?'online':vm.status==='provisioning'?'provisioning':'offline';
+    const bl = vm.status==='online'?'● Online':vm.status==='provisioning'?'◌ Provisioning':'✕ Offline';
     return `<div class="vmc ${s}">
       <div class="vmh"><div class="vmn">${vm.name}</div><div class="vmb ${s}">${bl}</div></div>
       <span class="pvdr ${vm.provider}">${vm.provider}</span>
