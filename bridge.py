@@ -1662,6 +1662,44 @@ def dashboard_status():
 
 
 # ---------------------------------------------------------------------------
+# VM Two-Way Relay — local bridge <-> jules-worker-agent on GCP VM
+# ---------------------------------------------------------------------------
+
+@app.route("/vm/bootstrap", methods=["POST"])
+@route_errors
+def vm_bootstrap():
+    """POST /vm/bootstrap — install jules-worker-agent on the GCP VM."""
+    from modules.vm_relay import bootstrap_vm
+    result = bootstrap_vm()
+    return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/vm/task", methods=["POST"])
+@route_errors
+def vm_task():
+    """POST /vm/task — dispatch a task to the jules-worker-agent on the GCP VM.
+
+    Body: {"task": "...", "task_type": "build|research|shell|chat", "context": "..."}
+    """
+    data = json_payload()
+    task = string_field(data, "task")
+    task_type = string_field(data, "task_type", default="build", allow_empty=False)
+    context = string_field(data, "context", default="", allow_empty=True)
+    from modules.vm_relay import send_task_to_vm
+    result = send_task_to_vm(task=task, task_type=task_type, context=context)
+    return jsonify(result), 200
+
+
+@app.route("/vm/status", methods=["GET"])
+@route_errors
+def vm_relay_status():
+    """GET /vm/status — get live status from the jules-worker-agent on the VM."""
+    from modules.vm_relay import get_vm_status
+    result = get_vm_status()
+    return jsonify(result), 200
+
+
+# ---------------------------------------------------------------------------
 # Chat — multi-provider conversational endpoint
 # ---------------------------------------------------------------------------
 
