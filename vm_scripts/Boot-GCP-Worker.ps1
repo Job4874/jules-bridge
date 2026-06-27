@@ -1,8 +1,13 @@
 # Boot-GCP-Worker.ps1 — enable Compute API and ensure a Jules offload worker VM exists
+#
+# PREREQUISITE (one-time, manual):
+#   Service Usage API must be enabled on tibin-terminal-2026 via the Cloud Console:
+#   https://console.developers.google.com/apis/api/serviceusage.googleapis.com/overview?project=tibin-terminal-2026
+#
 $ErrorActionPreference = "Continue"
-$Project = "tibin-terminal-2026"
-$Zone = "us-central1-a"
-$VmName = "jules-offload-worker"
+$Project   = "tibin-terminal-2026"
+$Zone      = "us-central1-a"
+$VmName    = "jules-offload-worker"
 $MachineType = "e2-standard-4"
 $logDir = Join-Path $env:USERPROFILE ".jules\jules_inbox\gcp_boot"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
@@ -16,18 +21,34 @@ function Write-Log($msg) {
 
 $gcloud = Join-Path $env:LOCALAPPDATA "Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd"
 if (-not (Test-Path $gcloud)) {
-    Write-Log "gcloud not found at $gcloud"
+    Write-Log "ERROR: gcloud not found at $gcloud"
     exit 1
 }
 
-Write-Log "Enabling compute.googleapis.com on $Project"
-& $gcloud config set project $Project 2>&1 | ForEach-Object { Write-Log $_ }
-& $gcloud services enable compute.googleapis.com serviceusage.googleapis.com --project=$Project --quiet 2>&1 | ForEach-Object { Write-Log $_ }
+# --- Fix: point gcloud and ADC quota to tibin-terminal-2026, not the API key project ---
+Write-Log "Setting active project and ADC quota project to $Project"
+& $gcloud config set project $Project --quiet 2>&1 | ForEach-Object { Write-Log $_ }
+& $gcloud auth application-default set-quota-project $Project 2>&1 | ForEach-Object { Write-Log $_ }
 
-Write-Log "Checking existing VM $VmName"
-$describe = & $gcloud compute instances describe $VmName --zone=$Zone --project=$Project --format="value(status)" 2>&1
+# --- Enable Compute API ---
+# NOTE: serviceusage.googleapis.com must already be enabled manually via:
+#   https://console.developers.google.com/apis/api/serviceusage.googleapis.com/overview?project=tibin-terminal-2026
+Write-Log "Enabling compute.googleapis.com on $Project"
+& $gcloud services enable compute.googleapis.com --project=$Project --quiet 2>&1 | ForEach-Object { Write-Log $_ }
 if ($LASTEXITCODE -ne 0) {
-    Write-Log "Creating VM $VmName ($MachineType) in $Zone"
+    Write-Log "ERROR: Failed to enable compute.googleapis.com (exit $LASTEXITCODE)."
+    Write-Log "If Service Usage API is disabled, open this URL in your browser first:"
+    Write-Log "  https://console.developers.google.com/apis/api/serviceusage.googleapis.com/overview?project=$Project"
+    Write-Log "Then re-run this script."
+    exit 1
+}
+
+# --- Ensure VM exists and is running ---
+Write-Log "Checking existing VM $VmName"
+$describe = & $gcloud compute instances describe $VmName `
+    --zone=$Zone --project=$Project --format="value(status)" 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Log "VM not found — creating $VmName ($MachineType) in $Zone"
     & $gcloud compute instances create $VmName `
         --project=$Project `
         --zone=$Zone `
@@ -37,13 +58,17 @@ if ($LASTEXITCODE -ne 0) {
         --image-family=ubuntu-2204-lts `
         --image-project=ubuntu-os-cloud `
         --scopes=cloud-platform `
-        --metadata=startup-script="#!/bin/bash`napt-get update -y`napt-get install -y git python3 python3-pip`n" `
-        2>&1 | ForEach-Object { Write-Log $_ }
+        --metadata=startup-script="#`!/bin/bash`napt-get update -y`napt-get install -y git python3 python3-pip`n" `
+        --quiet 2>&1 | ForEach-Object { Write-Log $_ }
 } else {
-    Write-Log "VM status: $describe"
-    if ($describe -ne "RUNNING") {
+    $vmStatus = ($describe | Where-Object { $_ -notmatch "^WARNING" }) -join ""
+    Write-Log "VM status: $vmStatus"
+    if ($vmStatus -ne "RUNNING") {
         Write-Log "Starting VM $VmName"
-        & $gcloud compute instances start $VmName --zone=$Zone --project=$Project 2>&1 | ForEach-Object { Write-Log $_ }
+        & $gcloud compute instances start $VmName `
+            --zone=$Zone --project=$Project --quiet 2>&1 | ForEach-Object { Write-Log $_ }
+    } else {
+        Write-Log "VM is already RUNNING. Nothing to do."
     }
 }
 

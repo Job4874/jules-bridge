@@ -1,4 +1,11 @@
 @echo off
+:: Launch-Bridge-WithVM.cmd
+:: Opens the bridge + GCP boot in SEPARATE windows, NOT in Cursor terminal.
+:: Double-click this from Explorer, or run it from any cmd prompt.
+
+:: 1. Boot GCP offload worker in a minimized background window
+start "GCP-Worker-Boot" /MIN powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\Users\abdul\.jules\vm_scripts\Boot-GCP-Worker.ps1"
+
+:: 2. Launch the bridge in its own visible window
 set JULES_VM_SCRIPT_DIR=C:\Users\abdul\.jules\vm_scripts
-cd /d C:\Users\abdul\.jules
-python bridge.py
+start "Jules-Bridge" /D "C:\Users\abdul\.jules" cmd /k "python bridge.py"
