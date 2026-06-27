@@ -920,6 +920,39 @@ class TestVMRoutes(unittest.TestCase):
         )
 
 
+class TestDiscoveryRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    def test_root_returns_authenticated_route_manifest(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["bridge"], "Jules Bridge")
+        self.assertEqual(payload["manifest"], "GET /tentacles")
+        self.assertIn("routes", payload)
+        self.assertIn(
+            {
+                "name": "info",
+                "route": "GET /info",
+                "reach": "Authenticated bridge metadata without the full manifest",
+            },
+            payload["routes"],
+        )
+
+    def test_info_returns_compact_authenticated_metadata(self):
+        response = self.client.get("/info")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["route_count"], len(bridge.TENTACLES))
+        self.assertNotIn("routes", payload)
+
+
 class TestBridgeTokenAuth(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
@@ -932,6 +965,11 @@ class TestBridgeTokenAuth(unittest.TestCase):
 
     def test_protected_route_rejects_missing_token(self):
         response = self.client.post("/notify/email", json={"subject": "x", "body": "y"})
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.get_json()["error"], "Unauthorized")
+
+    def test_root_discovery_rejects_missing_token(self):
+        response = self.client.get("/")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.get_json()["error"], "Unauthorized")
 

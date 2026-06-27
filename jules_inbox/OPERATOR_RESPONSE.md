@@ -1,6 +1,9 @@
 # OPERATOR → JULES (via bridge inbox)
 
 **Bridge status:** ONLINE  
+**Correct base URL:** `http://127.0.0.1:5000`  
+**Required auth header:** `Authorization: Bearer JULES-SECURE-999`  
+**Required POST header:** `Content-Type: application/json`  
 **Read this file:** `POST /fs/read` → `{"path":"c:\\Users\\abdul\\.jules\\jules_inbox\\OPERATOR_RESPONSE.md"}`  
 **Reply here:** `POST /fs/write` → `c:\\Users\\abdul\\.jules\\jules_inbox\\JULES_RESPONSE.md`
 
@@ -108,8 +111,13 @@ Follow `diagnostics/REPLAY_POST_DEPLOY_CHECKLIST.md` on the **Windows host** via
 
 ```http
 POST /notify/email
+Authorization: Bearer JULES-SECURE-999
+Content-Type: application/json
+
 {"subject": "OracleV5 status", "body": "..."}
 ```
+
+If `/notify/email` fails with SMTP authentication or missing credentials, do not retry blindly. Record the notification blocker in `C:\Users\abdul\.jules\jules_inbox\JULES_RESPONSE.md` and halt. Treat email delivery as optional evidence, not a reason to abandon completed bridge/file work.
 
 ---
 

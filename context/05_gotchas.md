@@ -13,6 +13,7 @@
 - **`ROOT_DIR`** is the Jules Bridge project root — use it for all default paths
 - **`LOG_PATH`** is defined at module level — don't redefine it in route handlers
 - **`GET /health`** — exists since Phase 5; returns `{status, bridge, uptime_s}`; used by ngrok/monitoring
+- **`GET /` and `GET /info`** — authenticated discovery routes; unlike `/health` and `/ping`, they require the bearer token and return bridge metadata instead of browser-facing 404s
 
 ## modules/__init__.py
 

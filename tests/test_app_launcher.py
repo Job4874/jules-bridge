@@ -48,8 +48,9 @@ class TestLaunchBrowserToUrl(unittest.TestCase):
         self.assertEqual(result["status"], "error")
         self.assertEqual(result["error"], "Invalid target URL")
 
+    @patch("modules.app_launcher._resolve_edge_executable", return_value="msedge")
     @patch("modules.app_launcher.subprocess.Popen")
-    def test_launches_edge_when_authorized(self, mock_popen):
+    def test_launches_edge_when_authorized(self, mock_popen, _mock_resolve):
         mock_popen.return_value.pid = 4242
 
         result = self.launcher.launch_browser_to_url(
@@ -65,6 +66,29 @@ class TestLaunchBrowserToUrl(unittest.TestCase):
         args = mock_popen.call_args.args[0]
         self.assertEqual(args[:4], ["cmd.exe", "/d", "/s", "/c"])
         self.assertEqual(args[4:], ["start", "", "msedge", "https://www.google.com"])
+
+    @patch("modules.app_launcher.subprocess.Popen")
+    def test_launches_absolute_edge_path_when_configured(self, mock_popen):
+        edge_path = r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+        with patch.dict(
+            "modules.app_launcher.os.environ",
+            {"JULES_EDGE_PATH": edge_path},
+        ), patch(
+            "modules.app_launcher.os.path.isfile",
+            side_effect=lambda path: path == edge_path,
+        ), patch(
+            "modules.app_launcher.shutil.which",
+            return_value=None,
+        ):
+            result = self.launcher.launch_browser_to_url(
+                "https://www.google.com",
+                allow_launch=True,
+            )
+
+        self.assertEqual(result["status"], "success")
+        self.assertTrue(result["started"])
+        args = mock_popen.call_args.args[0]
+        self.assertEqual(args, [edge_path, "https://www.google.com"])
 
     @patch("modules.app_launcher.subprocess.Popen", side_effect=OSError("spawn failed"))
     def test_maps_spawn_failure_to_error(self, _mock_popen):

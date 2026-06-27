@@ -355,6 +355,8 @@ def _evidence_age_check(response):
 # ---------------------------------------------------------------------------
 
 TENTACLES = [
+    {"name": "root",         "route": "GET /",                  "reach": "Authenticated bridge discovery and next-step pointers"},
+    {"name": "info",         "route": "GET /info",              "reach": "Authenticated bridge metadata without the full manifest"},
     {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
@@ -408,6 +410,43 @@ TENTACLES = [
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+def bridge_info_payload(include_routes=False):
+    uptime_s = round(
+        (datetime.now(timezone.utc) - _BRIDGE_START_UTC).total_seconds(), 1
+    )
+    payload = {
+        "status": "ok",
+        "bridge": "Jules Bridge",
+        "uptime_s": uptime_s,
+        "auth": {
+            "type": "bearer",
+            "public_routes": ["GET /health", "GET /ping"],
+            "protected_routes": "All other routes require Authorization: Bearer <token>",
+        },
+        "manifest": "GET /tentacles",
+        "session_log": "GET /session/log",
+        "mandatory_read": "jules_inbox/JULES_TOOL_REQUIREMENTS.md",
+        "route_count": len(TENTACLES),
+    }
+    if include_routes:
+        payload["routes"] = TENTACLES
+    return payload
+
+
+@app.route("/", methods=["GET"])
+@route_errors
+def root_info():
+    """GET / - Authenticated bridge discovery for browser/manual probes."""
+    return jsonify(bridge_info_payload(include_routes=True))
+
+
+@app.route("/info", methods=["GET"])
+@route_errors
+def bridge_info():
+    """GET /info - Compact authenticated bridge metadata."""
+    return jsonify(bridge_info_payload(include_routes=False))
+
 
 @app.route("/health", methods=["GET"])
 def health():
