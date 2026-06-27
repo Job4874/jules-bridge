@@ -100,6 +100,7 @@ from .context_orchestrator import (
     ContextSubagentPlan,
     build_context_subagents,
 )
+from .app_launcher import LaunchResult, launch_browser_to_url
 
 __all__ = [
     # fs_service
@@ -198,4 +199,7 @@ __all__ = [
     "ContextSubagent",
     "ContextSubagentPlan",
     "build_context_subagents",
+    # app_launcher
+    "LaunchResult",
+    "launch_browser_to_url",
 ]

@@ -373,6 +373,7 @@ TENTACLES = [
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
     {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},
+    {"name": "app_browser",       "route": "POST /apps/launch_browser",      "reach": "Explicitly launch Edge to an approved http(s) URL"},
     {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},
     {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},
     {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
@@ -1130,6 +1131,24 @@ def drive_quantower_login_route():
         secret_provider=secret_provider,
         notify_func=notifier,
     )
+    return jsonify(dict(result))
+
+
+# — App launcher routes —
+
+@app.route("/apps/launch_browser", methods=["POST"])
+@route_errors
+def launch_browser_route():
+    """POST /apps/launch_browser — Launch Edge to an approved http(s) URL.
+
+    Body (JSON):
+        url (str, required): Target http:// or https:// URL
+        allow_launch (bool, optional): Runtime launch gate (default false)
+    """
+    data = json_payload()
+    url = string_field(data, "url")
+    allow_launch = bool_field(data, "allow_launch", default=False)
+    result = modules.launch_browser_to_url(url, allow_launch=allow_launch)
     return jsonify(dict(result))
 
 

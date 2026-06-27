@@ -830,6 +830,38 @@ class TestRetrospectiveRoutes(unittest.TestCase):
         self.assertIs(mock_analyze.call_args.kwargs["auto_prune"], True)
 
 
+class TestAppLauncherRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.launch_browser_to_url")
+    def test_launch_browser_route_is_thin(self, mock_launch):
+        mock_launch.return_value = {
+            "status": "success",
+            "app_name": "msedge",
+            "started": True,
+            "error": None,
+        }
+
+        response = self.client.post(
+            "/apps/launch_browser",
+            json={"url": "https://example.com", "allow_launch": True},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "success")
+        mock_launch.assert_called_once_with(
+            "https://example.com",
+            allow_launch=True,
+        )
+
+    def test_launch_browser_requires_url(self):
+        response = self.client.post("/apps/launch_browser", json={"allow_launch": True})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+
 class TestBridgeTokenAuth(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
