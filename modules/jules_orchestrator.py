@@ -87,6 +87,17 @@ _DEFAULT_FLEET_STATE = "JULES_FLEET_STATE.json"
 _DEFAULT_FLEET_WATCH_STATE = "JULES_FLEET_WATCH_STATE.json"
 _STALE_UNKNOWN_REMOTE_SECONDS = 10 * 60
 _DEFAULT_INCLUDED_STATUSES = ("failed", "needs_review", "ready_for_review", "unknown")
+_DEFAULT_ANTIGRAVITY_PROMPT_DIR = Path(
+    os.environ.get(
+        "JULES_ANTIGRAVITY_PROMPT_DIR",
+        r"C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover"
+        r"\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS",
+    )
+)
+_ANTIGRAVITY_LINE_RE = re.compile(
+    r"^(?P<status>[^|]+)\|\s*Antigravity offload:\s*(?P<prompt>[^|]+?)\s*\|\s*repo=(?P<repo>.+?)\s*$",
+    re.IGNORECASE,
+)
 _TASK_HEADINGS = (
     ("testing", "Testing Improvement Task"),
     ("performance", "Performance Optimization Task"),
@@ -154,6 +165,69 @@ def parse_task_dump(content: str, source_name: str = "") -> list[JulesTask]:
         return [JulesTask(error=f"parse failed: {exc}", status="error")]
 
 
+def parse_antigravity_queue(
+    content: str,
+    source_name: str = "",
+    prompt_dir: str = "",
+) -> list[JulesTask]:
+    """Parse pipe-delimited Antigravity offload queue lines into Jules tasks.
+
+    Expected line format::
+
+        Needs review | Antigravity offload: CODEX_PROMPT.md | repo=C:\\path\\to\\repo
+
+    Args:
+        content: Raw queue text.
+        source_name: Optional label for traceability.
+        prompt_dir: Directory containing Codex prompt markdown files.
+
+    Returns:
+        List of JulesTask dictionaries. Never raises.
+    """
+    try:
+        prompt_root = Path(prompt_dir) if prompt_dir else _DEFAULT_ANTIGRAVITY_PROMPT_DIR
+        tasks: list[JulesTask] = []
+        ordinal = 0
+        for raw_line in (content or "").replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+            line = raw_line.strip()
+            if not line:
+                continue
+            match = _ANTIGRAVITY_LINE_RE.match(line)
+            if not match:
+                continue
+            ordinal += 1
+            status = _normalize_status(match.group("status")) or "unknown"
+            prompt_name = (match.group("prompt") or "").strip()
+            repo_path = (match.group("repo") or "").strip()
+            prompt_path = prompt_root / prompt_name
+            prompt_excerpt = ""
+            if prompt_path.is_file():
+                prompt_excerpt = prompt_path.read_text(encoding="utf-8", errors="replace")
+            elif prompt_name:
+                prompt_excerpt = f"(prompt file not found: {prompt_path})"
+            title = Path(prompt_name).stem.replace("_", " ") if prompt_name else "Antigravity prompt"
+            fingerprint = _fingerprint("antigravity", prompt_name, title, repo_path)
+            task_id = f"JT-{ordinal:03d}-{fingerprint[:6]}"
+            tasks.append(JulesTask(
+                id=task_id,
+                ordinal=ordinal,
+                fingerprint=fingerprint,
+                task_type="antigravity",
+                status=status,
+                source=source_name,
+                title=title,
+                file=str(prompt_path),
+                issue="Execute Antigravity Codex handover prompt end-to-end",
+                language="markdown",
+                rationale="Offload large Codex handover work to Jules remote workers.",
+                repo_path=repo_path,
+                raw_excerpt=prompt_excerpt[:12000],
+            ))
+        return tasks
+    except Exception as exc:  # noqa: BLE001
+        return [JulesTask(error=f"antigravity parse failed: {exc}", status="error")]
+
+
 def build_dispatch(
     content: str = "",
     source_path: str = "",
@@ -198,12 +272,19 @@ def build_dispatch(
 
         max_instances = max(1, int(max_instances or 1))
         statuses = _status_filter(include_statuses)
-        tasks = parse_task_dump(loaded_content, source_name=source_label)
+        if _is_antigravity_queue(loaded_content):
+            tasks = parse_antigravity_queue(loaded_content, source_name=source_label)
+        else:
+            tasks = parse_task_dump(loaded_content, source_name=source_label)
         tasks = [task for task in tasks if not task.get("error")]
         status_counts = _count_statuses(tasks)
         selected = _select_tasks(tasks, statuses, max_instances)
         packets = [
-            _packet_text(task, repo_path=repo_path, instance_index=index + 1)
+            _packet_text(
+                task,
+                repo_path=str(task.get("repo_path") or repo_path),
+                instance_index=index + 1,
+            )
             for index, task in enumerate(selected)
         ]
         commands = [
