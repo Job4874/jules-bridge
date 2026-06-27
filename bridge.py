@@ -10,6 +10,7 @@ All business logic lives in modules/:
 """
 
 import errno
+import json
 import logging
 import os
 import re
@@ -39,10 +40,11 @@ _BRIDGE_START_UTC = datetime.now(timezone.utc)  # set once at import time for up
 
 
 def configure_logging():
+    """Attach rotating file + stdout handlers once per process."""
+    if getattr(configure_logging, "configured", False):
+        return
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-    if any(getattr(h, "_jules_bridge_handler", False) for h in root_logger.handlers):
-        return
     formatter = logging.Formatter(
         "%(asctime)s %(levelname)s %(name)s: %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S%z",
@@ -50,12 +52,11 @@ def configure_logging():
     os.makedirs(ROOT_DIR, exist_ok=True)
     fh = RotatingFileHandler(LOG_PATH, maxBytes=10_000_000, backupCount=3, encoding="utf-8")
     fh.setFormatter(formatter)
-    fh._jules_bridge_handler = True
     sh = logging.StreamHandler(sys.stdout)
     sh.setFormatter(formatter)
-    sh._jules_bridge_handler = True
     root_logger.addHandler(fh)
     root_logger.addHandler(sh)
+    configure_logging.configured = True
 
 
 configure_logging()
@@ -144,7 +145,7 @@ def route_errors(func):
                 return _json_error(404, "Resource not found", path=getattr(exc, "filename", None))
             LOGGER.exception("%s %s -> 500 OSError", request.method, request.path)
             return _json_error(500, "Internal operational failure")
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             LOGGER.exception("%s %s -> 500", request.method, request.path)
             return _json_error(500, "Internal operational failure")
     return wrapper
@@ -281,9 +282,8 @@ def _stale_evidence_state():
     evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
     threshold_s = 3600
     try:
-        import json as _json
         with open(evidence_path, encoding="utf-8") as _f:
-            ev = _json.load(_f)
+            ev = json.load(_f)
         if isinstance(ev, list):
             ev = ev[-1] if ev else {}
         if not isinstance(ev, dict):
@@ -295,7 +295,7 @@ def _stale_evidence_state():
         if age_s <= threshold_s:
             return None
         return {"age_s": age_s, "threshold_s": threshold_s}
-    except Exception:  # noqa: BLE001
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
         return None  # evidence file missing or malformed — proceed without warning
 
 
@@ -1112,12 +1112,13 @@ def drive_quantower_login_route():
     allow_secret_use = bool_field(data, "allow_secret_use", default=False)
     notify = bool_field(data, "notify", default=False)
 
-    notifier = None
-    if notify:
-        notifier = lambda subject, body: email_service.send_email(
+    def _send_completion_email(subject, body):
+        return email_service.send_email(
             f"[Jules Bridge] {subject}",
             body,
         )
+
+    notify_func = _send_completion_email if notify else None
 
     secret_provider = None
     if allow_secret_use:
@@ -1129,7 +1130,7 @@ def drive_quantower_login_route():
         submit_y=submit_y,
         allow_secret_use=allow_secret_use,
         secret_provider=secret_provider,
-        notify_func=notifier,
+        notify_func=notify_func,
     )
     return jsonify(dict(result))
 
@@ -1395,7 +1396,11 @@ def retrospective_memory():
     memory_path = request.args.get("memory_path", os.path.join(ROOT_DIR, "memory"))
 
     if domain not in ("general", "oracle", "quantower", "trading", "reasoning"):
-        raise BridgeHTTPError(400, "Invalid input", details=f"domain must be one of: general, oracle, quantower, trading, reasoning")
+        raise BridgeHTTPError(
+            400,
+            "Invalid input",
+            details="domain must be one of: general, oracle, quantower, trading, reasoning",
+        )
 
     memory_content = modules.load_memory(memory_path=memory_path, domain=domain)
 
