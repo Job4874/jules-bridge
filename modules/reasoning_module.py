@@ -231,6 +231,7 @@ def _openrouter_chat(system_prompt: str, user_prompt: str, model_name: str) -> s
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.2,
+        "response_format": {"type": "json_object"},
     }
     headers = {
         "Authorization": f"Bearer {keys[0]}",
@@ -247,7 +248,7 @@ def _openrouter_chat(system_prompt: str, user_prompt: str, model_name: str) -> s
                 _OPENROUTER_API_URL,
                 headers=headers,
                 json=payload,
-                timeout=60,
+                timeout=30,
             )
             if response.status_code == 429 and len(keys) > 1:
                 last_error = "OpenRouter rate limited"
@@ -341,6 +342,32 @@ Return ONLY valid JSON:
 """
 
 
+def _extract_json_text(raw: str) -> str:
+    """Strip markdown fences and return JSON-looking payload."""
+    text = (raw or "").strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return text[start : end + 1]
+    return text
+
+
+def _parse_llm_json(raw: str) -> Dict[str, Any]:
+    """Parse model output as JSON with fence/brace extraction."""
+    text = _extract_json_text(raw)
+    data = json.loads(text)
+    if not isinstance(data, dict):
+        raise json.JSONDecodeError("Expected JSON object", text, 0)
+    return data
+
+
 def _h_gemini_call(problem: str, context: str, model_name: str, model_alias: str = "fast") -> Dict[str, Any]:
     """H module backed by OpenRouter or Gemini."""
     user_prompt = f"Problem: {problem}"
@@ -348,7 +375,7 @@ def _h_gemini_call(problem: str, context: str, model_name: str, model_alias: str
         user_prompt += f"\n\nContext:\n{context}"
     raw = _llm_chat(_H_SYSTEM_PROMPT, user_prompt, model_name, model_alias)
     try:
-        data = json.loads(raw)
+        data = _parse_llm_json(raw)
         if "error" in data:
             _LOGGER.warning("Gemini H-module error: %s — using stub fallback", data["error"])
             return _h_stub(problem, model_name)
@@ -376,7 +403,7 @@ def _l_gemini_call(
         user_prompt += f"\nContext: {context}"
     raw = _llm_chat(_L_SYSTEM_PROMPT, user_prompt, model_name, model_alias)
     try:
-        data = json.loads(raw)
+        data = _parse_llm_json(raw)
         if "error" in data:
             _LOGGER.warning("Gemini L-module error: %s — using stub fallback", data["error"])
             return _l_stub(step, step_index, model_name)

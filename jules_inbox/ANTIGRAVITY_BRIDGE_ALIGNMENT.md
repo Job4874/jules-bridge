@@ -52,17 +52,10 @@ Bridge read via: `POST /fs/read` with path above.
 ## Gemini Auth Path (recommended after ADC)
 
 1. **Enable APIs** (done): `generativelanguage.googleapis.com`, `aiplatform.googleapis.com` on `tibin-terminal-2026`
-2. **Call with ADC token** (works without `.env` API key):
-
-```powershell
-$token = gcloud auth application-default print-access-token
-curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" `
-  -H "Authorization: Bearer $token" `
-  -H "Content-Type: application/json" `
-  -d '{"contents":[{"parts":[{"text":"hello"}]}]}'
-```
-
-3. **Optional:** Create API key in `tibin-terminal-2026` → set `GEMINI_API_KEY` in `.env` → restart bridge
+2. **OpenRouter (LIVE):** set `OPENROUTER_API_KEY` / `OPENROUTER_API_KEYS` in `.env` — bridge prefers free models:
+   - `fast` → `google/gemma-4-26b-a4b-it:free`
+   - `smart` → `google/gemma-4-31b-it:free`
+3. **Gemini fallback:** only when OpenRouter fails and `GEMINI_API_KEY` has billing credits
 
 ---
 
