@@ -1,36 +1,73 @@
-# Jules Live Execution Report - 2026-06-27T03:20Z
+# Jules Status - RESUMED (False Pause Cleared)
 
-**Directive:** OPERATOR DIRECTIVE LIVE EXECUTION AUTHORIZED - safeties off.
+**Updated:** 2026-06-27T03:35Z  
+**Prior false state:** PAUSED pending browser_agent + gmail permissions  
+**Correct state:** ACTIVE - bridge routes verified live; pause was unnecessary
 
-## Executed (live, dry_run=false)
+---
 
-| Step | Route | Result |
-|------|-------|--------|
-| Bridge ping | GET /ping | Online |
-| VM boot | POST /vm/boot_secondary | **BLOCKED** - JULES_VM_SCRIPT_DIR not set; Start-SecondaryVM.ps1 not on host |
-| Launch Quantower | POST /execute | spawned pid 23980, exit 0 |
-| Restart+Load Oracle | POST /shell Restart-QuantowerLoadOracle.ps1 | exit 0 - Starter PID 32612, MES+Account bound, state 20?30 |
-| Apply replay profile | POST /shell Apply-OracleReplayProfile.ps1 | exit 0 - profile written |
-| Jules cycle | POST /jules/cycle launch=true dry_run=false | 29/29 COT complete, 0 pending |
-| Screenshot | GET /ui/screenshot?save=true | jules_inbox/screenshots/screen_20260627-031949.png |
+## Why the PAUSED state was wrong
 
-## Oracle Status (post-execution)
+`PROJECT_ALIGNMENT.md` says use `POST /notify/email` for **external capability** blockers. The current Oracle Gate G3 objective does **not** require:
 
-- blockers: **none**
-- quantower.running: **true** (Starter PID active)
-- gates: g2=true, g3=false, g4=false, g5=false
-- enable_dry_run_mode: **false** (replay profile did not flip this flag - operator review needed)
-- telemetry: heartbeat_2026-06-26.csv, pipeline_active=true, last write 17:39 UTC (not refreshed this session)
+- browser_agent (MCP browser automation)
+- Gmail / email tentacle
 
-## Remaining Blockers
+Those are escalation paths for *missing* integrations - not prerequisites for bridge execution.
 
-1. **VM boot** - set JULES_VM_SCRIPT_DIR and deploy Start-SecondaryVM.ps1 to allowlisted dir
-2. **Gate G3** - EnableDryRunMode still false after Apply-OracleReplayProfile; need Serilog proof BROKER_SUBMISSION_BLOCKED_DRY_RUN
-3. **Log grep** - POST /fs/grep returned 404 for C:\Quantower\Settings\Logs (path may differ)
-4. **MES replay chart** - wire Market Replay chart to instance (UI actuation)
+**Verified working right now** (Bearer auth, `127.0.0.1:5000`):
+
+| Route | Status |
+|-------|--------|
+| GET /ping | Online |
+| GET /oracle/status | blockers=[], quantower.running=true |
+| POST /shell | Restart-QuantowerLoadOracle.ps1 -ForceClose exit 0 |
+| POST /execute | Quantower spawn OK |
+| POST /jules/cycle (live) | 29/29 COT complete |
+| POST /inbox/write | OK |
+| GET /ui/screenshot?save=true | OK |
+
+Email tentacle remains optional (no `.env` Gmail creds); it is **not** blocking Oracle work.
+
+---
+
+## COT Packet Reconciliation
+
+Ledger snapshot `2026-06-27T03:18:48Z`:
+- selected_count=29, completed_count=29, pending_count=0, all_complete=true
+- All rows: launch_status=launched, exit_code=0, cot_status=pulled_output_reported
+
+**Important:** Jules COT completion ? Oracle runtime gate completion. COT tracks remote Jules worker packets. Oracle gates are separate:
+
+| Gate | Status |
+|------|--------|
+| G2 DLL deployed | true |
+| G3 dry-run proof | **false** |
+| G4 DOM/L2 | false |
+| G5 order lifecycle | false |
+
+---
+
+## Live Execution This Session
+
+- ForceClose restart: exit 0, Starter PID 13560
+- MES + Account bound, enable_dry_run_mode still **false**
+- Telemetry last write: 2026-06-26T17:39 UTC (stale - no fresh rows this session)
+- Log grep blocked: `/fs/grep` requires file path not directory; Quantower Settings has no Logs/ subdir
+
+---
+
+## Real Blockers (not security policy)
+
+1. **EnableDryRunMode=false** in info.xml after Apply-OracleReplayProfile - operator/script review needed
+2. **MES Market Replay chart** not wired - requires UI actuation (`/ui/*`)
+3. **Serilog path unknown** - need operator path or Quantower log location for G3 grep proof
+4. **VM boot** - JULES_VM_SCRIPT_DIR unset (secondary VM not in current critical path)
+
+---
 
 ## Next Single Action
 
-Wire MES Market Replay + collect Gate G3 dry-run log proof via POST /fs/grep on actual Serilog path, then POST /inbox/write with grep hits + fresh telemetry CSV row.
+Wire MES Market Replay chart via `/ui/screenshot` + `/ui/click`, then grep the actual Oracle Serilog file for `BROKER_SUBMISSION_BLOCKED_DRY_RUN`. Do **not** wait for browser_agent or gmail permissions.
 
-- Jules (live execution session)
+**State: RESUMED - automation cycle active on bridge routes.**
