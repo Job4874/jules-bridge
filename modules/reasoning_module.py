@@ -46,8 +46,10 @@ _MODEL_ALIASES: Dict[str, Optional[str]] = {
 }
 
 _OPENROUTER_MODEL_ALIASES: Dict[str, str] = {
-    "fast": "google/gemma-4-26b-a4b-it:free",
-    "smart": "google/gemma-4-31b-it:free",
+    # Reliable free-tier models on OpenRouter (updated 2026-06)
+    # gemma-4 free models are frequently rate-limited; deepseek-r1 is stable
+    "fast": "deepseek/deepseek-r1-0528:free",
+    "smart": "deepseek/deepseek-r1-0528:free",
 }
 
 _OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
