@@ -1,29 +1,28 @@
-# Jules RUN MODE - Auth Passed, Full Execution
+# Jules - API/Agent Focus (Quantower deprioritized)
 
-**Updated:** 2026-06-27T03:57Z  
-**State:** RUNNING - human handoff complete, no pause
+**Updated:** 2026-06-27T04:08Z
 
-## Operator Auth (confirmed via screenshots)
-- Google Account, GCP Projectmywebsite, Azure portal - all logged in
-- DO NOT store API keys from screenshots in repo/inbox
+## Diagnosis: Why Gemini reasoning returns STUB
 
-## Live Execution This Cycle
-| Item | Evidence |
-|------|----------|
-| Oracle restart | ForceClose exit 0 |
-| Telemetry | heartbeat_2026-06-27.csv LIVE (03:54 UTC) |
-| Quantower | running, MES+Account bound |
-| Jules COT | 29/29 |
-| VM boot | pid 31372 started |
-| Screenshot | screen_20260627-035617.png |
+| Key in .env | Type | Test result |
+|-------------|------|-------------|
+| AQ.Ab8RN... | Agent Platform | 429 prepayment credits depleted |
+| AIzaSy... (GCP "62 APIs") | Standard GCP | 400 API_KEY_INVALID for generativelanguage |
 
-## Gates: G2 true | G3 false | G4 false | G5 false
+Bridge `/reasoning/solve` model=smart falls back to stub when Gemini fails.
 
-## Azure VM Deploy Blocker
-- `tibin-agent-vm-01` @ 74.249.129.209 - Permission denied (publickey)
-- ~/.ssh has no private key - operator must add key to VM or run `az ssh vm`
+## What works NOW
 
-## Next Actions (running, not waiting)
-1. UI: wire MES Market Replay chart
-2. Azure: deploy agent once SSH key available
-3. G3: fix EnableDryRunMode in info.xml / replay profile script
+- Jules CLI remote fleet (40+ sessions, OAuth active)
+- POST /notify/email (Gmail SMTP)
+- POST /jules/cycle (29/29 COT)
+- GCP/Azure/Gemini web consoles (operator logged in)
+
+## Operator fix (5 min)
+
+1. GCP ? Enable **Generative Language API** on Projectmywebsite
+2. Create fresh API key with that API enabled + billing
+3. Update GEMINI_API_KEY in .env, restart bridge
+4. Azure: add SSH key to tibin-agent-vm-01 for agent deploy
+
+Full inventory: jules_inbox/API_AGENT_INVENTORY.md
