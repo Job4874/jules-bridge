@@ -75,7 +75,7 @@ BRIDGE_TOKEN = "JULES-SECURE-999"
 
 @app.before_request
 def require_auth():
-    if request.path in ("/health", "/ping"):
+    if request.path in ("/health", "/ping", "/dashboard/status"):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -1646,6 +1646,19 @@ def akc_subagents_post():
     )
     status = 400 if result.get("error") else 200
     return jsonify(dict(result)), status
+
+
+# ---------------------------------------------------------------------------
+# Dashboard
+# ---------------------------------------------------------------------------
+
+@app.route("/dashboard/status", methods=["GET"])
+@route_errors
+def dashboard_status():
+    """GET /dashboard/status — real-time multi-cloud mission control snapshot."""
+    from modules.dashboard_module import get_dashboard_status
+    result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
+    return jsonify(result), 200 if result.get("ok") else 500
 
 
 # ---------------------------------------------------------------------------
