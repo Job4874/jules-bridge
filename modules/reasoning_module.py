@@ -31,6 +31,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+import requests
+
 _LOGGER = logging.getLogger("jules_bridge.reasoning")
 
 # ---------------------------------------------------------------------------
@@ -39,9 +41,16 @@ _LOGGER = logging.getLogger("jules_bridge.reasoning")
 # Swap the right-hand values to change models without touching call sites.
 _MODEL_ALIASES: Dict[str, Optional[str]] = {
     "stub":  None,                    # deterministic stub — for unit tests
-    "fast":  "gemini-2.0-flash",      # cheap, fast reasoning
-    "smart": "gemini-2.5-pro",        # high-quality planning
+    "fast":  "gemini-2.0-flash",      # cheap, fast reasoning (Gemini fallback)
+    "smart": "gemini-2.5-pro",        # high-quality planning (Gemini fallback)
 }
+
+_OPENROUTER_MODEL_ALIASES: Dict[str, str] = {
+    "fast": "google/gemma-4-26b-a4b-it:free",
+    "smart": "google/gemma-4-31b-it:free",
+}
+
+_OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 # ---------------------------------------------------------------------------
@@ -172,8 +181,106 @@ def _l_stub(step: str, step_index: int, model: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Gemini helpers — only imported/called when model != "stub"
+# LLM helpers — OpenRouter (preferred) then Gemini when model != "stub"
 # ---------------------------------------------------------------------------
+
+def _load_env_keys() -> None:
+    try:
+        from notify_email import load_env
+
+        load_env()
+    except ImportError:
+        pass
+
+
+def _openrouter_api_keys() -> List[str]:
+    """Return configured OpenRouter keys in rotation order."""
+    _load_env_keys()
+    keys: List[str] = []
+    multi = os.environ.get("OPENROUTER_API_KEYS", "").strip()
+    if multi:
+        keys.extend(part.strip() for part in multi.split(",") if part.strip())
+    single = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if single and single not in keys:
+        keys.insert(0, single)
+    return keys
+
+
+def _resolve_model_name(model: str, use_openrouter: bool) -> str:
+    if use_openrouter:
+        if model in _OPENROUTER_MODEL_ALIASES:
+            return _OPENROUTER_MODEL_ALIASES[model]
+        if model in _MODEL_ALIASES and _MODEL_ALIASES[model]:
+            return _OPENROUTER_MODEL_ALIASES.get("fast", model)
+    resolved = _MODEL_ALIASES.get(model, model)
+    if resolved is None:
+        return model
+    return resolved
+
+
+def _openrouter_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
+    """Call OpenRouter chat completions; rotate keys on rate-limit errors."""
+    keys = _openrouter_api_keys()
+    if not keys:
+        return json.dumps({"error": "OPENROUTER_API_KEY not set"})
+
+    payload = {
+        "model": model_name,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0.2,
+    }
+    headers = {
+        "Authorization": f"Bearer {keys[0]}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://127.0.0.1:5000",
+        "X-Title": "Jules Bridge",
+    }
+
+    last_error = "OpenRouter request failed"
+    for key in keys:
+        headers["Authorization"] = f"Bearer {key}"
+        try:
+            response = requests.post(
+                _OPENROUTER_API_URL,
+                headers=headers,
+                json=payload,
+                timeout=60,
+            )
+            if response.status_code == 429 and len(keys) > 1:
+                last_error = "OpenRouter rate limited"
+                continue
+            response.raise_for_status()
+            data = response.json()
+            if "error" in data:
+                last_error = str(data["error"])
+                continue
+            content = data["choices"][0]["message"]["content"]
+            return content if isinstance(content, str) else json.dumps(content)
+        except Exception as exc:  # noqa: BLE001
+            last_error = str(exc)
+            _LOGGER.warning("OpenRouter call failed with key rotation: %s", exc)
+
+    return json.dumps({"error": last_error})
+
+
+def _llm_chat(system_prompt: str, user_prompt: str, model_name: str, model_alias: str) -> str:
+    """Prefer OpenRouter free models; fall back to Gemini when configured."""
+    if _openrouter_api_keys():
+        resolved = _resolve_model_name(model_alias, use_openrouter=True)
+        raw = _openrouter_chat(system_prompt, user_prompt, resolved)
+        try:
+            data = json.loads(raw)
+            if "error" not in data:
+                return raw
+            _LOGGER.warning("OpenRouter error: %s — trying Gemini fallback", data["error"])
+        except json.JSONDecodeError:
+            if raw and not raw.startswith("{"):
+                return raw
+    return _gemini_chat(system_prompt, user_prompt, model_name)
+
 
 def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
     """Call Gemini and return the raw text response.
@@ -187,12 +294,7 @@ def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
         _LOGGER.warning("google-generativeai not installed; falling back to stub output")
         return json.dumps({"error": "google-generativeai not installed"})
 
-    try:
-        from notify_email import load_env
-
-        load_env()
-    except ImportError:
-        pass
+    _load_env_keys()
 
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -239,12 +341,12 @@ Return ONLY valid JSON:
 """
 
 
-def _h_gemini_call(problem: str, context: str, model_name: str) -> Dict[str, Any]:
-    """H module backed by Gemini."""
+def _h_gemini_call(problem: str, context: str, model_name: str, model_alias: str = "fast") -> Dict[str, Any]:
+    """H module backed by OpenRouter or Gemini."""
     user_prompt = f"Problem: {problem}"
     if context:
         user_prompt += f"\n\nContext:\n{context}"
-    raw = _gemini_chat(_H_SYSTEM_PROMPT, user_prompt, model_name)
+    raw = _llm_chat(_H_SYSTEM_PROMPT, user_prompt, model_name, model_alias)
     try:
         data = json.loads(raw)
         if "error" in data:
@@ -257,15 +359,22 @@ def _h_gemini_call(problem: str, context: str, model_name: str) -> Dict[str, Any
         return _h_stub(problem, model_name)
 
 
-def _l_gemini_call(step: str, step_index: int, problem: str, context: str, model_name: str) -> Dict[str, Any]:
-    """L module backed by Gemini."""
+def _l_gemini_call(
+    step: str,
+    step_index: int,
+    problem: str,
+    context: str,
+    model_name: str,
+    model_alias: str = "fast",
+) -> Dict[str, Any]:
+    """L module backed by OpenRouter or Gemini."""
     user_prompt = (
         f"Original problem: {problem}\n"
         f"Step {step_index}: {step}"
     )
     if context:
         user_prompt += f"\nContext: {context}"
-    raw = _gemini_chat(_L_SYSTEM_PROMPT, user_prompt, model_name)
+    raw = _llm_chat(_L_SYSTEM_PROMPT, user_prompt, model_name, model_alias)
     try:
         data = json.loads(raw)
         if "error" in data:
@@ -304,7 +413,7 @@ def _h_module_call(problem: str, context: str, model: str = "stub") -> Dict[str,
     resolved = _MODEL_ALIASES.get(model, model)  # unknown alias treated as raw model name
     if resolved is None:
         return _h_stub(problem, model)
-    return _h_gemini_call(problem, context, resolved)
+    return _h_gemini_call(problem, context, resolved, model_alias=model)
 
 
 def _l_module_call(
@@ -338,7 +447,7 @@ def _l_module_call(
     resolved = _MODEL_ALIASES.get(model, model)
     if resolved is None:
         return _l_stub(step, step_index, model)
-    return _l_gemini_call(step, step_index, problem, context, resolved)
+    return _l_gemini_call(step, step_index, problem, context, resolved, model_alias=model)
 
 
 def _halt_check(
