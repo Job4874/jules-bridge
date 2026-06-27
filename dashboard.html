@@ -1,476 +1,504 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>JULES MISSION CONTROL</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #050810;
-    --surface: rgba(255,255,255,0.04);
-    --border: rgba(255,255,255,0.08);
-    --blue: #00c8ff;
-    --green: #00ff88;
-    --red: #ff4060;
-    --orange: #ffaa00;
-    --purple: #b060ff;
-    --dim: rgba(255,255,255,0.35);
-    --text: rgba(255,255,255,0.9);
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Space Grotesk', sans-serif;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+:root{--bg:#050810;--s:rgba(255,255,255,.04);--b:rgba(255,255,255,.08);--blue:#00c8ff;--green:#00ff88;--red:#ff4060;--orange:#ffaa00;--purple:#b060ff;--dim:rgba(255,255,255,.35);--text:rgba(255,255,255,.9);--mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,200,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.025) 1px,transparent 1px);background-size:40px 40px;animation:gs 20s linear infinite}
+@keyframes gs{to{background-position:40px 40px}}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);z-index:0;opacity:.12}
+.o1{width:400px;height:400px;background:var(--blue);top:-100px;left:-100px}
+.o2{width:300px;height:300px;background:var(--purple);bottom:-80px;right:-80px}
+#root{position:relative;z-index:1;padding:16px;max-width:1700px;margin:0 auto}
 
-  /* Animated background grid */
-  body::before {
-    content: '';
-    position: fixed; inset: 0; z-index: 0;
-    background-image:
-      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    animation: gridScroll 20s linear infinite;
-  }
-  @keyframes gridScroll { to { background-position: 40px 40px; } }
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;margin-bottom:14px;background:var(--s);border:1px solid var(--b);border-radius:14px;backdrop-filter:blur(20px)}
+.logo{font-size:18px;font-weight:700;letter-spacing:2px;color:var(--blue);text-shadow:0 0 20px rgba(0,200,255,.4)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+.dot.red{background:var(--red);box-shadow:0 0 8px var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.badge{font-family:var(--mono);font-size:11px;color:var(--dim);background:rgba(0,200,255,.07);border:1px solid rgba(0,200,255,.13);padding:3px 9px;border-radius:20px}
+.lnk{font-family:var(--mono);font-size:10px;color:var(--blue);background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.13);padding:3px 9px;border-radius:20px;text-decoration:none;cursor:pointer}
 
-  /* Glow orbs */
-  .orb {
-    position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; opacity: 0.15;
-  }
-  .orb1 { width:400px; height:400px; background:var(--blue); top:-100px; left:-100px; }
-  .orb2 { width:300px; height:300px; background:var(--purple); bottom:-80px; right:-80px; }
+/* LAYOUT */
+.row{display:grid;gap:12px;margin-bottom:12px}
+.r4{grid-template-columns:repeat(4,1fr)}
+.r3{grid-template-columns:repeat(3,1fr)}
+.r2{grid-template-columns:2fr 1fr}
+.r2b{grid-template-columns:1fr 1fr}
 
-  #root { position: relative; z-index: 1; padding: 20px; max-width: 1600px; margin: 0 auto; }
+/* CARD */
+.card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:16px;backdrop-filter:blur(20px);position:relative;overflow:hidden;transition:border-color .3s}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--ac,var(--blue)),transparent);opacity:.5}
+.card.green{--ac:var(--green);border-color:rgba(0,255,136,.13)}
+.card.red{--ac:var(--red);border-color:rgba(255,64,96,.13)}
+.card.orange{--ac:var(--orange);border-color:rgba(255,170,0,.13)}
+.card.purple{--ac:var(--purple);border-color:rgba(176,96,255,.13)}
+.lbl{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.val{font-size:30px;font-weight:700;font-family:var(--mono);line-height:1}
+.sub{font-size:11px;color:var(--dim);margin-top:5px;font-family:var(--mono)}
+.ico{position:absolute;top:14px;right:14px;font-size:20px;opacity:.12}
 
-  /* HEADER */
-  header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 24px; margin-bottom: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-  }
-  .header-left { display:flex; align-items:center; gap:16px; }
-  .logo { font-size:22px; font-weight:700; letter-spacing:2px; color:var(--blue);
-    text-shadow: 0 0 20px rgba(0,200,255,0.5); }
-  .status-dot {
-    width:10px; height:10px; border-radius:50%; background:var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: pulse 2s ease-in-out infinite;
-  }
-  .status-dot.red { background:var(--red); box-shadow:0 0 8px var(--red); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .uptime-badge {
-    font-family: var(--mono); font-size:12px; color:var(--dim);
-    background: rgba(0,200,255,0.08); border:1px solid rgba(0,200,255,0.15);
-    padding: 4px 10px; border-radius: 20px;
-  }
-  .ngrok-url {
-    font-family: var(--mono); font-size:11px; color:var(--blue);
-    background: rgba(0,200,255,0.05); border:1px solid rgba(0,200,255,0.15);
-    padding:4px 10px; border-radius:20px; text-decoration:none;
-    cursor:pointer;
-  }
-  .last-update { font-size:11px; color:var(--dim); font-family:var(--mono); }
-  .refresh-btn {
-    background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.3);
-    color: var(--blue); padding: 6px 14px; border-radius: 8px; cursor:pointer;
-    font-family: var(--sans); font-size:12px; font-weight:600;
-    transition: all 0.2s;
-  }
-  .refresh-btn:hover { background: rgba(0,200,255,0.2); }
+/* GAUGE */
+.gbar{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-top:8px}
+.gfill{height:100%;border-radius:3px;transition:width .8s ease,background .3s}
+.gfill.low{background:linear-gradient(90deg,var(--green),#00cc66)}
+.gfill.mid{background:linear-gradient(90deg,var(--orange),#ff6600)}
+.gfill.high{background:linear-gradient(90deg,var(--red),#ff2040)}
 
-  /* GRID LAYOUTS */
-  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:16px; }
-  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:16px; }
-  .grid-2 { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px; }
+/* FLEET */
+.fleet{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.fstat{text-align:center;padding:12px 6px;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid var(--b)}
+.fnum{font-size:26px;font-weight:700;font-family:var(--mono)}
+.fnum.g{color:var(--green);text-shadow:0 0 10px rgba(0,255,136,.3)}
+.fnum.b{color:var(--blue)}
+.fnum.o{color:var(--orange)}
+.fnum.r{color:var(--red)}
+.fnum.d{color:var(--dim)}
+.flbl{font-size:9px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
 
-  /* CARD */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    backdrop-filter: blur(20px);
-    transition: border-color 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-  .card::before {
-    content:''; position:absolute; top:0; left:0; right:0; height:2px;
-    background: linear-gradient(90deg, transparent, var(--accent, var(--blue)), transparent);
-    opacity:0.6;
-  }
-  .card.green { --accent: var(--green); border-color: rgba(0,255,136,0.15); }
-  .card.red { --accent: var(--red); border-color: rgba(255,64,96,0.15); }
-  .card.orange { --accent: var(--orange); border-color: rgba(255,170,0,0.15); }
-  .card.purple { --accent: var(--purple); border-color: rgba(176,96,255,0.15); }
-  .card-label {
-    font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase;
-    color:var(--dim); margin-bottom:10px;
-  }
-  .card-value {
-    font-size:36px; font-weight:700; line-height:1;
-    font-family: var(--mono);
-  }
-  .card-sub { font-size:12px; color:var(--dim); margin-top:6px; font-family:var(--mono); }
-  .card-icon { position:absolute; top:16px; right:16px; font-size:24px; opacity:0.15; }
+/* VM */
+.vmg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:12px}
+.vmc{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px;transition:all .3s}
+.vmc.online{border-color:rgba(0,255,136,.2)}
+.vmc.offline{border-color:rgba(255,64,96,.12)}
+.vmc.provisioning{border-color:rgba(255,170,0,.15)}
+.vmh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.vmn{font-size:13px;font-weight:600}
+.vmb{font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:20px;text-transform:uppercase}
+.vmb.online{background:rgba(0,255,136,.12);color:var(--green)}
+.vmb.offline{background:rgba(255,64,96,.08);color:var(--red)}
+.vmb.provisioning{background:rgba(255,170,0,.08);color:var(--orange)}
+.pvdr{display:inline-block;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:2px 6px;border-radius:4px;margin-bottom:7px}
+.pvdr.GCP{background:rgba(0,200,255,.08);color:var(--blue)}
+.pvdr.Azure{background:rgba(176,96,255,.08);color:var(--purple)}
+.vmrow{display:flex;justify-content:space-between;font-size:11px;margin-top:4px}
+.vk{color:var(--dim)} .vv{font-family:var(--mono)}
 
-  /* VM CARDS */
-  .vm-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-bottom:16px; }
-  .vm-card {
-    background: var(--surface); border:1px solid var(--border);
-    border-radius:16px; padding:18px; backdrop-filter:blur(20px);
-    transition: all 0.3s;
-  }
-  .vm-card.online { border-color:rgba(0,255,136,0.25); }
-  .vm-card.offline { border-color:rgba(255,64,96,0.15); }
-  .vm-card.provisioning { border-color:rgba(255,170,0,0.2); }
-  .vm-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-  .vm-name { font-size:14px; font-weight:600; }
-  .vm-badge {
-    font-size:10px; font-weight:700; letter-spacing:1px; padding:3px 8px;
-    border-radius:20px; text-transform:uppercase;
-  }
-  .vm-badge.online { background:rgba(0,255,136,0.15); color:var(--green); }
-  .vm-badge.offline { background:rgba(255,64,96,0.1); color:var(--red); }
-  .vm-badge.provisioning { background:rgba(255,170,0,0.1); color:var(--orange); }
-  .vm-provider {
-    display:inline-block; font-size:9px; font-weight:700; letter-spacing:2px;
-    text-transform:uppercase; padding:2px 7px; border-radius:4px; margin-bottom:10px;
-  }
-  .vm-provider.GCP { background:rgba(0,200,255,0.1); color:var(--blue); }
-  .vm-provider.Azure { background:rgba(176,96,255,0.1); color:var(--purple); }
-  .vm-row { display:flex; justify-content:space-between; margin-top:6px; font-size:12px; }
-  .vm-key { color:var(--dim); }
-  .vm-val { font-family:var(--mono); color:var(--text); }
+/* LOG */
+.logfeed{height:220px;overflow-y:auto;font-family:var(--mono);font-size:10px;line-height:1.7;color:rgba(255,255,255,.55);background:rgba(0,0,0,.25);border-radius:8px;padding:10px 12px;border:1px solid var(--b);scroll-behavior:smooth}
+.logfeed::-webkit-scrollbar{width:3px}
+.logfeed::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
+.ll{white-space:pre-wrap;word-break:break-all}
+.ll.E{color:var(--red)}.ll.W{color:var(--orange)}
 
-  /* GAUGE */
-  .gauge-wrap { margin-top:10px; }
-  .gauge-label { display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; }
-  .gauge-label .gl-name { color:var(--dim); }
-  .gauge-label .gl-val { font-family:var(--mono); font-weight:600; }
-  .gauge-bar { height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
-  .gauge-fill {
-    height:100%; border-radius:3px;
-    transition: width 0.8s ease, background 0.3s;
-  }
-  .gauge-fill.low { background: linear-gradient(90deg,var(--green),#00cc66); }
-  .gauge-fill.mid { background: linear-gradient(90deg,var(--orange),#ff6600); }
-  .gauge-fill.high { background: linear-gradient(90deg,var(--red),#ff2040); }
+/* SECTION HEADER */
+.sh{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.sh::after{content:'';flex:1;height:1px;background:var(--b)}
 
-  /* FLEET ROW */
-  .fleet-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
-  .fleet-stat { text-align:center; padding:14px 8px; background:rgba(255,255,255,0.03);
-    border-radius:12px; border:1px solid var(--border); }
-  .fleet-num { font-size:28px; font-weight:700; font-family:var(--mono); }
-  .fleet-lbl { font-size:10px; color:var(--dim); letter-spacing:1.5px; text-transform:uppercase; margin-top:4px; }
-  .fleet-num.green { color:var(--green); text-shadow:0 0 12px rgba(0,255,136,0.4); }
-  .fleet-num.blue { color:var(--blue); }
-  .fleet-num.orange { color:var(--orange); }
-  .fleet-num.red { color:var(--red); }
-  .fleet-num.dim { color:var(--dim); }
+/* CHAT PANEL */
+.chat-panel{background:var(--s);border:1px solid var(--b);border-radius:14px;display:flex;flex-direction:column;height:500px;overflow:hidden;backdrop-filter:blur(20px);position:relative}
+.chat-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--purple),var(--blue),transparent);opacity:.6}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.chat-title{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue)}
+.model-sel{font-family:var(--mono);font-size:10px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);color:var(--blue);padding:3px 8px;border-radius:6px;cursor:pointer}
+.model-sel option{background:#0a0e1a}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
+.msg{max-width:85%;padding:10px 13px;border-radius:10px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.msg.user{align-self:flex-end;background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.2);color:var(--text)}
+.msg.ai{align-self:flex-start;background:rgba(176,96,255,.08);border:1px solid rgba(176,96,255,.15);color:var(--text)}
+.msg.sys{align-self:center;background:rgba(255,255,255,.04);border:1px solid var(--b);color:var(--dim);font-size:10px;font-family:var(--mono);max-width:95%;text-align:center}
+.msg-meta{font-size:9px;color:var(--dim);font-family:var(--mono);margin-top:4px}
+.img-preview{max-width:200px;max-height:120px;border-radius:6px;border:1px solid var(--b);margin-top:6px;display:block}
 
-  /* LOG FEED */
-  .log-feed {
-    height:280px; overflow-y:auto; font-family:var(--mono); font-size:11px;
-    line-height:1.7; color:rgba(255,255,255,0.6);
-    background:rgba(0,0,0,0.3); border-radius:10px; padding:12px 14px;
-    border:1px solid var(--border);
-    scroll-behavior:smooth;
-  }
-  .log-feed::-webkit-scrollbar { width:4px; }
-  .log-feed::-webkit-scrollbar-track { background:transparent; }
-  .log-feed::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
-  .log-line { white-space:pre-wrap; word-break:break-all; }
-  .log-line.ERROR, .log-line.error { color:var(--red); }
-  .log-line.WARNING, .log-line.warning { color:var(--orange); }
-  .log-line.INFO { color:rgba(255,255,255,0.5); }
-  .log-line.green { color:rgba(0,255,136,0.7); }
+/* CHAT INPUT */
+.chat-input-area{padding:10px 12px;border-top:1px solid var(--b);display:flex;flex-direction:column;gap:8px}
+.img-strip{display:none;align-items:center;gap:8px;padding:6px 8px;background:rgba(176,96,255,.06);border:1px solid rgba(176,96,255,.15);border-radius:8px;font-size:10px;color:var(--purple);font-family:var(--mono)}
+.img-strip.show{display:flex}
+.img-strip img{width:40px;height:30px;object-fit:cover;border-radius:4px;border:1px solid rgba(176,96,255,.2)}
+.chat-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--b);color:var(--text);padding:9px 12px;border-radius:8px;font-family:var(--mono);font-size:12px;resize:none;min-height:38px;max-height:100px;outline:none;transition:border-color .2s}
+.chat-input:focus{border-color:rgba(0,200,255,.3)}
+.chat-input::placeholder{color:var(--dim)}
+.cbtn{width:36px;height:36px;border-radius:8px;border:1px solid var(--b);background:rgba(255,255,255,.04);color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;flex-shrink:0}
+.cbtn:hover{border-color:rgba(0,200,255,.3);color:var(--blue);background:rgba(0,200,255,.08)}
+.cbtn.active{background:rgba(255,64,96,.15);border-color:rgba(255,64,96,.3);color:var(--red)}
+.cbtn.send{background:rgba(0,200,255,.12);border-color:rgba(0,200,255,.3);color:var(--blue)}
+.cbtn.send:hover{background:rgba(0,200,255,.2)}
+.cbtn.send:disabled{opacity:.3;cursor:default}
 
-  /* SECTION HEADER */
-  .section-hdr {
-    display:flex; align-items:center; gap:8px;
-    font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase;
-    color:var(--dim); margin-bottom:12px;
-  }
-  .section-hdr::after { content:''; flex:1; height:1px; background:var(--border); }
+/* THINKING */
+.thinking{display:flex;gap:4px;align-items:center;padding:10px 13px}
+.thinking span{width:5px;height:5px;background:var(--purple);border-radius:50%;animation:thk .8s ease-in-out infinite}
+.thinking span:nth-child(2){animation-delay:.15s}
+.thinking span:nth-child(3){animation-delay:.3s}
+@keyframes thk{0%,80%,100%{transform:scale(.8);opacity:.4}40%{transform:scale(1.2);opacity:1}}
 
-  /* SPINNER */
-  .spinner {
-    width:20px; height:20px; border:2px solid var(--border);
-    border-top-color:var(--blue); border-radius:50%;
-    animation: spin 0.8s linear infinite;
-    display:inline-block;
-  }
-  @keyframes spin { to { transform:rotate(360deg); } }
+/* QUICK LINKS */
+.links{display:flex;flex-direction:column;gap:6px}
+.qlink{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);text-decoration:none;padding:7px 10px;border-radius:8px;border:1px solid var(--b);background:rgba(255,255,255,.02);transition:all .2s}
+.qlink:hover{border-color:rgba(0,200,255,.2);color:var(--text);background:rgba(0,200,255,.04)}
+.env-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.pill{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(0,255,136,.07);color:var(--green);border:1px solid rgba(0,255,136,.12)}
 
-  /* ENV KEYS */
-  .env-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-  .env-pill {
-    font-family:var(--mono); font-size:10px; padding:3px 8px; border-radius:4px;
-    background:rgba(0,255,136,0.08); color:var(--green); border:1px solid rgba(0,255,136,0.15);
-  }
-
-  /* RESPONSIVE */
-  @media(max-width:900px) {
-    .grid-4 { grid-template-columns:repeat(2,1fr); }
-    .grid-3 { grid-template-columns:1fr; }
-    .grid-2 { grid-template-columns:1fr; }
-    .fleet-grid { grid-template-columns:repeat(3,1fr); }
-  }
-  @media(max-width:560px) {
-    .grid-4 { grid-template-columns:1fr; }
-    .fleet-grid { grid-template-columns:repeat(2,1fr); }
-  }
+/* RESPONSIVE */
+@media(max-width:1100px){.r4{grid-template-columns:repeat(2,1fr)}.r2{grid-template-columns:1fr}.r2b{grid-template-columns:1fr}.r3{grid-template-columns:1fr}}
+@media(max-width:600px){.r4{grid-template-columns:1fr}.fleet{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
-<div class="orb orb1"></div>
-<div class="orb orb2"></div>
-
+<div class="orb o1"></div><div class="orb o2"></div>
 <div id="root">
 
-  <!-- HEADER -->
-  <header>
-    <div class="header-left">
-      <div id="statusDot" class="status-dot"></div>
-      <span class="logo">⚡ JULES MISSION CONTROL</span>
-      <span class="uptime-badge" id="uptimeBadge">connecting...</span>
-      <a class="ngrok-url" id="ngrokUrl" href="#" target="_blank">–</a>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <span class="last-update" id="lastUpdate">–</span>
-      <button class="refresh-btn" onclick="fetchStatus()">↻ Refresh</button>
-    </div>
-  </header>
-
-  <!-- RESOURCE + BRIDGE STATS -->
-  <div class="grid-4" id="statCards">
-    <div class="card" id="cpuCard">
-      <div class="card-icon">🖥</div>
-      <div class="card-label">CPU Usage</div>
-      <div class="card-value" id="cpuVal">–</div>
-      <div class="gauge-wrap">
-        <div class="gauge-bar"><div class="gauge-fill" id="cpuBar" style="width:0%"></div></div>
-      </div>
-    </div>
-    <div class="card" id="memCard">
-      <div class="card-icon">💾</div>
-      <div class="card-label">Memory Usage</div>
-      <div class="card-value" id="memVal">–</div>
-      <div class="gauge-wrap">
-        <div class="gauge-bar"><div class="gauge-fill" id="memBar" style="width:0%"></div></div>
-      </div>
-    </div>
-    <div class="card" id="cloudCard">
-      <div class="card-icon">☁️</div>
-      <div class="card-label">Cloud VMs Online</div>
-      <div class="card-value green" id="vmOnlineVal">–</div>
-      <div class="card-sub" id="vmTotalSub">of – total</div>
-    </div>
-    <div class="card" id="bridgeCard">
-      <div class="card-icon">🌉</div>
-      <div class="card-label">Bridge Uptime</div>
-      <div class="card-value blue" id="bridgeUptime">–</div>
-      <div class="card-sub" id="bridgeLocal">http://127.0.0.1:5000</div>
-    </div>
+<!-- HEADER -->
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div id="sDot" class="dot"></div>
+    <span class="logo">⚡ JULES MISSION CONTROL</span>
+    <span class="badge" id="upBadge">connecting...</span>
+    <a class="lnk" id="ngrokLnk" href="#" target="_blank">tunnel –</a>
   </div>
-
-  <!-- FLEET STATUS -->
-  <div class="section-hdr">Jules Fleet Status</div>
-  <div class="fleet-grid" style="margin-bottom:16px">
-    <div class="fleet-stat">
-      <div class="fleet-num blue" id="fLaunched">–</div>
-      <div class="fleet-lbl">Launched</div>
-    </div>
-    <div class="fleet-stat">
-      <div class="fleet-num green" id="fCompleted">–</div>
-      <div class="fleet-lbl">Completed</div>
-    </div>
-    <div class="fleet-stat">
-      <div class="fleet-num orange" id="fPending">–</div>
-      <div class="fleet-lbl">Pending</div>
-    </div>
-    <div class="fleet-stat">
-      <div class="fleet-num red" id="fFailed">–</div>
-      <div class="fleet-lbl">Failed</div>
-    </div>
-    <div class="fleet-stat">
-      <div class="fleet-num dim" id="fInProgress">–</div>
-      <div class="fleet-lbl">In Progress</div>
-    </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:10px;color:var(--dim);font-family:var(--mono)" id="lastUp">–</span>
+    <button class="cbtn" onclick="fetchStatus()" title="Refresh">↻</button>
   </div>
+</header>
 
-  <!-- CLOUD VMs -->
-  <div class="section-hdr">Cloud Instances</div>
-  <div class="vm-grid" id="vmGrid">
-    <div class="vm-card">
-      <div style="text-align:center;padding:20px;color:var(--dim)"><div class="spinner"></div><br/>Loading...</div>
-    </div>
-  </div>
-
-  <!-- LOG FEED + ENV KEYS -->
-  <div class="grid-2">
-    <div>
-      <div class="section-hdr">Live Log Feed <span style="color:var(--green);font-size:10px;margin-left:4px">● LIVE</span></div>
-      <div class="log-feed" id="logFeed">Loading logs...</div>
-    </div>
-    <div>
-      <div class="section-hdr">Environment Keys</div>
-      <div class="card">
-        <div class="card-label">Configured Secrets</div>
-        <div class="env-pills" id="envPills"><span style="color:var(--dim);font-size:12px">Loading...</span></div>
-        <div style="margin-top:20px">
-          <div class="card-label">Quick Links</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-            <a href="http://127.0.0.1:5000/health" target="_blank" class="ngrok-url" style="text-decoration:none">🟢 /health</a>
-            <a href="https://console.cloud.google.com/compute/instances?project=tibin-terminal-2026" target="_blank" class="ngrok-url" style="text-decoration:none;color:var(--green)">☁️ GCP Console</a>
-            <a href="https://portal.azure.com" target="_blank" class="ngrok-url" style="text-decoration:none;color:var(--purple)">🔷 Azure Portal</a>
-            <a href="https://aistudio.google.com" target="_blank" class="ngrok-url" style="text-decoration:none;color:var(--orange)">✨ AI Studio</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+<!-- TOP STATS -->
+<div class="row r4">
+  <div class="card" id="cpuCard"><div class="ico">🖥</div><div class="lbl">CPU</div><div class="val" id="cpuV">–</div><div class="gbar"><div class="gfill" id="cpuB" style="width:0%"></div></div></div>
+  <div class="card" id="memCard"><div class="ico">💾</div><div class="lbl">Memory</div><div class="val" id="memV">–</div><div class="gbar"><div class="gfill" id="memB" style="width:0%"></div></div></div>
+  <div class="card"><div class="ico">☁️</div><div class="lbl">Cloud VMs Online</div><div class="val green" id="vmOnV">–</div><div class="sub" id="vmTot">of – total</div></div>
+  <div class="card"><div class="ico">🌉</div><div class="lbl">Bridge Uptime</div><div class="val blue" id="bridgeUp">–</div><div class="sub" id="bridgeSub">http://127.0.0.1:5000</div></div>
 </div>
+
+<!-- FLEET -->
+<div class="sh">Jules Fleet</div>
+<div class="fleet">
+  <div class="fstat"><div class="fnum b" id="fL">–</div><div class="flbl">Launched</div></div>
+  <div class="fstat"><div class="fnum g" id="fC">–</div><div class="flbl">Completed</div></div>
+  <div class="fstat"><div class="fnum o" id="fP">–</div><div class="flbl">Pending</div></div>
+  <div class="fstat"><div class="fnum r" id="fF">–</div><div class="flbl">Failed</div></div>
+  <div class="fstat"><div class="fnum d" id="fI">–</div><div class="flbl">In Progress</div></div>
+</div>
+
+<!-- VMs -->
+<div class="sh">Cloud Instances</div>
+<div class="vmg" id="vmGrid"><div class="vmc"><div style="color:var(--dim);font-size:12px;text-align:center;padding:16px">Loading...</div></div></div>
+
+<!-- CHAT + RIGHT SIDEBAR -->
+<div class="row r2b">
+
+  <!-- CHAT -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <span class="chat-title">💬 Talk to Jules</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:9px;color:var(--dim);font-family:var(--mono)" id="modelBadge">gemini-2.0-flash</span>
+        <select class="model-sel" id="modelSel" onchange="onModelChange()">
+          <option value="fast">fast (flash)</option>
+          <option value="smart">smart (2.5-pro)</option>
+        </select>
+      </div>
+    </div>
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msg sys">Jules is live. Talk, ask questions, paste a screenshot (Ctrl+V), or speak.</div>
+    </div>
+    <div class="chat-input-area">
+      <div class="img-strip" id="imgStrip">
+        <img id="imgThumb" src="" alt="screenshot"/>
+        <span id="imgLabel">Screenshot attached</span>
+        <button class="cbtn" onclick="clearImg()" title="Remove" style="width:22px;height:22px;font-size:10px">✕</button>
+      </div>
+      <div class="chat-row">
+        <textarea class="chat-input" id="chatIn" placeholder="Ask Jules anything... or paste a screenshot" rows="1"
+          onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="cbtn" id="micBtn" onclick="toggleMic()" title="Voice input">🎤</button>
+        <button class="cbtn send" id="sendBtn" onclick="sendChat()" title="Send">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: LOGS + LINKS -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div>
+      <div class="sh">Live Logs <span style="color:var(--green);font-size:9px;margin-left:4px">● LIVE</span></div>
+      <div class="logfeed" id="logFeed">Loading...</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Environment</div>
+      <div class="env-pills" id="envP"><span style="color:var(--dim);font-size:10px">–</span></div>
+      <div style="margin-top:14px"><div class="lbl">Quick Links</div></div>
+      <div class="links" style="margin-top:6px">
+        <a class="qlink" href="http://127.0.0.1:5000/health" target="_blank">🟢 Bridge /health</a>
+        <a class="qlink" href="https://console.cloud.google.com/compute/instances?project=tibin-terminal-2026" target="_blank">☁️ GCP Console</a>
+        <a class="qlink" href="https://portal.azure.com" target="_blank">🔷 Azure Portal</a>
+        <a class="qlink" href="https://aistudio.google.com" target="_blank">✨ AI Studio</a>
+        <a class="qlink" href="https://openrouter.ai/activity" target="_blank">🔀 OpenRouter</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /root -->
 
 <script>
 const BRIDGE = 'http://127.0.0.1:5000';
-let autoRefreshId = null;
+const TOKEN  = 'JULES-SECURE-999';
+let chatHistory = [];
+let pendingImgB64 = null;
+let recognition = null;
+let isListening = false;
 
-function gaugeClass(pct) {
-  if (pct >= 85) return 'high';
-  if (pct >= 60) return 'mid';
-  return 'low';
+/* ── STATUS POLLING ── */
+async function fetchStatus() {
+  try {
+    const r = await fetch(`${BRIDGE}/dashboard/status`, {cache:'no-store'});
+    const d = await r.json();
+    document.getElementById('sDot').className = 'dot';
+    document.getElementById('upBadge').textContent = d.bridge?.uptime_human || '–';
+    document.getElementById('bridgeUp').textContent = d.bridge?.uptime_human || '–';
+    const ng = document.getElementById('ngrokLnk');
+    if (d.bridge?.ngrok_url) { ng.textContent = '🌐 ' + d.bridge.ngrok_url.replace('https://',''); ng.href = d.bridge.ngrok_url; }
+    const cpu = d.resource_pressure?.cpu_percent ?? 0;
+    const mem = d.resource_pressure?.memory_percent ?? 0;
+    document.getElementById('cpuV').textContent = cpu.toFixed(1)+'%';
+    document.getElementById('memV').textContent = mem.toFixed(1)+'%';
+    setGauge('cpuB','cpuCard',cpu); setGauge('memB','memCard',mem);
+    const cl = d.cloud || {};
+    document.getElementById('vmOnV').textContent = cl.online ?? 0;
+    document.getElementById('vmTot').textContent = `of ${cl.total ?? 0} total`;
+    renderVMs(cl.vms || []);
+    const f = d.jules_fleet || {};
+    document.getElementById('fL').textContent = f.launched ?? 0;
+    document.getElementById('fC').textContent = f.completed ?? 0;
+    document.getElementById('fP').textContent = f.pending ?? 0;
+    document.getElementById('fF').textContent = f.failed ?? 0;
+    document.getElementById('fI').textContent = f.in_progress ?? 0;
+    renderLogs(d.recent_logs || []);
+    const keys = d.env_keys_present || [];
+    document.getElementById('envP').innerHTML = keys.length
+      ? keys.map(k=>`<span class="pill">✓ ${k}</span>`).join('')
+      : '<span style="color:var(--dim);font-size:10px">–</span>';
+    document.getElementById('lastUp').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    document.getElementById('sDot').className = 'dot red';
+    document.getElementById('upBadge').textContent = 'BRIDGE OFFLINE';
+  }
 }
 
 function setGauge(barId, cardId, pct) {
   const bar = document.getElementById(barId);
   const card = document.getElementById(cardId);
-  if (!bar) return;
-  bar.style.width = Math.min(pct, 100) + '%';
-  bar.className = 'gauge-fill ' + gaugeClass(pct);
-  if (card) {
-    card.className = 'card ' + (pct >= 85 ? 'red' : pct >= 60 ? 'orange' : 'green');
-  }
+  bar.style.width = Math.min(pct,100)+'%';
+  bar.className = 'gfill ' + (pct>=85?'high':pct>=60?'mid':'low');
+  if(card) card.className = 'card ' + (pct>=85?'red':pct>=60?'orange':'green');
 }
 
-function renderVMs(cloud) {
-  const grid = document.getElementById('vmGrid');
-  if (!cloud || !cloud.vms || cloud.vms.length === 0) {
-    grid.innerHTML = '<div class="vm-card" style="color:var(--dim);font-size:13px;padding:20px">No cloud VMs configured yet</div>';
-    return;
-  }
-  grid.innerHTML = cloud.vms.map(vm => {
-    const cls = vm.status === 'online' ? 'online' : vm.status === 'provisioning' ? 'provisioning' : 'offline';
-    const badgeLabel = vm.status === 'online' ? '● Online' : vm.status === 'provisioning' ? '◌ Provisioning' : '✕ Offline';
-    return `
-      <div class="vm-card ${cls}">
-        <div class="vm-header">
-          <div class="vm-name">${vm.name}</div>
-          <div class="vm-badge ${cls}">${badgeLabel}</div>
-        </div>
-        <span class="vm-provider ${vm.provider}">${vm.provider}</span>
-        <div class="vm-row"><span class="vm-key">IP</span><span class="vm-val">${vm.ip}</span></div>
-        <div class="vm-row"><span class="vm-key">Zone</span><span class="vm-val">${vm.zone}</span></div>
-        <div class="vm-row"><span class="vm-key">Project</span><span class="vm-val">${vm.project}</span></div>
-        ${vm.ip !== 'unknown' ? `<div class="vm-row" style="margin-top:10px"><a href="https://console.cloud.google.com/compute/instances?project=${vm.project}" target="_blank" class="ngrok-url" style="font-size:10px">Open Console ↗</a></div>` : ''}
-      </div>`;
+function renderVMs(vms) {
+  const g = document.getElementById('vmGrid');
+  if(!vms.length){g.innerHTML='<div class="vmc" style="color:var(--dim);font-size:12px;padding:16px">No VMs configured</div>';return;}
+  g.innerHTML = vms.map(vm=>{
+    const s = vm.status==='online'?'online':vm.status==='provisioning'?'provisioning':'offline';
+    const bl = vm.status==='online'?'● Online':vm.status==='provisioning'?'◌ Provisioning':'✕ Offline';
+    return `<div class="vmc ${s}">
+      <div class="vmh"><div class="vmn">${vm.name}</div><div class="vmb ${s}">${bl}</div></div>
+      <span class="pvdr ${vm.provider}">${vm.provider}</span>
+      <div class="vmrow"><span class="vk">IP</span><span class="vv">${vm.ip}</span></div>
+      <div class="vmrow"><span class="vk">Zone</span><span class="vv">${vm.zone}</span></div>
+    </div>`;
   }).join('');
 }
 
 function renderLogs(lines) {
-  const feed = document.getElementById('logFeed');
-  if (!lines || lines.length === 0) {
-    feed.innerHTML = '<span style="color:var(--dim)">No log lines available</span>';
+  const f = document.getElementById('logFeed');
+  if(!lines.length){f.innerHTML='<span style="color:var(--dim)">No logs</span>';return;}
+  f.innerHTML = lines.map(l=>{
+    let cls='ll';
+    if(/ERROR|error/.test(l)) cls+=' E';
+    else if(/WARNING|warning/.test(l)) cls+=' W';
+    return `<div class="${cls}">${esc(l)}</div>`;
+  }).join('');
+  f.scrollTop = f.scrollHeight;
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+/* ── CHAT ── */
+function onModelChange(){
+  const m = document.getElementById('modelSel').value;
+  document.getElementById('modelBadge').textContent = m==='fast'?'gemini-2.0-flash':'gemini-2.5-pro';
+}
+
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px'}
+
+function onKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}
+}
+
+function addMsg(role, content, meta='') {
+  const box = document.getElementById('chatMsgs');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.textContent = content;
+  if(meta){const m=document.createElement('div');m.className='msg-meta';m.textContent=meta;div.appendChild(m);}
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function addImgMsg(b64) {
+  const box = document.getElementById('chatMsgs');
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  const img = document.createElement('img');
+  img.src = 'data:image/png;base64,'+b64;
+  img.className = 'img-preview';
+  div.appendChild(img);
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addThinking() {
+  const box = document.getElementById('chatMsgs');
+  const div = document.createElement('div');
+  div.className = 'msg ai thinking';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chatIn');
+  const msg = inp.value.trim();
+  if(!msg && !pendingImgB64) return;
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  const model = document.getElementById('modelSel').value;
+
+  if(pendingImgB64) addImgMsg(pendingImgB64);
+  if(msg) addMsg('user', msg);
+  inp.value = '';
+  inp.style.height = 'auto';
+
+  const thinking = addThinking();
+
+  chatHistory.push({role:'user', content: msg || '[screenshot]'});
+
+  try {
+    const body = {message: msg || 'What do you see in this screenshot? Give me concrete next actions.', model};
+    if(pendingImgB64) body.image_base64 = pendingImgB64;
+    if(chatHistory.length > 2) body.history = chatHistory.slice(-10,-1);
+
+    const r = await fetch(`${BRIDGE}/chat`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    thinking.remove();
+
+    const reply = d.response || 'No response.';
+    const meta = d.model_used ? `${d.model_used} · ${d.elapsed_ms}ms` : '';
+    addMsg('ai', reply, meta);
+    chatHistory.push({role:'assistant', content: reply});
+    speak(reply);
+  } catch(e) {
+    thinking.remove();
+    addMsg('sys', '⚠ Bridge unreachable: '+e.message);
+  }
+
+  clearImg();
+  btn.disabled = false;
+}
+
+/* ── VOICE INPUT ── */
+function toggleMic() {
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+    addMsg('sys','⚠ Voice not supported in this browser. Use Chrome.');
     return;
   }
-  feed.innerHTML = lines.map(line => {
-    let cls = 'log-line';
-    if (/ERROR|error/.test(line)) cls += ' ERROR';
-    else if (/WARNING|warning/.test(line)) cls += ' WARNING';
-    else if (/200|ping|health|ok/.test(line)) cls += ' INFO';
-    return `<div class="${cls}">${escHtml(line)}</div>`;
-  }).join('');
-  feed.scrollTop = feed.scrollHeight;
-}
+  if(isListening){stopMic();return;}
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
 
-async function fetchStatus() {
-  const dot = document.getElementById('statusDot');
-  try {
-    const res = await fetch(`${BRIDGE}/dashboard/status`, { cache: 'no-store' });
-    const data = await res.json();
-
-    // Bridge info
-    dot.className = 'status-dot';
-    document.getElementById('uptimeBadge').textContent = data.bridge?.uptime_human || '–';
-    document.getElementById('bridgeUptime').textContent = data.bridge?.uptime_human || '–';
-    const ngrok = document.getElementById('ngrokUrl');
-    if (data.bridge?.ngrok_url) {
-      ngrok.textContent = '🌐 ' + data.bridge.ngrok_url.replace('https://', '');
-      ngrok.href = data.bridge.ngrok_url;
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('micBtn').className = 'cbtn active';
+    document.getElementById('chatIn').placeholder = '🎤 Listening...';
+  };
+  recognition.onresult = (e) => {
+    let interim = '', final = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
     }
-
-    // Resource pressure
-    const cpu = data.resource_pressure?.cpu_percent ?? 0;
-    const mem = data.resource_pressure?.memory_percent ?? 0;
-    document.getElementById('cpuVal').textContent = cpu.toFixed(1) + '%';
-    document.getElementById('memVal').textContent = mem.toFixed(1) + '%';
-    setGauge('cpuBar', 'cpuCard', cpu);
-    setGauge('memBar', 'memCard', mem);
-
-    // Cloud VMs
-    const cloud = data.cloud || {};
-    document.getElementById('vmOnlineVal').textContent = cloud.online ?? 0;
-    document.getElementById('vmTotalSub').textContent = `of ${cloud.total ?? 0} total`;
-    renderVMs(cloud);
-
-    // Fleet
-    const f = data.jules_fleet || {};
-    document.getElementById('fLaunched').textContent = f.launched ?? 0;
-    document.getElementById('fCompleted').textContent = f.completed ?? 0;
-    document.getElementById('fPending').textContent = f.pending ?? 0;
-    document.getElementById('fFailed').textContent = f.failed ?? 0;
-    document.getElementById('fInProgress').textContent = f.in_progress ?? 0;
-
-    // Logs
-    renderLogs(data.recent_logs || []);
-
-    // Env keys
-    const pills = document.getElementById('envPills');
-    const keys = data.env_keys_present || [];
-    pills.innerHTML = keys.length
-      ? keys.map(k => `<span class="env-pill">✓ ${k}</span>`).join('')
-      : '<span style="color:var(--dim);font-size:12px">None detected</span>';
-
-    document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
-  } catch (e) {
-    dot.className = 'status-dot red';
-    document.getElementById('uptimeBadge').textContent = 'BRIDGE OFFLINE';
-    document.getElementById('logFeed').innerHTML =
-      `<span class="log-line ERROR">Cannot reach bridge at ${BRIDGE}\n${e.message}</span>`;
-  }
+    document.getElementById('chatIn').value = final || interim;
+    autoResize(document.getElementById('chatIn'));
+    if(final) { stopMic(); setTimeout(sendChat, 400); }
+  };
+  recognition.onerror = () => stopMic();
+  recognition.onend = () => stopMic();
+  recognition.start();
 }
 
-// Auto-refresh every 4 seconds
+function stopMic() {
+  isListening = false;
+  document.getElementById('micBtn').className = 'cbtn';
+  document.getElementById('chatIn').placeholder = 'Ask Jules anything... or paste a screenshot';
+  if(recognition){try{recognition.stop();}catch(e){}}
+}
+
+/* ── VOICE OUTPUT ── */
+let ttsEnabled = true;
+function speak(text) {
+  if(!ttsEnabled || !window.speechSynthesis) return;
+  const short = text.slice(0, 300);
+  const utt = new SpeechSynthesisUtterance(short);
+  utt.rate = 1.1; utt.pitch = 1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utt);
+}
+
+/* ── SCREENSHOT / CLIPBOARD PASTE ── */
+document.addEventListener('paste', async (e) => {
+  const items = (e.clipboardData || window.clipboardData).items;
+  for(const item of items) {
+    if(item.type.startsWith('image/')) {
+      e.preventDefault();
+      const blob = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const b64 = ev.target.result.split(',')[1];
+        setPendingImg(b64, ev.target.result);
+      };
+      reader.readAsDataURL(blob);
+      return;
+    }
+  }
+});
+
+function setPendingImg(b64, dataUrl) {
+  pendingImgB64 = b64;
+  const strip = document.getElementById('imgStrip');
+  const thumb = document.getElementById('imgThumb');
+  const label = document.getElementById('imgLabel');
+  thumb.src = dataUrl;
+  label.textContent = 'Screenshot ready — press ➤ or speak';
+  strip.className = 'img-strip show';
+  document.getElementById('chatIn').focus();
+}
+
+function clearImg() {
+  pendingImgB64 = null;
+  document.getElementById('imgStrip').className = 'img-strip';
+  document.getElementById('imgThumb').src = '';
+}
+
+/* ── INIT ── */
 fetchStatus();
-autoRefreshId = setInterval(fetchStatus, 4000);
+setInterval(fetchStatus, 4000);
 </script>
 </body>
 </html>
