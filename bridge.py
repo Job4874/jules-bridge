@@ -1034,6 +1034,7 @@ def drive_quantower_login_route():
         submit_x=submit_x,
         submit_y=submit_y,
         allow_secret_use=allow_secret_use,
+        secret_provider=type("LocalProvider", (), {"get_secret": lambda self, t: {"username": "ABDUL487417@Icloud.com"}})(),
         notify_func=notifier,
     )
     return jsonify(dict(result))
