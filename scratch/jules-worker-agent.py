@@ -75,6 +75,20 @@ def status():
     })
 
 
+@app.route("/results")
+def results():
+    """GET /results — full untruncated results for all completed tasks."""
+    return jsonify({"tasks": _TASKS_COMPLETED})
+
+
+@app.route("/result/<int:idx>")
+def result_by_index(idx):
+    """GET /result/<idx> — single full result."""
+    if 0 <= idx < len(_TASKS_COMPLETED):
+        return jsonify(_TASKS_COMPLETED[idx])
+    return jsonify({"error": "not found"}), 404
+
+
 @app.route("/task", methods=["POST"])
 def task():
     data = request.get_json() or {}
@@ -97,7 +111,7 @@ def task():
         except Exception as exc:
             result = f"ERROR: {exc}"
         entry["status"] = "done"
-        entry["result"] = str(result)[:1000]
+        entry["result"] = str(result)[:10000]  # store up to 10k chars
         entry["ended"] = datetime.now(timezone.utc).isoformat()
         if entry in _TASKS_RUNNING:
             _TASKS_RUNNING.remove(entry)
