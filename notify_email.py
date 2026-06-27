@@ -34,10 +34,19 @@ def send_email(subject, body, mail_to=None):
     msg["From"] = gmail_user
     msg["To"] = mail_to
 
-    with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as smtp:
-        smtp.starttls()
-        smtp.login(gmail_user, gmail_pass)
-        smtp.sendmail(gmail_user, [mail_to], msg.as_string())
+    smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
+    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
+    smtp_use_ssl = os.environ.get("SMTP_USE_SSL", "1").strip().lower() in {"1", "true", "yes"}
+
+    if smtp_use_ssl:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30) as smtp:
+            smtp.login(gmail_user, gmail_pass)
+            smtp.sendmail(gmail_user, [mail_to], msg.as_string())
+    else:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as smtp:
+            smtp.starttls()
+            smtp.login(gmail_user, gmail_pass)
+            smtp.sendmail(gmail_user, [mail_to], msg.as_string())
 
     return {"from": gmail_user, "to": mail_to, "subject": subject}
 
