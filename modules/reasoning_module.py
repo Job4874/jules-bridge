@@ -283,42 +283,62 @@ def _llm_chat(system_prompt: str, user_prompt: str, model_name: str, model_alias
     return _gemini_chat(system_prompt, user_prompt, model_name)
 
 
-def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
-    """Call Gemini via Vertex AI using Application Default Credentials (ADC).
+def _gcloud_access_token() -> str:
+    """Return a fresh OAuth2 bearer token via `gcloud auth print-access-token`.
 
-    No API key is required — uses `gcloud auth application-default login`.
-    GCE_WORKER_PROJECT and VERTEX_LOCATION control the GCP project/region.
-    Falls back to a JSON error string if the SDK is missing or the call fails.
+    Uses the interactive gcloud login (ya29.*) which has full API scopes,
+    including generativelanguage.googleapis.com. Returns empty string on failure.
     """
+    import subprocess  # noqa: PLC0415
     try:
-        import vertexai  # type: ignore
-        from vertexai.generative_models import GenerationConfig, GenerativeModel  # type: ignore
-    except ImportError:
-        _LOGGER.warning(
-            "google-cloud-aiplatform not installed; run: pip install google-cloud-aiplatform"
+        result = subprocess.run(
+            ["gcloud", "auth", "print-access-token"],
+            capture_output=True, text=True, timeout=10,
         )
-        return json.dumps({"error": "google-cloud-aiplatform not installed"})
+        token = result.stdout.strip()
+        if result.returncode == 0 and token.startswith("ya29"):
+            return token
+        _LOGGER.warning("gcloud token fetch failed: %s", result.stderr.strip())
+    except Exception as exc:  # noqa: BLE001
+        _LOGGER.warning("gcloud not available: %s", exc)
+    return ""
+
+
+def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
+    """Call Gemini via the Generative Language REST API using a gcloud OAuth2 token.
+
+    No API key required — uses `gcloud auth print-access-token` (the interactive
+    gcloud login token which has full API scopes).  Falls back to a JSON error
+    string if gcloud is unavailable or the call fails.
+    """
+    import subprocess  # noqa: F401,PLC0415  (already imported in _gcloud_access_token)
+
+    token = _gcloud_access_token()
+    if not token:
+        _LOGGER.warning("No gcloud token available; cannot call Gemini")
+        return json.dumps({"error": "gcloud auth token unavailable — run: gcloud auth login"})
 
     _load_env_keys()
-    project = os.environ.get("GCE_WORKER_PROJECT", "tibin-terminal-2026")
-    location = os.environ.get("VERTEX_LOCATION", "us-central1")
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+    )
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
+        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
+    }
 
     try:
-        vertexai.init(project=project, location=location)  # ADC picked up automatically
-        model = GenerativeModel(
-            model_name=model_name,
-            system_instruction=system_prompt,
-        )
-        response = model.generate_content(
-            user_prompt,
-            generation_config=GenerationConfig(
-                response_mime_type="application/json",
-                temperature=0.2,
-            ),
-        )
-        return response.text
+        resp = requests.post(url, json=payload, headers=headers, timeout=60)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as exc:  # noqa: BLE001
-        _LOGGER.error("Vertex AI Gemini call failed: %s", exc)
+        _LOGGER.error("Gemini REST call failed: %s", exc)
         return json.dumps({"error": str(exc)})
 
 
