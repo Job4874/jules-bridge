@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-06-27T04:37:37.959198+00:00",
+  "dry_run": false,
+  "session_id": "10747689874915790980",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "10747689874915790980"
+  ],
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "status": "pulled",
+  "exit_code": 0,
+  "stdout": "diff --git a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\nindex 99d4acc..a27077c 100644\n--- a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n+++ b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n@@ -27,6 +27,7 @@ namespace OracleV5\n \n             TestPositionSizer();\n             TestAccountGuardDrawdown();\n+            TestGetSelectorSummary();\n \n             OracleLog.Write(\"SELF_TEST\", \"==================================================\");\n             OracleLog.Write(\"SELF_TEST\", \"   SIM-MODE SELF-TEST COMPLETED                   \");\n@@ -138,5 +139,45 @@ namespace OracleV5\n                 }\n             };\n         }\n+\n+        private void TestGetSelectorSummary()\n+        {\n+#if NINJATRADER\n+            OracleLog.Write(\"SELF_TEST\", \">>> TESTING GET SELECTOR SUMMARY\");\n+\n+            // Save current state\n+            var originalSnapshot = this.currentSelectorSnapshot;\n+\n+            try\n+            {\n+                // Scenario 1: Snapshot is null\n+                this.currentSelectorSnapshot = null;\n+                string summary1 = GetSelectorSummary();\n+                if (summary1 != \"Selector snapshot unavailable\")\n+                    throw new Exception($\"Scenario 1 failed: Expected 'Selector snapshot unavailable', got '{summary1}'\");\n+\n+                // Scenario 2: Snapshot exists but Summary is null\n+                this.currentSelectorSnapshot = new SelectorSnapshot { Summary = null };\n+                string summary2 = GetSelectorSummary();\n+                if (summary2 != string.Empty)\n+                    throw new Exception($\"Scenario 2 failed: Expected empty string, got '{summary2}'\");\n+\n+                // Scenario 3: Snapshot exists with Summary\n+                this.currentSelectorSnapshot = new SelectorSnapshot { Summary = \"Test Summary\" };\n+                string summary3 = GetSelectorSummary();\n+                if (summary3 != \"Test Summary\")\n+                    throw new Exception($\"Scenario 3 failed: Expected 'Test Summary', got '{summary3}'\");\n+\n+                OracleLog.Write(\"SELF_TEST\", \"GetSelectorSummary tests passed.\");\n+            }\n+            finally\n+            {\n+                // Restore original state\n+                this.currentSelectorSnapshot = originalSnapshot;\n+            }\n+#else\n+            OracleLog.Write(\"SELF_TEST\", \">>> TESTING GET SELECTOR SUMMARY - SKIPPED (NINJATRADER not defined)\");\n+#endif\n+        }\n     }\n }\n\n",
+  "stderr": "",
+  "timed_out": false,
+  "session_ids": [
+    "10747689874915790980",
+    "100644"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_10747689874915790980.json",
+  "note": "Live pull attempted through the Jules CLI."
+}
