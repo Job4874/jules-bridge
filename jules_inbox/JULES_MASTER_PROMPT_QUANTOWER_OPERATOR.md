@@ -37,7 +37,12 @@ You learn fast only when you **verify**, not when you click faster.
 ## 2. Bridge-only execution (God-Mode)
 
 Public URL: `https://parade-marrow-pulp.ngrok-free.dev`  
-Header: `ngrok-skip-browser-warning: true`
+Headers (every call):
+
+```http
+ngrok-skip-browser-warning: true
+Authorization: Bearer JULES-SECURE-999
+```
 
 | Tentacle | Use |
 |----------|-----|

@@ -24,6 +24,7 @@ from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 
 import notify_email as email_service
+from notify_email import load_env
 import modules
 
 # ---------------------------------------------------------------------------
@@ -58,6 +59,7 @@ def configure_logging():
 
 
 configure_logging()
+load_env()
 LOGGER = logging.getLogger("jules_bridge")
 
 # ---------------------------------------------------------------------------
@@ -66,6 +68,19 @@ LOGGER = logging.getLogger("jules_bridge")
 
 app = Flask(__name__)
 CORS(app)
+
+BRIDGE_TOKEN = "JULES-SECURE-999"
+
+
+@app.before_request
+def require_auth():
+    if request.path in ("/health", "/ping"):
+        return None
+    auth_header = request.headers.get("Authorization")
+    if auth_header != f"Bearer {BRIDGE_TOKEN}":
+        LOGGER.warning("%s %s -> 401 unauthorized", request.method, request.path)
+        return jsonify({"error": "Unauthorized", "message": "Missing or invalid token"}), 401
+    return None
 
 # ---------------------------------------------------------------------------
 # Error handling infrastructure
@@ -354,6 +369,7 @@ TENTACLES = [
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
     {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},
+    {"name": "operator",     "route": "POST /execute",           "reach": "Universal driver — click, type, and launch shell actions in one call"},
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
     {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},
@@ -971,6 +987,79 @@ def codex_handover():
     return jsonify(dict(modules.codex_handover_index()))
 
 
+# — Universal operator route —
+
+@app.route("/execute", methods=["POST"])
+@route_errors
+def execute_operator():
+    """POST /execute — Run one or more host actions in a single request.
+
+    Body (JSON), at least one field required:
+        click (object): {x, y, button?} — mouse click via ui_automation
+        type  (str): text to type at current focus
+        text  (str): alias for type (matches /ui/type)
+        shell (str): command to run; defaults to fire-and-forget spawn via cmd
+        wait  (bool): when true with shell, block on /shell-style execute
+        shell_name (str): shell selector for shell — cmd (default), powershell, bash
+        cwd (str): working directory for shell actions
+        timeout (int): seconds when wait=true
+    """
+    data = json_payload()
+    has_click = "click" in data
+    has_type = "type" in data or "text" in data
+    has_shell = "shell" in data
+    if not (has_click or has_type or has_shell):
+        raise BridgeHTTPError(
+            400,
+            "Invalid input",
+            details="At least one of click, type, text, or shell is required",
+        )
+
+    results = {"status": "executed", "actions": {}}
+
+    if has_shell:
+        command = string_field(data, "shell")
+        shell_name = string_field(data, "shell_name", default="cmd")
+        cwd = path_field(data, "cwd", default=os.getcwd())
+        wait = bool_field(data, "wait", default=False)
+        if cwd:
+            existing_path(cwd, kind="directory")
+        if wait:
+            timeout = int_field(data, "timeout", default=30, min_value=1)
+            LOGGER.info("[JULES EXECUTE] wait shell=%s cwd=%s command=%s", shell_name, cwd, command)
+            shell_result = modules.execute(
+                command,
+                shell=shell_name,
+                cwd=cwd,
+                timeout=timeout,
+            )
+            results["actions"]["shell"] = dict(shell_result)
+        else:
+            LOGGER.info("[JULES EXECUTE] spawn shell=%s cwd=%s command=%s", shell_name, cwd, command)
+            shell_result = modules.spawn(command, shell=shell_name, cwd=cwd)
+            results["actions"]["shell"] = dict(shell_result)
+
+    if has_click:
+        click_data = data["click"]
+        if not isinstance(click_data, dict):
+            raise BridgeHTTPError(400, "Invalid input", details="click must be an object")
+        x = int_field(click_data, "x", min_value=0)
+        y = int_field(click_data, "y", min_value=0)
+        button = string_field(click_data, "button", default="left")
+        LOGGER.info("[JULES EXECUTE] click x=%s y=%s button=%s", x, y, button)
+        results["actions"]["click"] = dict(modules.click(x, y, button=button))
+
+    if has_type:
+        if "type" in data:
+            text = string_field(data, "type", allow_empty=True)
+        else:
+            text = string_field(data, "text", allow_empty=True)
+        LOGGER.info("[JULES EXECUTE] type chars=%s", len(text))
+        results["actions"]["type"] = modules.type_text(text)
+
+    return jsonify(results)
+
+
 # — UI routes —
 
 @app.route("/ui/screenshot", methods=["GET"])
@@ -1453,5 +1542,6 @@ if __name__ == "__main__":
     LOGGER.info("JULES GOD-MODE BRIDGE ACTIVATED")
     LOGGER.info("Listening on 0.0.0.0:5000")
     LOGGER.info("Log path: %s", LOG_PATH)
+    LOGGER.info("Token auth: ENABLED (Bearer JULES-SECURE-999)")
     LOGGER.info("========================================")
     app.run(port=5000, host="0.0.0.0")

@@ -15,10 +15,28 @@ from unittest.mock import MagicMock, patch
 import bridge
 
 
+BRIDGE_AUTH_HEADER = {"Authorization": "Bearer JULES-SECURE-999"}
+
+
+def authed_client(test_client):
+    """Wrap Flask test client so protected routes receive the bridge token."""
+
+    class _AuthedClient:
+        def get(self, path, **kwargs):
+            headers = {**BRIDGE_AUTH_HEADER, **(kwargs.pop("headers", None) or {})}
+            return test_client.get(path, headers=headers, **kwargs)
+
+        def post(self, path, **kwargs):
+            headers = {**BRIDGE_AUTH_HEADER, **(kwargs.pop("headers", None) or {})}
+            return test_client.post(path, headers=headers, **kwargs)
+
+    return _AuthedClient()
+
+
 class TestInboxRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     def test_inbox_read_missing_file(self):
         response = self.client.post("/inbox/read", json={"file": "nonexistent.json"})
@@ -34,7 +52,7 @@ class TestInboxRoutes(unittest.TestCase):
 class TestJulesDispatchRoute(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     @patch("modules.build_dispatch")
     def test_jules_dispatch_passes_payload_to_module(self, mock_dispatch):
@@ -336,7 +354,7 @@ class TestJulesDispatchRoute(unittest.TestCase):
 class TestFsRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     def test_fs_read_invalid_input(self):
         response = self.client.post("/fs/read", json={})
@@ -370,7 +388,7 @@ class TestFsRoutes(unittest.TestCase):
 class TestShellRoute(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     @patch("modules.shell_executor.subprocess.run")
     def test_shell_powershell_default(self, mock_run):
@@ -426,10 +444,90 @@ class TestShellRoute(unittest.TestCase):
         self.assertIn("timed out", response.get_json()["error"])
 
 
+class TestExecuteRoute(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    def test_execute_requires_at_least_one_action(self):
+        response = self.client.post("/execute", json={})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("At least one of click, type, text, or shell", response.get_json()["details"])
+
+    @patch("modules.spawn")
+    def test_execute_shell_spawns_by_default(self, mock_spawn):
+        mock_spawn.return_value = {
+            "exit_code": 0,
+            "stdout": "",
+            "stderr": "",
+            "shell": "cmd",
+            "pid": 4242,
+            "spawned": True,
+        }
+
+        response = self.client.post(
+            "/execute",
+            json={"shell": "start msedge https://www.google.com"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["status"], "executed")
+        self.assertEqual(payload["actions"]["shell"]["pid"], 4242)
+        mock_spawn.assert_called_once_with(
+            "start msedge https://www.google.com",
+            shell="cmd",
+            cwd=os.getcwd(),
+        )
+
+    @patch("modules.click")
+    def test_execute_click_delegates_to_ui_module(self, mock_click):
+        mock_click.return_value = {"status": "Clicked 500, 500"}
+
+        response = self.client.post(
+            "/execute",
+            json={"click": {"x": 500, "y": 500}},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_click.assert_called_once_with(500, 500, button="left")
+
+    @patch("modules.type_text")
+    def test_execute_type_accepts_type_key(self, mock_type):
+        mock_type.return_value = {"status": "Typed successfully"}
+
+        response = self.client.post("/execute", json={"type": "hello"})
+
+        self.assertEqual(response.status_code, 200)
+        mock_type.assert_called_once_with("hello")
+
+    @patch("modules.spawn")
+    @patch("modules.click")
+    @patch("modules.type_text")
+    def test_execute_runs_shell_then_click_then_type(self, mock_type, mock_click, mock_spawn):
+        mock_spawn.return_value = {"exit_code": 0, "stdout": "", "stderr": "", "shell": "cmd", "pid": 1}
+        mock_click.return_value = {"status": "Clicked 1, 2"}
+        mock_type.return_value = {"status": "Typed successfully"}
+
+        response = self.client.post(
+            "/execute",
+            json={
+                "shell": "start notepad",
+                "click": {"x": 1, "y": 2},
+                "type": "abc",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_spawn.call_count, 1)
+        self.assertEqual(mock_click.call_count, 1)
+        self.assertEqual(mock_type.call_count, 1)
+
+
 class TestUIRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     def test_ui_click_negative_coordinate(self):
         response = self.client.post("/ui/click", json={"x": -10, "y": 500})
@@ -481,7 +579,7 @@ class TestUIRoutes(unittest.TestCase):
 class TestAKCRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     @patch("modules.build_akc_context")
     def test_akc_context_post_validates_and_returns_checkpoint(self, mock_build):
@@ -613,7 +711,7 @@ class TestAKCRoutes(unittest.TestCase):
 class TestEvidenceGate(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     def _write_evidence(self, root_dir, timestamp):
         memory_dir = os.path.join(root_dir, "memory")
@@ -697,7 +795,7 @@ class TestEvidenceGate(unittest.TestCase):
 class TestRetrospectiveRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     def _report(self):
         report = MagicMock()
@@ -730,6 +828,31 @@ class TestRetrospectiveRoutes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIs(mock_analyze.call_args.kwargs["auto_prune"], True)
+
+
+class TestBridgeTokenAuth(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    def test_ping_and_health_exempt_without_token(self):
+        for path in ("/ping", "/health"):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200, path)
+
+    def test_protected_route_rejects_missing_token(self):
+        response = self.client.post("/notify/email", json={"subject": "x", "body": "y"})
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.get_json()["error"], "Unauthorized")
+
+    def test_protected_route_accepts_bearer_token(self):
+        with patch("bridge.email_service.send_email", return_value={"status": "sent"}):
+            response = self.client.post(
+                "/notify/email",
+                json={"subject": "x", "body": "y"},
+                headers=BRIDGE_AUTH_HEADER,
+            )
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == "__main__":

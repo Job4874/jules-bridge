@@ -118,6 +118,34 @@ def _build_args(shell_name: str, command: str) -> tuple[str, list[str]]:
 # Public interface
 # ---------------------------------------------------------------------------
 
+def spawn(
+    command: str,
+    shell: str = "cmd",
+    cwd: Optional[str] = None,
+) -> ShellResult:
+    """Launch a command without waiting for completion.
+
+    Intended for operator workflows that open apps or detach background jobs.
+    """
+    resolved_shell, args = _build_args(shell, command)
+    effective_cwd = cwd or os.getcwd()
+    proc = subprocess.Popen(
+        args,
+        cwd=effective_cwd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return ShellResult(
+        exit_code=0,
+        code=0,
+        stdout="",
+        stderr="",
+        shell=resolved_shell,
+        pid=proc.pid,
+        spawned=True,
+    )
+
+
 def execute(
     command: str,
     shell: str = "powershell",

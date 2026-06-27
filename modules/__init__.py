@@ -10,6 +10,7 @@ from .shell_executor import (
     ShellNotAvailableError,
     UnsupportedShellError,
     execute,
+    spawn,
     available_shells,
 )
 from .ui_automation import (
@@ -114,6 +115,7 @@ __all__ = [
     "ShellNotAvailableError",
     "UnsupportedShellError",
     "execute",
+    "spawn",
     "available_shells",
     # ui_automation
     "ScreenshotResult",

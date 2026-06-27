@@ -8,11 +8,14 @@ The Jules Bridge runs on the operator's Windows machine in Colorado. It is **not
 
 **Bridge API base URL:** `https://parade-marrow-pulp.ngrok-free.dev`
 
-Send every bridge request to that host. Include header:
+Send every bridge request to that host. Include headers:
 
 ```http
 ngrok-skip-browser-warning: true
+Authorization: Bearer JULES-SECURE-999
 ```
+
+Without a valid token, all routes except `GET /ping` and `GET /health` return **401 Unauthorized**.
 
 Do **not** probe `127.0.0.1`, `192.168.x.x`, or internal cloud IPs for the bridge.
 
@@ -31,6 +34,7 @@ Example:
 ```http
 POST https://parade-marrow-pulp.ngrok-free.dev/notify/email
 ngrok-skip-browser-warning: true
+Authorization: Bearer JULES-SECURE-999
 Content-Type: application/json
 
 {"subject":"[ARCH-BLOCKER] Exception Request","body":"..."}
