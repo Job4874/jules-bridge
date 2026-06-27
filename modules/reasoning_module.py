@@ -268,7 +268,7 @@ def _openrouter_chat(system_prompt: str, user_prompt: str, model_name: str) -> s
 
 
 def _llm_chat(system_prompt: str, user_prompt: str, model_name: str, model_alias: str) -> str:
-    """Prefer OpenRouter free models; fall back to Gemini when configured."""
+    """Prefer OpenRouter free models; fall back to Vertex AI Gemini (via ADC) on error."""
     if _openrouter_api_keys():
         resolved = _resolve_model_name(model_alias, use_openrouter=True)
         raw = _openrouter_chat(system_prompt, user_prompt, resolved)
@@ -276,7 +276,7 @@ def _llm_chat(system_prompt: str, user_prompt: str, model_name: str, model_alias
             data = json.loads(raw)
             if "error" not in data:
                 return raw
-            _LOGGER.warning("OpenRouter error: %s — trying Gemini fallback", data["error"])
+            _LOGGER.warning("OpenRouter error: %s — trying Vertex AI Gemini fallback", data["error"])
         except json.JSONDecodeError:
             if raw and not raw.startswith("{"):
                 return raw
@@ -284,40 +284,41 @@ def _llm_chat(system_prompt: str, user_prompt: str, model_name: str, model_alias
 
 
 def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
-    """Call Gemini and return the raw text response.
+    """Call Gemini via Vertex AI using Application Default Credentials (ADC).
 
-    Requires GEMINI_API_KEY in the environment.
-    Falls back to a JSON error string if the key is missing or the call fails.
+    No API key is required — uses `gcloud auth application-default login`.
+    GCE_WORKER_PROJECT and VERTEX_LOCATION control the GCP project/region.
+    Falls back to a JSON error string if the SDK is missing or the call fails.
     """
     try:
-        import google.generativeai as genai  # type: ignore
+        import vertexai  # type: ignore
+        from vertexai.generative_models import GenerationConfig, GenerativeModel  # type: ignore
     except ImportError:
-        _LOGGER.warning("google-generativeai not installed; falling back to stub output")
-        return json.dumps({"error": "google-generativeai not installed"})
+        _LOGGER.warning(
+            "google-cloud-aiplatform not installed; run: pip install google-cloud-aiplatform"
+        )
+        return json.dumps({"error": "google-cloud-aiplatform not installed"})
 
     _load_env_keys()
-
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        _LOGGER.warning("GEMINI_API_KEY not set in environment; falling back to stub output")
-        return json.dumps({"error": "GEMINI_API_KEY not set"})
+    project = os.environ.get("GCE_WORKER_PROJECT", "tibin-terminal-2026")
+    location = os.environ.get("VERTEX_LOCATION", "us-central1")
 
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(
+        vertexai.init(project=project, location=location)  # ADC picked up automatically
+        model = GenerativeModel(
             model_name=model_name,
             system_instruction=system_prompt,
         )
         response = model.generate_content(
             user_prompt,
-            generation_config=genai.GenerationConfig(
+            generation_config=GenerationConfig(
                 response_mime_type="application/json",
                 temperature=0.2,
             ),
         )
         return response.text
     except Exception as exc:  # noqa: BLE001
-        _LOGGER.error("Gemini call failed: %s", exc)
+        _LOGGER.error("Vertex AI Gemini call failed: %s", exc)
         return json.dumps({"error": str(exc)})
 
 
