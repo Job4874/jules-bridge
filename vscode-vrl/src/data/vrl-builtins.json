@@ -1,0 +1,20 @@
+[
+  {
+    "name": "parse_json",
+    "detail": "parse_json!(value: string)",
+    "doc": "Parses a JSON string into a structured value and aborts on failure.",
+    "insertText": "parse_json!(${1:value})"
+  },
+  {
+    "name": "now",
+    "detail": "now()",
+    "doc": "Returns the current timestamp.",
+    "insertText": "now()"
+  },
+  {
+    "name": "upcase",
+    "detail": "upcase(value: string)",
+    "doc": "Converts a string to uppercase.",
+    "insertText": "upcase(${1:value})"
+  }
+]
