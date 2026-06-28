@@ -35,6 +35,8 @@ Captured by Codex on 2026-06-28 before dispatch:
 - Telemetry last write: `2026-06-27T03:56:38.352926+00:00`.
 - `BROKER_SUBMISSION_BLOCKED_DRY_RUN` grep: no hit in searched Oracle telemetry / Quantower script logs.
 - Foreground Quantower screenshot: `jules_inbox/screenshots/screen_20260628-200153.png`.
+- Remote proof session `16797126457435464612` failed because it saved raw `/ui/screenshot` JSON as `latest_screenshot.png`. That is not acceptable evidence.
+- Use `self_created_tools/safe_bridge_probe.py` for route proof so `image_base64` is omitted and only screenshot paths plus concise route summaries are printed.
 
 Screenshot state observed:
 
@@ -78,6 +80,7 @@ The report must contain one of these outcomes:
 
 ## Allowed Moves
 
+- Prefer `python self_created_tools/safe_bridge_probe.py all` for first-pass bridge evidence.
 - Use `GET /tentacles`, `GET /oracle/status`, `GET /ui/screenshot?save=true`, `POST /fs/grep`, `POST /fs/read`, `POST /inbox/write`, and other bridge routes discovered from `/tentacles`.
 - Use screenshots before and after UI actions.
 - Use guarded UI actions only when the target is clear from the screenshot and the action is safe.
@@ -91,6 +94,8 @@ The report must contain one of these outcomes:
 - Do not print account identifiers, API keys, tokens, passwords, or bearer strings.
 - Do not apply helper-code diffs that hardcode bridge tokens.
 - Do not claim Quantower/Oracle proof from a screenshot that only shows Codex or a generic desktop.
+- Do not save the raw `/ui/screenshot` response body as a `.png`; the JSON includes `image_base64`, not a PNG byte stream.
+- Do not commit raw `image_base64` output into the repo.
 - Do not call a plan a proof packet.
 
 ## Proof Bar

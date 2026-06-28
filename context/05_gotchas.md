@@ -11,6 +11,7 @@
 - **`jsonify(dict(some_dataclass))`** — dataclasses are NOT auto-serializable; convert to dict first
 - **Adding a new route** — must also add to the TENTACLES list and to `context/02_architecture.md` route table
 - **`POST /notify/email` attachments** - validate every local attachment path with `existing_path(..., kind="file")` before calling SMTP. Do not silently skip missing screenshots; reports must not claim evidence was attached when the file is absent.
+- **`GET /ui/screenshot?save=true` response shape** - the route returns JSON with `image_base64` and `saved_path`; do not save the whole response body as a `.png` or commit raw base64. Use `self_created_tools/safe_bridge_probe.py screenshot` for report-safe evidence.
 - **`ROOT_DIR`** is the Jules Bridge project root — use it for all default paths
 - **`LOG_PATH`** is defined at module level — don't redefine it in route handlers
 - **`GET /health`** — exists since Phase 5; returns `{status, bridge, uptime_s}`; used by ngrok/monitoring

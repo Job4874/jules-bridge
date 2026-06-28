@@ -236,3 +236,10 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - `notify_email.send_email(...)` now builds multipart messages when attachments are present and returns the exact attached paths in the result.
 - Added `tests/test_notify_email_enhanced.py` plus route tests covering attachment forwarding and missing-attachment rejection.
 - Evidence: `python -m pytest tests/ -q` passed 284 tests with 1 existing warning, SHA-256 `281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4`.
+
+## Session 20260628T201200 - Safe Bridge Proof Probe
+
+- Remote showoff proof session `16797126457435464612` reached the screenshot route but failed by saving raw `/ui/screenshot` JSON as `latest_screenshot.png`.
+- Added `self_created_tools/safe_bridge_probe.py` to call bridge evidence routes while omitting `image_base64` and redacting sensitive-looking fields.
+- Updated `JULES_PROOF_RUN_20260628.md`, `context/05_gotchas.md`, and `memory/reasoning.md` so future proof runs use concise route summaries and screenshot `saved_path` values.
+- Evidence: `python -m py_compile self_created_tools\safe_bridge_probe.py tests\test_safe_bridge_probe.py` passed; `python self_created_tools\safe_bridge_probe.py screenshot --base-url http://127.0.0.1:5000` returned a saved path with `image_base64` omitted; `python -m pytest tests/ -q` passed 288 tests with 1 existing warning.
