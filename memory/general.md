@@ -267,3 +267,51 @@ has gone wrong before and what to avoid.
 - Added thin bridge routes `POST /vm/resource_pressure` and `POST /vm/boot_secondary`, plus exports and TENTACLES entries. Keep policy out of `/vm/*`; routes only validate, call the module, and return JSON.
 - Codex Chrome Extension was re-enabled in Chrome `Default` profile; extension browser connection now attaches and docs were read.
 - Evidence: `python -m pytest tests/ -q` passed 274 tests with 1 existing warning, SHA-256 `9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a`.
+
+## Session 20260627T214922 — 2026-06-27T21:49:22.701894+00:00
+
+- DOOM LOOP: POST /fs/read called 30x consecutively. Route 'POST /fs/read' called 30x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /fs/write called 3x consecutively. Route 'POST /fs/write' called 3x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /inbox/read called 9x consecutively. Route 'POST /inbox/read' called 9x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /shell called 20x consecutively. Route 'POST /shell' called 20x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /ui/click called 6x consecutively. Route 'POST /ui/click' called 6x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /ping called 42x consecutively. Route 'GET /ping' called 42x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /fs/tail called 8x consecutively. Route 'POST /fs/tail' called 8x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /health called 32x consecutively. Route 'GET /health' called 32x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /akc/context called 5x consecutively. Route 'POST /akc/context' called 5x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/dispatch called 4x consecutively. Route 'POST /jules/dispatch' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/launch called 6x consecutively. Route 'POST /jules/launch' called 6x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/sessions called 6x consecutively. Route 'POST /jules/sessions' called 6x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /retrospective/record_evidence called 4x consecutively. Route 'POST /retrospective/record_evidence' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/pull called 3x consecutively. Route 'POST /jules/pull' called 3x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/cycle called 4x consecutively. Route 'POST /jules/cycle' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/fleet called 4x consecutively. Route 'POST /jules/fleet' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/fleet-watch called 34x consecutively. Route 'POST /jules/fleet-watch' called 34x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /akc/subagents called 7x consecutively. Route 'POST /akc/subagents' called 7x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /notify/email called 4x consecutively. Route 'POST /notify/email' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /tentacles called 4x consecutively. Route 'GET /tentacles' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /execute called 8x consecutively. Route 'POST /execute' called 8x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /apps/launch_browser called 3x consecutively. Route 'POST /apps/launch_browser' called 3x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /info called 4x consecutively. Route 'GET /info' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /vm/boot_secondary called 4x consecutively. Route 'POST /vm/boot_secondary' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /dashboard/status called 814x consecutively. Route 'GET /dashboard/status' called 814x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /fs/list called 4x consecutively. Route 'POST /fs/list' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /ui/screenshot called 4x consecutively. Route 'GET /ui/screenshot' called 4x consecutively. Add a circuit breaker or cache the last response.
+- TIMEOUT: Subprocess/PowerShell calls timing out (232x). Increase timeout or add async handling.
+- HARNESS BUG: Internal server errors (14x). Check module exception handling — add defensive try/except.
+- PERFORMANCE: Route 'POST /shell' averaged 58214ms over 12 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/sessions' averaged 13723ms over 15 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/cycle' averaged 29064ms over 9 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/preflight' averaged 6997ms over 5 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/watch' averaged 103624ms over 5 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/fleet' averaged 31092ms over 14 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/fleet-watch' averaged 441320ms over 54 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /notify/email' averaged 30129ms over 2 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'GET /dashboard/status' averaged 13820ms over 7 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- RETROSPECTIVE BASELINE: analyze_session found 18 log patterns. Use the domain memories before the next bridge/runtime work.
+
+## Session 20260628T075134 - Notify Email Attachment Evidence
+
+- `/notify/email` now accepts `attachments: list[str]` for screenshot/report evidence. The route validates each path with `existing_path(..., kind="file")` before SMTP so missing screenshots fail fast with 404 instead of being silently skipped.
+- `notify_email.send_email(subject, body, mail_to=None, attachments=None)` keeps the old plain-text path when no attachments are present and switches to multipart only when files are supplied.
+- Added module and route coverage in `tests/test_notify_email_enhanced.py` and `tests/test_bridge_routes.py::TestBridgeTokenAuth`; full evidence recorded: 284 tests passed, SHA-256 `281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4`.

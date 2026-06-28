@@ -1253,11 +1253,16 @@ def launch_browser_route():
 @app.route("/notify/email", methods=["POST"])
 @route_errors
 def send_notify_email():
+    """POST /notify/email - Email the operator, optionally with local attachments."""
     data = json_payload()
     subject = string_field(data, "subject", default="Jules Bridge update")
     body = string_field(data, "body")
     mail_to = optional_email(data, "to")
-    result = email_service.send_email(subject, body, mail_to=mail_to)
+    attachments = [
+        existing_path(path, kind="file")
+        for path in string_list_field(data, "attachments", default=[], control_safe=True)
+    ]
+    result = email_service.send_email(subject, body, mail_to=mail_to, attachments=attachments)
     return jsonify({"status": "sent", **result})
 
 

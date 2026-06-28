@@ -982,6 +982,44 @@ class TestBridgeTokenAuth(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 200)
 
+    def test_notify_email_forwards_existing_attachments(self):
+        with tempfile.NamedTemporaryFile(delete=False) as handle:
+            handle.write(b"screen")
+            attachment = handle.name
+        try:
+            with patch("bridge.email_service.send_email", return_value={"status": "sent"}) as mock_send:
+                response = self.client.post(
+                    "/notify/email",
+                    json={"subject": "x", "body": "y", "attachments": [attachment]},
+                    headers=BRIDGE_AUTH_HEADER,
+                )
+
+            self.assertEqual(response.status_code, 200)
+            mock_send.assert_called_once_with(
+                "x",
+                "y",
+                mail_to=None,
+                attachments=[attachment],
+            )
+        finally:
+            os.unlink(attachment)
+
+    def test_notify_email_rejects_missing_attachment_before_send(self):
+        missing = os.path.join(tempfile.gettempdir(), "jules-missing-screenshot.png")
+        if os.path.exists(missing):
+            os.unlink(missing)
+
+        with patch("bridge.email_service.send_email") as mock_send:
+            response = self.client.post(
+                "/notify/email",
+                json={"subject": "x", "body": "y", "attachments": [missing]},
+                headers=BRIDGE_AUTH_HEADER,
+            )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["error"], "Resource not found")
+        mock_send.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

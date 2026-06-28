@@ -228,3 +228,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Added `POST /vm/resource_pressure` and `POST /vm/boot_secondary` as thin bridge routes plus TENTACLES manifest entries.
 - Added `tests/test_vm_manager.py` and `/vm/*` route tests. Red state was missing module/export/routes; green state passed targeted tests and full suite.
 - Evidence: `python -m pytest tests/ -q` passed 274 tests with 1 existing warning, SHA-256 `9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a`.
+
+## Session 20260628T075134 - Notify Email Attachment Evidence
+
+- Resolved the screenshot-report blocker from remote session `5848008381865409658` by extending `POST /notify/email` with optional `attachments: list[str]`.
+- `bridge.py` now validates attachment paths before SMTP and rejects missing files with 404 instead of silently sending an evidence-light report.
+- `notify_email.send_email(...)` now builds multipart messages when attachments are present and returns the exact attached paths in the result.
+- Added `tests/test_notify_email_enhanced.py` plus route tests covering attachment forwarding and missing-attachment rejection.
+- Evidence: `python -m pytest tests/ -q` passed 284 tests with 1 existing warning, SHA-256 `281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4`.
