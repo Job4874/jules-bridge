@@ -8,16 +8,18 @@ Inherit the full available Jules Bridge tool surface and use it with no-slop HRE
 
 ## Current Proven State
 
-- Source-of-truth repo commit: `7c0a5fe docs: harden Jules self-unblocking protocol`.
+- Source-of-truth hardening commits include `7c0a5fe docs: harden Jules self-unblocking protocol` and `3fdf3f9 docs: set Jules full bridge objective`.
 - Public bridge URL: `https://parade-marrow-pulp.ngrok-free.dev`.
 - Public `/ping`: HTTP 200, `{"status":"Jules Bridge Online"}`.
 - Public authenticated `/tentacles`: HTTP 200, 50 routes.
 - Available tool groups include filesystem, Oracle status/build, UI screenshot/click/type, VM, apps, notify/email, Jules dispatch/launch/watch/fleet, reasoning, retrospective, and AKC.
-- Local Oracle status currently reports `Quantower Starter not running`.
+- Local Oracle status now reports no top-level blockers.
+- Quantower is running and can be foregrounded.
 - Oracle V5 `info.xml` exists and binds MES plus account.
 - `Enable Live Trading=false`.
 - `Enable Dry Run Mode=false`.
 - G3 dry-run broker-block proof is not yet captured.
+- Latest active proof demand: `JULES_PROOF_RUN_20260628.md`.
 
 ## Required Operating Mode
 
