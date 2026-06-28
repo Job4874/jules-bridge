@@ -38,14 +38,29 @@ Bridge: `https://parade-marrow-pulp.ngrok-free.dev`
 1. GET  /ping
 2. GET  /tentacles
 3. POST /inbox/read  {"file": "JULES_TOOL_REQUIREMENTS.md"}
-4. POST /inbox/read  {"file": "WAKE_UP.txt"}
-5. GET  /oracle/status
-6. GET  /ui/screenshot?save=true
-7. Fix blockers with the narrowest route that proves the state.
-8. POST /inbox/write with evidence and next action.
+4. POST /inbox/read  {"file": "JULES_SELF_UNBLOCKING_PROTOCOL.md"}
+5. POST /inbox/read  {"file": "WAKE_UP.txt"}
+6. GET  /oracle/status
+7. GET  /ui/screenshot?save=true
+8. Fix blockers with the narrowest route that proves the state.
+9. POST /inbox/write with evidence and next action.
 ```
 
 Do not run repeated `/shell` build loops while Symbol, Account, or telemetry blockers remain visible in `/oracle/status`.
+
+## HRE Self-Unblocking Requirement
+
+HRE means Hypothesis, Route, Evidence. Use it whenever progress stalls:
+
+- Hypothesis: name the specific blocker.
+- Route: choose the available tool, route, extension, skill, file, or repo check that can test it.
+- Evidence: capture concrete output before deciding the next move.
+
+Before escalating to the operator, read `JULES_SELF_UNBLOCKING_PROTOCOL.md` and run up to three bounded HRE passes. A valid escalation must include the blocker class, routes/files/tools checked, exact error/output, and the smallest operator action required.
+
+Tool or extension gaps are not proven until `GET /tentacles`, `.agents/AGENTS.md`, `.agents/skills/*/SKILL.md`, `context/05_gotchas.md`, and relevant `memory/*.md` files have been checked.
+
+When a blocker is resolved, write the learning back to `memory/reasoning.md` or `context/05_gotchas.md` so the next session does not need the operator to repeat the same correction.
 
 ## Shell Routing Architecture
 
