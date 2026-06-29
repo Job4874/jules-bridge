@@ -14,7 +14,7 @@
 | **Branch** | `master` |
 | **Working tree** | Dirty (Human-Mimic VM Manager TDD changes pending commit) |
 | **Last commit** | `30deaa8` — feat: create Global Verdent Rule handoff files and initiate 8-target verification for Oracle V5 |
-| **Tests** | 274 passed, 1 warning (`python -m pytest tests/ -q`) |
+| **Tests** | 282 passed, 1 warning (`python -m pytest tests/ -q`) |
 | **Bridge entry** | `python bridge.py` → Flask on `0.0.0.0:5000` |
 | **Oracle V5 source** | `C:\aotp\projects\OracleV5` |
 | **Oracle DLL** | `C:\Quantower\Settings\Scripts\Strategies\OracleV5.Strategy.dll` |
@@ -35,6 +35,9 @@ Parallel track in progress:
 
 | Area | Status | Evidence |
 |---|---|---|
+| Deep Module Refactor | Done | Decomposed `jules_orchestrator.py` into `modules/jules/` package; thinned `bridge.py` using `modules/infra/`. |
+| Dashboard Node Isolation | Done | `modules/dashboard_module.py` implements `quant_allowed` logic based on context/hostname. |
+| Evidence Gate Logic | Fixed | Restored 423 status for stale evidence in hard mode. |
 | App launcher (Edge) | Done | `modules/app_launcher.py`, `POST /apps/launch_browser`, 7 unit tests |
 | Token auth on bridge | Done | commit `98af291` |
 | Jules fleet / COT automation | Done | 29/29 packets complete per `JULES_COT_LEDGER.json` |

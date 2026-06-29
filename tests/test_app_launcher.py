@@ -77,6 +77,9 @@ class TestLaunchBrowserToUrl(unittest.TestCase):
             "modules.app_launcher.os.path.isfile",
             side_effect=lambda path: path == edge_path,
         ), patch(
+            "modules.app_launcher.os.path.isabs",
+            side_effect=lambda path: path == edge_path,
+        ), patch(
             "modules.app_launcher.shutil.which",
             return_value=None,
         ):

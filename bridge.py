@@ -9,69 +9,48 @@ All business logic lives in modules/:
   fs_service, shell_executor, ui_automation, inbox_service, oracle_session
 """
 
-import errno
+import os
 import json
 import logging
-import os
-import re
-import subprocess
-import sys
-from collections import deque
+import time
 from datetime import datetime, timezone
-from functools import wraps
-from logging.handlers import RotatingFileHandler
-
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 
 import notify_email as email_service
 from notify_email import load_env
 import modules
-
-# ---------------------------------------------------------------------------
-# Logging setup
-# ---------------------------------------------------------------------------
+from modules.infra import (
+    BridgeHTTPError,
+    route_errors,
+    json_payload,
+    string_field,
+    int_field,
+    bool_field,
+    string_list_field,
+    path_field,
+    existing_path,
+    content_field,
+    inbox_name_field,
+    optional_email,
+    configure_logging,
+    REQUEST_LOG,
+    CONTROL_CHAR_RE
+)
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 INBOX_DIR = os.path.join(ROOT_DIR, "jules_inbox")
 LOG_PATH = os.path.join(ROOT_DIR, "bridge.log")
-REQUEST_LOG: deque = deque(maxlen=200)
-_BRIDGE_START_UTC = datetime.now(timezone.utc)  # set once at import time for uptime tracking
+_BRIDGE_START_UTC = datetime.now(timezone.utc)
 
-
-def configure_logging():
-    """Attach rotating file + stdout handlers once per process."""
-    if getattr(configure_logging, "configured", False):
-        return
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-    formatter = logging.Formatter(
-        "%(asctime)s %(levelname)s %(name)s: %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S%z",
-    )
-    os.makedirs(ROOT_DIR, exist_ok=True)
-    fh = RotatingFileHandler(LOG_PATH, maxBytes=10_000_000, backupCount=3, encoding="utf-8")
-    fh.setFormatter(formatter)
-    sh = logging.StreamHandler(sys.stdout)
-    sh.setFormatter(formatter)
-    root_logger.addHandler(fh)
-    root_logger.addHandler(sh)
-    configure_logging.configured = True
-
-
-configure_logging()
+configure_logging(LOG_PATH, ROOT_DIR)
 load_env()
 LOGGER = logging.getLogger("jules_bridge")
-
-# ---------------------------------------------------------------------------
-# Flask app
-# ---------------------------------------------------------------------------
 
 app = Flask(__name__)
 CORS(app)
 
 BRIDGE_TOKEN = "JULES-SECURE-999"
-
 
 @app.before_request
 def require_auth():
@@ -83,200 +62,9 @@ def require_auth():
         return jsonify({"error": "Unauthorized", "message": "Missing or invalid token"}), 401
     return None
 
-# ---------------------------------------------------------------------------
-# Error handling infrastructure
-# ---------------------------------------------------------------------------
-
-CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-MISSING = object()
-
-
-class BridgeHTTPError(Exception):
-    def __init__(self, status_code, error, **payload):
-        super().__init__(error)
-        self.status_code = status_code
-        self.error = error
-        self.payload = payload
-
-
-def _json_error(status_code, error, **payload):
-    body = {"error": error}
-    body.update({k: v for k, v in payload.items() if v is not None})
-    return jsonify(body), status_code
-
-
-def route_errors(func):
-    """Translate module exceptions into semantic JSON HTTP responses."""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except BridgeHTTPError as exc:
-            LOGGER.warning("%s %s -> %s %s", request.method, request.path, exc.status_code, exc.error)
-            return _json_error(exc.status_code, exc.error, **exc.payload)
-        except subprocess.TimeoutExpired as exc:
-            timeout = getattr(exc, "timeout", None)
-            msg = f"Execution timed out after {timeout} seconds" if timeout else "Execution timed out"
-            LOGGER.warning("%s %s -> 504 %s", request.method, request.path, msg)
-            return _json_error(504, msg)
-        except (modules.ShellNotAvailableError, modules.UnsupportedShellError) as exc:
-            LOGGER.warning("%s %s -> 400 %s", request.method, request.path, exc)
-            return _json_error(400, "Invalid input", details=str(exc))
-        except (IsADirectoryError, NotADirectoryError) as exc:
-            LOGGER.warning("%s %s -> 400 %s", request.method, request.path, exc)
-            return _json_error(400, "Invalid input", details=str(exc))
-        except FileNotFoundError as exc:
-            path = getattr(exc, "filename", None)
-            LOGGER.warning("%s %s -> 404 %s", request.method, request.path, exc)
-            return _json_error(404, "Resource not found", path=path)
-        except PermissionError as exc:
-            LOGGER.warning("%s %s -> 403 %s", request.method, request.path, exc)
-            return _json_error(403, "Access denied", reason="Insufficient permissions")
-        except re.error as exc:
-            return _json_error(400, "Invalid input", details=f"Invalid regex: {exc}")
-        except ValueError as exc:
-            LOGGER.warning("%s %s -> 400 %s", request.method, request.path, exc)
-            return _json_error(400, "Invalid input", details=str(exc))
-        except OSError as exc:
-            if getattr(exc, "errno", None) in (errno.EACCES, errno.EPERM, 13):
-                return _json_error(403, "Access denied", reason="Insufficient permissions")
-            if getattr(exc, "errno", None) in (errno.ENOENT, 2, 3):
-                return _json_error(404, "Resource not found", path=getattr(exc, "filename", None))
-            LOGGER.exception("%s %s -> 500 OSError", request.method, request.path)
-            return _json_error(500, "Internal operational failure")
-        except Exception:  # pylint: disable=broad-exception-caught
-            LOGGER.exception("%s %s -> 500", request.method, request.path)
-            return _json_error(500, "Internal operational failure")
-    return wrapper
-
-# ---------------------------------------------------------------------------
-# Request field helpers (validation only — no business logic)
-# ---------------------------------------------------------------------------
-
-def json_payload():
-    raw = request.get_data(cache=True)
-    if not raw:
-        return {}
-    if not request.is_json:
-        raise BridgeHTTPError(400, "Malformed JSON or missing Content-Type header.")
-    data = request.get_json(silent=True)
-    if data is None:
-        raise BridgeHTTPError(400, "Malformed JSON or missing Content-Type header.")
-    if not isinstance(data, dict):
-        raise BridgeHTTPError(400, "Invalid input", details="JSON body must be an object.")
-    return data
-
-
-def string_field(data, key, default=MISSING, allow_empty=False, control_safe=False):
-    if key not in data:
-        if default is MISSING:
-            raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
-        return default
-    value = data.get(key)
-    if not isinstance(value, str):
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a string")
-    if not allow_empty and not value.strip():
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} cannot be empty")
-    if control_safe and CONTROL_CHAR_RE.search(value):
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} contains illegal control characters")
-    return value
-
-
-def int_field(data, key, default=MISSING, min_value=None, max_value=None):
-    if key not in data or data.get(key) is None:
-        if default is MISSING:
-            raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
-        return default
-    value = data.get(key)
-    if isinstance(value, bool):
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be an integer")
-    try:
-        value = int(value)
-    except (TypeError, ValueError):
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be an integer") from None
-    if min_value is not None and value < min_value:
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be >= {min_value}")
-    if max_value is not None and value > max_value:
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be <= {max_value}")
-    return value
-
-
-def bool_field(data, key, default=MISSING):
-    if key not in data or data.get(key) is None:
-        if default is MISSING:
-            raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
-        return default
-    value = data.get(key)
-    if not isinstance(value, bool):
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a boolean")
-    return value
-
-
-def string_list_field(data, key, default=None, control_safe=False):
-    if key not in data or data.get(key) is None:
-        return list(default or [])
-    value = data.get(key)
-    if not isinstance(value, list):
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a list of strings")
-    items = []
-    for item in value:
-        if not isinstance(item, str) or not item.strip():
-            raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a list of non-empty strings")
-        if control_safe and CONTROL_CHAR_RE.search(item):
-            raise BridgeHTTPError(400, "Invalid input", details=f"{key} contains illegal control characters")
-        items.append(item)
-    return items
-
-
-def path_field(data, key="path", default=MISSING):
-    return string_field(data, key, default=default, control_safe=True)
-
-
-def existing_path(path, kind="file"):
-    if not os.path.exists(path):
-        raise BridgeHTTPError(404, "Resource not found", path=path)
-    if kind == "file" and not os.path.isfile(path):
-        raise BridgeHTTPError(400, "Invalid input", details="path must point to a file", path=path)
-    if kind == "directory" and not os.path.isdir(path):
-        raise BridgeHTTPError(400, "Invalid input", details="path must point to a directory", path=path)
-    return path
-
-
-def content_field(data):
-    if "content" in data:
-        return string_field(data, "content", allow_empty=True)
-    if "data" in data:
-        return string_field(data, "data", allow_empty=True)
-    raise BridgeHTTPError(400, "Invalid input", details="content or data is required")
-
-
-def inbox_name_field(data, default):
-    if "file" not in data or data.get("file") in (None, ""):
-        return default
-    name = string_field(data, "file", control_safe=True)
-    name = os.path.basename(name)
-    if not name:
-        raise BridgeHTTPError(400, "Invalid input", details="file cannot be empty")
-    return name
-
-
-def optional_email(data, key):
-    if key not in data or data.get(key) in (None, ""):
-        return None
-    val = string_field(data, key)
-    if not EMAIL_RE.match(val):
-        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a valid email address")
-    return val
-
-# ---------------------------------------------------------------------------
-# Request logging middleware
-# ---------------------------------------------------------------------------
-
 @app.before_request
 def _start_timer():
     g.request_start = datetime.now(timezone.utc)
-
 
 def _stale_evidence_state():
     evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
@@ -296,8 +84,7 @@ def _stale_evidence_state():
             return None
         return {"age_s": age_s, "threshold_s": threshold_s}
     except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return None  # evidence file missing or malformed — proceed without warning
-
+        return None
 
 @app.before_request
 def _evidence_hard_gate():
@@ -313,7 +100,6 @@ def _evidence_hard_gate():
         "age_s": stale["age_s"],
         "threshold_s": stale["threshold_s"],
     }), 423
-
 
 @app.after_request
 def _finalize_request(response):
@@ -335,25 +121,14 @@ def _finalize_request(response):
                 entry["method"], entry["path"], entry["status"], entry["ms"], entry["remote"])
     return response
 
-
 @app.after_request
 def _evidence_age_check(response):
-    """Attach stale-evidence warning headers on /oracle/* responses.
-
-    Hard mode is enforced before the route runs by _evidence_hard_gate().
-    """
     if not request.path.startswith("/oracle/"):
         return response
     stale = _stale_evidence_state()
     if stale:
         response.headers["X-Evidence-Age-Warning"] = f"stale:{stale['age_s']}s"
     return response
-
-
-# ---------------------------------------------------------------------------
-# Tentacle manifest
-# ---------------------------------------------------------------------------
-
 TENTACLES = [
     {"name": "root",         "route": "GET /",                  "reach": "Authenticated bridge discovery and next-step pointers"},
     {"name": "info",         "route": "GET /info",              "reach": "Authenticated bridge metadata without the full manifest"},
