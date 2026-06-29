@@ -1,28 +1,28 @@
 {
-  "generated_at_utc": "2026-06-27T04:05:00.602684+00:00",
+  "generated_at_utc": "2026-06-29T15:42:43.429690+00:00",
   "ready": false,
   "likely_blocker": "remote_timeout_possible_auth_required",
-  "jules_command": "jules",
+  "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
   "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
   "preferred_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
   "candidate_commands": [
     {
       "label": "requested",
-      "requested": "jules",
-      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
+      "requested": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
       "exists": true
     },
     {
-      "label": "npm_bin_exe",
-      "requested": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+      "label": "npm_cmd",
+      "requested": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.cmd",
+      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.cmd",
       "exists": true
     },
     {
       "label": "temp_exe",
       "requested": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
       "resolved": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
-      "exists": true
+      "exists": false
     }
   ],
   "version": {
@@ -46,7 +46,8 @@
     "timed_out": true,
     "session_ids": [],
     "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe"
+    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "cache_hit": false
   },
   "auth_indicators": {
     "known_auth_paths": [
