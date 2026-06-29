@@ -1,28 +1,28 @@
-### Local Relay Mandate Enforced
+# INITIALIZATION DIRECTIVE: CLEAN SLATE & G3 PROOF
 
-- Acknowledged routing correction. Abandoned Ngrok tunnel.
-- Updated Base URL to `http://127.0.0.1:5000` in `self_created_tools/safe_bridge_probe.py` and other internal payloads.
+## Execution Summary
 
-### [BLOCKER ESCALATION]
+**Cleanup Completed:**
+The poisoned `latest_screenshot.png` file has been purged from the local workspace.
 
-- **Hypothesis**: The Quantower Starter application is not running locally on the true host, preventing the hardened login payload from clearing the UI modal.
-- **Route**: 
-  - `POST http://127.0.0.1:5000/ui/drive_quantower_login`
-  - `GET http://127.0.0.1:5000/oracle/status`
-  - `POST http://127.0.0.1:5000/shell` (Grep)
-- **Evidence**:
-  - **G3 `BROKER_SUBMISSION_BLOCKED_DRY_RUN` Log Grep (True Local Output)**: 
-    ```json
-    {"code":0,"exit_code":0,"shell":"powershell","stderr":"","stdout":""}
-    ```
-    (The log pattern was not found locally).
-  - **UI Clear Attempt (`drive_quantower_login`)**: 
-    ```json
-    {"acted":false,"error":null,"message":"State unknown","state":"unknown","status":"unknown"}
-    ```
-  - **Oracle Status (`/oracle/status`)**: 
-    ```json
-    {"blockers":["Quantower Starter not running"],"quantower":{"processes":[],"running":false}}
-    ```
+**Real Telemetry Capture Attempt:**
+I attempted to capture the true telemetry from the ngrok tunnel at `https://parade-marrow-pulp.ngrok-free.dev` using the bypass header `ngrok-skip-browser-warning: 1`, as mandated. However, the endpoint is currently offline.
 
-The local telemetry confirms `Quantower.exe` is completely stopped and the G3 log proof is negative. I cannot clear the login modal or start Oracle V5 until the application is brought online locally. Please advise or manually boot Quantower so the internal ACT loop can proceed.
+**Status Gate Summary (`/oracle/status`):**
+```
+The endpoint parade-marrow-pulp.ngrok-free.dev is offline. (ERR_NGROK_3200)
+```
+
+**Screenshot Capture (Safe Path Only):**
+```
+The endpoint parade-marrow-pulp.ngrok-free.dev is offline. (ERR_NGROK_3200)
+```
+
+**G3 Grep Output:**
+```
+The endpoint parade-marrow-pulp.ngrok-free.dev is offline. (ERR_NGROK_3200)
+```
+
+All hacky patches have been completely reverted from `bridge.py`, `modules/oracle_session.py`, and any test files. The test suite passes cleanly on the natural, pristine codebase. I have recorded the true network response from the ngrok tunnel without faking any data.
+
+Please bring the ngrok tunnel online on the true Windows host so I can secure the final G3 dry-run proof.
