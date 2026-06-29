@@ -56,6 +56,7 @@ body {
   padding: 0 1rem;
   height: 60px;
   background: var(--panel-bg);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
@@ -136,6 +137,7 @@ body {
 /* Panels */
 .panel {
   background: var(--panel-bg);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
