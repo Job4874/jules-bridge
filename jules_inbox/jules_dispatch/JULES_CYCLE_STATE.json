@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-29T15:43:08.277335+00:00",
+  "generated_at_utc": "2026-06-29T16:04:52.159272+00:00",
   "status": "pending",
   "dry_run": true,
   "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
@@ -12,7 +12,7 @@
   "blockers": [],
   "dispatch": {
     "source": "existing_packets",
-    "generated_at_utc": "2026-06-29T15:43:08.277335+00:00",
+    "generated_at_utc": "2026-06-29T16:04:52.159272+00:00",
     "task_count": 0,
     "selected_count": 4,
     "status_counts": {},
@@ -54,7 +54,7 @@
     "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe"
   },
   "launch_result": {
-    "generated_at_utc": "2026-06-29T15:43:08.279364+00:00",
+    "generated_at_utc": "2026-06-29T16:04:52.162269+00:00",
     "dry_run": true,
     "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
     "selected_count": 4,
@@ -188,7 +188,7 @@
   },
   "pull_results": [
     {
-      "generated_at_utc": "2026-06-29T15:43:09.681537+00:00",
+      "generated_at_utc": "2026-06-29T16:04:53.708919+00:00",
       "dry_run": true,
       "session_id": "18196467418341089057",
       "command": [
@@ -213,7 +213,7 @@
       "note": "Dry run only; remote Jules session was not pulled."
     },
     {
-      "generated_at_utc": "2026-06-29T15:43:09.683539+00:00",
+      "generated_at_utc": "2026-06-29T16:04:53.708919+00:00",
       "dry_run": true,
       "session_id": "224256420467650186",
       "command": [
@@ -238,7 +238,7 @@
       "note": "Dry run only; remote Jules session was not pulled."
     },
     {
-      "generated_at_utc": "2026-06-29T15:43:09.684539+00:00",
+      "generated_at_utc": "2026-06-29T16:04:53.708919+00:00",
       "dry_run": true,
       "session_id": "5740649256591165337",
       "command": [
@@ -263,7 +263,7 @@
       "note": "Dry run only; remote Jules session was not pulled."
     },
     {
-      "generated_at_utc": "2026-06-29T15:43:09.685539+00:00",
+      "generated_at_utc": "2026-06-29T16:04:53.714980+00:00",
       "dry_run": true,
       "session_id": "3128018457996589851",
       "command": [
@@ -289,7 +289,7 @@
     }
   ],
   "cot": {
-    "generated_at_utc": "2026-06-29T15:43:09.685539+00:00",
+    "generated_at_utc": "2026-06-29T16:04:53.717003+00:00",
     "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
     "launch_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
     "report_dir": "",
