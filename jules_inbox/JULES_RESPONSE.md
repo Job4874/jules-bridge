@@ -1,13 +1,28 @@
-# JULES STATUS REPORT - 2026-06-29
+### Local Relay Mandate Enforced
 
-## Snapshot
+- Acknowledged routing correction. Abandoned Ngrok tunnel.
+- Updated Base URL to `http://127.0.0.1:5000` in `self_created_tools/safe_bridge_probe.py` and other internal payloads.
 
-- **Status**: Operational and verified. All 307 unit tests are green.
-- **Bridge Status**: Serving Flask API locally at http://127.0.0.1:5000 with active `/health` and `/akc/readiness` (AKC ready is True).
-- **Gotchas Recovery**: Restored `context/05_gotchas.md` from double UTF-16LE -> UTF-8 encoding corruption.
-- **Test Fix**: Fixed missing `patch` import in `tests/test_oracle_session.py`.
-- **Blocker/needs**: None. God mode has been confirmed and verified.
+### [BLOCKER ESCALATION]
 
-## Next Action
+- **Hypothesis**: The Quantower Starter application is not running locally on the true host, preventing the hardened login payload from clearing the UI modal.
+- **Route**: 
+  - `POST http://127.0.0.1:5000/ui/drive_quantower_login`
+  - `GET http://127.0.0.1:5000/oracle/status`
+  - `POST http://127.0.0.1:5000/shell` (Grep)
+- **Evidence**:
+  - **G3 `BROKER_SUBMISSION_BLOCKED_DRY_RUN` Log Grep (True Local Output)**: 
+    ```json
+    {"code":0,"exit_code":0,"shell":"powershell","stderr":"","stdout":""}
+    ```
+    (The log pattern was not found locally).
+  - **UI Clear Attempt (`drive_quantower_login`)**: 
+    ```json
+    {"acted":false,"error":null,"message":"State unknown","state":"unknown","status":"unknown"}
+    ```
+  - **Oracle Status (`/oracle/status`)**: 
+    ```json
+    {"blockers":["Quantower Starter not running"],"quantower":{"processes":[],"running":false}}
+    ```
 
-- Ready to receive the next directives for active tickets or trading strategy builds.
+The local telemetry confirms `Quantower.exe` is completely stopped and the G3 log proof is negative. I cannot clear the login modal or start Oracle V5 until the application is brought online locally. Please advise or manually boot Quantower so the internal ACT loop can proceed.

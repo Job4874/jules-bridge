@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_BASE_URL = "https://parade-marrow-pulp.ngrok-free.dev"
+DEFAULT_BASE_URL = "http://127.0.0.1:5000"
 OMITTED_IMAGE = "<image_base64 omitted; use saved_path as screenshot evidence>"
 SENSITIVE_KEY_PARTS = ("authorization", "token", "secret", "password", "api_key", "apikey")
 
