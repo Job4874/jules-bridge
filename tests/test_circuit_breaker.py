@@ -23,7 +23,7 @@ def client():
             self.client = test_client
             
         def get(self, path):
-            return self.client.get(path, headers={"Authorization": "Bearer testing"})
+            return self.client.get(path, headers={"Authorization": "Bearer JULES-SECURE-999"})
 
     with app.test_client() as client:
         yield AuthenticatedClient(client)
