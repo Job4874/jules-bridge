@@ -315,6 +315,20 @@ def _evidence_hard_gate():
     }), 423
 
 
+@app.before_request
+def _circuit_breaker_check():
+    # pylint: disable=import-outside-toplevel
+    from modules.circuit_breaker import check_circuit_breaker
+    
+    is_open, retry_after = check_circuit_breaker(request.path)
+    if is_open:
+        logger.warning("Circuit breaker OPEN for %s", request.path)
+        return jsonify({
+            "error": "circuit_open",
+            "route": request.path,
+            "retry_after_s": retry_after
+        }), 429
+
 @app.after_request
 def _finalize_request(response):
     started = getattr(g, "request_start", None)
