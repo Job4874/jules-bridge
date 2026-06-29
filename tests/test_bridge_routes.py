@@ -1021,5 +1021,46 @@ class TestBridgeTokenAuth(unittest.TestCase):
         mock_send.assert_not_called()
 
 
+class TestChatRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    @patch("modules.test_chat_providers")
+    def test_chat_test_delegates_to_module(self, mock_test):
+        mock_test.return_value = {"healthy": False, "providers": {"gemini": {"status": "no_key"}}}
+
+        response = self.client.get("/chat/test")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.get_json()["healthy"])
+        mock_test.assert_called_once_with()
+
+    @patch("modules.chat")
+    def test_chat_route_is_thin(self, mock_chat):
+        mock_chat.return_value = {"response": "ok", "model_used": "stub", "elapsed_ms": 1, "errors": []}
+
+        response = self.client.post(
+            "/chat",
+            json={
+                "message": "hello",
+                "model": "smart",
+                "system": "system",
+                "image_base64": "abc",
+                "history": [{"role": "user", "content": "prior"}],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["response"], "ok")
+        mock_chat.assert_called_once_with(
+            message="hello",
+            model_alias="smart",
+            system_prompt="system",
+            image_base64="abc",
+            history=[{"role": "user", "content": "prior"}],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

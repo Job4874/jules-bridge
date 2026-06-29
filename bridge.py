@@ -1768,51 +1768,8 @@ def chat_test():
 
     Returns per-provider status so operators can debug which keys work.
     """
-    import time as _time  # pylint: disable=import-outside-toplevel
-    import requests as _req  # pylint: disable=import-outside-toplevel
-
-    results = {}
-
-    # --- Gemini ---
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if api_key:
-        t0 = _time.monotonic()
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"  # pylint: disable=line-too-long
-            payload = {"contents": [{"role": "user", "parts": [{"text": "Say OK"}]}]}
-            r = _req.post(url, json=payload, timeout=15)
-            elapsed = int((_time.monotonic() - t0) * 1000)
-            if r.status_code == 200:
-                results["gemini"] = {"status": "ok", "model": "gemini-2.0-flash", "ms": elapsed}
-            else:
-                results["gemini"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            elapsed = int((_time.monotonic() - t0) * 1000)
-            results["gemini"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
-    else:
-        results["gemini"] = {"status": "no_key", "detail": "GEMINI_API_KEY not set"}
-
-    # --- OpenRouter ---
-    or_key = os.environ.get("OPENROUTER_API_KEY", "")
-    if or_key:
-        t0 = _time.monotonic()
-        try:
-            or_url = "https://openrouter.ai/api/v1/chat/completions"
-            r = _req.post(or_url, json={"model": "google/gemma-3-27b-it:free", "messages": [{"role": "user", "content": "Say OK"}]},  # pylint: disable=line-too-long
-                          headers={"Authorization": f"Bearer {or_key}"}, timeout=20)
-            elapsed = int((_time.monotonic() - t0) * 1000)
-            if r.status_code == 200:
-                results["openrouter"] = {"status": "ok", "model": "google/gemma-3-27b-it:free", "ms": elapsed}
-            else:
-                results["openrouter"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}  # pylint: disable=line-too-long
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            elapsed = int((_time.monotonic() - t0) * 1000)
-            results["openrouter"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
-    else:
-        results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY not set"}
-
-    any_ok = any(v.get("status") == "ok" for v in results.values())
-    return jsonify({"healthy": any_ok, "providers": results}), 200
+    result = modules.test_chat_providers()
+    return jsonify(dict(result)), 200
 
 @app.route("/chat", methods=["POST"])
 @route_errors
@@ -1833,107 +1790,15 @@ def chat():
     image_b64 = string_field(data, "image_base64", default="", allow_empty=True)
     history = data.get("history", [])
 
-    if not system_prompt:
-        system_prompt = (
-            "You are Jules — a powerful AI engineering agent built on Jules Bridge. "
-            "You are direct, honest, and focused on shipping production-grade software. "
-            "You have access to cloud VMs (GCP jules-offload-worker, Azure workers), "
-            "a local Flask bridge at port 5000, and a fleet of Jules AI workers. "
-            "When shown a screenshot, describe what you see and suggest concrete next actions. "
-            "Be concise but complete. Never refuse to help with technical tasks."
-        )
+    result = modules.chat(
+        message=message,
+        model_alias=model_alias,
+        system_prompt=system_prompt,
+        image_base64=image_b64,
+        history=history,
+    )
+    return jsonify(dict(result)), 200
 
-    # Build messages list
-    messages = []
-    for turn in (history or []):
-        if isinstance(turn, dict) and turn.get("role") in ("user", "assistant"):
-            messages.append({"role": turn["role"], "content": turn["content"]})
-
-    # Add current user message (with image if provided)
-    if image_b64:
-        user_content = [
-            {"type": "text", "text": message},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64}"}},
-        ]
-    else:
-        user_content = message
-    messages.append({"role": "user", "content": user_content})
-
-    # Try Gemini first via reasoning module's LLM call
-    import time as _time  # pylint: disable=import-outside-toplevel
-    t0 = _time.monotonic()
-    response_text = None
-    model_used = None
-    error_chain = []
-
-    # --- Gemini path ---
-    try:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-        if api_key:
-            import requests as _req  # pylint: disable=import-outside-toplevel
-            gemini_model = "gemini-2.0-flash" if model_alias == "fast" else "gemini-2.5-pro"
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={api_key}"  # pylint: disable=line-too-long
-            # Build Gemini parts
-            parts = [{"text": message}]
-            if image_b64:
-                parts.append({"inline_data": {"mime_type": "image/png", "data": image_b64}})
-            payload = {
-                "system_instruction": {"parts": [{"text": system_prompt}]},
-                "contents": [{"role": "user", "parts": parts}],
-            }
-            # Add history to contents
-            if history:
-                hist_contents = []
-                for turn in history:
-                    role = "user" if turn.get("role") == "user" else "model"
-                    hist_contents.append({"role": role, "parts": [{"text": turn.get("content", "")}]})
-                hist_contents.append({"role": "user", "parts": parts})
-                payload["contents"] = hist_contents
-
-            r = _req.post(url, json=payload, timeout=30)
-            if r.status_code == 200:
-                resp = r.json()
-                response_text = resp["candidates"][0]["content"]["parts"][0]["text"]
-                model_used = gemini_model
-            else:
-                error_chain.append(f"Gemini {r.status_code}: {r.text[:200]}")
-    except Exception as exc:  # pylint: disable=broad-exception-caught
-        error_chain.append(f"Gemini exception: {exc}")
-
-    # --- OpenRouter fallback ---
-    if not response_text:
-        try:
-            or_key = os.environ.get("OPENROUTER_API_KEY", "")
-            if or_key:
-                import requests as _req  # pylint: disable=import-outside-toplevel
-                or_model = "google/gemma-3-27b-it:free" if model_alias == "fast" else "deepseek/deepseek-r1:free"
-                or_url = "https://openrouter.ai/api/v1/chat/completions"
-                or_messages = [{"role": "system", "content": system_prompt}] + messages
-                r = _req.post(or_url, json={"model": or_model, "messages": or_messages},
-                              headers={"Authorization": f"Bearer {or_key}"}, timeout=45)
-                if r.status_code == 200:
-                    response_text = r.json()["choices"][0]["message"]["content"]
-                    model_used = f"openrouter/{or_model}"
-                else:
-                    error_chain.append(f"OpenRouter {r.status_code}: {r.text[:200]}")
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            error_chain.append(f"OpenRouter exception: {exc}")
-
-    elapsed_ms = int((_time.monotonic() - t0) * 1000)
-
-    if response_text:
-        return jsonify({
-            "response": response_text,
-            "model_used": model_used,
-            "elapsed_ms": elapsed_ms,
-        }), 200
-
-    return jsonify({
-        "response": "I'm offline right now — no API keys responded. Check GEMINI_API_KEY or OPENROUTER_API_KEY in .env.",  # pylint: disable=line-too-long
-        "model_used": "none",
-        "elapsed_ms": elapsed_ms,
-        "errors": error_chain,
-    }), 200
 
 
 # ---------------------------------------------------------------------------
