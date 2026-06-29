@@ -196,7 +196,7 @@ def _l_stub(_step: str, step_index: int, _model: str) -> Dict[str, Any]:
 
 def _load_env_keys() -> None:
     try:
-        from notify_email import load_env
+        from notify_email import load_env  # pylint: disable=import-outside-toplevel
 
         load_env()
     except ImportError:
@@ -308,7 +308,7 @@ def _gcloud_access_token() -> str:
             token = result.stdout.strip()
             if result.returncode == 0 and token.startswith("ya29"):
                 return token
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
             continue
     _LOGGER.warning("gcloud token fetch failed — ensure gcloud is installed and `gcloud auth login` has been run")
     return ""
@@ -800,7 +800,7 @@ def score_hre_depth(trace: ReasoningTrace) -> dict:
         os.makedirs(os.path.dirname(eval_path), exist_ok=True)
         with open(eval_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(result) + "\n")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         _LOGGER.warning("Failed to record HRE depth: %s", e)
 
     return result
@@ -847,7 +847,7 @@ def discover_skills(skills_dir: str) -> list[dict]:
                 "trigger_condition": trigger,
                 "skill_path": skill_path
             })
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             _LOGGER.warning("Failed to parse skill %s: %s", skill_path, e)
 
     return skills
@@ -879,5 +879,5 @@ def inject_gotcha(module: str, text: str) -> dict:
             f.write(new_content)
 
         return {"status": "ok", "module": module, "text": text}
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         return {"status": "error", "message": str(e)}

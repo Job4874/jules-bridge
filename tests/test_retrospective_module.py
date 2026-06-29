@@ -3,6 +3,8 @@
 Tests the module boundary contract — all tests call only the public interface.
 Nick Ni: "Every failure is a harness bug."
 """
+# pylint: disable=redefined-outer-name
+
 import json
 import logging
 import os
@@ -151,7 +153,7 @@ class TestTestEvidence:
         record_test_evidence(SAMPLE_PYTEST_OUTPUT, tmp)
         evidence_file = os.path.join(tmp, "test_evidence.json")
         assert os.path.exists(evidence_file)
-        with open(evidence_file) as f:
+        with open(evidence_file, encoding="utf-8") as f:
             records = json.load(f)
         assert len(records) >= 1
         assert records[-1]["passed"] is True
@@ -161,7 +163,7 @@ class TestTestEvidence:
         for _ in range(3):
             record_test_evidence(SAMPLE_PYTEST_OUTPUT, tmp)
         evidence_file = os.path.join(tmp, "test_evidence.json")
-        with open(evidence_file) as f:
+        with open(evidence_file, encoding="utf-8") as f:
             records = json.load(f)
         assert len(records) == 3
 
@@ -191,7 +193,7 @@ class TestTestEvidence:
         for i in range(55):
             record_test_evidence(f"output {i}", tmp)
         evidence_file = os.path.join(tmp, "test_evidence.json")
-        with open(evidence_file) as f:
+        with open(evidence_file, encoding="utf-8") as f:
             records = json.load(f)
         assert len(records) == 50
 
@@ -233,8 +235,8 @@ class TestAnalyzeSession:
     def test_empty_log_produces_no_patterns(self, setup_dirs):
         _write_log(setup_dirs["log"], [])
         report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
-        assert report.patterns == []
-        assert report.doom_loops == []
+        assert not report.patterns
+        assert not report.doom_loops
 
     def test_missing_log_does_not_raise(self, setup_dirs):
         # log_path doesn't exist — should return empty report, not crash
