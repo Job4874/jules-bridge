@@ -41,6 +41,7 @@ Add a tunnel health watchdog to `start.py` that:
 ## Offline Escalation Path
 
 When tunnel is confirmed dead and cannot self-heal:
+
 1. Jules writes blocker to `JULES_RESPONSE.md` via **git commit + push** (not via bridge)
 2. The commit message includes `[TUNNEL_DEAD]` tag
 3. This gives the operator visibility even when the bridge is unreachable

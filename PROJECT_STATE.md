@@ -9,7 +9,7 @@
 ## Snapshot
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | **Repo** | `C:\Users\abdul\.jules` |
 | **Branch** | `master` |
 | **Working tree** | Dirty (Human-Mimic UI & VM Driver Completion) |
@@ -34,7 +34,7 @@ Parallel track in progress:
 ## Recently Completed (high signal)
 
 | Area | Status | Evidence |
-|---|---|---|
+| --- | --- | --- |
 | App launcher (Edge) | Done | `modules/app_launcher.py`, `POST /apps/launch_browser`, 8 unit tests |
 | Token auth on bridge | Done | commit `98af291` |
 | Jules fleet / COT automation | Done | 29/29 packets complete per `JULES_COT_LEDGER.json` |
@@ -53,7 +53,7 @@ Parallel track in progress:
 ## Blocking Issues
 
 | ID | Issue | Severity | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | B1 | Oracle V5 handoff chain was missing | **Resolved this session** | Created `PROJECT_STATE.md`, `docs/HANDOFF_PROTOCOL.md`, `docs/NEXT_PROFILE_PROMPT.md`, `docs/CLAIM_AUDIT.md` |
 | B2 | No live Oracle runtime evidence in Jules repo | Medium | `/oracle/*` routes depend on `test_evidence.json`; stale evidence triggers soft warning or HTTP 423 when `EVIDENCE_GATE_HARD=1` |
 | B3 | `vm_manager` not implemented | **Resolved this session** | Added `modules/vm_manager.py`, `/vm/*` routes, and evidence hash `9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a` |
@@ -63,7 +63,7 @@ Parallel track in progress:
 ## Dual Handoff Systems (do not conflate)
 
 | System | Primary files | Audience |
-|---|---|---|
+| --- | --- | --- |
 | **Project Agents Rule** | `context/01–08`, `.agents/AGENTS.md`, `memory/*.md` | Jules Bridge coding agents |
 | **Global Verdent Rule (Oracle V5)** | `PROJECT_STATE.md`, `docs/HANDOFF_PROTOCOL.md`, `docs/NEXT_PROFILE_PROMPT.md`, `docs/CLAIM_AUDIT.md` | Profile/credit switches, Oracle operator continuity |
 

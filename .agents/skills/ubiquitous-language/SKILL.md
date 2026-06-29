@@ -10,8 +10,10 @@ description: >
 # Ubiquitous Language Skill
 
 ## Purpose
+
 From Domain-Driven Design (DDD): create a shared vocabulary between you, the AI, domain experts,
 and the code itself. Matt Pocco describes this as "a powerhouse" that:
+
 - Allows the AI to think in a less verbose way
 - Makes implementation more aligned with what was planned
 - Reduces communication overhead between you and the AI
@@ -22,7 +24,9 @@ and the code itself. Matt Pocco describes this as "a powerhouse" that:
 ## Instructions
 
 ### Step 1: Scan the Codebase
+
 Use a sub-agent to explore the codebase and collect:
+
 - All class names, function names, and module names
 - Variable names that appear to be domain concepts (not generic ones like `i`, `tmp`, `data`)
 - Comments that explain domain concepts
@@ -30,13 +34,16 @@ Use a sub-agent to explore the codebase and collect:
 - Error messages and log strings that reference domain concepts
 
 ### Step 2: Identify Domain Clusters
+
 Group the collected terms into **bounded contexts** — natural clusters of related concepts.
 For example:
+
 - "Order lifecycle" (submit, fill, cancel, reject)
 - "Market data" (OHLCV, bid, ask, spread, depth)
 - "Infrastructure" (route, endpoint, payload, timeout)
 
 ### Step 3: Generate the Ubiquitous Language Document
+
 Create `UBIQUITOUS_LANGUAGE.md` in the project root with this structure:
 
 ```markdown
@@ -58,17 +65,21 @@ Create `UBIQUITOUS_LANGUAGE.md` in the project root with this structure:
 ```
 
 ### Step 4: Validate with User
+
 Present a draft and ask:
+
 - "Are these terms used consistently?"
 - "Are there terms we use differently in different contexts?"
 - "Are there business terms missing from the codebase?"
 
 ### Step 5: Keep It Current
+
 - Update the document whenever new domain concepts are introduced
 - Reference the document in your system prompt or CLAUDE.md
 - Include it as context in grilling sessions and PRD drafts
 
 ## Rules
+
 - Use the exact terms from the codebase — don't invent cleaner-sounding names
 - Mark synonyms/aliases explicitly to avoid confusion
 - Include the file/module where each term is primarily used
@@ -77,6 +88,7 @@ Present a draft and ask:
 - Pass this document to every grilling session and PRD-writing session as context
 
 ## Example: When to Run This
+
 - New contributor joining a complex project
 - AI keeps using wrong terminology (using "order" when you mean "fill")
 - Planning sessions feel misaligned with the resulting code

@@ -259,7 +259,7 @@ This stores a SHA-256 hash in `memory/test_evidence.json`.
 ### Key Test Files
 
 | File | Module | Test Count |
-|------|--------|------------|
+| ------ | -------- | ------------ |
 | `test_fs_service.py` | fs_service | — |
 | `test_shell_executor.py` | shell_executor | — |
 | `test_inbox_service.py` | inbox_service | — |

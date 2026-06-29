@@ -3,7 +3,6 @@
 Tests the module boundary contract — all tests call only the public interface.
 Nick Ni: "Every failure is a harness bug."
 """
-import hashlib
 import json
 import logging
 import os
@@ -16,7 +15,6 @@ from modules.retrospective_module import (
     DoomLoop,
     LogPattern,
     RetrospectiveReport,
-    TestEvidence,
     analyze_session,
     load_memory,
     load_test_evidence,
@@ -29,7 +27,7 @@ from modules.retrospective_module import (
 # ---------------------------------------------------------------------------
 
 @pytest.fixture()
-def tmp_dirs():
+def setup_dirs():
     """Provide temporary directories for log, memory, and evidence."""
     with tempfile.TemporaryDirectory() as tmpdir:
         log_path = os.path.join(tmpdir, "bridge.log")
@@ -224,30 +222,30 @@ class TestTestEvidence:
 # ---------------------------------------------------------------------------
 
 class TestAnalyzeSession:
-    def test_returns_report(self, tmp_dirs):
+    def test_returns_report(self, setup_dirs):
         report = analyze_session(
-            log_path=tmp_dirs["log"],
-            memory_path=tmp_dirs["memory"],
+            log_path=setup_dirs["log"],
+            memory_path=setup_dirs["memory"],
             session_id="test001",
         )
         assert isinstance(report, RetrospectiveReport)
 
-    def test_empty_log_produces_no_patterns(self, tmp_dirs):
-        _write_log(tmp_dirs["log"], [])
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+    def test_empty_log_produces_no_patterns(self, setup_dirs):
+        _write_log(setup_dirs["log"], [])
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         assert report.patterns == []
         assert report.doom_loops == []
 
-    def test_missing_log_does_not_raise(self, tmp_dirs):
+    def test_missing_log_does_not_raise(self, setup_dirs):
         # log_path doesn't exist — should return empty report, not crash
         report = analyze_session(
-            log_path=os.path.join(tmp_dirs["root"], "nonexistent.log"),
-            memory_path=tmp_dirs["memory"],
+            log_path=os.path.join(setup_dirs["root"], "nonexistent.log"),
+            memory_path=setup_dirs["memory"],
         )
         assert report.log_lines_analyzed == 0
         assert isinstance(report.learnings, list)
 
-    def test_doom_loop_detected(self, tmp_dirs):
+    def test_doom_loop_detected(self, setup_dirs):
         # Same route called 4x consecutively
         lines = [
             '127.0.0.1 "POST /oracle/status HTTP/1.1" 200 ms=100',
@@ -255,26 +253,26 @@ class TestAnalyzeSession:
             '127.0.0.1 "POST /oracle/status HTTP/1.1" 200 ms=100',
             '127.0.0.1 "POST /oracle/status HTTP/1.1" 200 ms=100',
         ]
-        _write_log(tmp_dirs["log"], lines)
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        _write_log(setup_dirs["log"], lines)
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         assert report.has_doom_loops
         assert len(report.doom_loops) >= 1
         loop = report.doom_loops[0]
         assert loop.call_count >= 4
         assert loop.consecutive is True
 
-    def test_no_doom_loop_for_alternating_routes(self, tmp_dirs):
+    def test_no_doom_loop_for_alternating_routes(self, setup_dirs):
         lines = [
             '127.0.0.1 "POST /oracle/status HTTP/1.1" 200',
             '127.0.0.1 "GET /fs/read HTTP/1.1" 200',
             '127.0.0.1 "POST /oracle/status HTTP/1.1" 200',
             '127.0.0.1 "GET /fs/read HTTP/1.1" 200',
         ]
-        _write_log(tmp_dirs["log"], lines)
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        _write_log(setup_dirs["log"], lines)
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         assert not report.has_doom_loops
 
-    def test_repeated_doom_loops_are_deduped_by_route(self, tmp_dirs):
+    def test_repeated_doom_loops_are_deduped_by_route(self, setup_dirs):
         lines = [
             '127.0.0.1 "POST /shell HTTP/1.1" 200',
             '127.0.0.1 "POST /shell HTTP/1.1" 200',
@@ -285,75 +283,75 @@ class TestAnalyzeSession:
             '127.0.0.1 "POST /shell HTTP/1.1" 200',
             '127.0.0.1 "POST /shell HTTP/1.1" 200',
         ]
-        _write_log(tmp_dirs["log"], lines)
+        _write_log(setup_dirs["log"], lines)
 
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
 
         shell_loops = [loop for loop in report.doom_loops if loop.tool_name == "POST /shell"]
         assert len(shell_loops) == 1
         assert shell_loops[0].call_count == 4
 
-    def test_error_pattern_detected(self, tmp_dirs):
+    def test_error_pattern_detected(self, setup_dirs):
         lines = [
             '127.0.0.1 "POST /oracle/build HTTP/1.1" 500',
             '127.0.0.1 "POST /oracle/build HTTP/1.1" 500',
             '127.0.0.1 "POST /oracle/build HTTP/1.1" 500',
         ]
-        _write_log(tmp_dirs["log"], lines)
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        _write_log(setup_dirs["log"], lines)
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         assert len(report.patterns) >= 1
         pattern_types = [p.pattern_type for p in report.patterns]
         assert "repeated_error" in pattern_types
 
-    def test_port_5000_and_threshold_5000ms_are_not_500_errors(self, tmp_dirs):
+    def test_port_5000_and_threshold_5000ms_are_not_500_errors(self, setup_dirs):
         lines = [
             "2026-06-25T15:56:46.925817+00:00 Flask bridge online at http://127.0.0.1:5000",
             "2026-06-25T10:41:10-0600 INFO jules_bridge: Listening on 0.0.0.0:5000",
             "2026-06-25T10:41:10-0600 INFO jules_bridge: POST /shell -> 200 5000.00ms remote=127.0.0.1",
         ]
-        _write_log(tmp_dirs["log"], lines)
+        _write_log(setup_dirs["log"], lines)
 
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
 
         assert not any("internal_error_500" in pattern.description for pattern in report.patterns)
 
-    def test_dev_server_warning_is_not_a_harness_warning(self, tmp_dirs):
+    def test_dev_server_warning_is_not_a_harness_warning(self, setup_dirs):
         lines = [
             "2026-06-25T10:41:10-0600 INFO werkzeug: WARNING: This is a development server.",
             "2026-06-25T10:50:45-0600 INFO werkzeug: WARNING: This is a development server.",
             "2026-06-25T19:35:43-0600 INFO werkzeug: WARNING: This is a development server.",
         ]
-        _write_log(tmp_dirs["log"], lines)
+        _write_log(setup_dirs["log"], lines)
 
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
 
         assert not any("warning" in pattern.description for pattern in report.patterns)
 
-    def test_arrow_style_slow_route_detected(self, tmp_dirs):
+    def test_arrow_style_slow_route_detected(self, setup_dirs):
         lines = [
             "2026-06-25 INFO jules_bridge: GET /oracle/status -> 200 11874.35ms remote=127.0.0.1",
             "2026-06-25 INFO jules_bridge: GET /oracle/status -> 200 9844.00ms remote=127.0.0.1",
         ]
-        _write_log(tmp_dirs["log"], lines)
+        _write_log(setup_dirs["log"], lines)
 
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
 
         assert any(pattern.pattern_type == "slow_route" for pattern in report.patterns)
         assert any("GET /oracle/status" in learning for learning in report.learnings)
 
-    def test_repeated_oracle_status_polling_extracts_learning(self, tmp_dirs):
+    def test_repeated_oracle_status_polling_extracts_learning(self, setup_dirs):
         lines = [
             f"2026-06-25 INFO jules_bridge: GET /oracle/status -> 200 {1000 + i}.00ms remote=127.0.0.1"
             for i in range(6)
         ]
-        _write_log(tmp_dirs["log"], lines)
+        _write_log(setup_dirs["log"], lines)
 
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
 
         assert any(pattern.pattern_type == "route_frequency" for pattern in report.patterns)
         assert any("GET /oracle/status" in learning for learning in report.learnings)
 
-    def test_quantower_shell_operations_extract_learning(self, tmp_dirs):
+    def test_quantower_shell_operations_extract_learning(self, setup_dirs):
         lines = [
             (
                 "2026-06-25 INFO jules_bridge: [JULES SHELL] shell=powershell "
@@ -364,71 +362,71 @@ class TestAnalyzeSession:
                 "cwd=C:\\Users\\abdul\\.jules command=powershell.exe -ExecutionPolicy Bypass -File scratch\\run_starter.ps1"
             ),
         ]
-        _write_log(tmp_dirs["log"], lines)
+        _write_log(setup_dirs["log"], lines)
 
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
 
         assert any(pattern.pattern_type == "host_operation" for pattern in report.patterns)
         assert any("Quantower" in learning or "Oracle" in learning for learning in report.learnings)
 
-    def test_session_id_is_set(self, tmp_dirs):
+    def test_session_id_is_set(self, setup_dirs):
         report = analyze_session(
-            log_path=tmp_dirs["log"],
-            memory_path=tmp_dirs["memory"],
+            log_path=setup_dirs["log"],
+            memory_path=setup_dirs["memory"],
             session_id="my-session-42",
         )
         assert report.session_id == "my-session-42"
 
-    def test_auto_session_id_when_none(self, tmp_dirs):
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+    def test_auto_session_id_when_none(self, setup_dirs):
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         assert len(report.session_id) > 0  # auto-generated timestamp
 
-    def test_learnings_list_is_non_empty(self, tmp_dirs):
+    def test_learnings_list_is_non_empty(self, setup_dirs):
         """Even with no patterns, learnings should contain at least one entry."""
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         assert len(report.learnings) >= 1
 
-    def test_learnings_written_to_memory(self, tmp_dirs):
+    def test_learnings_written_to_memory(self, setup_dirs):
         lines = [
             '127.0.0.1 "POST /shell/exec HTTP/1.1" 500',
             '127.0.0.1 "POST /shell/exec HTTP/1.1" 500',
         ]
-        _write_log(tmp_dirs["log"], lines)
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        _write_log(setup_dirs["log"], lines)
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         # Check that at least one domain got a memory update
-        general_path = os.path.join(tmp_dirs["memory"], "general.md")
+        general_path = os.path.join(setup_dirs["memory"], "general.md")
         if report.memory_updates:
             assert os.path.exists(general_path) or any(
-                os.path.exists(os.path.join(tmp_dirs["memory"], f"{d}.md"))
+                os.path.exists(os.path.join(setup_dirs["memory"], f"{d}.md"))
                 for d in report.memory_updates
             )
 
-    def test_to_summary_is_string(self, tmp_dirs):
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+    def test_to_summary_is_string(self, setup_dirs):
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         summary = report.to_summary()
         assert isinstance(summary, str)
         assert len(summary) > 0
         assert "Retrospective" in summary
 
-    def test_has_learnings_property(self, tmp_dirs):
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+    def test_has_learnings_property(self, setup_dirs):
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         assert isinstance(report.has_learnings, bool)
 
-    def test_log_lines_analyzed_count(self, tmp_dirs):
+    def test_log_lines_analyzed_count(self, setup_dirs):
         lines = ["line one", "line two", "line three"]
-        _write_log(tmp_dirs["log"], lines)
-        report = analyze_session(log_path=tmp_dirs["log"], memory_path=tmp_dirs["memory"])
+        _write_log(setup_dirs["log"], lines)
+        report = analyze_session(log_path=setup_dirs["log"], memory_path=setup_dirs["memory"])
         assert report.log_lines_analyzed == len(lines)
 
-    def test_analyze_session_does_not_prune_by_default(self, tmp_dirs):
-        general_path = os.path.join(tmp_dirs["memory"], "general.md")
+    def test_analyze_session_does_not_prune_by_default(self, setup_dirs):
+        general_path = os.path.join(setup_dirs["memory"], "general.md")
         with open(general_path, "w", encoding="utf-8") as handle:
             handle.write("## Session 20000101T000000\n\n- stale learning\n")
-        _write_log(tmp_dirs["log"], ['127.0.0.1 "POST /shell/exec HTTP/1.1" 500'] * 2)
+        _write_log(setup_dirs["log"], ['127.0.0.1 "POST /shell/exec HTTP/1.1" 500'] * 2)
 
         analyze_session(
-            log_path=tmp_dirs["log"],
-            memory_path=tmp_dirs["memory"],
+            log_path=setup_dirs["log"],
+            memory_path=setup_dirs["memory"],
             session_id="20990101T000000",
         )
 
@@ -437,16 +435,16 @@ class TestAnalyzeSession:
         assert "stale learning" in text
         assert "20990101T000000" in text
 
-    def test_analyze_session_auto_prune_removes_stale_sections_after_write(self, tmp_dirs, caplog):
-        general_path = os.path.join(tmp_dirs["memory"], "general.md")
+    def test_analyze_session_auto_prune_removes_stale_sections_after_write(self, setup_dirs, caplog):
+        general_path = os.path.join(setup_dirs["memory"], "general.md")
         with open(general_path, "w", encoding="utf-8") as handle:
             handle.write("## Session 20000101T000000\n\n- stale learning\n")
-        _write_log(tmp_dirs["log"], ['127.0.0.1 "POST /shell/exec HTTP/1.1" 500'] * 2)
+        _write_log(setup_dirs["log"], ['127.0.0.1 "POST /shell/exec HTTP/1.1" 500'] * 2)
 
         with caplog.at_level(logging.INFO, logger="retrospective"):
             analyze_session(
-                log_path=tmp_dirs["log"],
-                memory_path=tmp_dirs["memory"],
+                log_path=setup_dirs["log"],
+                memory_path=setup_dirs["memory"],
                 session_id="20990101T000000",
                 auto_prune=True,
             )
@@ -463,27 +461,27 @@ class TestAnalyzeSession:
 # ---------------------------------------------------------------------------
 
 class TestLoadMemory:
-    def test_returns_empty_when_no_memory(self, tmp_dirs):
-        content = load_memory(memory_path=tmp_dirs["memory"], domain="general")
+    def test_returns_empty_when_no_memory(self, setup_dirs):
+        content = load_memory(memory_path=setup_dirs["memory"], domain="general")
         assert content == ""
 
-    def test_returns_written_content(self, tmp_dirs):
-        general_path = os.path.join(tmp_dirs["memory"], "general.md")
-        with open(general_path, "w") as f:
+    def test_returns_written_content(self, setup_dirs):
+        general_path = os.path.join(setup_dirs["memory"], "general.md")
+        with open(general_path, "w", encoding="utf-8") as f:
             f.write("# Memory\n\n- Learning A\n")
-        content = load_memory(memory_path=tmp_dirs["memory"], domain="general")
+        content = load_memory(memory_path=setup_dirs["memory"], domain="general")
         assert "Learning A" in content
 
-    def test_oracle_domain_separate_from_general(self, tmp_dirs):
-        oracle_path = os.path.join(tmp_dirs["memory"], "oracle.md")
-        with open(oracle_path, "w") as f:
+    def test_oracle_domain_separate_from_general(self, setup_dirs):
+        oracle_path = os.path.join(setup_dirs["memory"], "oracle.md")
+        with open(oracle_path, "w", encoding="utf-8") as f:
             f.write("# Oracle\n\n- Oracle gotcha\n")
-        general = load_memory(memory_path=tmp_dirs["memory"], domain="general")
-        oracle = load_memory(memory_path=tmp_dirs["memory"], domain="oracle")
+        general = load_memory(memory_path=setup_dirs["memory"], domain="general")
+        oracle = load_memory(memory_path=setup_dirs["memory"], domain="oracle")
         assert "Oracle gotcha" not in general
         assert "Oracle gotcha" in oracle
 
-    def test_all_domains_loadable(self, tmp_dirs):
+    def test_all_domains_loadable(self, setup_dirs):
         for domain in ("general", "oracle", "quantower", "trading", "reasoning"):
-            content = load_memory(memory_path=tmp_dirs["memory"], domain=domain)
+            content = load_memory(memory_path=setup_dirs["memory"], domain=domain)
             assert isinstance(content, str)  # never raises

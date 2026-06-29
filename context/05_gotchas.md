@@ -17,7 +17,7 @@
 - **`GET /health`** — exists since Phase 5; returns `{status, bridge, uptime_s}`; used by ngrok/monitoring
 - **`GET /` and `GET /info`** — authenticated discovery routes; unlike `/health` and `/ping`, they require the bearer token and return bridge metadata instead of browser-facing 404s
 
-## modules/__init__.py
+## modules/**init**.py
 
 - **Adding a new module** — must add BOTH the import AND the `__all__` entry
 - **Order matters** — modules that depend on others must be imported after their dependencies
@@ -141,7 +141,6 @@
 - **PowerShell execution policy** — if scripts fail with "not digitally signed", add `-ExecutionPolicy Bypass`
 - **File locking** — Windows locks files that are open; `oracle_status()` uses `try/except` on file reads
 
-
 ## human_mimic_driver
 
 - Keep H/L/ACT desktop-driving loops in `modules/human_mimic_driver.py`; `bridge.py` routes must only validate request fields, optionally build notification callbacks, call the module, and return JSON.
@@ -181,4 +180,3 @@
 - `POST /shell` averaged 58 seconds per call. Never call it in a tight loop without caching.
 - If you detect yourself calling any route > 5x consecutively, STOP and run the `recover` skill.
 - Memory file `memory/general.md` contains 318 lines of prior doom loop learnings — read it BEFORE starting work.
-

@@ -14,18 +14,21 @@ he self-unblocks faster and learns from every session without operator intervent
 ### Part A — HRE Depth Scoring in reasoning_module
 
 Extend `ReasoningTrace` to record:
+
 - `hre_passes_taken` — how many HRE passes ran before halting
 - `self_unblocked` — bool: did agent resolve without external escalation?
 - `blockers_resolved` — list of blocker classes resolved during this trace
 - `knowledge_sources_checked` — list of files/routes consulted during HRE
 
 Add `score_hre_depth(trace: ReasoningTrace) -> dict` to `reasoning_module.py`:
+
 - Returns `{depth_score: float, self_unblock_rate: float, gaps_found: list}`
 - Write result to `memory/eval_results.json` alongside existing eval rows
 
 ### Part B — Skill Auto-Discovery at Session Start
 
 Add `discover_skills(skills_dir: str) -> list[dict]` to `reasoning_module.py`:
+
 - Reads all `.agents/skills/*/SKILL.md` front matter
 - Returns `[{name, description, trigger_condition, skill_path}]`
 - `GET /reasoning/skills` — new route that returns the live skill inventory
@@ -34,6 +37,7 @@ Add `discover_skills(skills_dir: str) -> list[dict]` to `reasoning_module.py`:
 ### Part C — Gotchas Auto-Injection
 
 Add `inject_gotcha(module: str, text: str) -> dict` to `reasoning_module.py`:
+
 - Appends a new dated entry to `context/05_gotchas.md` under the correct module heading
 - Called automatically by `remember` skill at session end
 - `POST /reasoning/inject_gotcha` — bridge route for remote injection
@@ -42,6 +46,7 @@ Add `inject_gotcha(module: str, text: str) -> dict` to `reasoning_module.py`:
 ### Part D — Memory Compaction Quality Gate
 
 Add `assess_memory_quality(memory_path: str) -> dict` to `retrospective_module.py`:
+
 - Returns `{total_sections, dated_sections, stale_count, actionable_count, quality_score}`
 - `quality_score` = actionable_count / total_sections
 - Quality < 0.6 triggers a WARNING log and recommendation to prune

@@ -9,7 +9,7 @@
 ## Bounded Context: Bridge (Flask API Layer)
 
 | Term | Definition | Module | Synonyms to Avoid |
-|------|-----------|--------|-------------------|
+| ------ | ----------- | -------- | ------------------- |
 | **Bridge** | The Flask API server (`bridge.py`) that gives remote agents access to the host machine via HTTP | `bridge.py` | "server", "API", "backend" |
 | **Route** | A single HTTP endpoint on the bridge (e.g., `POST /shell`) | `bridge.py` | "endpoint", "handler", "path" |
 | **Tentacle** | A named route entry in the manifest — each tentacle extends Jules' reach to a specific host capability | `bridge.py` | "endpoint", "feature" |
@@ -24,7 +24,7 @@
 ## Bounded Context: Modules (Deep Module Layer)
 
 | Term | Definition | Module | Synonyms to Avoid |
-|------|-----------|--------|-------------------|
+| ------ | ----------- | -------- | ------------------- |
 | **Module** | One of the five deep modules in `modules/` — each hides a domain's complexity behind a typed interface | `modules/` | "service", "helper", "util" |
 | **FSResult** | Typed dict returned by `fs_service` operations — always has `path`, `content`, `data` keys | `modules/fs_service.py` | "file response", "read result" |
 | **ShellResult** | Typed dict returned by `shell_executor.execute()` — always has `exit_code`, `stdout`, `stderr`, `shell` | `modules/shell_executor.py` | "command result", "run result" |
@@ -38,7 +38,7 @@
 ## Bounded Context: Shell Execution
 
 | Term | Definition | Module | Synonyms to Avoid |
-|------|-----------|--------|-------------------|
+| ------ | ----------- | -------- | ------------------- |
 | **Shell selector** | The `shell` parameter in `POST /shell` — chooses the execution engine | `modules/shell_executor.py` | "shell type", "engine" |
 | **PowerShell** | Default shell (`powershell.exe -NoProfile -NonInteractive -Command`) | `modules/shell_executor.py` | "PS", "ps1" |
 | **cmd** | Windows Command Prompt shell (`cmd.exe /d /s /c`) | `modules/shell_executor.py` | "command prompt", "DOS" |
@@ -51,7 +51,7 @@
 ## Bounded Context: Oracle V5 (Trading Strategy)
 
 | Term | Definition | Module | Synonyms to Avoid |
-|------|-----------|--------|-------------------|
+| ------ | ----------- | -------- | ------------------- |
 | **Oracle** | The OracleV5 trading strategy — a C# DLL deployed to Quantower | `modules/oracle_session.py` | "strategy", "algo", "bot" |
 | **Oracle repo** | `C:\aotp\projects\OracleV5` — the git repository containing Oracle source code | `modules/oracle_session.py` | "source", "project folder" |
 | **Strategy DLL** | `OracleV5.Strategy.dll` — the compiled binary deployed to Quantower | `modules/oracle_session.py` | "DLL", "binary", "build output" |
@@ -69,7 +69,7 @@
 ## Bounded Context: Quantower (Trading Platform)
 
 | Term | Definition | Module | Synonyms to Avoid |
-|------|-----------|--------|-------------------|
+| ------ | ----------- | -------- | ------------------- |
 | **Quantower** | The algorithmic trading platform running Oracle — detected by the `Starter` process | `modules/oracle_session.py` | "trading platform", "QT" |
 | **Starter** | Quantower's launcher process name (used to check if Quantower is running) | `modules/oracle_session.py` | "process", "app" |
 | **StM** | Strategies Manager in Quantower — UI panel where Oracle instance is configured | (docs) | "strategy manager", "settings" |
@@ -84,7 +84,7 @@
 ## Bounded Context: Inbox (Agent Communication)
 
 | Term | Definition | Module | Synonyms to Avoid |
-|------|-----------|--------|-------------------|
+| ------ | ----------- | -------- | ------------------- |
 | **Inbox** | The `jules_inbox/` directory — file-based message exchange between operator and Jules | `modules/inbox_service.py` | "messages", "mailbox" |
 | **OPERATOR_RESPONSE.md** | Default file the operator writes to communicate with Jules | `modules/inbox_service.py` | "operator message", "input file" |
 | **JULES_RESPONSE.md** | Default file Jules writes to communicate with the operator | `modules/inbox_service.py` | "agent response", "output file" |
@@ -97,7 +97,7 @@
 ## Bounded Context: UI Automation
 
 | Term | Definition | Module | Synonyms to Avoid |
-|------|-----------|--------|-------------------|
+| ------ | ----------- | -------- | ------------------- |
 | **Screenshot** | A full-desktop PNG captured via pyautogui, returned as base64 | `modules/ui_automation.py` | "image", "capture", "screen" |
 | **Display bounds** | The screen resolution (e.g., 1920×1080) — coordinates must be within this | `modules/ui_automation.py` | "screen size", "resolution" |
 | **pyautogui** | Python library for mouse/keyboard control — hidden inside `ui_automation.py` | `modules/ui_automation.py` | (internal — don't expose in routes) |
@@ -108,7 +108,7 @@
 ## Bounded Context: AKC (Agent Knowledge Context)
 
 | Term | Definition | Module | Synonyms to Avoid |
-|------|-----------|--------|-------------------|
+| ------ | ----------- | -------- | ------------------- |
 | **AKC** | Agent Knowledge Context: a source-backed checkpoint that turns transcripts, project context, and runtime learnings into compact operating rules | `modules/akc_module.py` | "random memory", "summary" |
 | **AKC checkpoint** | Markdown file containing source inventory, path refs, extracted operating rules, and the daily loop | `context/08_akc_context_checkpoint.md` | "notes", "dump" |
 | **AKC readiness** | Session-start gate that verifies the AKC checkpoint exists, has `status: ready`, and includes required operating rules | `modules/akc_module.py` | "context check", "preflight" |
@@ -121,7 +121,7 @@
 ## Anti-Patterns (Terms to Never Use)
 
 | Wrong Term | Correct Term | Why |
-|-----------|-------------|-----|
+| ----------- | ------------- | ----- |
 | "API" (unqualified) | "bridge route" or "bridge endpoint" | "API" is too vague — everything is an API |
 | "run" (for shell) | `execute` | Matches the actual function name |
 | "file" (for inbox) | "inbox file" or "inbox message" | Distinguishes from filesystem files |

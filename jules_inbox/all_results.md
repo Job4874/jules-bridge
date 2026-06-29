@@ -1,11 +1,15 @@
 # Jules VM Results — 304s uptime
+
 Completed: 6 | Running: 0
 
 ======================================================================
+
 ## Task 1: df -h && free -h && nproc && cat /proc/cpuinfo | grep 'model name' | head -1
+
 Status: done | Started: 2026-06-27T06:30:27 | Ended: 2026-06-27T06:30:27
 
-### Result:
+### Result
+
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/root       145G  3.6G  141G   3% /
 tmpfs           7.9G     0  7.9G   0% /dev/shm
@@ -19,43 +23,52 @@ tmpfs           1.6G   12K  1.6G   1% /run/user/1001
 Mem:            15Gi       685Mi        13Gi       1.0Mi       2.1Gi        14Gi
 Swap:             0B          0B          0B
 4
-model name	: Intel(R) Xeon(R) CPU @ 2.20GHz
+model name : Intel(R) Xeon(R) CPU @ 2.20GHz
 
 ======================================================================
-## Task 2: You are Jules — autonomous AI agent on GCP VM. 
+
+## Task 2: You are Jules — autonomous AI agent on GCP VM
 
 Abdul is a solo developer, minimum wage job, 12 mon
 Status: done | Started: 2026-06-27T06:30:27 | Ended: 2026-06-27T06:30:56
 
-### Result:
+### Result
+
 ## 5 Things I Build in 24h
 
 ### 1. The Command Bridge (Bi-Directional Sync)
+
 **What**: A robust bridge connecting my GCP VM shell to Abdul's Windows Flask API to allow seamless file transfer and remote command execution.
 **Time**: 3 hours
 **Success proof**: A `ping` command sent from GCP that triggers a file write on the Windows machine.
 
 ### 2. TIBIN Core Integration
+
 **What**: Merging OracleV5 logic into the TIBIN trading terminal to create a unified signal-to-execution pipeline.
 **Time**: 6 hours
 **Success proof**: A live log showing a signal from OracleV5 triggering a mock order in the TIBIN terminal.
 
 ### 3. Order-Flow Engine Implementation
+
 **What**: Implementing the actual order-flow calculation logic (Delta, Cumulative Volume Delta) using the `order-flow-trader` codebase.
 **Time**: 5 hours
 **Success proof**: A CSV export of real-time CVD calculations based on a provided tick-data sample.
 
 ### 4. Production Deployment Pipeline
-**What**: A Dockerized environment for the trading bot 
+
+**What**: A Dockerized environment for the trading bot
 
 ======================================================================
-## Task 3: MISSION: Build TIBIN Core Integration — signal-to-execution pipeline.
+
+## Task 3: MISSION: Build TIBIN Core Integration — signal-to-execution pipeline
 
 CONTEXT:
+
 - You are Jules, aut
 Status: done | Started: 2026-06-27T06:32:34 | Ended: 2026-06-27T06:33:06
 
-### Result:
+### Result
+
 ```python
 #!/usr/bin/env python3
 """

@@ -16,6 +16,7 @@ Your job is to change that, starting NOW.
 === CONTEXT (from Downloads audit) ===
 
 TIBIN Terminal is a quant trading platform with:
+
 - Barchart live market data integration
 - Trading bot engine (paper trading, aiming for live)
 - 100+ environment variables (Barchart, BLS, CFTC, Ably, etc.)
@@ -28,6 +29,7 @@ Status as of last audit: PARTIAL / NOT_PRODUCTION_READY
 
 TASK 1 — AUDIT WHAT EXISTS
 Research what files are in the TIBIN project. Look at:
+
 - C:\Users\abdul\.jules\* (local bridge, modules, vm_scripts)
 - Any context files in context/ directory
 - The TIBIN_DEEP_AUDIT docs in Downloads
@@ -36,18 +38,21 @@ Report: list of modules that are DONE vs BROKEN vs MISSING.
 
 TASK 2 — FIX THE DASHBOARD
 The dashboard.html at C:\Users\abdul\.jules\dashboard.html needs:
+
 - Voice chat that actually works (Web Speech API + /chat endpoint)
 - VM relay status panel showing jules-worker-agent status
 - Screenshot analysis via clipboard paste + Gemini Vision
 
 TASK 3 — BUILD THE REAL HEALTH CHECK
 Build /health/deep endpoint in bridge.py that:
+
 - Tests each API key (makes a real lightweight test call)
 - Returns PASS/FAIL with latency for: GEMINI, OPENROUTER, GCP, AZURE
 - Returns disk/memory pressure
 
 TASK 4 — FREE COMPUTE RESEARCH
 Find all free-tier compute platforms for running agents 24/7 in 2025:
+
 - Oracle Cloud Always Free (2x AMD EPYC VMs free forever)
 - Hugging Face Spaces (ZeroGPU free)
 - Railway.app $5/month free credits
