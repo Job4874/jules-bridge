@@ -56,7 +56,7 @@ def ping():
     try:
         ext_ip = subprocess.check_output(["curl", "-s", "--max-time", "3", "ifconfig.me"],
                                           text=True).strip()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
     return jsonify({"ok": True, "agent": "jules-worker", "ip": ext_ip})
 
@@ -109,7 +109,7 @@ def task():
     def run():
         try:
             result = execute_task(task_text, task_type, context)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             result = f"ERROR: {exc}"
         entry["status"] = "done"
         entry["result"] = str(result)[:10000]  # store up to 10k chars
@@ -125,7 +125,7 @@ def task():
                 headers={"Authorization": f"Bearer {LOCAL_TOKEN}"},
                 timeout=10
             )
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
     threading.Thread(target=run, daemon=True).start()

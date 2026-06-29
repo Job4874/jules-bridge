@@ -130,7 +130,7 @@ def get_secret(
             secret_available=True,
             error=None,
         )
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return SecretResult(
             status="error",
             target=target,
@@ -222,7 +222,7 @@ def detect_ui_state(
             signals=signals,
             error=None,
         )
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return UIDetectionResult(
             state="unknown",
             confidence=0.0,

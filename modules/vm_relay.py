@@ -42,7 +42,7 @@ def _env() -> dict:
             if "=" in line and not line.startswith("#"):
                 k, _, v = line.partition("=")
                 env[k.strip()] = v.strip()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
     return env
 
@@ -155,7 +155,7 @@ def _get_local_ip() -> str:
         ip = s.getsockname()[0]
         s.close()
         return ip
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return "127.0.0.1"
 
 
@@ -180,7 +180,7 @@ def send_task_to_vm(task: str, task_type: str = "build", context: str = "") -> d
             headers={"Authorization": "Bearer JULES-VM-WORKER-999"}
         )
         return r.json()
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         _log(f"Task send failed: {exc}")
         return {"ok": False, "error": str(exc)}
 
@@ -192,7 +192,7 @@ def get_vm_status() -> dict[str, Any]:
     try:
         r = _req.get(f"http://{VM_IP}:{VM_PORT}/status", timeout=5)
         return r.json()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return {"online": False}
 
 
@@ -279,7 +279,7 @@ def task():
                 "file": "vm_results.jsonl",
                 "content": json.dumps(entry)
             }, headers={"Authorization": f"Bearer {LOCAL_TOKEN}"}, timeout=10)
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
     threading.Thread(target=run, daemon=True).start()
@@ -333,7 +333,7 @@ def call_llm(prompt: str, context: str = "") -> str:
             )
             if r.status_code == 200:
                 return r.json()["choices"][0]["message"]["content"]
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
     return "No LLM available — GEMINI_API_KEY and OPENROUTER_API_KEY both failed."

@@ -270,7 +270,7 @@ def _openrouter_chat(system_prompt: str, user_prompt: str, model_name: str) -> s
                 continue
             content = data["choices"][0]["message"]["content"]
             return content if isinstance(content, str) else json.dumps(content)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             last_error = str(exc)
             _LOGGER.warning("OpenRouter call failed with key rotation: %s", exc)
 
@@ -345,7 +345,7 @@ def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
         resp.raise_for_status()
         data = resp.json()
         return data["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         _LOGGER.error("Gemini REST call failed: %s", exc)
         return json.dumps({"error": str(exc)})
 
@@ -629,7 +629,7 @@ def reason(
             reasoning=h_raw.get("reasoning", ""),
             model=h_raw.get("model", model),
         )
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         plan = HLevelPlan(
             steps=["Resolve the problem"],
             goal_statement=problem[:80],
@@ -655,7 +655,7 @@ def reason(
                 confidence=float(l_raw.get("confidence", 0.5)),
                 reasoning=l_raw.get("reasoning", ""),
             )
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             action = LLevelAction(
                 step_index=step_index,
                 step_description=step,
@@ -724,7 +724,7 @@ def plan_only(problem: str, context: str = "", model: str = "stub") -> HLevelPla
             reasoning=h_raw.get("reasoning", ""),
             model=h_raw.get("model", model),
         )
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return HLevelPlan(
             steps=[],
             goal_statement=problem[:80],
@@ -765,7 +765,7 @@ def execute_step(
             confidence=float(l_raw.get("confidence", 0.5)),
             reasoning=l_raw.get("reasoning", ""),
         )
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return LLevelAction(
             step_index=step_index,
             step_description=step,

@@ -44,7 +44,7 @@ def _env_vars() -> dict[str, str]:
                 continue
             key, _, val = line.partition("=")
             env[key.strip()] = val.strip()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
     return env
 
@@ -56,7 +56,7 @@ def _tcp_reachable(host: str, port: int = 22, timeout: float = 3.0) -> bool:
     try:
         with socket.create_connection((host, port), timeout=timeout):
             return True
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return False
 
 
@@ -66,14 +66,14 @@ def _tail_log(n: int = _LOG_TAIL_LINES) -> list[str]:
         text = _LOG_PATH.read_text(encoding="utf-8", errors="replace")
         lines = text.splitlines()
         return lines[-n:] if len(lines) >= n else lines
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return []
 
 
 def _read_json(path: Path) -> dict | None:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return None
 
 
@@ -222,7 +222,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         }
         _dashboard_status_cache['last'] = (now_ts, result)
         return result
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return {"ok": False, "error": str(exc)}
 
 

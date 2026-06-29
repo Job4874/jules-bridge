@@ -1772,7 +1772,7 @@ def chat_test():
                 results["gemini"] = {"status": "ok", "model": "gemini-2.0-flash", "ms": elapsed}
             else:
                 results["gemini"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             elapsed = int((_time.monotonic() - t0) * 1000)
             results["gemini"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
     else:
@@ -1791,7 +1791,7 @@ def chat_test():
                 results["openrouter"] = {"status": "ok", "model": "google/gemma-3-27b-it:free", "ms": elapsed}
             else:
                 results["openrouter"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             elapsed = int((_time.monotonic() - t0) * 1000)
             results["openrouter"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
     else:
@@ -1883,7 +1883,7 @@ def chat():
                 model_used = gemini_model
             else:
                 error_chain.append(f"Gemini {r.status_code}: {r.text[:200]}")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         error_chain.append(f"Gemini exception: {exc}")
 
     # --- OpenRouter fallback ---
@@ -1902,7 +1902,7 @@ def chat():
                     model_used = f"openrouter/{or_model}"
                 else:
                     error_chain.append(f"OpenRouter {r.status_code}: {r.text[:200]}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             error_chain.append(f"OpenRouter exception: {exc}")
 
     elapsed_ms = int((_time.monotonic() - t0) * 1000)

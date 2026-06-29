@@ -262,7 +262,7 @@ def build_context_subagents(
                 "remote Jules sessions."
             ),
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return ContextSubagentPlan(
             error=str(exc),
             generated_at_utc=generated_at,

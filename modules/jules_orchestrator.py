@@ -159,7 +159,7 @@ def parse_task_dump(content: str, source_name: str = "") -> list[JulesTask]:
                 raw_excerpt="\n".join(_compact_lines(block_lines[:80])),
             ))
         return tasks
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return [JulesTask(error=f"parse failed: {exc}", status="error")]
 
 
@@ -222,7 +222,7 @@ def parse_antigravity_queue(
                 raw_excerpt=prompt_excerpt[:12000],
             ))
         return tasks
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return [JulesTask(error=f"antigravity parse failed: {exc}", status="error")]
 
 
@@ -299,7 +299,6 @@ def build_dispatch(
             packet_files, commands = _write_dispatch_files(
                 selected=selected,
                 packets=packets,
-                commands=commands,
                 output_dir=Path(output_dir) if output_dir else _DEFAULT_OUTPUT_DIR,
                 repo_path=repo_path,
                 source_label=source_label,
@@ -326,7 +325,7 @@ def build_dispatch(
                 "launch; no remote Jules sessions were started."
             ),
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesDispatchResult(
             error=str(exc),
             source=source_path or "inline",
@@ -443,7 +442,7 @@ def launch_packets(
                         stdout=_coerce_text(exc.stdout),
                         stderr=_coerce_text(exc.stderr),
                     )
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
                     result.update(status="error", stderr=str(exc))
             results.append(result)
 
@@ -492,7 +491,7 @@ def launch_packets(
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             payload["state_path"] = str(destination)
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesLaunchResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -581,7 +580,7 @@ def list_remote_sessions(
             jules_command=jules_command,
             resolved_jules_command=resolved_jules_command,
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesRemoteResult(
             dry_run=False,
             command=command,
@@ -670,7 +669,7 @@ def jules_preflight(
             payload["state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesPreflightResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -767,7 +766,7 @@ def pull_remote_session(
             payload["output_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesPullResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -850,7 +849,7 @@ def build_cot_ledger(
             ledger_path.write_text(_cot_ledger_markdown(payload), encoding="utf-8")
             ledger_path.with_suffix(".json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesCotResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -1021,7 +1020,7 @@ def run_jules_cycle(
             payload["cycle_state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesCycleResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -1157,7 +1156,7 @@ def run_jules_watch(
             payload["watch_state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesWatchResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -1373,7 +1372,7 @@ def run_jules_fleet(
             payload["fleet_state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesFleetResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -1524,7 +1523,7 @@ def run_jules_fleet_watch(
             payload["fleet_watch_state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesFleetWatchResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -1777,7 +1776,6 @@ def _launch_command(packet_path: str | None, task: JulesTask, repo_path: str) ->
 def _write_dispatch_files(
     selected: list[JulesTask],
     packets: list[str],
-    _commands: list[str],
     output_dir: Path,
     repo_path: str,
     source_label: str,
@@ -1846,7 +1844,7 @@ def _packet_files_from_index(packet_dir: Path) -> list[Path]:
             if key not in seen and packet.is_file():
                 ordered.append(packet)
                 seen.add(key)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return []
     return ordered
 
@@ -1967,7 +1965,7 @@ def _safe_child_count(path: Path) -> int:
         if path.is_dir():
             return len(list(path.iterdir()))
         return 1
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return 0
 
 
@@ -2039,7 +2037,7 @@ def _run_cli_command(
             "stderr": stderr,
             "timed_out": True,
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         _terminate_process_tree(process)
         return {
             "exit_code": None,
@@ -2063,11 +2061,11 @@ def _terminate_process_tree(process: subprocess.Popen) -> None:
                 check=False,
             )
             return
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
     try:
         process.kill()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
 
 
@@ -2084,7 +2082,7 @@ def _read_json_file(path: Path) -> dict:
         if not path.is_file():
             return {}
         return json.loads(path.read_text(encoding="utf-8-sig", errors="replace"))
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return {}
 
 
