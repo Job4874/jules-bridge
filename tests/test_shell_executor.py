@@ -75,6 +75,64 @@ class TestShellExecutorExecute(unittest.TestCase):
         self.assertEqual(result["shell"], "powershell")
 
 
+
+class TestShellExecutorSpawn(unittest.TestCase):
+    def setUp(self):
+        from modules import shell_executor
+        self.se = shell_executor
+
+    @patch("modules.shell_executor.subprocess.Popen")
+    @patch("modules.shell_executor.os.getcwd", return_value="/mock/dir")
+    def test_spawn_default_cmd(self, mock_getcwd, mock_popen):
+        mock_proc = MagicMock()
+        mock_proc.pid = 1234
+        mock_popen.return_value = mock_proc
+
+        result = self.se.spawn(command="echo test")
+
+        self.assertEqual(result["exit_code"], 0)
+        self.assertEqual(result["shell"], "cmd")
+        self.assertEqual(result["pid"], 1234)
+        self.assertTrue(result["spawned"])
+
+        args, kwargs = mock_popen.call_args
+        self.assertEqual(args[0][:4], ["cmd.exe", "/d", "/s", "/c"])
+        self.assertEqual(kwargs["cwd"], "/mock/dir")
+        self.assertEqual(kwargs["stdout"], subprocess.DEVNULL)
+        self.assertEqual(kwargs["stderr"], subprocess.DEVNULL)
+
+    @patch("modules.shell_executor.subprocess.Popen")
+    def test_spawn_powershell_selector(self, mock_popen):
+        mock_proc = MagicMock()
+        mock_proc.pid = 5678
+        mock_popen.return_value = mock_proc
+
+        result = self.se.spawn(command="echo test", shell="powershell")
+
+        self.assertEqual(result["shell"], "powershell")
+        args, kwargs = mock_popen.call_args
+        self.assertEqual(args[0][:4], ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command"])
+
+    @patch("modules.shell_executor.subprocess.Popen")
+    def test_spawn_custom_cwd(self, mock_popen):
+        mock_proc = MagicMock()
+        mock_popen.return_value = mock_proc
+
+        self.se.spawn(command="echo test", cwd="/custom/path")
+
+        _, kwargs = mock_popen.call_args
+        self.assertEqual(kwargs["cwd"], "/custom/path")
+
+    def test_spawn_wsl_raises_valueerror(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.se.spawn(command="ls", shell="wsl")
+        self.assertIn("WSL", str(ctx.exception))
+
+    def test_spawn_unknown_shell_raises(self):
+        with self.assertRaises(self.se.UnsupportedShellError):
+            self.se.spawn(command="x", shell="fish")
+
+
 class TestAvailableShells(unittest.TestCase):
     def setUp(self):
         from modules import shell_executor
