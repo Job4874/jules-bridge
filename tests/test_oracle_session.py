@@ -124,6 +124,47 @@ class TestCodexHandoverIndex(unittest.TestCase):
         paths = [f["relative_path"] for f in result["files"]]
         self.assertIn("a.md", paths)
 
+    def test_nested_directories_and_size(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "sub1", "sub2"))
+
+            # File 1: in root
+            p1 = os.path.join(d, "file1.txt")
+            with open(p1, "w", encoding="utf-8") as f:
+                f.write("hello")  # 5 bytes
+
+            # File 2: in sub1/sub2
+            p2 = os.path.join(d, "sub1", "sub2", "file2.txt")
+            with open(p2, "w", encoding="utf-8") as f:
+                f.write("world!")  # 6 bytes
+
+            with patch.object(self.os_mod, "_CODEX_HANDOVER_ROOT", d):
+                result = self.os_mod.codex_handover_index()
+
+        self.assertTrue(result["exists"])
+        self.assertEqual(result["file_count"], 2)
+
+        # files should be sorted by relative_path
+        files = result["files"]
+        self.assertEqual(files[0]["relative_path"], "file1.txt")
+        self.assertEqual(files[0]["size"], 5)
+        self.assertEqual(files[1]["relative_path"], "sub1/sub2/file2.txt")
+        self.assertEqual(files[1]["size"], 6)
+
+    def test_max_200_files_truncation(self):
+        with tempfile.TemporaryDirectory() as d:
+            for i in range(205):
+                p = os.path.join(d, f"file{i:03d}.txt")
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write("x")
+
+            with patch.object(self.os_mod, "_CODEX_HANDOVER_ROOT", d):
+                result = self.os_mod.codex_handover_index()
+
+        self.assertTrue(result["exists"])
+        self.assertEqual(result["file_count"], 205)
+        self.assertEqual(len(result["files"]), 200)
+
 
 if __name__ == "__main__":
     unittest.main()
