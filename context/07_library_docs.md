@@ -247,7 +247,7 @@ ShellResult(exit_code=0, stdout="...", stderr="...", shell="powershell")
 
 After every test run, the output MUST be recorded for cryptographic proof:
 
-```
+```text
 
 POST /retrospective/record_evidence
 Body: { "test_output": "<raw pytest stdout>" }
@@ -259,7 +259,7 @@ This stores a SHA-256 hash in `memory/test_evidence.json`.
 ### Key Test Files
 
 | File | Module | Test Count |
-| ------ | -------- | ------------ |
+| --- | --- | --- |
 | `test_fs_service.py` | fs_service | — |
 | `test_shell_executor.py` | shell_executor | — |
 | `test_inbox_service.py` | inbox_service | — |

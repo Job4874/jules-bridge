@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import socket
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -157,8 +159,7 @@ def _vm_info(env: dict[str, str]) -> dict[str, Any]:
     return {"vms": vms, "total": len(vms), "online": sum(1 for v in vms if v["reachable"])}
 
 
-import time
-_dashboard_status_cache = {}
+_dashboard_status_cache: dict = {}
 # ---------------------------------------------------------------------------
 # Public interface
 # ---------------------------------------------------------------------------
@@ -188,7 +189,6 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         # Try to extract ngrok URL from recent logs
         for line in reversed(logs):
             if "ngrok-free.dev" in line or "ngrok.io" in line:
-                import re
                 match = re.search(r"https://[a-z0-9\-]+\.ngrok[a-z.\-]*/", line)
                 if match:
                     ngrok_url = match.group(0).rstrip("/")

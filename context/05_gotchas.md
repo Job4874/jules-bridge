@@ -17,7 +17,7 @@
 - **`GET /health`** — exists since Phase 5; returns `{status, bridge, uptime_s}`; used by ngrok/monitoring
 - **`GET /` and `GET /info`** — authenticated discovery routes; unlike `/health` and `/ping`, they require the bearer token and return bridge metadata instead of browser-facing 404s
 
-## modules/**init**.py
+## modules/__init__.py
 
 - **Adding a new module** — must add BOTH the import AND the `__all__` entry
 - **Order matters** — modules that depend on others must be imported after their dependencies

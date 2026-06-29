@@ -69,7 +69,7 @@ Deliverables:
 
 Before any escalation, run THREE full HRE passes:
 
-```
+```text
 1. Hypothesis: name the SINGLE blocker in one sentence
 2. Route: pick the narrowest available tool/endpoint/file to test it
 3. Evidence: capture exact output before deciding

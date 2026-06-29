@@ -22,11 +22,9 @@ Architecture:
 """
 from __future__ import annotations
 
-import json
-import os
+import socket
 import subprocess
 import threading
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -75,7 +73,7 @@ def _gcloud_ssh(remote_cmd: str, timeout: int = 60) -> tuple[str, str, int]:
         "--tunnel-through-iap",
         "--command", remote_cmd,
     ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
     return proc.stdout, proc.stderr, proc.returncode
 
 
@@ -89,7 +87,7 @@ def _gcloud_scp(local_path: str, remote_path: str) -> tuple[str, str, int]:
         f"--project={VM_PROJ}",
         "--tunnel-through-iap",
     ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60, check=False)
     return proc.stdout, proc.stderr, proc.returncode
 
 
@@ -103,7 +101,7 @@ def bootstrap_vm() -> dict[str, Any]:
 
     # Step 1: Install deps
     _log("Installing Python deps...")
-    stdout, stderr, rc = _gcloud_ssh(
+    _, stderr, rc = _gcloud_ssh(
         "sudo apt-get update -qq && sudo apt-get install -y -qq "
         "python3 python3-pip git curl && "
         "pip3 install flask requests google-generativeai --quiet",
@@ -118,7 +116,7 @@ def bootstrap_vm() -> dict[str, Any]:
     agent_path.parent.mkdir(parents=True, exist_ok=True)
     agent_path.write_text(agent_script, encoding="utf-8")
 
-    stdout, stderr, rc = _gcloud_scp(str(agent_path), "/home/julesadmin/jules-worker-agent.py")
+    _, _, rc = _gcloud_scp(str(agent_path), "/home/julesadmin/jules-worker-agent.py")
     results.append({"step": "push_agent", "rc": rc})
     _log(f"push_agent rc={rc}")
 
@@ -128,16 +126,16 @@ def bootstrap_vm() -> dict[str, Any]:
         f"GEMINI_API_KEY={env_vars.get('GEMINI_API_KEY','')}",
         f"OPENROUTER_API_KEY={env_vars.get('OPENROUTER_API_KEY','')}",
         f"LOCAL_BRIDGE_URL=http://{_get_local_ip()}:5000",
-        f"LOCAL_BRIDGE_TOKEN=JULES-SECURE-999",
+        "LOCAL_BRIDGE_TOKEN=JULES-SECURE-999",
     ])
     env_path = _ROOT / "scratch" / "vm.env"
     env_path.write_text(minimal_env, encoding="utf-8")
-    stdout, stderr, rc = _gcloud_scp(str(env_path), "/home/julesadmin/.jules_worker.env")
+    _, _, rc = _gcloud_scp(str(env_path), "/home/julesadmin/.jules_worker.env")
     results.append({"step": "push_env", "rc": rc})
     _log(f"push_env rc={rc}")
 
     # Step 4: Start (or restart) the worker agent
-    stdout, stderr, rc = _gcloud_ssh(
+    _, _, rc = _gcloud_ssh(
         "pkill -f 'jules-worker-agent' 2>/dev/null || true; "
         "nohup python3 /home/julesadmin/jules-worker-agent.py "
         "> /home/julesadmin/worker.log 2>&1 &",
@@ -151,7 +149,6 @@ def bootstrap_vm() -> dict[str, Any]:
 
 def _get_local_ip() -> str:
     """Get the local machine's LAN IP so the VM can call back."""
-    import socket
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))

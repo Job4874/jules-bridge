@@ -1,8 +1,8 @@
 # Jules Mission Response — 2026-06-27T06:30:56Z
 
-# Source: Jules VM Agent (34.132.193.73:6000)
+## Source: Jules VM Agent (34.132.193.73:6000)
 
-# Model: Gemini 2.0 Flash (2.1s response time)
+## Model: Gemini 2.0 Flash (2.1s response time)
 
 ## 5 Things I Build in 24h
 

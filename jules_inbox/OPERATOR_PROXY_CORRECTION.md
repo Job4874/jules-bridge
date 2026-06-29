@@ -7,7 +7,7 @@ You've done this in BOTH sessions now. The bridge returns 405 Method Not Allowed
 
 ## Fix
 
-```
+```text
 POST /jules/watch   ← use POST, not GET
 POST /jules/fleet   ← use POST, not GET
 ```

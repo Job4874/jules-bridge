@@ -1,3 +1,5 @@
+# Reasoning Memory
+
 ## Session 20260627T214922 - 2026-06-27T21:49:22.701894+00:00
 
 - DOOM LOOP: POST /reasoning/solve called 4x consecutively. Route 'POST /reasoning/solve' called 4x consecutively. Add a circuit breaker or cache the last response.
