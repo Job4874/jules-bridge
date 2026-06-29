@@ -15,6 +15,7 @@
 
 ## What's Complete
 
+- [x] Ticket 007 — Dashboard Circuit Breaker (added global rate limiting to prevent 814x doom loop)
 - [x] `modules/fs_service.py`
 - [x] `modules/shell_executor.py`
 - [x] `modules/ui_automation.py`
