@@ -10,9 +10,9 @@ from unittest.mock import MagicMock, patch
 class TestScreenshot(unittest.TestCase):
     @patch("modules.ui_automation._pyautogui")
     def test_screenshot_returns_base64(self, mock_pag_factory):
-        import base64
-        import os
-        import tempfile
+        import base64  # pylint: disable=import-outside-toplevel
+        import os  # pylint: disable=import-outside-toplevel
+        import tempfile  # pylint: disable=import-outside-toplevel
 
         # Write a small PNG stand-in so open() succeeds
         handle, path = tempfile.mkstemp(suffix=".png")
@@ -22,12 +22,12 @@ class TestScreenshot(unittest.TestCase):
         pag = MagicMock()
         # Intercept screenshot call and write to the expected temp path
         def fake_screenshot(p):
-            import shutil
+            import shutil  # pylint: disable=import-outside-toplevel
             shutil.copy(path, p)
         pag.screenshot.side_effect = fake_screenshot
         mock_pag_factory.return_value = pag
 
-        from modules.ui_automation import screenshot
+        from modules.ui_automation import screenshot  # pylint: disable=import-outside-toplevel
         result = screenshot(save=False)
 
         self.assertIn("image_base64", result)
@@ -39,8 +39,8 @@ class TestScreenshot(unittest.TestCase):
 
     @patch("modules.ui_automation._pyautogui")
     def test_screenshot_save_returns_path(self, mock_pag_factory):
-        import os
-        import tempfile
+        import os  # pylint: disable=import-outside-toplevel
+        import tempfile  # pylint: disable=import-outside-toplevel
 
         handle, path = tempfile.mkstemp(suffix=".png")
         os.write(handle, b"px")
@@ -48,14 +48,14 @@ class TestScreenshot(unittest.TestCase):
 
         pag = MagicMock()
         def fake_screenshot(p):
-            import shutil
+            import shutil  # pylint: disable=import-outside-toplevel
             shutil.copy(path, p)
         pag.screenshot.side_effect = fake_screenshot
         mock_pag_factory.return_value = pag
 
-        import tempfile as _tmp
+        import tempfile as _tmp  # pylint: disable=import-outside-toplevel
         with _tmp.TemporaryDirectory() as d:
-            from modules.ui_automation import screenshot
+            from modules.ui_automation import screenshot  # pylint: disable=import-outside-toplevel
             result = screenshot(save=True, screenshot_dir=d)
             self.assertIn("saved_path", result)
             self.assertTrue(os.path.exists(result["saved_path"]))
@@ -70,7 +70,7 @@ class TestClick(unittest.TestCase):
         pag.size.return_value = (1920, 1080)
         mock_pag_factory.return_value = pag
 
-        from modules.ui_automation import click
+        from modules.ui_automation import click  # pylint: disable=import-outside-toplevel
         result = click(100, 200)
         pag.moveTo.assert_called_once_with(100, 200, duration=0.2)
         pag.click.assert_called_once_with(button="left")
@@ -82,7 +82,7 @@ class TestClick(unittest.TestCase):
         pag.size.return_value = (1920, 1080)
         mock_pag_factory.return_value = pag
 
-        from modules.ui_automation import click
+        from modules.ui_automation import click  # pylint: disable=import-outside-toplevel
         with self.assertRaises(ValueError):
             click(-1, 100)
 
@@ -92,7 +92,7 @@ class TestClick(unittest.TestCase):
         pag.size.return_value = (1920, 1080)
         mock_pag_factory.return_value = pag
 
-        from modules.ui_automation import click
+        from modules.ui_automation import click  # pylint: disable=import-outside-toplevel
         with self.assertRaises(ValueError) as ctx:
             click(5000, 100)
         self.assertIn("display bounds", str(ctx.exception))
@@ -104,7 +104,7 @@ class TestClick(unittest.TestCase):
         pag.size.return_value = (1920, 1080)
         mock_pag_factory.return_value = pag
 
-        from modules.ui_automation import click
+        from modules.ui_automation import click  # pylint: disable=import-outside-toplevel
         with self.assertRaises(ValueError):
             click(100, 100, button="sideways")
 
@@ -114,7 +114,7 @@ class TestClick(unittest.TestCase):
         pag.size.return_value = (1920, 1080)
         mock_pag_factory.return_value = pag
 
-        from modules.ui_automation import click
+        from modules.ui_automation import click  # pylint: disable=import-outside-toplevel
         click(10, 10, button="right")
         pag.click.assert_called_once_with(button="right")
 
@@ -125,7 +125,7 @@ class TestTypeText(unittest.TestCase):
         pag = MagicMock()
         mock_pag_factory.return_value = pag
 
-        from modules.ui_automation import type_text
+        from modules.ui_automation import type_text  # pylint: disable=import-outside-toplevel
         result = type_text("hello")
         pag.write.assert_called_once_with("hello", interval=0.01)
         self.assertEqual(result["status"], "Typed successfully")
@@ -135,7 +135,7 @@ class TestTypeText(unittest.TestCase):
         pag = MagicMock()
         mock_pag_factory.return_value = pag
 
-        from modules.ui_automation import type_text
+        from modules.ui_automation import type_text  # pylint: disable=import-outside-toplevel
         result = type_text("")
         pag.write.assert_called_once_with("", interval=0.01)
         self.assertIn("status", result)

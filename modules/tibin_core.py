@@ -182,8 +182,10 @@ def run_paper_trading(df: pd.DataFrame) -> dict:
         last = df.iloc[-1]
         pnl = position * last["close"] - position * entry_price
         capital += position * last["close"]
-        if pnl >= 0: wins += 1
-        else: losses += 1
+        if pnl >= 0:
+            wins += 1
+        else:
+            losses += 1
         ts_str = last['timestamp'].strftime('%Y-%m-%d %H:%M')
         log_lines.append(f"{ts_str} | CLOSE | {SYMBOL} | Force-close P&L=${pnl:+,.2f}")
         position = 0.0

@@ -58,6 +58,7 @@
 
 Added a Ralph Loop agentic framework to Jules Bridge:
 
+
 - Created `doc/tickets/` with 5 Phase 6 tickets (eval harness, Quantower memory, evidence gating, auto-prune, analyze baseline)
 - Created `.agents/skills/ralph-loop/SKILL.md` — full loop protocol as a reusable Claude skill
 - Created `Run-RalphLoop.ps1` — Windows PowerShell autonomous loop runner

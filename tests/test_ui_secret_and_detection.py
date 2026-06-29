@@ -16,7 +16,7 @@ class MockSecretProvider:
 
 class TestMockSecretProviderBoundary:
     def test_get_secret_blocks_without_runtime_authorization(self):
-        from modules.ui_automation import get_secret
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
 
         result = get_secret(
             "quantower_login",
@@ -31,7 +31,7 @@ class TestMockSecretProviderBoundary:
         assert "super-secret-password" not in repr(result)
 
     def test_get_secret_reports_availability_without_returning_plaintext_secret(self):
-        from modules.ui_automation import get_secret
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
 
         result = get_secret(
             "quantower_login",
@@ -49,7 +49,7 @@ class TestMockSecretProviderBoundary:
 
 class TestUIDetectionStateEngine:
     def test_detects_quantower_login_from_ocr_text(self):
-        from modules.ui_automation import detect_ui_state
+        from modules.ui_automation import detect_ui_state  # pylint: disable=import-outside-toplevel
 
         result = detect_ui_state(
             ocr_text="Quantower Login Email Password Sign In",
@@ -61,7 +61,7 @@ class TestUIDetectionStateEngine:
         assert result["error"] is None
 
     def test_detects_quantower_loading_from_ocr_text(self):
-        from modules.ui_automation import detect_ui_state
+        from modules.ui_automation import detect_ui_state  # pylint: disable=import-outside-toplevel
 
         result = detect_ui_state(
             ocr_text="Quantower loading workspace please wait connecting",
@@ -73,7 +73,7 @@ class TestUIDetectionStateEngine:
         assert result["error"] is None
 
     def test_detects_auth_prompt_from_ocr_text(self):
-        from modules.ui_automation import detect_ui_state
+        from modules.ui_automation import detect_ui_state  # pylint: disable=import-outside-toplevel
 
         result = detect_ui_state(
             ocr_text="Please enter your email and password to continue login",
@@ -84,7 +84,7 @@ class TestUIDetectionStateEngine:
         assert "credentials" in result["signals"]
 
     def test_detects_error_state_from_ocr_text(self):
-        from modules.ui_automation import detect_ui_state
+        from modules.ui_automation import detect_ui_state  # pylint: disable=import-outside-toplevel
 
         result = detect_ui_state(
             ocr_text="Connection failed: unexpected error occurred",

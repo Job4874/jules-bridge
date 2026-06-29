@@ -355,63 +355,63 @@ def _evidence_age_check(response):
 # ---------------------------------------------------------------------------
 
 TENTACLES = [
-    {"name": "root",         "route": "GET /",                  "reach": "Authenticated bridge discovery and next-step pointers"},
-    {"name": "info",         "route": "GET /info",              "reach": "Authenticated bridge metadata without the full manifest"},
-    {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},
+    {"name": "root",         "route": "GET /",                  "reach": "Authenticated bridge discovery and next-step pointers"},  # pylint: disable=line-too-long
+    {"name": "info",         "route": "GET /info",              "reach": "Authenticated bridge metadata without the full manifest"},  # pylint: disable=line-too-long
+    {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},  # pylint: disable=line-too-long
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
     {"name": "session_log",  "route": "GET /session/log",        "reach": "Audit which tools Jules used recently"},
-    {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},
-    {"name": "read",         "route": "POST /fs/read",           "reach": "Read any file on the host (supports offset/limit)"},
+    {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},  # pylint: disable=line-too-long
+    {"name": "read",         "route": "POST /fs/read",           "reach": "Read any file on the host (supports offset/limit)"},  # pylint: disable=line-too-long
     {"name": "write",        "route": "POST /fs/write",          "reach": "Write any file on the host"},
     {"name": "list",         "route": "POST /fs/list",           "reach": "List a directory like Codex file tree"},
     {"name": "tail",         "route": "POST /fs/tail",           "reach": "Tail log/CSV files"},
     {"name": "grep",         "route": "POST /fs/grep",           "reach": "Search file contents for gate/log strings"},
-    {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},
+    {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},  # pylint: disable=line-too-long
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
-    {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},
-    {"name": "operator",     "route": "POST /execute",           "reach": "Universal driver — click, type, and launch shell actions in one call"},
+    {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},  # pylint: disable=line-too-long
+    {"name": "operator",     "route": "POST /execute",           "reach": "Universal driver — click, type, and launch shell actions in one call"},  # pylint: disable=line-too-long
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
-    {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},
-    {"name": "vm_pressure",       "route": "POST /vm/resource_pressure", "reach": "Detect CPU/memory pressure before local VM actions"},
-    {"name": "vm_boot_secondary", "route": "POST /vm/boot_secondary",    "reach": "Dry-run-first allowlisted secondary VM boot script"},
-    {"name": "app_browser",       "route": "POST /apps/launch_browser",      "reach": "Explicitly launch Edge to an approved http(s) URL"},
-    {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},
-    {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},
+    {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},  # pylint: disable=line-too-long
+    {"name": "vm_pressure",       "route": "POST /vm/resource_pressure", "reach": "Detect CPU/memory pressure before local VM actions"},  # pylint: disable=line-too-long
+    {"name": "vm_boot_secondary", "route": "POST /vm/boot_secondary",    "reach": "Dry-run-first allowlisted secondary VM boot script"},  # pylint: disable=line-too-long
+    {"name": "app_browser",       "route": "POST /apps/launch_browser",      "reach": "Explicitly launch Edge to an approved http(s) URL"},  # pylint: disable=line-too-long
+    {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},  # pylint: disable=line-too-long
+    {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},  # pylint: disable=line-too-long
     {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
-    {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},
-    {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},
-    {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},
-    {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},
-    {"name": "jules_pull",      "route": "POST /jules/pull",               "reach": "Pull one remote Jules session with timeout protection"},
-    {"name": "jules_cot",       "route": "POST /jules/cot",                "reach": "Build a completion-of-task ledger from Jules launch and pull artifacts"},
-    {"name": "jules_cycle",     "route": "POST /jules/cycle",              "reach": "Run one dry-run-first Jules dispatch/launch/pull/COT communication cycle"},
-    {"name": "jules_watch",     "route": "POST /jules/watch",              "reach": "Poll Jules sessions, pull completed results, and refresh COT until bounded stop"},
-    {"name": "jules_fleet",     "route": "POST /jules/fleet",              "reach": "Scale Jules workers within max_concurrent and refresh pull/COT state"},
-    {"name": "jules_fleet_watch", "route": "POST /jules/fleet-watch",      "reach": "Loop fleet scale-out, pull, and COT refresh until complete or timed out"},
+    {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},  # pylint: disable=line-too-long
+    {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},  # pylint: disable=line-too-long
+    {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},  # pylint: disable=line-too-long
+    {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},  # pylint: disable=line-too-long
+    {"name": "jules_pull",      "route": "POST /jules/pull",               "reach": "Pull one remote Jules session with timeout protection"},  # pylint: disable=line-too-long
+    {"name": "jules_cot",       "route": "POST /jules/cot",                "reach": "Build a completion-of-task ledger from Jules launch and pull artifacts"},  # pylint: disable=line-too-long
+    {"name": "jules_cycle",     "route": "POST /jules/cycle",              "reach": "Run one dry-run-first Jules dispatch/launch/pull/COT communication cycle"},  # pylint: disable=line-too-long
+    {"name": "jules_watch",     "route": "POST /jules/watch",              "reach": "Poll Jules sessions, pull completed results, and refresh COT until bounded stop"},  # pylint: disable=line-too-long
+    {"name": "jules_fleet",     "route": "POST /jules/fleet",              "reach": "Scale Jules workers within max_concurrent and refresh pull/COT state"},  # pylint: disable=line-too-long
+    {"name": "jules_fleet_watch", "route": "POST /jules/fleet-watch",      "reach": "Loop fleet scale-out, pull, and COT refresh until complete or timed out"},  # pylint: disable=line-too-long
     # Reasoning routes (HRM-inspired H/L/ACT)
-    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},
-    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},
-    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},
-    {"name": "reason_skills",   "route": "GET /reasoning/skills",          "reach": "Inventory of available agent skills"},
-    {"name": "reason_gotcha",   "route": "POST /reasoning/inject_gotcha",  "reach": "Inject new edge case into gotchas context"},
+    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},  # pylint: disable=line-too-long
+    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},  # pylint: disable=line-too-long
+    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},  # pylint: disable=line-too-long
+    {"name": "reason_skills",   "route": "GET /reasoning/skills",          "reach": "Inventory of available agent skills"},  # pylint: disable=line-too-long
+    {"name": "reason_gotcha",   "route": "POST /reasoning/inject_gotcha",  "reach": "Inject new edge case into gotchas context"},  # pylint: disable=line-too-long
     # Retrospective routes (self-improving memory)
-    {"name": "retro_analyze",   "route": "POST /retrospective/analyze",    "reach": "Analyze bridge.log and write learnings to memory"},
-    {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},
-    {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},
-    {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},
-    {"name": "retro_quality",   "route": "GET /retrospective/memory_quality", "reach": "Assess memory structural quality"},
+    {"name": "retro_analyze",   "route": "POST /retrospective/analyze",    "reach": "Analyze bridge.log and write learnings to memory"},  # pylint: disable=line-too-long
+    {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},  # pylint: disable=line-too-long
+    {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},  # pylint: disable=line-too-long
+    {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},  # pylint: disable=line-too-long
+    {"name": "retro_quality",   "route": "GET /retrospective/memory_quality", "reach": "Assess memory structural quality"},  # pylint: disable=line-too-long
     # Agent Knowledge Context routes
-    {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},
-    {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},
-    {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},
-    {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},
+    {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},  # pylint: disable=line-too-long
+    {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},  # pylint: disable=line-too-long
+    {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},  # pylint: disable=line-too-long
+    {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},  # pylint: disable=line-too-long
     # Dashboard + Chat routes
-    {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},
-    {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},
-    {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},
+    {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
+    {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},  # pylint: disable=line-too-long
+    {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},  # pylint: disable=line-too-long
 ]
 
 # ---------------------------------------------------------------------------
@@ -1700,7 +1700,7 @@ def akc_subagents_post():
 @route_errors
 def dashboard_status():
     """GET /dashboard/status — real-time multi-cloud mission control snapshot."""
-    from modules.dashboard_module import get_dashboard_status
+    from modules.dashboard_module import get_dashboard_status  # pylint: disable=import-outside-toplevel
     result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
     return jsonify(result), 200 if result.get("ok") else 500
 
@@ -1713,7 +1713,7 @@ def dashboard_status():
 @route_errors
 def vm_bootstrap():
     """POST /vm/bootstrap — install jules-worker-agent on the GCP VM."""
-    from modules.vm_relay import bootstrap_vm
+    from modules.vm_relay import bootstrap_vm  # pylint: disable=import-outside-toplevel
     result = bootstrap_vm()
     return jsonify(result), 200 if result.get("ok") else 500
 
@@ -1729,7 +1729,7 @@ def vm_task():
     task = string_field(data, "task")
     task_type = string_field(data, "task_type", default="build", allow_empty=False)
     context = string_field(data, "context", default="", allow_empty=True)
-    from modules.vm_relay import send_task_to_vm
+    from modules.vm_relay import send_task_to_vm  # pylint: disable=import-outside-toplevel
     result = send_task_to_vm(task=task, task_type=task_type, context=context)
     return jsonify(result), 200
 
@@ -1738,7 +1738,7 @@ def vm_task():
 @route_errors
 def vm_relay_status():
     """GET /vm/status — get live status from the jules-worker-agent on the VM."""
-    from modules.vm_relay import get_vm_status
+    from modules.vm_relay import get_vm_status  # pylint: disable=import-outside-toplevel
     result = get_vm_status()
     return jsonify(result), 200
 
@@ -1754,8 +1754,8 @@ def chat_test():
 
     Returns per-provider status so operators can debug which keys work.
     """
-    import time as _time
-    import requests as _req
+    import time as _time  # pylint: disable=import-outside-toplevel
+    import requests as _req  # pylint: disable=import-outside-toplevel
 
     results = {}
 
@@ -1764,7 +1764,7 @@ def chat_test():
     if api_key:
         t0 = _time.monotonic()
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"  # pylint: disable=line-too-long
             payload = {"contents": [{"role": "user", "parts": [{"text": "Say OK"}]}]}
             r = _req.post(url, json=payload, timeout=15)
             elapsed = int((_time.monotonic() - t0) * 1000)
@@ -1784,13 +1784,13 @@ def chat_test():
         t0 = _time.monotonic()
         try:
             or_url = "https://openrouter.ai/api/v1/chat/completions"
-            r = _req.post(or_url, json={"model": "google/gemma-3-27b-it:free", "messages": [{"role": "user", "content": "Say OK"}]},
+            r = _req.post(or_url, json={"model": "google/gemma-3-27b-it:free", "messages": [{"role": "user", "content": "Say OK"}]},  # pylint: disable=line-too-long
                           headers={"Authorization": f"Bearer {or_key}"}, timeout=20)
             elapsed = int((_time.monotonic() - t0) * 1000)
             if r.status_code == 200:
                 results["openrouter"] = {"status": "ok", "model": "google/gemma-3-27b-it:free", "ms": elapsed}
             else:
-                results["openrouter"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}
+                results["openrouter"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}  # pylint: disable=line-too-long
         except Exception as exc:  # pylint: disable=broad-exception-caught
             elapsed = int((_time.monotonic() - t0) * 1000)
             results["openrouter"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
@@ -1846,7 +1846,7 @@ def chat():
     messages.append({"role": "user", "content": user_content})
 
     # Try Gemini first via reasoning module's LLM call
-    import time as _time
+    import time as _time  # pylint: disable=import-outside-toplevel
     t0 = _time.monotonic()
     response_text = None
     model_used = None
@@ -1856,9 +1856,9 @@ def chat():
     try:
         api_key = os.environ.get("GEMINI_API_KEY", "")
         if api_key:
-            import requests as _req
+            import requests as _req  # pylint: disable=import-outside-toplevel
             gemini_model = "gemini-2.0-flash" if model_alias == "fast" else "gemini-2.5-pro"
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={api_key}"  # pylint: disable=line-too-long
             # Build Gemini parts
             parts = [{"text": message}]
             if image_b64:
@@ -1891,7 +1891,7 @@ def chat():
         try:
             or_key = os.environ.get("OPENROUTER_API_KEY", "")
             if or_key:
-                import requests as _req
+                import requests as _req  # pylint: disable=import-outside-toplevel
                 or_model = "google/gemma-3-27b-it:free" if model_alias == "fast" else "deepseek/deepseek-r1:free"
                 or_url = "https://openrouter.ai/api/v1/chat/completions"
                 or_messages = [{"role": "system", "content": system_prompt}] + messages
@@ -1915,7 +1915,7 @@ def chat():
         }), 200
 
     return jsonify({
-        "response": "I'm offline right now — no API keys responded. Check GEMINI_API_KEY or OPENROUTER_API_KEY in .env.",
+        "response": "I'm offline right now — no API keys responded. Check GEMINI_API_KEY or OPENROUTER_API_KEY in .env.",  # pylint: disable=line-too-long
         "model_used": "none",
         "elapsed_ms": elapsed_ms,
         "errors": error_chain,

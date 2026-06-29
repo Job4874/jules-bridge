@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 class TestResourcePressure:
     def test_detect_resource_pressure_reports_ok_for_injected_safe_metrics(self):
-        from modules.vm_manager import detect_resource_pressure
+        from modules.vm_manager import detect_resource_pressure  # pylint: disable=import-outside-toplevel
 
         result = detect_resource_pressure(
             cpu_percent=42,
@@ -23,7 +23,7 @@ class TestResourcePressure:
         assert result["error"] is None
 
     def test_detect_resource_pressure_flags_cpu_and_memory_thresholds(self):
-        from modules.vm_manager import detect_resource_pressure
+        from modules.vm_manager import detect_resource_pressure  # pylint: disable=import-outside-toplevel
 
         result = detect_resource_pressure(
             cpu_percent=91,
@@ -38,7 +38,7 @@ class TestResourcePressure:
         assert result["error"] is None
 
     def test_detect_resource_pressure_rejects_negative_metrics(self):
-        from modules.vm_manager import detect_resource_pressure
+        from modules.vm_manager import detect_resource_pressure  # pylint: disable=import-outside-toplevel
 
         result = detect_resource_pressure(cpu_percent=-1, memory_percent=50)
 
@@ -57,7 +57,7 @@ class TestBootSecondaryVM:
         script.write_text("Write-Output 'start'", encoding="utf-8")
         monkeypatch.setenv("JULES_VM_SCRIPT_DIR", str(tmp_path))
 
-        from modules.vm_manager import boot_secondary_vm
+        from modules.vm_manager import boot_secondary_vm  # pylint: disable=import-outside-toplevel
 
         result = boot_secondary_vm("Start-SecondaryVM.ps1")
 
@@ -76,7 +76,7 @@ class TestBootSecondaryVM:
         script.write_text("Write-Output 'start'", encoding="utf-8")
         monkeypatch.setenv("JULES_VM_SCRIPT_DIR", str(tmp_path))
 
-        from modules.vm_manager import boot_secondary_vm
+        from modules.vm_manager import boot_secondary_vm  # pylint: disable=import-outside-toplevel
 
         result = boot_secondary_vm(
             "Start-SecondaryVM.ps1",
@@ -93,7 +93,7 @@ class TestBootSecondaryVM:
     def test_boot_secondary_vm_rejects_path_traversal(self, monkeypatch, tmp_path):
         monkeypatch.setenv("JULES_VM_SCRIPT_DIR", str(tmp_path))
 
-        from modules.vm_manager import boot_secondary_vm
+        from modules.vm_manager import boot_secondary_vm  # pylint: disable=import-outside-toplevel
 
         result = boot_secondary_vm(r"..\Start-SecondaryVM.ps1")
 
@@ -114,7 +114,7 @@ class TestBootSecondaryVM:
         monkeypatch.setenv("JULES_VM_SCRIPT_DIR", str(tmp_path))
         mock_popen.return_value = MagicMock(pid=4242)
 
-        from modules.vm_manager import boot_secondary_vm
+        from modules.vm_manager import boot_secondary_vm  # pylint: disable=import-outside-toplevel
 
         result = boot_secondary_vm(
             "Start-SecondaryVM.ps1",

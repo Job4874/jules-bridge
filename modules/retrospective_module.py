@@ -695,11 +695,11 @@ def prune_memory(
 
     # ISO 8601 compact timestamp pattern embedded in session headers
     # e.g. "## Session 20250601T143022" or "## Analysis 20260101T000000"
-    _TS_RE = re.compile(r"(\d{8}T\d{6})")
-    _PRESERVE_PREFIXES = ("## How to use", "## Initial Notes")
+    _ts_re = re.compile(r"(\d{8}T\d{6})")
+    _preserve_prefixes = ("## How to use", "## Initial Notes")
 
     cutoff = datetime.now(timezone.utc).replace(tzinfo=None)
-    from datetime import timedelta
+    from datetime import timedelta  # pylint: disable=import-outside-toplevel
     cutoff -= timedelta(days=max_age_days)
 
     total_pruned = 0
@@ -785,7 +785,7 @@ def assess_memory_quality(memory_path: str) -> dict:
     dated_sections = 0
     actionable_count = 0
 
-    _TS_RE = re.compile(r"(\d{8}T\d{6})")
+    _ts_re = re.compile(r"(\d{8}T\d{6})")
 
     for line in lines:
         if line.startswith("## "):
