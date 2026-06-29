@@ -112,6 +112,7 @@ _COMPLETED_COT_STATUSES = {"completed_reported", "pulled_output_reported"}
 
 # ---------------------------------------------------------------------------
 # Public interface
+_session_list_cache = {}
 # ---------------------------------------------------------------------------
 
 def parse_task_dump(content: str, source_name: str = "") -> list[JulesTask]:
@@ -501,6 +502,7 @@ def launch_packets(
             timeout_count=0,
             results=[],
         )
+_session_list_cache = {}
 
 
 def list_remote_sessions(
@@ -518,6 +520,15 @@ def list_remote_sessions(
     Returns:
         JulesRemoteResult. Never raises.
     """
+    cache_ttl = int(os.environ.get('JULES_SESSION_CACHE_TTL_S', '30'))
+    now = time.time()
+    
+    if not dry_run and jules_command in _session_list_cache and cache_ttl > 0:
+        ts, cached_res = _session_list_cache[jules_command]
+        if now - ts < cache_ttl:
+            cached_res['cache_hit'] = True
+            return cached_res
+
     resolved_jules_command = _resolve_cli_command(jules_command)
     command = [resolved_jules_command, "remote", "list", "--session"]
     if dry_run:
@@ -541,7 +552,7 @@ def list_remote_sessions(
         combined = f"{completed.get('stdout', '')}\n{completed.get('stderr', '')}"
         timed_out = bool(completed.get("timed_out"))
         exit_code = completed.get("exit_code")
-        return JulesRemoteResult(
+        result = JulesRemoteResult(
             dry_run=False,
             command=command,
             status="timeout" if timed_out else "ok" if exit_code == 0 else "failed",
@@ -552,7 +563,11 @@ def list_remote_sessions(
             session_ids=_extract_session_ids(combined),
             jules_command=jules_command,
             resolved_jules_command=resolved_jules_command,
+            cache_hit=False,
         )
+        if not timed_out and exit_code == 0:
+            _session_list_cache[jules_command] = (now, result)
+        return result
     except subprocess.TimeoutExpired as exc:
         return JulesRemoteResult(
             dry_run=False,

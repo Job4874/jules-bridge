@@ -157,6 +157,8 @@ def _vm_info(env: dict[str, str]) -> dict[str, Any]:
     return {"vms": vms, "total": len(vms), "online": sum(1 for v in vms if v["reachable"])}
 
 
+import time
+_dashboard_status_cache = {}
 # ---------------------------------------------------------------------------
 # Public interface
 # ---------------------------------------------------------------------------
@@ -164,6 +166,15 @@ def _vm_info(env: dict[str, str]) -> dict[str, Any]:
 def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, Any]:
     """Aggregate full dashboard status. Never raises."""
     try:
+        cache_ttl = int(os.environ.get('DASHBOARD_CACHE_TTL_S', '5'))
+        now_ts = time.time()
+        
+        if _dashboard_status_cache:
+            ts, cached_res = _dashboard_status_cache.get('last', (0, {}))
+            if now_ts - ts < cache_ttl:
+                cached_res['cache_age_s'] = int(now_ts - ts)
+                return cached_res
+
         now = datetime.now(timezone.utc)
         uptime_s = int((now - bridge_start_utc).total_seconds()) if bridge_start_utc else 0
 
@@ -183,9 +194,10 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
                     ngrok_url = match.group(0).rstrip("/")
                     break
 
-        return {
+        result = {
             "ok": True,
             "timestamp": now.isoformat(),
+            "cache_age_s": 0,
             "bridge": {
                 "status": "running",
                 "uptime_s": uptime_s,
@@ -208,6 +220,8 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
                 if env.get(k)
             ],
         }
+        _dashboard_status_cache['last'] = (now_ts, result)
+        return result
     except Exception as exc:
         return {"ok": False, "error": str(exc)}
 
