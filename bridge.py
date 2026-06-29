@@ -407,6 +407,7 @@ TENTACLES = [
     {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},
     # Dashboard + Chat routes
     {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},
+    {"name": "health_deep",      "route": "GET /health/deep",                "reach": "Deep health check: API keys, cloud reachability, disk usage"},
     {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},
     {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},
 ]
@@ -1668,6 +1669,14 @@ def dashboard_status():
     from modules.dashboard_module import get_dashboard_status
     result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
     return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/health/deep", methods=["GET"])
+@route_errors
+def health_deep():
+    """GET /health/deep — Multi-provider connectivity and host status cryptographic proof."""
+    result = modules.get_deep_health()
+    return jsonify(result), 200
 
 
 # ---------------------------------------------------------------------------
