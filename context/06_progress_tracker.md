@@ -1,40 +1,8 @@
 # Jules Bridge — Progress Tracker
 
 > Context file 6 of 7. The ONLY file that updates constantly.
-> How the agent picks up exactly where you left off in a single prompt.
-
-## Current Phase: Phase 5 — LLM Integration + Self-Improvement 🔄
-
-## Phase History
-
-### Phase 1 — Deep Module Refactor ✅
-Applied Matt Pocco's deep module pattern (AI Engineer World Fair 2025).
-- Extracted 5 deep modules from monolithic bridge.py
-- Added 56 new unit tests
-- All 14 integration tests still passing
-
-### Phase 2 — HRM Reasoning Module ✅
-Applied Hierarchical Reasoning Model architecture (Sapient Inc, June 2025).
-- CDLC: Generated AGENTS.md + Ubiquitous Language for HRM repo
-- Integrated reasoning_module.py with H/L/ACT pattern
-- 34/34 tests passing
-
-### Phase 3 — Harness Engineering ✅
-Applied Nick Ni's "Case" harness principles (AI Engineer World Fair 2025).
-- retrospective_module.py: reads bridge.log, detects doom loops, writes memory
-- Six-file context system: context/01-06
-- memory/ directory with per-domain markdown files
-- 3 new retrospective routes
-
-### Phase 4 — Job Pilot Agent Skills ✅ (Current)
-Applied JSM/Job Pilot Agent Skills to Jules Bridge.
-- Created 5 core agent skills: architect, remember, review, recover, imprint in `.agents/skills/`
-- Updated workflow rules in `context/04_ai_workflow_rules.md`
-
-## Active Architectural Decisions
-
 | Decision | Choice | Rationale |
-|---|---|---|
+| Decision | Choice | Rationale |
 | Memory format | Markdown files | Human + agent readable; matches Nick's Case |
 | Evidence storage | SHA-256 in JSON | Cryptographic proof; cannot be faked |
 | LLM integration | Gemini via alias system | No new API key; `fast`/`smart` aliases hide provider details |
