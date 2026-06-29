@@ -23,6 +23,7 @@ has gone wrong before and what to avoid.
 ## Session 20260626T021500 — Phase 5: LLM Integration + Self-Improvement
 
 ### Resolved: GET /health 404 storm
+
 - `bridge.log` had 58 consecutive `GET /health → 404` in a tight loop (19:54 timestamp)
 - Root cause: route never existed; caller (ngrok/monitoring) assumed standard health endpoint
 - Fix: added `GET /health` returning `{status, bridge, uptime_s}` using `_BRIDGE_START_UTC` constant
@@ -30,6 +31,7 @@ has gone wrong before and what to avoid.
 - Also added `/health` to TENTACLES manifest so clients can discover it
 
 ### Resolved: LLM stubs in reasoning_module
+
 - `_h_module_call()` and `_l_module_call()` were pure deterministic stubs
 - Now dispatched via `_MODEL_ALIASES` dict: `"stub"` → None (stub), `"fast"` → gemini-2.0-flash, `"smart"` → gemini-2.5-pro
 - Gemini call in `_gemini_chat()`: lazy-imports `google.generativeai`, reads `GEMINI_API_KEY` from env
@@ -37,12 +39,14 @@ has gone wrong before and what to avoid.
 - Tests still use `model="stub"` (default) — zero network calls, all 133 pass unchanged
 
 ### Added: Evidence gating (soft)
+
 - `/oracle/*` routes now attach `X-Evidence-Age-Warning: stale:{N}s` if `test_evidence.json` is >1h old
 - Implemented as second `@app.after_request` hook: `_evidence_age_check()`
 - NOT a hard block (no 423) — warning header only; harden later when test-first is established
 - Best-effort: if evidence file missing or malformed, request passes through with no header
 
 ### Added: POST /retrospective/prune_memory
+
 - Pruning strategy: age-based (sections with `## Session 20YYMMDDTHHMMSS` stamps older than N days are removed)
 - Sections with no parseable timestamp are KEPT (conservative default — don't lose things we can't date)
 - `## How to use` and `## Initial Notes` headings are always preserved
@@ -50,11 +54,13 @@ has gone wrong before and what to avoid.
 - Default: `max_age_days=30`; callable with `{"max_age_days": 7}` for aggressive pruning
 
 ### Added: Full TENTACLES manifest
+
 - Reasoning routes (`/reasoning/solve`, `/reasoning/plan`, `/reasoning/execute_step`) were missing
 - Retrospective routes (`/retrospective/analyze`, `/retrospective/record_evidence`, `/retrospective/memory`, `/retrospective/prune_memory`) were missing
 - Now all routes discoverable via `GET /tentacles`
 
 ### Pattern: adding a new route (checklist)
+
 1. Add handler in `bridge.py` with `@route_errors`
 2. Add to `TENTACLES` list in `bridge.py`
 3. Add to route table in `context/02_architecture.md`

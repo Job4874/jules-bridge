@@ -171,6 +171,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .dp-btn{font-family:var(--mono);font-size:9px;padding:4px 10px;border-radius:6px;border:1px solid rgba(0,200,255,.2);background:rgba(0,200,255,.08);color:var(--blue);cursor:pointer;transition:all .2s}
 .dp-btn:hover{background:rgba(0,200,255,.15);border-color:rgba(0,200,255,.3)}
 .dp-btn:disabled{opacity:.4;cursor:default}
+.dp-actions{margin-top:6px;text-align:right}
 </style>
 </head>
 <body>
@@ -270,7 +271,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
         <div class="dp-detail" id="dpGeminiDetail"></div>
         <div class="dp-row"><span>OpenRouter</span><span class="dp-status nokey" id="dpOpenrouter">–</span></div>
         <div class="dp-detail" id="dpOpenrouterDetail"></div>
-        <div style="margin-top:6px;text-align:right"><button class="dp-btn" id="testBtn" onclick="testProviders()">🔍 Test Providers</button></div>
+        <div class="dp-actions"><button class="dp-btn" id="testBtn" onclick="testProviders()">🔍 Test Providers</button></div>
       </div>
     </div>
   </div>
