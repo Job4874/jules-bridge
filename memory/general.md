@@ -351,4 +351,3 @@ has gone wrong before and what to avoid.
 - **subprocess.run**: always explicit `check=False` or `check=True`.
 - **Broad except in route handlers**: `except Exception as exc:  # noqa: BLE001` is correct suppression.
 - **Lazy module imports in bridge.py routes**: `from modules.xxx import yyy` inside handlers is intentional; do NOT hoist to top.
-
