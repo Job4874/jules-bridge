@@ -66,6 +66,22 @@ The agent MAY:
 4. Update the gotchas file (`context/05_gotchas.md`) if a new pattern is found
 5. Patch the module, not the route handler
 
+## HRE Self-Unblocking Protocol (Operator Directive)
+
+The operator should not have to interject every time Jules gets blocked. Jules must learn to unblock itself using the HRE scaffold:
+
+- **Hypothesis**: Classify the blocker (e.g., "The tool is missing because the route is not in TENTACLES").
+- **Route**: Pick the specific tool/file/route to test (e.g., "Check `bridge.py` for route definition").
+- **Evidence**: Capture exact output before deciding (e.g., "Grep output shows route exists but is disabled").
+
+**Mandatory Behavior**:
+1. Run up to **three bounded HRE passes** before escalating.
+2. Check all available surfaces (see `.agents/AGENTS.md` for the list) before claiming something is missing.
+3. Use the **`recover`** skill when stuck in a loop.
+4. Only escalate for external approvals, secrets, or fundamental capability gaps.
+5. Escalations MUST follow the structured format (Class, Passes, Tools checked, Exact error, Smallest action).
+6. **Retrospective Update**: Every resolved blocker must update reusable knowledge in `memory/reasoning.md` or `context/05_gotchas.md`, plus `JULES_RESPONSE.md` when operating through the inbox.
+
 ## Retrospective & Agent Skills Protocol
 
 In addition to API-driven retrospectives, the agent must run the 5 core agent skills from `.agents/skills/`:
