@@ -15,10 +15,11 @@ Run: python3 tibin_core.py
 """
 
 import os
-import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 SYMBOL = "BTC/USD"
 N_CANDLES = 1000
@@ -183,7 +184,8 @@ def run_paper_trading(df: pd.DataFrame) -> dict:
         capital += position * last["close"]
         if pnl >= 0: wins += 1
         else: losses += 1
-        log_lines.append(f"{last['timestamp'].strftime('%Y-%m-%d %H:%M')} | CLOSE | {SYMBOL} | Force-close P&L=${pnl:+,.2f}")
+        ts_str = last['timestamp'].strftime('%Y-%m-%d %H:%M')
+        log_lines.append(f"{ts_str} | CLOSE | {SYMBOL} | Force-close P&L=${pnl:+,.2f}")
         position = 0.0
 
     total_trades = wins + losses
@@ -221,7 +223,10 @@ def main():
     df = compute_order_flow(df)
 
     signal_counts = df["signal"].value_counts().to_dict()
-    print(f"Signals: BUY={signal_counts.get('BUY',0)} SELL={signal_counts.get('SELL',0)} HOLD={signal_counts.get('HOLD',0)}")
+    buys = signal_counts.get('BUY', 0)
+    sells = signal_counts.get('SELL', 0)
+    holds = signal_counts.get('HOLD', 0)
+    print(f"Signals: BUY={buys} SELL={sells} HOLD={holds}")
 
     print("Running paper trading engine...")
     results = run_paper_trading(df)

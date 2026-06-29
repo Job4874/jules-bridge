@@ -169,7 +169,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
     try:
         cache_ttl = int(os.environ.get('DASHBOARD_CACHE_TTL_S', '5'))
         now_ts = time.time()
-        
+
         if _dashboard_status_cache:
             ts, cached_res = _dashboard_status_cache.get('last', (0, {}))
             if now_ts - ts < cache_ttl:

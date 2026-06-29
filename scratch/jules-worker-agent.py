@@ -9,15 +9,16 @@ import os
 import subprocess
 import threading
 import time
-import requests
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, request, jsonify
+
+import requests
+from flask import Flask, jsonify, request
 
 # Load env
 env_file = Path(os.path.expanduser("~/.jules_worker.env"))
 if env_file.exists():
-    for line in env_file.read_text().splitlines():
+    for line in env_file.read_text(encoding='utf-8').splitlines():
         if "=" in line and not line.startswith("#"):
             k, _, v = line.partition("=")
             os.environ[k.strip()] = v.strip()

@@ -179,10 +179,10 @@ def execute(
     """
     effective_cwd = cwd or os.getcwd()
     cache_ttl = int(os.environ.get('SHELL_CACHE_TTL_S', '0'))
-    
+
     # Cache key: hash(command + cwd + shell)
     cache_key = hashlib.sha256(f"{command}{effective_cwd}{shell}".encode()).hexdigest()
-    
+
     now = time.time()
     if cache_key in _shell_result_cache and cache_ttl > 0:
         ts, cached_res = _shell_result_cache[cache_key]
@@ -213,7 +213,7 @@ def execute(
             stderr=_coerce_text(res.stderr),
             shell=resolved_shell,
         )
-        
+
         # Update cache
         _shell_result_cache[cache_key] = (now, result)
         return result

@@ -141,14 +141,14 @@ def get_secret(
 
 
 def detect_ui_state(
-    image_path: str | None = None,
+    _image_path: str | None = None,
     ocr_text: str = "",
     template_signals: dict | None = None,
 ) -> UIDetectionResult:
     """Classify a UI state from OCR text and optional template signals.
 
     Args:
-        image_path: Reserved for later OCR/OpenCV integration.
+        _image_path: Reserved for later OCR/OpenCV integration.
         ocr_text: Text extracted from the screen. Tests pass this directly.
         template_signals: Optional precomputed visual signals.
 

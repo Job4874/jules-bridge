@@ -321,3 +321,34 @@ has gone wrong before and what to avoid.
 - `/notify/email` now accepts `attachments: list[str]` for screenshot/report evidence. The route validates each path with `existing_path(..., kind="file")` before SMTP so missing screenshots fail fast with 404 instead of being silently skipped.
 - `notify_email.send_email(subject, body, mail_to=None, attachments=None)` keeps the old plain-text path when no attachments are present and switches to multipart only when files are supplied.
 - Added module and route coverage in `tests/test_notify_email_enhanced.py` and `tests/test_bridge_routes.py::TestBridgeTokenAuth`; full evidence recorded: 284 tests passed, SHA-256 `281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4`.
+
+## Session 20260629T092400 - Lint Cleanup Pass (303 tests passing)
+
+### Python Module Fixes
+
+- `modules/dashboard_module.py`: Moved `import time` and `import re` to top-level; removed `import re` from inside loop body.
+- `modules/reasoning_module.py`: Added `import subprocess` + `from datetime import datetime, timezone` to top-level; removed both from inline locations; renamed `_ROOT_DIR` → `_root_dir`; renamed `_l_stub` args `step`→`_step`, `model`→`_model`; renamed `_extract_answer` arg `plan`→`_plan`; added `check=False` to `subprocess.run`; changed f-string logging to lazy `%s` format; stripped trailing whitespace.
+- `modules/oracle_session.py`: Added `check=False` to all 3 `subprocess.run` calls.
+- `modules/ui_automation.py`: Renamed `image_path`→`_image_path` (unused, reserved for future OCR integration).
+
+### Test Fix
+
+- `tests/test_hre_depth.py`: Updated `rm._ROOT_DIR` → `rm._root_dir` to match renamed module attribute. Final count: **303/303 passing**.
+
+### Markdown Fixes
+
+- `context/05_gotchas.md`: Fixed `## modules/**init**.py` heading (MD050); collapsed extra blank lines.
+- `context/07_library_docs.md`: Added `text` language spec to unnamed code fence; simplified table separators.
+- `jules_inbox/JULES_MISSION_001.md`: Converted from plain text to proper Markdown (H1 first, H2 sections, code fences with `text` lang).
+- `jules_inbox/JULES_MISSION_001_RESPONSE.md`: Fixed multiple H1 mid-doc → H2.
+- `jules_inbox/MONDAY_MISSION_20260629.md`, `OPERATOR_PROXY_CORRECTION.md`: Added `text` lang to code fences.
+- `memory/reasoning.md`: Added `# Reasoning Memory` H1 as first line.
+
+### Patterns
+
+- **Private path constants**: use `_root_dir` (snake_case), not `_ROOT_DIR` — pylint sees module-level `_NAME` as variable.
+- **Unused stub params**: prefix with `_` to suppress warning without removing the interface contract.
+- **subprocess.run**: always explicit `check=False` or `check=True`.
+- **Broad except in route handlers**: `except Exception as exc:  # noqa: BLE001` is correct suppression.
+- **Lazy module imports in bridge.py routes**: `from modules.xxx import yyy` inside handlers is intentional; do NOT hoist to top.
+

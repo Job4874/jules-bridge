@@ -112,6 +112,7 @@ def _run_ps(script_path: str, extra_args: Optional[list] = None, timeout: int = 
         text=True,
         timeout=timeout,
         cwd=_ORACLE_REPO,
+        check=False,
     )
     return {"stdout": res.stdout, "stderr": res.stderr, "code": res.returncode}
 
@@ -189,6 +190,7 @@ def _quantower_process() -> ProcessInfo:
                 "Select-Object Id,StartTime | ConvertTo-Json -Compress",
             ],
             capture_output=True, text=True, timeout=30,
+            check=False,
         )
         if res.returncode != 0 or not res.stdout.strip():
             return ProcessInfo(running=False, processes=[])
@@ -334,6 +336,7 @@ def oracle_build_deploy() -> BuildDeployResult:
         capture_output=True,
         text=True,
         timeout=300,
+        check=False,
     )
     deploy = _run_ps(_script("Deploy-OracleQuantowerStrategy.ps1"))
     verify = _run_ps(_script("Verify-OracleReplayReady.ps1"), ["-InfoXmlPath", _INFO_XML])

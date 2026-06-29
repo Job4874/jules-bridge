@@ -27,7 +27,9 @@ from __future__ import annotations
 import json
 import logging
 import os
+import subprocess
 import time
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -128,7 +130,7 @@ class ReasoningTrace:
 
     # CDLC Observe: structured feedback for improving future context
     feedback: Dict[str, Any] = field(default_factory=dict)
-    
+
     # HRE Depth Tracking
     hre_passes_taken: int = 1
     self_unblocked: bool = False
@@ -178,7 +180,7 @@ def _h_stub(problem: str, model: str) -> Dict[str, Any]:
     }
 
 
-def _l_stub(step: str, step_index: int, model: str) -> Dict[str, Any]:
+def _l_stub(_step: str, step_index: int, _model: str) -> Dict[str, Any]:
     """Deterministic L-module stub for unit tests."""
     return {
         "action_type": "answer",
@@ -298,11 +300,10 @@ def _gcloud_access_token() -> str:
     including generativelanguage.googleapis.com. Returns empty string on failure.
     On Windows, gcloud is a .cmd batch file so shell=True is required.
     """
-    import subprocess  # noqa: PLC0415
     for cmd in (["gcloud", "auth", "print-access-token"], ["gcloud.cmd", "auth", "print-access-token"]):
         try:
             result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=15, shell=True,
+                cmd, capture_output=True, text=True, timeout=15, shell=True, check=False,
             )
             token = result.stdout.strip()
             if result.returncode == 0 and token.startswith("ya29"):
@@ -320,8 +321,6 @@ def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
     gcloud login token which has full API scopes).  Falls back to a JSON error
     string if gcloud is unavailable or the call fails.
     """
-    import subprocess  # noqa: F401,PLC0415  (already imported in _gcloud_access_token)
-
     token = _gcloud_access_token()
     if not token:
         _LOGGER.warning("No gcloud token available; cannot call Gemini")
@@ -577,7 +576,7 @@ def _halt_check(
     )
 
 
-def _extract_answer(actions: List[LLevelAction], plan: HLevelPlan) -> Optional[str]:
+def _extract_answer(actions: List[LLevelAction], _plan: HLevelPlan) -> Optional[str]:
     """Extract a final answer from the set of executed actions."""
     answer_actions = [a for a in actions if a.action_type == "answer" and a.should_execute]
     if not answer_actions:
@@ -780,14 +779,13 @@ def execute_step(
 
 def score_hre_depth(trace: ReasoningTrace) -> dict:
     """Score the HRE pass depth and write to eval results."""
-    from datetime import datetime, timezone
-    _ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    eval_path = os.path.join(_ROOT_DIR, "memory", "eval_results.json")
-    
+    _root_dir_local = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    eval_path = os.path.join(_root_dir_local, "memory", "eval_results.json")
+
     score = float(trace.hre_passes_taken)
     self_unblock_rate = 1.0 if trace.self_unblocked else 0.0
     gaps_found = list(trace.blockers_resolved)
-    
+
     result = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "depth_score": score,
@@ -796,15 +794,15 @@ def score_hre_depth(trace: ReasoningTrace) -> dict:
         "knowledge_sources": list(trace.knowledge_sources_checked),
         "problem": trace.problem[:100]
     }
-    
+
     # Append to JSON lines file
     try:
         os.makedirs(os.path.dirname(eval_path), exist_ok=True)
         with open(eval_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(result) + "\n")
     except Exception as e:
-        _LOGGER.warning(f"Failed to record HRE depth: {e}")
-        
+        _LOGGER.warning("Failed to record HRE depth: %s", e)
+
     return result
 
 
@@ -813,21 +811,21 @@ def discover_skills(skills_dir: str) -> list[dict]:
     skills = []
     if not os.path.exists(skills_dir):
         return skills
-        
+
     for skill_name in os.listdir(skills_dir):
         skill_path = os.path.join(skills_dir, skill_name, "SKILL.md")
         if not os.path.isfile(skill_path):
             continue
-            
+
         try:
             with open(skill_path, "r", encoding="utf-8") as f:
                 content = f.read()
-                
+
             # Parse simple YAML frontmatter manually
             name = ""
             description = ""
             trigger = ""
-            
+
             if content.startswith("---"):
                 parts = content.split("---", 2)
                 if len(parts) >= 3:
@@ -839,10 +837,10 @@ def discover_skills(skills_dir: str) -> list[dict]:
                             description = line.split(":", 1)[1].strip()
                         elif line.startswith("trigger_condition:"):
                             trigger = line.split(":", 1)[1].strip()
-                            
+
             if not name:
                 name = skill_name
-                
+
             skills.append({
                 "name": name,
                 "description": description,
@@ -850,23 +848,23 @@ def discover_skills(skills_dir: str) -> list[dict]:
                 "skill_path": skill_path
             })
         except Exception as e:
-            _LOGGER.warning(f"Failed to parse skill {skill_path}: {e}")
-            
+            _LOGGER.warning("Failed to parse skill %s: %s", skill_path, e)
+
     return skills
 
 
-_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_GOTCHAS_PATH = os.path.join(_ROOT_DIR, "context", "05_gotchas.md")
+_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_GOTCHAS_PATH = os.path.join(_root_dir, "context", "05_gotchas.md")
 
 def inject_gotcha(module: str, text: str) -> dict:
     """Inject a new edge case directly into 05_gotchas.md."""
     if not os.path.exists(_GOTCHAS_PATH):
         return {"status": "error", "message": "Gotchas file not found"}
-        
+
     try:
         with open(_GOTCHAS_PATH, "r", encoding="utf-8") as f:
             content = f.read()
-            
+
         # Find the module heading
         heading = f"## {module}"
         if heading not in content:
@@ -876,10 +874,10 @@ def inject_gotcha(module: str, text: str) -> dict:
             # Inject right after the heading
             parts = content.split(heading, 1)
             new_content = parts[0] + heading + f"\n\n- **auto-injected**: {text}" + parts[1]
-            
+
         with open(_GOTCHAS_PATH, "w", encoding="utf-8") as f:
             f.write(new_content)
-            
+
         return {"status": "ok", "module": module, "text": text}
     except Exception as e:
         return {"status": "error", "message": str(e)}

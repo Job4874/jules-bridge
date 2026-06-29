@@ -854,7 +854,8 @@ def _plan_markdown(
         f"- context_over_budget: {context_budget.get('over_budget', False)}",
         f"- memory_store_strategy: {memory_store.get('strategy', '')}",
         f"- memory_store_refs: {memory_store.get('entry_count', 0)}",
-        f"- long_session_eval: preload {eval_plan.get('preload_turns', 0)} turns, probe turn {eval_plan.get('probe_turn', 0)}",
+        f"- long_session_eval: preload {eval_plan.get('preload_turns', 0)} turns,"
+        f" probe turn {eval_plan.get('probe_turn', 0)}",
         "",
         "## No Slop Workflow",
         "",

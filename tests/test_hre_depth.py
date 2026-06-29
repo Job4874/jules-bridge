@@ -41,7 +41,7 @@ def test_score_hre_depth():
                 assert res["depth_score"] == 3.0
                 
                 import modules.reasoning_module as rm
-                mock_file.assert_called_with(os.path.join(rm._ROOT_DIR, "memory", "eval_results.json"), "a", encoding="utf-8")
+                mock_file.assert_called_with(os.path.join(rm._root_dir, "memory", "eval_results.json"), "a", encoding="utf-8")
 
 def test_discover_skills():
     with tempfile.TemporaryDirectory() as tmpdir:

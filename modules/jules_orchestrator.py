@@ -522,7 +522,7 @@ def list_remote_sessions(
     """
     cache_ttl = int(os.environ.get('JULES_SESSION_CACHE_TTL_S', '30'))
     now = time.time()
-    
+
     if not dry_run and jules_command in _session_list_cache and cache_ttl > 0:
         ts, cached_res = _session_list_cache[jules_command]
         if now - ts < cache_ttl:
@@ -1324,7 +1324,12 @@ def run_jules_fleet(
             if item.get("status") == "launched"
         )
         all_complete = bool(cot_result.get("all_complete"))
-        status = "complete" if all_complete else "blocked" if blockers else "scaled" if launched_this_cycle else "pending"
+        status = (
+            "complete" if all_complete
+            else "blocked" if blockers
+            else "scaled" if launched_this_cycle
+            else "pending"
+        )
         payload = JulesFleetResult(
             generated_at_utc=generated_at,
             status=status,
@@ -1729,11 +1734,13 @@ def _packet_text(task: JulesTask, repo_path: str, instance_index: int) -> str:
         "",
         "## Operating Rules",
         "- Work on one card only; do not opportunistically refactor unrelated code.",
-        "- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.",
+        "- Do not stop at a plan or ask for plan approval; plan briefly in the report"
+        " and proceed unless a hard blocker prevents work.",
         "- Preserve existing behavior unless the card explicitly asks for behavior change.",
         "- Run the narrowest relevant verification first, then the broader suite if practical.",
         "- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.",
-        "- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.",
+        "- Do not reveal private chain-of-thought."
+        " Use a concise rationale, decision log, and evidence checklist instead.",
         "- If blocked, write the blocker, attempted evidence, and the exact next question.",
         "",
         "## Completion report",
@@ -1770,7 +1777,7 @@ def _launch_command(packet_path: str | None, task: JulesTask, repo_path: str) ->
 def _write_dispatch_files(
     selected: list[JulesTask],
     packets: list[str],
-    commands: list[str],
+    _commands: list[str],
     output_dir: Path,
     repo_path: str,
     source_label: str,
