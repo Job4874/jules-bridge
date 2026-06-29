@@ -198,7 +198,7 @@ def _quantower_process() -> ProcessInfo:
         if isinstance(data, dict):
             data = [data]
         return ProcessInfo(running=len(data) > 0, processes=data)
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return ProcessInfo(running=False, error=str(exc), processes=[])
 
 

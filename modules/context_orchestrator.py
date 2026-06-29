@@ -604,7 +604,7 @@ def _packet_text(
         f"- role_id: {role['id']}",
         f"- mission: {role['mission']}",
         f"- task: {task or '(operator task not specified)'}",
-        f"- context_strategy: smart_truncation_head_tail_memory_store",
+        "- context_strategy: smart_truncation_head_tail_memory_store",
         f"- source_count: {metrics.get('source_count', 0)}",
         f"- active_prompt_chars: {metrics.get('active_prompt_chars', 0)}",
         f"- omitted_middle_chars: {metrics.get('omitted_middle_chars', 0)}",
@@ -621,12 +621,7 @@ def _packet_text(
         f"- memory_store: {memory_store.get('strategy', 'middle refs')} ({memory_store.get('entry_count', 0)} refs)",
         "- retrieve omitted middles before assuming missing details are irrelevant",
         "- subagent_boundary: keep heavy source analysis inside role packets",
-        (
-            "- long_session_eval: preload {preload} turns; probe turn {probe}"
-        ).format(
-            preload=eval_plan.get("preload_turns", _DEFAULT_LONG_SESSION_PRELOAD_TURNS),
-            probe=eval_plan.get("probe_turn", _DEFAULT_LONG_SESSION_PROBE_TURN),
-        ),
+            f"- long_session_eval: preload {eval_plan.get('preload_turns', _DEFAULT_LONG_SESSION_PRELOAD_TURNS)} turns; probe turn {eval_plan.get('probe_turn', _DEFAULT_LONG_SESSION_PROBE_TURN)}"
         "",
         "## Operating Rules",
         "- Keep the main conversation light; do heavy source analysis inside this packet.",
@@ -814,13 +809,7 @@ def _index_markdown(
     ]
     for subagent, packet_file in zip(subagents, packet_files):
         lines.append(
-            "| {id} | {role} | {chars} | {budget} | {packet} |".format(
-                id=subagent.get("id", ""),
-                role=subagent.get("role_id", ""),
-                chars=subagent.get("packet_char_count", 0),
-                budget=subagent.get("within_budget", False),
-                packet=packet_file.replace("|", "\\|"),
-            )
+            f"| {subagent.get('id', '')} | {subagent.get('role_id', '')} | {subagent.get('packet_char_count', 0)} | {subagent.get('within_budget', False)} | {packet_file.replace('|', '\\|')} |"
         )
     lines.append("")
     return "\n".join(lines)
@@ -845,7 +834,7 @@ def _plan_markdown(
         f"- generated_at_utc: {generated_at}",
         f"- status: {status}",
         f"- task: {task or '(not specified)'}",
-        f"- context_strategy: smart_truncation_head_tail_memory_store",
+        "- context_strategy: smart_truncation_head_tail_memory_store",
         f"- active_prompt_chars: {metrics.get('active_prompt_chars', 0)}",
         f"- omitted_middle_chars: {metrics.get('omitted_middle_chars', 0)}",
         f"- compression_ratio: {metrics.get('compression_ratio', 0)}",
@@ -864,11 +853,7 @@ def _plan_markdown(
     ]
     for phase in workflow.get("phases", []):
         lines.append(
-            "| {id} | {artifact} | {done} |".format(
-                id=phase.get("id", ""),
-                artifact=phase.get("artifact", ""),
-                done=str(phase.get("done_when", "")).replace("|", "\\|"),
-            )
+            f"| {phase.get('id', '')} | {phase.get('artifact', '')} | {str(phase.get('done_when', '')).replace('|', '\\|')} |"
         )
     lines.extend([
         "",
@@ -897,12 +882,7 @@ def _plan_markdown(
     for subagent in subagents:
         packet = packet_by_id.get(str(subagent.get("id", "")), "")
         lines.append(
-            "| {id} | {role} | {mission} | {packet} |".format(
-                id=subagent.get("id", ""),
-                role=subagent.get("role_id", ""),
-                mission=str(subagent.get("mission", "")).replace("|", "\\|"),
-                packet=packet.replace("|", "\\|"),
-            )
+            f"| {subagent.get('id', '')} | {subagent.get('role_id', '')} | {str(subagent.get('mission', '')).replace('|', '\\|')} | {packet.replace('|', '\\|')} |"
         )
     lines.extend([
         "",
