@@ -170,6 +170,7 @@
 - `jules remote new` can take 60-120 seconds for session creation; do not assume it hung before 2 minutes.
 - Exit code 0 from `jules new` does NOT guarantee success; check for `Error:`/`Fatal:` in stderr and verify a session ID is present.
 - Worker packets must be noninteractive; the installed CLI has no plan-approval command, so `Awaiting Plan` rows are retryable.
+- **CRITICAL**: `/jules/watch`, `/jules/fleet`, `/jules/fleet-watch`, `/jules/cycle`, `/jules/dispatch`, `/jules/launch`, `/jules/pull`, `/jules/cot` are ALL **POST** routes, not GET. Using GET returns 405. Check `GET /tentacles` for the method column.
 
 ## doom_loop_prevention
 
