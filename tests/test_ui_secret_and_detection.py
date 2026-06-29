@@ -71,3 +71,24 @@ class TestUIDetectionStateEngine:
         assert result["confidence"] >= 0.8
         assert "loading" in result["signals"]
         assert result["error"] is None
+
+    def test_detects_auth_prompt_from_ocr_text(self):
+        from modules.ui_automation import detect_ui_state
+
+        result = detect_ui_state(
+            ocr_text="Please enter your email and password to continue login",
+        )
+
+        assert result["state"] == "auth_prompt"
+        assert result["confidence"] >= 0.8
+        assert "credentials" in result["signals"]
+
+    def test_detects_error_state_from_ocr_text(self):
+        from modules.ui_automation import detect_ui_state
+
+        result = detect_ui_state(
+            ocr_text="Connection failed: unexpected error occurred",
+        )
+
+        assert result["state"] == "error"
+        assert result["confidence"] >= 0.7

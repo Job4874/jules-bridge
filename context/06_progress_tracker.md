@@ -164,13 +164,15 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Regenerated `jules_inbox/context_subagents/` from the two current pasted sources: 2 readable sources, 4 role packets, 2 memory refs, `context_budget.over_budget=false`, and no raw attachment paths in generated packet artifacts.
 - Evidence: `python -m py_compile bridge.py modules\context_orchestrator.py modules\__init__.py` passed; `python -m pytest tests/ -q` passed 240 tests with 1 existing warning, SHA-256 `7e42a3ecdcad29604d56efef9775d577985e939d8a503cbb9ef5a1c21c9e1d4c`.
 
-## In Progress — Human-Mimic UI & VM Driver
+## What's Complete
 
-- Security architecture locked: operator-authorized OS-backed secrets only, no plaintext credential persistence, and `allow_secret_use=true` required for runtime secret use.
-- H/L/ACT architecture plan captured in `implementation_plan.md`.
-- First TDD red tests added for mock secret provider boundaries and OCR/UI state detection in `tests/test_ui_secret_and_detection.py`.
-
-## Session 20260626T203837 - Human-Mimic UI Green Phase
+- [x] `modules/fs_service.py`
+- [x] `modules/shell_executor.py`
+- [x] `modules/ui_automation.py`
+- [x] `modules/vm_manager.py` (resource pressure + dry-run-first VM boot gating)
+- [x] `modules/human_mimic_driver.py` (guarded Quantower login ACT driver)
+- [x] `modules/windows_secret_provider.py` (OS-backed secret abstraction)
+- [x] `modules/inbox_service.py`
 
 - Implemented minimal green-phase `ui_automation.get_secret(...)` and `ui_automation.detect_ui_state(...)`.
 - Exported `SecretResult`, `UIDetectionResult`, `get_secret`, and `detect_ui_state` from `modules/__init__.py`.
@@ -211,3 +213,10 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Added `self_created_tools/safe_bridge_probe.py` to call bridge evidence routes while omitting `image_base64` and redacting sensitive-looking fields.
 - Updated `JULES_PROOF_RUN_20260628.md`, `context/05_gotchas.md`, and `memory/reasoning.md` so future proof runs use concise route summaries and screenshot `saved_path` values.
 - Evidence: `python -m py_compile self_created_tools\safe_bridge_probe.py tests\test_safe_bridge_probe.py` passed; `python self_created_tools\safe_bridge_probe.py screenshot --base-url http://127.0.0.1:5000` returned a saved path with `image_base64` omitted; `python -m pytest tests/ -q` passed 288 tests with 1 existing warning.
+
+## Session 20260629T000000 - Human-Mimic UI & VM Driver Completion
+
+- Finalized `modules/ui_automation.py` with `UIActionResult` and expanded state detection for `auth_prompt` and `error`.
+- Verified `modules/human_mimic_driver.py` and `modules/vm_manager.py` against the H/L/ACT implementation plan.
+- Resolved platform-dependent test failures in `tests/test_app_launcher.py` by mocking `os.path.isabs` to handle Windows paths in Linux test environment.
+- Evidence: `python3 -m pytest tests/ -v` passed all 290 tests with 1 existing warning.

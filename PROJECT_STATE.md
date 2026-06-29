@@ -12,9 +12,9 @@
 |---|---|
 | **Repo** | `C:\Users\abdul\.jules` |
 | **Branch** | `master` |
-| **Working tree** | Dirty (Human-Mimic VM Manager TDD changes pending commit) |
-| **Last commit** | `30deaa8` — feat: create Global Verdent Rule handoff files and initiate 8-target verification for Oracle V5 |
-| **Tests** | 274 passed, 1 warning (`python -m pytest tests/ -q`) |
+| **Working tree** | Dirty (Human-Mimic UI & VM Driver Completion) |
+| **Last commit** | `fd39b93` — style: disable MD013 globally to prevent line-length warnings on agent memory files |
+| **Tests** | 290 passed, 1 warning (`python3 -m pytest tests/ -v`) |
 | **Bridge entry** | `python bridge.py` → Flask on `0.0.0.0:5000` |
 | **Oracle V5 source** | `C:\aotp\projects\OracleV5` |
 | **Oracle DLL** | `C:\Quantower\Settings\Scripts\Strategies\OracleV5.Strategy.dll` |
@@ -35,20 +35,18 @@ Parallel track in progress:
 
 | Area | Status | Evidence |
 |---|---|---|
-| App launcher (Edge) | Done | `modules/app_launcher.py`, `POST /apps/launch_browser`, 7 unit tests |
+| App launcher (Edge) | Done | `modules/app_launcher.py`, `POST /apps/launch_browser`, 8 unit tests |
 | Token auth on bridge | Done | commit `98af291` |
 | Jules fleet / COT automation | Done | 29/29 packets complete per `JULES_COT_LEDGER.json` |
 | Context sub-agents + no-slop workflow | Done | `POST /akc/subagents` |
-| Human-mimic Quantower login route | Done | commit chain through session 20260626T204200 |
-| Human-mimic VM manager | Done | `modules/vm_manager.py`, `POST /vm/resource_pressure`, `POST /vm/boot_secondary`, 9 new/affected tests |
+| Human-mimic UI & VM Driver | Done | Phase 5 completion evidence hash `93c3c248eb977a5969a1ab02fc9d3968a721e6ef40b5947319b117a9874ad68b` |
 
 ---
 
 ## Active Work / Next Queue
 
 1. **Oracle V5 claim audit** — begin 8-target verification in `docs/CLAIM_AUDIT.md` (source reads done; runtime telemetry cross-check pending).
-2. **Human-Mimic UI** — remaining guarded UI actions per `implementation_plan.md` after VM manager green phase.
-3. **Medium-priority Oracle docs** — `docs/INVENTORY.md`, `docs/PARAMETERS.md`, `docs/ORACLE_V5_MASTER_SPEC.md` (not yet created).
+2. **Medium-priority Oracle docs** — `docs/INVENTORY.md`, `docs/PARAMETERS.md`, `docs/ORACLE_V5_MASTER_SPEC.md` (not yet created).
 
 ---
 

@@ -56,6 +56,17 @@ class UIDetectionResult(dict):
     """
 
 
+class UIActionResult(dict):
+    """Result of a guarded UI action.
+
+    Keys always present:
+      status (str): success, blocked, unknown, or error
+      state (str): detected UI state
+      acted (bool): whether keyboard/mouse actions were attempted
+      error (str | None): failure detail
+    """
+
+
 # ---------------------------------------------------------------------------
 # Module-level lazy import guard — pyautogui is only imported at call time
 # so that test environments can mock it cleanly.
@@ -173,6 +184,14 @@ def detect_ui_state(
                 error=None,
             )
 
+        if "login" in signals and "credentials" in signals:
+            return UIDetectionResult(
+                state="auth_prompt",
+                confidence=0.8,
+                signals=signals,
+                error=None,
+            )
+
         if "quantower" in signals and "loading" in signals:
             return UIDetectionResult(
                 state="quantower_loading",
@@ -185,6 +204,14 @@ def detect_ui_state(
             return UIDetectionResult(
                 state="quantower_ready",
                 confidence=0.8,
+                signals=signals,
+                error=None,
+            )
+
+        if "error" in text or "failed" in text:
+            return UIDetectionResult(
+                state="error",
+                confidence=0.7,
                 signals=signals,
                 error=None,
             )
