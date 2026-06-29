@@ -2,7 +2,12 @@
 import os
 import smtplib
 import sys
+import mimetypes
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+from email import encoders
 from pathlib import Path
 
 
@@ -18,7 +23,7 @@ def load_env():
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
-def send_email(subject, body, mail_to=None):
+def send_email(subject, body, mail_to=None, attachments=None):
     load_env()
     gmail_user = os.environ.get("GMAIL_USER", "").strip()
     gmail_pass = os.environ.get("GMAIL_APP_PASSWORD", "").strip()
@@ -29,7 +34,33 @@ def send_email(subject, body, mail_to=None):
             "Missing GMAIL_USER or GMAIL_APP_PASSWORD in c:\\Users\\abdul\\.jules\\.env"
         )
 
-    msg = MIMEText(body, "plain", "utf-8")
+    if attachments:
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(body, "plain", "utf-8"))
+        for path_str in attachments:
+            path = Path(path_str)
+            if not path.is_file():
+                continue
+
+            ctype, encoding = mimetypes.guess_type(str(path))
+            if ctype is None or encoding is not None:
+                ctype = 'application/octet-stream'
+            maintype, subtype = ctype.split('/', 1)
+
+            with open(path, 'rb') as f:
+                if maintype == 'image':
+                    img = MIMEImage(f.read(), _subtype=subtype)
+                    img.add_header('Content-Disposition', 'attachment', filename=path.name)
+                    msg.attach(img)
+                else:
+                    part = MIMEBase(maintype, subtype)
+                    part.set_payload(f.read())
+                    encoders.encode_base64(part)
+                    part.add_header('Content-Disposition', 'attachment', filename=path.name)
+                    msg.attach(part)
+    else:
+        msg = MIMEText(body, "plain", "utf-8")
+
     msg["Subject"] = subject
     msg["From"] = gmail_user
     msg["To"] = mail_to
@@ -48,13 +79,16 @@ def send_email(subject, body, mail_to=None):
             smtp.login(gmail_user, gmail_pass)
             smtp.sendmail(gmail_user, [mail_to], msg.as_string())
 
-    return {"from": gmail_user, "to": mail_to, "subject": subject}
+    return {"from": gmail_user, "to": mail_to, "subject": subject, "attachments": attachments or []}
 
 
 if __name__ == "__main__":
     subject = sys.argv[1] if len(sys.argv) > 1 else "Jules Bridge update"
     body = sys.argv[2] if len(sys.argv) > 2 else "Test message from Jules bridge."
+    attachments = sys.argv[3:] if len(sys.argv) > 3 else None
+
     if len(sys.argv) == 1 and not sys.stdin.isatty():
         body = sys.stdin.read()
-    result = send_email(subject, body)
-    print(f"Sent: {result['from']} -> {result['to']}: {result['subject']}")
+
+    result = send_email(subject, body, attachments=attachments)
+    print(f"Sent: {result['from']} -> {result['to']}: {result['subject']} with {len(result['attachments'])} attachments")

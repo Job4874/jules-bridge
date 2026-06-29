@@ -1257,7 +1257,8 @@ def send_notify_email():
     subject = string_field(data, "subject", default="Jules Bridge update")
     body = string_field(data, "body")
     mail_to = optional_email(data, "to")
-    result = email_service.send_email(subject, body, mail_to=mail_to)
+    attachments = string_list_field(data, "attachments", default=None, control_safe=True)
+    result = email_service.send_email(subject, body, mail_to=mail_to, attachments=attachments)
     return jsonify({"status": "sent", **result})
 
 
