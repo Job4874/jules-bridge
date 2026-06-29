@@ -732,12 +732,12 @@ def prune_memory(
             heading = section[0].rstrip() if section else ""
 
             # Always preserve non-session headers
-            if any(heading.startswith(p) for p in _PRESERVE_PREFIXES):
+            if any(heading.startswith(p) for p in _preserve_prefixes):
                 kept.append(section)
                 continue
 
             # Try to parse a timestamp from the heading
-            m = _TS_RE.search(heading)
+            m = _ts_re.search(heading)
             if not m:
                 # No timestamp found — keep conservatively
                 kept.append(section)
@@ -790,7 +790,7 @@ def assess_memory_quality(memory_path: str) -> dict:
     for line in lines:
         if line.startswith("## "):
             total_sections += 1
-            if _TS_RE.search(line):
+            if _ts_re.search(line):
                 dated_sections += 1
         elif line.strip().startswith("- ") or line.strip().startswith("* "):
             # Bullet point roughly counts as actionable context

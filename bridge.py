@@ -322,7 +322,7 @@ def _circuit_breaker_check():
     
     is_open, retry_after = check_circuit_breaker(request.path)
     if is_open:
-        logger.warning("Circuit breaker OPEN for %s", request.path)
+        LOGGER.warning("Circuit breaker OPEN for %s", request.path)
         return jsonify({
             "error": "circuit_open",
             "route": request.path,
