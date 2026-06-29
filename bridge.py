@@ -395,11 +395,14 @@ TENTACLES = [
     {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},
     {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},
     {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},
+    {"name": "reason_skills",   "route": "GET /reasoning/skills",          "reach": "Inventory of available agent skills"},
+    {"name": "reason_gotcha",   "route": "POST /reasoning/inject_gotcha",  "reach": "Inject new edge case into gotchas context"},
     # Retrospective routes (self-improving memory)
     {"name": "retro_analyze",   "route": "POST /retrospective/analyze",    "reach": "Analyze bridge.log and write learnings to memory"},
     {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},
     {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},
     {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},
+    {"name": "retro_quality",   "route": "GET /retrospective/memory_quality", "reach": "Assess memory structural quality"},
     # Agent Knowledge Context routes
     {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},
     {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},
@@ -1384,6 +1387,27 @@ def reasoning_execute_step():
     })
 
 
+
+@app.route("/reasoning/skills", methods=["GET"])
+@route_errors
+def reasoning_skills():
+    """GET /reasoning/skills — Inventory of available agent skills."""
+    skills_dir = request.args.get("skills_dir", os.path.join(ROOT_DIR, ".agents", "skills"))
+    skills = modules.reasoning_module.discover_skills(skills_dir)
+    return jsonify({"skills": skills})
+
+
+@app.route("/reasoning/inject_gotcha", methods=["POST"])
+@route_errors
+def reasoning_inject_gotcha():
+    """POST /reasoning/inject_gotcha — Inject new edge case into gotchas context."""
+    data = json_payload()
+    module = string_field(data, "module")
+    text = string_field(data, "text")
+    result = modules.reasoning_module.inject_gotcha(module, text)
+    return jsonify(result)
+
+
 # — Retrospective routes (Nick Ni's "Case" harness pattern) —
 
 @app.route("/retrospective/analyze", methods=["POST"])
@@ -1538,6 +1562,17 @@ def retrospective_prune_memory():
         "domains_affected": result["domains_affected"],
         "max_age_days": max_age_days,
     })
+
+
+
+@app.route("/retrospective/memory_quality", methods=["GET"])
+@route_errors
+def retrospective_memory_quality():
+    """GET /retrospective/memory_quality — Assess memory structural quality."""
+    domain = request.args.get("domain", "general")
+    memory_path = os.path.join(ROOT_DIR, "memory", f"{domain}.md")
+    result = modules.retrospective_module.assess_memory_quality(memory_path)
+    return jsonify(result)
 
 
 # - AKC routes (Agent Knowledge Context) -

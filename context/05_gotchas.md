@@ -48,6 +48,8 @@
 
 ## reasoning_module
 
+- **auto-injected**: HRE Depth & Skill Discovery injected successfully.
+
 - **Model aliases** — use `"stub"` (tests), `"fast"` (gemini-2.0-flash), `"smart"` (gemini-2.5-pro). Never pass raw model strings unless the alias doesn't exist yet.
 - **`tests/eval_reasoning.py`** — CDLC eval harness for `reasoning_module`; run `python tests/eval_reasoning.py --model stub` for offline proof, or `--model fast` when a live Gemini eval is explicitly desired
 - **Eval results** — `memory/eval_results.json` is structured JSON, not markdown memory; do not append prose to it by hand

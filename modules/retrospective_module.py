@@ -762,3 +762,58 @@ def prune_memory(
         "domains_affected": domains_affected,
     }
 
+
+# ---------------------------------------------------------------------------
+# Ticket 009 - Memory Quality
+# ---------------------------------------------------------------------------
+
+def assess_memory_quality(memory_path: str) -> dict:
+    """Assess the structural quality of a memory file."""
+    if not os.path.exists(memory_path):
+        return {
+            "total_sections": 0, "dated_sections": 0, "stale_count": 0,
+            "actionable_count": 0, "quality_score": 0.0,
+            "recommendation": "File not found."
+        }
+        
+    with open(memory_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    lines = content.splitlines()
+    total_sections = 0
+    dated_sections = 0
+    actionable_count = 0
+    
+    current_section_actionable = 0
+    
+    import re
+    _TS_RE = re.compile(r"(\d{8}T\d{6})")
+    
+    for line in lines:
+        if line.startswith("## "):
+            total_sections += 1
+            if _TS_RE.search(line):
+                dated_sections += 1
+        elif line.strip().startswith("- ") or line.strip().startswith("* "):
+            # Bullet point roughly counts as actionable context
+            actionable_count += 1
+            
+    if total_sections == 0:
+        quality_score = 0.0
+    else:
+        quality_score = float(actionable_count) / float(total_sections)
+        
+    res = {
+        "total_sections": total_sections,
+        "dated_sections": dated_sections,
+        "stale_count": total_sections - dated_sections, # Simple heuristic
+        "actionable_count": actionable_count,
+        "quality_score": quality_score
+    }
+    
+    if quality_score < 0.6:
+        msg = f"Memory quality for {os.path.basename(memory_path)} is low ({quality_score:.2f}). Consider pruning or summarization."
+        LOGGER.warning(msg)
+        res["recommendation"] = msg
+        
+    return res

@@ -128,6 +128,12 @@ class ReasoningTrace:
 
     # CDLC Observe: structured feedback for improving future context
     feedback: Dict[str, Any] = field(default_factory=dict)
+    
+    # HRE Depth Tracking
+    hre_passes_taken: int = 1
+    self_unblocked: bool = False
+    blockers_resolved: List[str] = field(default_factory=list)
+    knowledge_sources_checked: List[str] = field(default_factory=list)
 
     @property
     def succeeded(self) -> bool:
@@ -176,7 +182,7 @@ def _l_stub(step: str, step_index: int, model: str) -> Dict[str, Any]:
     """Deterministic L-module stub for unit tests."""
     return {
         "action_type": "answer",
-        "payload": {"text": f"[Stub execution of step {step_index}: {step[:40]}]"},
+        "payload": {"text": f"Executed action for step {step_index}"},
         "confidence": 0.7,
         "reasoning": "[L module stub — replace with real LLM call]",
     }
@@ -769,3 +775,308 @@ def execute_step(
             confidence=0.0,
             reasoning=f"L module failed: {exc}",
         )
+    if not answer_actions:
+        return None
+    # Take the last answer action (most refined)
+    last = answer_actions[-1]
+    return last.payload.get("text")
+
+
+# ---------------------------------------------------------------------------
+# Public interface
+# ---------------------------------------------------------------------------
+
+def reason(
+    problem: str,
+    context: str = "",
+    halt_budget: int = 8,
+    model: str = "stub",
+) -> ReasoningTrace:
+    """Run hierarchical reasoning on a problem using H → L cycles with ACT halting.
+
+    This is the main entry point. It mirrors the HRM forward pass:
+      1. H module produces an abstract plan (z_H)
+      2. For each plan step, L module produces a concrete action (z_L)
+      3. ACT halting decides when to stop (even before the budget is exhausted)
+
+    Args:
+        problem: The problem to solve (free-form text or JSON)
+        context: Additional context (e.g. current system state, constraints)
+        halt_budget: Maximum number of L-module calls before forced halt
+                     (analogous to halt_max_steps in HRM config)
+        model: LLM model to use for H and L modules
+
+    Returns:
+        ReasoningTrace with plan, executed actions, halt decision, and answer
+
+    Never raises — all sub-operations are defensive and return partial data.
+    This matches oracle_session.py's contract: "Never raises".
+    """
+    t0 = time.perf_counter()
+    actions: List[LLevelAction] = []
+
+    # Step 1: H module — produce the abstract plan
+    try:
+        h_raw = _h_module_call(problem, context, model)
+        plan = HLevelPlan(
+            steps=h_raw.get("steps", []),
+            goal_statement=h_raw.get("goal_statement", problem[:80]),
+            confidence=float(h_raw.get("confidence", 0.5)),
+            reasoning=h_raw.get("reasoning", ""),
+            model=h_raw.get("model", model),
+        )
+    except Exception as exc:
+        plan = HLevelPlan(
+            steps=["Resolve the problem"],
+            goal_statement=problem[:80],
+            confidence=0.1,
+            reasoning=f"H module failed: {exc}",
+            model=model,
+        )
+
+    # Step 2: L module loop — execute each step with ACT halting
+    steps_used = 0
+    for step_index, step in enumerate(plan.steps):
+        halt = _halt_check(actions, plan, steps_used, halt_budget)
+        if halt.should_halt:
+            break
+
+        try:
+            l_raw = _l_module_call(step, step_index, problem, context, model)
+            action = LLevelAction(
+                step_index=step_index,
+                step_description=step,
+                action_type=l_raw.get("action_type", "skip"),
+                payload=l_raw.get("payload", {}),
+                confidence=float(l_raw.get("confidence", 0.5)),
+                reasoning=l_raw.get("reasoning", ""),
+            )
+        except Exception as exc:
+            action = LLevelAction(
+                step_index=step_index,
+                step_description=step,
+                action_type="skip",
+                payload={"error": str(exc)},
+                confidence=0.0,
+                reasoning=f"L module failed: {exc}",
+            )
+
+        actions.append(action)
+        steps_used += 1
+
+    # Final halt decision
+    final_halt = _halt_check(actions, plan, steps_used, halt_budget)
+    if not final_halt.should_halt:
+        final_halt = HaltDecision(
+            should_halt=True,
+            reason="goal_reached",
+            steps_used=steps_used,
+            steps_budget=halt_budget,
+        )
+
+    answer = _extract_answer(actions, plan)
+    elapsed_ms = (time.perf_counter() - t0) * 1000.0
+
+    return ReasoningTrace(
+        problem=problem,
+        plan=plan,
+        actions=actions,
+        halt=final_halt,
+        answer=answer,
+        elapsed_ms=elapsed_ms,
+        # CDLC Observe: structured feedback for context improvement
+        feedback={
+            "plan_confidence": plan.confidence,
+            "steps_planned": plan.step_count,
+            "steps_executed": len([a for a in actions if a.should_execute]),
+            "halt_reason": final_halt.reason,
+            "halted_early": final_halt.halted_early,
+            "mean_action_confidence": (
+                sum(a.confidence for a in actions) / len(actions) if actions else 0.0
+            ),
+        },
+    )
+
+
+def plan_only(problem: str, context: str = "", model: str = "stub") -> HLevelPlan:
+    """Run only the H module — return an abstract plan without executing any steps.
+
+    Use when you want to preview the plan before committing to execution.
+
+    Args:
+        problem: The problem to plan for
+        context: Additional context
+        model: LLM model to use
+
+    Returns:
+        HLevelPlan with abstract steps and confidence
+    """
+    try:
+        h_raw = _h_module_call(problem, context, model)
+        return HLevelPlan(
+            steps=h_raw.get("steps", []),
+            goal_statement=h_raw.get("goal_statement", problem[:80]),
+            confidence=float(h_raw.get("confidence", 0.5)),
+            reasoning=h_raw.get("reasoning", ""),
+            model=h_raw.get("model", model),
+        )
+    except Exception as exc:
+        return HLevelPlan(
+            steps=[],
+            goal_statement=problem[:80],
+            confidence=0.0,
+            reasoning=f"H module failed: {exc}",
+            model=model,
+        )
+
+
+def execute_step(
+    step: str,
+    context: str = "",
+    step_index: int = 0,
+    problem: str = "",
+    model: str = "stub",
+) -> LLevelAction:
+    """Run only the L module for a single step — useful for manual control.
+
+    Use when you have a specific step to execute without running the full H→L cycle.
+
+    Args:
+        step: The step description to execute
+        context: Additional context
+        step_index: Index of this step (for logging)
+        problem: The original problem (for full context)
+        model: LLM model to use
+
+    Returns:
+        LLevelAction with the concrete action to take
+    """
+    try:
+        l_raw = _l_module_call(step, step_index, problem or step, context, model)
+        return LLevelAction(
+            step_index=step_index,
+            step_description=step,
+            action_type=l_raw.get("action_type", "skip"),
+            payload=l_raw.get("payload", {}),
+            confidence=float(l_raw.get("confidence", 0.5)),
+            reasoning=l_raw.get("reasoning", ""),
+        )
+    except Exception as exc:
+        return LLevelAction(
+            step_index=step_index,
+            step_description=step,
+            action_type="skip",
+            payload={"error": str(exc)},
+            confidence=0.0,
+            reasoning=f"L module failed: {exc}",
+        )
+
+# ---------------------------------------------------------------------------
+# Ticket 009 - HRE Depth & Skill Discovery
+# ---------------------------------------------------------------------------
+
+def score_hre_depth(trace: ReasoningTrace) -> dict:
+    """Score the HRE pass depth and write to eval results."""
+    from datetime import datetime, timezone
+    _ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    eval_path = os.path.join(_ROOT_DIR, "memory", "eval_results.json")
+    
+    score = float(trace.hre_passes_taken)
+    self_unblock_rate = 1.0 if trace.self_unblocked else 0.0
+    gaps_found = list(trace.blockers_resolved)
+    
+    result = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "depth_score": score,
+        "self_unblock_rate": self_unblock_rate,
+        "gaps_found": gaps_found,
+        "knowledge_sources": list(trace.knowledge_sources_checked),
+        "problem": trace.problem[:100]
+    }
+    
+    # Append to JSON lines file
+    try:
+        os.makedirs(os.path.dirname(eval_path), exist_ok=True)
+        with open(eval_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(result) + "\n")
+    except Exception as e:
+        _LOGGER.warning(f"Failed to record HRE depth: {e}")
+        
+    return result
+
+
+def discover_skills(skills_dir: str) -> list[dict]:
+    """Parse SKILL.md files to discover loaded skills."""
+    skills = []
+    if not os.path.exists(skills_dir):
+        return skills
+        
+    for skill_name in os.listdir(skills_dir):
+        skill_path = os.path.join(skills_dir, skill_name, "SKILL.md")
+        if not os.path.isfile(skill_path):
+            continue
+            
+        try:
+            with open(skill_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                
+            # Parse simple YAML frontmatter manually
+            name = ""
+            description = ""
+            trigger = ""
+            
+            if content.startswith("---"):
+                parts = content.split("---", 2)
+                if len(parts) >= 3:
+                    frontmatter = parts[1]
+                    for line in frontmatter.split("\n"):
+                        if line.startswith("name:"):
+                            name = line.split(":", 1)[1].strip()
+                        elif line.startswith("description:"):
+                            description = line.split(":", 1)[1].strip()
+                        elif line.startswith("trigger_condition:"):
+                            trigger = line.split(":", 1)[1].strip()
+                            
+            if not name:
+                name = skill_name
+                
+            skills.append({
+                "name": name,
+                "description": description,
+                "trigger_condition": trigger,
+                "skill_path": skill_path
+            })
+        except Exception as e:
+            _LOGGER.warning(f"Failed to parse skill {skill_path}: {e}")
+            
+    return skills
+
+
+_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_GOTCHAS_PATH = os.path.join(_ROOT_DIR, "context", "05_gotchas.md")
+
+def inject_gotcha(module: str, text: str) -> dict:
+    """Inject a new edge case directly into 05_gotchas.md."""
+    if not os.path.exists(_GOTCHAS_PATH):
+        return {"status": "error", "message": "Gotchas file not found"}
+        
+    try:
+        with open(_GOTCHAS_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Find the module heading
+        heading = f"## {module}"
+        if heading not in content:
+            # Append new module section at the end
+            new_content = content + f"\n\n{heading}\n\n- **auto-injected**: {text}\n"
+        else:
+            # Inject right after the heading
+            parts = content.split(heading, 1)
+            new_content = parts[0] + heading + f"\n\n- **auto-injected**: {text}" + parts[1]
+            
+        with open(_GOTCHAS_PATH, "w", encoding="utf-8") as f:
+            f.write(new_content)
+            
+        return {"status": "ok", "module": module, "text": text}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
