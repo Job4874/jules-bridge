@@ -89,37 +89,39 @@ def start_flask() -> subprocess.Popen:
     return STATE.flask_process
 
 
-atexit.register(stop_flask)
+def main():
+    log("Starting Jules Bridge locally...")
+    start_flask()
 
-log("Starting Jules Bridge locally...")
-start_flask()
-
-for _ in range(20):
-    if ping_local():
-        break
-    time.sleep(0.5)
-else:
-    log("ERROR: bridge.py did not respond on port 5000")
-    stop_flask()
-    sys.exit(1)
-
-log("Flask bridge online at http://127.0.0.1:5000")
-
-log("Opening ngrok tunnel...")
-try:
-    public_url = ngrok.connect(5000, domain=NGROK_DOMAIN)
-    log("========================================")
-    log(f"NGROK URL: {public_url.public_url}")
-    log("========================================")
-except PyngrokError as exc:
-    if ping_local():
-        log(f"ngrok connect failed ({exc}) but local bridge is UP.")
-        log("Try reopening tunnel or use: http://127.0.0.1:5000")
-        log(f"Expected public URL: https://{NGROK_DOMAIN}")
+    for _ in range(20):
+        if ping_local():
+            break
+        time.sleep(0.5)
     else:
-        log(f"FATAL: ngrok and local bridge both unavailable: {exc}")
+        log("ERROR: bridge.py did not respond on port 5000")
         stop_flask()
         sys.exit(1)
+
+    log("Flask bridge online at http://127.0.0.1:5000")
+
+    log("Opening ngrok tunnel...")
+    try:
+        public_url = ngrok.connect(5000, domain=NGROK_DOMAIN)
+        log("========================================")
+        log(f"NGROK URL: {public_url.public_url}")
+        log("========================================")
+    except PyngrokError as exc:
+        if ping_local():
+            log(f"ngrok connect failed ({exc}) but local bridge is UP.")
+            log("Try reopening tunnel or use: http://127.0.0.1:5000")
+            log(f"Expected public URL: https://{NGROK_DOMAIN}")
+        else:
+            log(f"FATAL: ngrok and local bridge both unavailable: {exc}")
+            stop_flask()
+            sys.exit(1)
+
+if __name__ == "__main__":
+    main()
 
 class TunnelWatchdog:
     def __init__(self, inbox_dir=ROOT / "jules_inbox"):
@@ -189,17 +191,18 @@ class TunnelWatchdog:
         except subprocess.CalledProcessError as e:
             log(f"Failed to push offline escalation: {e}")
 
-watchdog = TunnelWatchdog()
-threading.Thread(target=watchdog.run_loop, daemon=True).start()
-
-log("Keeping process alive. Do not close this window.")
-
-try:
-    while True:
-        if STATE.flask_process and STATE.flask_process.poll() is not None:
-            log(f"ERROR: bridge.py exited with code {STATE.flask_process.returncode}")
-            sys.exit(STATE.flask_process.returncode or 1)
-        time.sleep(2)
-except KeyboardInterrupt:
-    log("Shutting down...")
-    stop_flask()
+if __name__ == "__main__":
+    watchdog = TunnelWatchdog()
+    threading.Thread(target=watchdog.run_loop, daemon=True).start()
+    
+    log("Keeping process alive. Do not close this window.")
+    
+    try:
+        while True:
+            if STATE.flask_process and STATE.flask_process.poll() is not None:
+                log(f"ERROR: bridge.py exited with code {STATE.flask_process.returncode}")
+                sys.exit(STATE.flask_process.returncode or 1)
+            time.sleep(2)
+    except KeyboardInterrupt:
+        log("Shutting down...")
+        stop_flask()

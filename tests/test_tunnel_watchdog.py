@@ -44,9 +44,9 @@ def test_ping_failure_reconnect(mock_ngrok, mock_urlopen, mock_watchdog, tmp_pat
     mock_watchdog.check_tunnel()
     assert mock_watchdog.consecutive_failures == 2
     
-    # 3rd fail -> triggers reconnect
+    # 3rd fail -> triggers reconnect (and resets to 0 since connect succeeds)
     mock_watchdog.check_tunnel()
-    assert mock_watchdog.consecutive_failures == 3
+    assert mock_watchdog.consecutive_failures == 0
     mock_ngrok.kill.assert_called_once()
     mock_ngrok.connect.assert_called_once_with(5000, domain=start.NGROK_DOMAIN)
     
@@ -61,12 +61,13 @@ def test_reconnect_failure_escalation(mock_subrun, mock_ngrok, mock_urlopen, moc
     mock_urlopen.side_effect = OSError("Connection refused")
     mock_ngrok.connect.side_effect = Exception("ngrok error")
     
-    # Trigger 3 reconnect failures
-    for _ in range(3):
-        # 3 ping failures to trigger 1 reconnect attempt
-        for _ in range(3):
-            mock_watchdog.check_tunnel()
-            
+    # Trigger 3 reconnect failures by checking 5 times.
+    # 1st, 2nd, 3rd check -> ping fails -> consecutive=3 -> reconnect fails (reconnect_fails=1)
+    # 4th check -> ping fails -> consecutive=4 -> reconnect fails (reconnect_fails=2)
+    # 5th check -> ping fails -> consecutive=5 -> reconnect fails (reconnect_fails=3, escalated!)
+    for _ in range(5):
+        mock_watchdog.check_tunnel()
+        
     assert mock_watchdog.reconnect_failures == 3
     
     blocker_file = tmp_path / "TUNNEL_BLOCKER.md"
