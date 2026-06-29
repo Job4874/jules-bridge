@@ -153,3 +153,29 @@
 - `boot_secondary_vm(...)` is dry-run by default. Real launch requires both `dry_run=false` and `allow_vm_boot=true`.
 - VM scripts must live under `JULES_VM_SCRIPT_DIR` and `script_name` must be a simple file name, not a path. Allowed extensions are `.ps1`, `.cmd`, and `.bat`.
 - `/vm/*` routes are Local Node executor routes. They should validate fields, call `modules.vm_manager`, and return typed JSON without policy logic in `bridge.py`.
+
+## ngrok_tunnel
+
+- The ngrok tunnel is a **SINGLE POINT OF FAILURE** for all remote Jules sessions. When it dies, Jules on the VM loses all tool access (shell, UI, Oracle, screenshots, inbox write).
+- Known outage 2026-06-28: tunnel dead for 7+ hours, caused 5 sessions to stall or fail without Jules being able to communicate what was wrong.
+- ERR_NGROK_3200 means the tunnel process died or lost its connection; `start.py` uses `pyngrok.ngrok.connect()` for reconnection.
+- Always verify tunnel health BEFORE launching remote Jules sessions: `GET /ping` on `https://parade-marrow-pulp.ngrok-free.dev`.
+- Ngrok auth token is stored in ngrok's own config, not in `.env`. If auth fails, run `ngrok config add-authtoken <token>`.
+- Zombie ngrok processes (WorkingSet64=0) can persist after crashes; kill them before restarting.
+
+## jules_cli
+
+- The npm `jules.cmd` shim can hang on Windows stdin piping; always prefer `C:\Users\abdul\AppData\Roaming\npm\bin\jules.exe` directly.
+- `jules.exe` temp binary at `%TEMP%\jules_tmp\jules.exe` is extracted at first run and can be cleaned by Windows Disk Cleanup or temp sweeps; fix with `npm install -g @google/jules`.
+- `jules remote new` can take 60-120 seconds for session creation; do not assume it hung before 2 minutes.
+- Exit code 0 from `jules new` does NOT guarantee success; check for `Error:`/`Fatal:` in stderr and verify a session ID is present.
+- Worker packets must be noninteractive; the installed CLI has no plan-approval command, so `Awaiting Plan` rows are retryable.
+
+## doom_loop_prevention
+
+- `GET /dashboard/status` was called 814x consecutively in one session — the worst doom loop in bridge history. Ticket 007 (circuit breaker) must be completed before any dashboard polling.
+- `POST /jules/fleet-watch` averaged 441 seconds per call over 34 consecutive calls — 4.1 hours of compute burned. Always set bounded `max_wait_s`.
+- `POST /shell` averaged 58 seconds per call. Never call it in a tight loop without caching.
+- If you detect yourself calling any route > 5x consecutively, STOP and run the `recover` skill.
+- Memory file `memory/general.md` contains 318 lines of prior doom loop learnings — read it BEFORE starting work.
+
