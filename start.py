@@ -1,5 +1,4 @@
 """Launch Jules Bridge locally and expose it through the reserved ngrok domain."""
-import atexit
 import json
 import logging
 import subprocess
@@ -120,9 +119,6 @@ def main():
             stop_flask()
             sys.exit(1)
 
-if __name__ == "__main__":
-    main()
-
 class TunnelWatchdog:
     def __init__(self, inbox_dir=ROOT / "jules_inbox"):
         self.inbox_dir = inbox_dir
@@ -192,11 +188,13 @@ class TunnelWatchdog:
             log(f"Failed to push offline escalation: {e}")
 
 if __name__ == "__main__":
+    main()
+
     watchdog = TunnelWatchdog()
     threading.Thread(target=watchdog.run_loop, daemon=True).start()
-    
+
     log("Keeping process alive. Do not close this window.")
-    
+
     try:
         while True:
             if STATE.flask_process and STATE.flask_process.poll() is not None:
