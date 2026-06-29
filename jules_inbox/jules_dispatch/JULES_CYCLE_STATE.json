@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-29T16:04:52.159272+00:00",
+  "generated_at_utc": "2026-06-29T17:19:42.637587+00:00",
   "status": "pending",
   "dry_run": true,
   "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
@@ -12,7 +12,7 @@
   "blockers": [],
   "dispatch": {
     "source": "existing_packets",
-    "generated_at_utc": "2026-06-29T16:04:52.159272+00:00",
+    "generated_at_utc": "2026-06-29T17:19:42.637587+00:00",
     "task_count": 0,
     "selected_count": 4,
     "status_counts": {},
@@ -50,17 +50,17 @@
     "stderr": "",
     "timed_out": false,
     "session_ids": [],
-    "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "jules_command": "jules",
     "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe"
   },
   "launch_result": {
-    "generated_at_utc": "2026-06-29T16:04:52.162269+00:00",
+    "generated_at_utc": "2026-06-29T17:19:42.650144+00:00",
     "dry_run": true,
     "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
     "selected_count": 4,
     "launched_count": 0,
     "timeout_count": 0,
-    "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "jules_command": "jules",
     "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
     "repo_path": "",
     "results": [
@@ -188,7 +188,7 @@
   },
   "pull_results": [
     {
-      "generated_at_utc": "2026-06-29T16:04:53.708919+00:00",
+      "generated_at_utc": "2026-06-29T17:19:44.523951+00:00",
       "dry_run": true,
       "session_id": "18196467418341089057",
       "command": [
@@ -198,7 +198,7 @@
         "--session",
         "18196467418341089057"
       ],
-      "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+      "jules_command": "jules",
       "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
       "repo_path": "",
       "status": "dry_run",
@@ -213,7 +213,7 @@
       "note": "Dry run only; remote Jules session was not pulled."
     },
     {
-      "generated_at_utc": "2026-06-29T16:04:53.708919+00:00",
+      "generated_at_utc": "2026-06-29T17:19:44.537575+00:00",
       "dry_run": true,
       "session_id": "224256420467650186",
       "command": [
@@ -223,7 +223,7 @@
         "--session",
         "224256420467650186"
       ],
-      "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+      "jules_command": "jules",
       "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
       "repo_path": "",
       "status": "dry_run",
@@ -238,7 +238,7 @@
       "note": "Dry run only; remote Jules session was not pulled."
     },
     {
-      "generated_at_utc": "2026-06-29T16:04:53.708919+00:00",
+      "generated_at_utc": "2026-06-29T17:19:44.547446+00:00",
       "dry_run": true,
       "session_id": "5740649256591165337",
       "command": [
@@ -248,7 +248,7 @@
         "--session",
         "5740649256591165337"
       ],
-      "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+      "jules_command": "jules",
       "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
       "repo_path": "",
       "status": "dry_run",
@@ -263,7 +263,7 @@
       "note": "Dry run only; remote Jules session was not pulled."
     },
     {
-      "generated_at_utc": "2026-06-29T16:04:53.714980+00:00",
+      "generated_at_utc": "2026-06-29T17:19:44.558022+00:00",
       "dry_run": true,
       "session_id": "3128018457996589851",
       "command": [
@@ -273,7 +273,7 @@
         "--session",
         "3128018457996589851"
       ],
-      "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+      "jules_command": "jules",
       "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
       "repo_path": "",
       "status": "dry_run",
@@ -289,7 +289,7 @@
     }
   ],
   "cot": {
-    "generated_at_utc": "2026-06-29T16:04:53.717003+00:00",
+    "generated_at_utc": "2026-06-29T17:19:44.567834+00:00",
     "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
     "launch_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
     "report_dir": "",

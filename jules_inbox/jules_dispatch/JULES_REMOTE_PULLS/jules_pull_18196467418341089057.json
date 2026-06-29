@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-29T16:04:53.708919+00:00",
+  "generated_at_utc": "2026-06-29T17:19:44.523951+00:00",
   "dry_run": true,
   "session_id": "18196467418341089057",
   "command": [
@@ -9,7 +9,7 @@
     "--session",
     "18196467418341089057"
   ],
-  "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "jules_command": "jules",
   "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
   "repo_path": "",
   "status": "dry_run",
