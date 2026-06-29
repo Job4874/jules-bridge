@@ -8,6 +8,8 @@ All subprocess and filesystem calls are mocked — no Oracle or Quantower needed
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
+
 
 
 class TestOracleStatus(unittest.TestCase):

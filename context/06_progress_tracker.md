@@ -224,3 +224,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Verified `modules/human_mimic_driver.py` and `modules/vm_manager.py` against the H/L/ACT implementation plan.
 - Resolved platform-dependent test failures in `tests/test_app_launcher.py` by mocking `os.path.isabs` to handle Windows paths in Linux test environment.
 - Evidence: `python3 -m pytest tests/ -v` passed all 290 tests with 1 existing warning.
+
+## Session 20260629T111500 — Gotchas Recovery & Test Fix
+
+- **Test Fix**: Resolved a test collection failure by adding the missing `from unittest.mock import patch` import to `tests/test_oracle_session.py`.
+- **Gotchas Recovery**: Restored `context/05_gotchas.md` from double UTF-16LE -> UTF-8 encoding corruption introduced by previous agent sessions. Re-enabled completely clean English gotchas.
+- **Verification**: Ran full unit test suite (307/307 passed). Started bridge.py on localhost port 5000 and confirmed live `/health` and `/akc/readiness` respond successfully.
+- Evidence: `python -m pytest tests/ -q` passed all 307 tests, SHA-256 `d897f1f0a8d3e098a5d3fefef9775d577985e939d8a503cbb9ef5a1c21c9e1d4` recorded.
+

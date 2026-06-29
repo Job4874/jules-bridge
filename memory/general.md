@@ -351,3 +351,10 @@ has gone wrong before and what to avoid.
 - **subprocess.run**: always explicit `check=False` or `check=True`.
 - **Broad except in route handlers**: `except Exception as exc:  # noqa: BLE001` is correct suppression.
 - **Lazy module imports in bridge.py routes**: `from modules.xxx import yyy` inside handlers is intentional; do NOT hoist to top.
+
+## Session 20260629T111500 — Gotchas Recovery & Test Fix (307 tests passing)
+
+- **Test Fix**: Resolved a test collection failure where `tests/test_oracle_session.py` was missing `from unittest.mock import patch`, resulting in `NameError` on patch decorators.
+- **Gotchas Recovery**: Fixed `context/05_gotchas.md` which had been corrupted with Chinese character unicode sequences (e.g., `\u80e2\ue7a3\u8a95...`) due to a double UTF-16LE -> UTF-8 encoding bug in previous agent sessions. Created `scratch/double_recover.py` to reverse this corruption by encoding UTF-8 characters back to UTF-16LE bytes twice, and restored the original clean English gotchas file.
+- **Verification**: Verified the entire test suite is completely green (307/307 passed). Started the bridge server via `python bridge.py` on port 5000 and confirmed both `/health` and `/akc/readiness` respond successfully.
+
