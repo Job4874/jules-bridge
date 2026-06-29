@@ -15,7 +15,9 @@
 
 ## What's Complete
 
+- [x] Ticket 006 — Auto-fix loop recursion break
 - [x] Ticket 007 — Dashboard Circuit Breaker (added global rate limiting to prevent 814x doom loop)
+- [x] Ticket 010 — Ngrok Tunnel Watchdog (Self-healing & Git escalation)
 - [x] `modules/fs_service.py`
 - [x] `modules/shell_executor.py`
 - [x] `modules/ui_automation.py`

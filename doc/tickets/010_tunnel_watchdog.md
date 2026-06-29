@@ -1,6 +1,7 @@
 # Ticket 010 — Ngrok Tunnel Health Watchdog
 
-Status: OPEN
+Status: DONE
+Evidence Hash: 05EB250F560A08F5A53930FF6D4F3731AE0BD1491E92FBD15DC6C2D232F73994
 
 ## Priority: CRITICAL
 
