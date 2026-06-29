@@ -1,7 +1,8 @@
 JULES - BRIDGE IS ONLINE. READ INBOX NOW.
 
 READ ORDER (do not skip):
-0. POST /inbox/read -> {"file":"JULES_TOOL_REQUIREMENTS.md"}   <- Codex-parity tool rules
+0a. POST /inbox/read -> {"file":"MONDAY_MISSION_20260629.md"}   <- MONDAY MISSION — tickets 007/008/009
+0b. POST /inbox/read -> {"file":"JULES_TOOL_REQUIREMENTS.md"}   <- Codex-parity tool rules
 1. POST /inbox/read -> {"file":"JULES_SELF_UNBLOCKING_PROTOCOL.md"}   <- HRE/tool/knowledge self-unblocking rules
 2. POST /inbox/read -> {"file":"JULES_FULL_OBJECTIVE_20260628.md"}   <- active full objective
 3. POST /inbox/read -> {"file":"JULES_PROOF_RUN_20260628.md"}   <- active proof demand
@@ -17,7 +18,11 @@ Path: C:\Quantower\Settings\Scripts\ScriptsData\Oracle V5 (f9eb0699-4c73-4ee2-b3
 
 Current proof demand: read JULES_PROOF_RUN_20260628.md and write SHOWOFF PROOF REPORT to JULES_RESPONSE.md.
 
-Continue: GET /oracle/status -> GET /ui/screenshot?save=true -> foreground/verify Quantower runtime -> resolve safe UI blocker or prove it -> replay -> G3 grep.
+🚨 MONDAY MISSION ACTIVE — READ THIS FIRST: jules_inbox/MONDAY_MISSION_20260629.md
+Three tickets waiting: 007 (circuit breaker), 008 (perf cache), 009 (HRE depth)
+Run them IN ORDER. Evidence on every ticket. Ship by Monday.
+
+Continue after tickets: GET /oracle/status -> GET /ui/screenshot?save=true -> foreground/verify Quantower runtime -> resolve safe UI blocker or prove it -> replay -> G3 grep.
 
 New tools: GET /oracle/status | GET /codex/handover | POST /fs/list | /fs/tail | /fs/grep | GET /session/log
 
