@@ -70,7 +70,9 @@ LOGGER = logging.getLogger("jules_bridge")
 app = Flask(__name__)
 CORS(app)
 
-BRIDGE_TOKEN = "JULES-SECURE-999"
+BRIDGE_TOKEN = os.environ.get("BRIDGE_TOKEN")
+if not BRIDGE_TOKEN:
+    raise ValueError("BRIDGE_TOKEN environment variable is missing")
 
 
 @app.before_request
@@ -1810,6 +1812,6 @@ if __name__ == "__main__":
     LOGGER.info("JULES GOD-MODE BRIDGE ACTIVATED")
     LOGGER.info("Listening on 0.0.0.0:5000")
     LOGGER.info("Log path: %s", LOG_PATH)
-    LOGGER.info("Token auth: ENABLED (Bearer JULES-SECURE-999)")
+    LOGGER.info("Token auth: ENABLED")
     LOGGER.info("========================================")
     app.run(port=5000, host="0.0.0.0")
