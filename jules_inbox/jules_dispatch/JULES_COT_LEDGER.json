@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-27T04:45:43.174768+00:00",
+  "generated_at_utc": "2026-06-28T21:18:32.680354+00:00",
   "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
   "launch_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
   "report_dir": "",
@@ -9,7 +9,7 @@
   "pending_count": 4,
   "all_complete": false,
   "status_counts": {
-    "launched_pending_cot": 4
+    "report_found_needs_review": 4
   },
   "rows": [
     {
@@ -21,8 +21,10 @@
       ],
       "timed_out": false,
       "exit_code": 0,
-      "cot_status": "launched_pending_cot",
-      "report_files": []
+      "cot_status": "report_found_needs_review",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_18196467418341089057.json"
+      ]
     },
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
@@ -33,8 +35,10 @@
       ],
       "timed_out": false,
       "exit_code": 0,
-      "cot_status": "launched_pending_cot",
-      "report_files": []
+      "cot_status": "report_found_needs_review",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_224256420467650186.json"
+      ]
     },
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
@@ -45,8 +49,10 @@
       ],
       "timed_out": false,
       "exit_code": 0,
-      "cot_status": "launched_pending_cot",
-      "report_files": []
+      "cot_status": "report_found_needs_review",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_5740649256591165337.json"
+      ]
     },
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
@@ -57,8 +63,10 @@
       ],
       "timed_out": false,
       "exit_code": 0,
-      "cot_status": "launched_pending_cot",
-      "report_files": []
+      "cot_status": "report_found_needs_review",
+      "report_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_3128018457996589851.json"
+      ]
     }
   ],
   "ledger_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.md",

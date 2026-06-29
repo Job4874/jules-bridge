@@ -1,13 +1,13 @@
 {
-  "generated_at_utc": "2026-06-27T04:45:38.498788+00:00",
-  "dry_run": false,
+  "generated_at_utc": "2026-06-28T21:18:32.669353+00:00",
+  "dry_run": true,
   "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
   "selected_count": 4,
   "launched_count": 4,
   "timeout_count": 0,
   "jules_command": "jules",
   "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "repo_path": "",
   "results": [
     {
       "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
@@ -74,29 +74,12 @@
       ]
     }
   ],
-  "attempt_results": [
-    {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
-      "repo_path": "C:\\aotp\\projects\\OracleV5",
-      "status": "launched",
-      "exit_code": 0,
-      "stdout": "Using repository from working directory: Job4874/OracleV5\nSession is created.\nID: 3128018457996589851\nTask: # Jules Worker Packet JT-001-59ae6d\n\n- instance_index: 4\n- status: unknown\n- task_type: antigravity\n- source: C:\\Users\\abdul\\.jules\\jules_inbox\\antigravity_offload_queue.txt\n- fingerprint: 59ae6d4b9eb4\n- repo_path: C:\\aotp\\projects\\OracleV5\n\n## Objective\nExecute this Antigravity Codex handover prompt: CODEX DECOUPLE QUANTOWER AND BUILD API FOUNDATION\n\n## Task Details\n- File: C:\\Users\\abdul\\.gemini\\antigravity-ide\\scratch\\tibin_handover\\TIBIN_CODEX_MASTER_HANDOVER_V2\\04_CODEX_PROMPTS\\CODEX_DECOUPLE_QUANTOWER_AND_BUILD_API_FOUNDATION.md\n- Issue: Execute Antigravity Codex handover prompt end-to-end\n- Language: markdown\n- Rationale: Offload large Codex handover work to Jules remote workers.\n\n## Operating Rules\n- Work on one card only; do not opportunistically refactor unrelated code.\n- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.\n- Preserve existing behavior unless the card explicitly asks for behavior change.\n- Run the narrowest relevant verification first, then the broader suite if practical.\n- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.\n- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.\n- If blocked, write the blocker, attempted evidence, and the exact next question.\n\n## Completion report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\n## Raw Card Excerpt\n```text\n# Codex Directive \u2014 Disconnect Quantower and Establish the TIBIN API Boundary\n\n```text\nTARGET ONLY THE PRIVATE FINANCIAL SWING ANALYST REPOSITORY.\n\nDo not touch stop cursor automation, Oracle V5, ForceOneV5, the macro terminal, or sibling projects.\n\nREAD FIRST:\n\n1. TIBIN_DECOUPLE_AND_WEB_ACQUISITION_ARCHITECTURE.md\n2. TIBIN_MARKET_DATA_HUB_IMPLEMENTATION.md\n3. TIBIN_DEEP_RESEARCH_PREMORTEM.md\n4. TIBIN_STABILITY_SECURITY_CHAOS_PLAN.md\n5. the Phase 0 archaeology reports already produced\n\nMISSION:\n\nImplement only the execution-platform decoupling and API-boundary foundation.\n\nDo not implement broad web scraping.\nDo not automate Barchart.\nDo not begin ML training.\nDo not place trades.\nDo not delete files before inventory and approval.\n\nPART 1 \u2014 VERIFY CURRENT QUANTOWER COUPLING\n\nFind and report:\n\n- imports/references\n- packages/DLLs\n- environment variables\n- startup dependencies\n- routes\n- UI controls\n- order models\n- connection services\n- background jobs\n- tests\n- files named Quantower, Tower, execution, broker, order, trade, or bridge\n\nProduce an exact dependency map.\n\nPART 2 \u2014 INTRODUCE EXECUTION BOUNDARY\n\nCreate or adapt:\n\n- ExecutionAdapter contract\n- DisabledExecutionAdapter\n- execution configuration validation\n- explicit disabled status endpoint\n- audit events for rejected execution attempts\n\nDefaults:\n\nEXECUTION_ENABLED=false\nEXECUTION_ADAPTER=disabled\nQUANTOWER_BRIDGE_ENABLED=false\nALLOW_LIVE_ORDERS=false\nALLOW_PAPER_ORDERS=false\n\nWhen disabled:\n\n- do not load Quantower libraries\n- do not load execution credentials\n- do not start bridge processes\n- do not mount live order routes\n- reject every execution call\n- display intentional disconnected/research mode in UI\n\nPART 3 \u2014 PROVE INDEPENDENCE\n\nProve:\n\n- install succeeds without Quantower\n- build succeeds without Quantower\n- tests succeed without Quantower\n- backend starts without Quantower\n- frontend starts without Quantower\n- data imports work\n- analysis endpoints work\n- execution status is DISABLED\n- order submission is impossible\n\nPART 4 \u2014 INTERNAL API FOUNDATION\n\nImplement only the minimum secure foundation:\n\n- application record\n- API-key issue-once function/CLI\n- cryptographically random key\n- salted hash storage\n- key prefix lookup\n- scopes\n- source entitlements\n- expiry and revocation\n- per-key rate limit\n- audit log\n- Authorization Bearer middleware\n- one protected health/data proof endpoint\n- no provider credential exposed to client\n\nDo not put raw API keys in logs or database.\n\nPART 5 \u2014 ACQUISITION POLICY SKELETON\n\nImplement contracts only:\n\n- AcquisitionRequest\n- AcquisitionResult\n- source policy registry\n- URL validation\n- public-host allowlist\n- private/reserved IP blocking\n- Barchart automated acquisition policy = BLOCKED\n- no browser worker yet\n\nPART 6 \u2014 TESTS\n\nAdd tests for:\n\n- disabled adapter rejects orders\n- no Quantower initialization when disabled\n- execution secrets not required\n- API key valid/invalid/revoked/expired\n- scope denial\n- source-entitlement denial\n- rate limit\n- no secret logging\n- private URL/localhost URL blocked\n- redirect to private address blocked\n- Barchart automated acquisition blocked\n\nRUN:\n\n- typecheck\n- lint\n- unit tests\n- integration tests\n- build\n- startup smoke\n- protected endpoint smoke\n- execution rejection smoke\n\nFINAL RESPONSE:\n\nQUANTOWER DECOUPLING AND API FOUNDATION REPORT\n\n- repo path\n- branch\n- commit\n- prior coupling found\n- files changed\n- execution adapter status\n- Quantower loaded: YES/NO\n- execution credentials loaded: YES/NO\n- backend without Quantower: PASS/FAIL\n- frontend without Quantower: PASS/FAIL\n- imports without Quantower: PASS/FAIL\n- analysis without Quantower: PASS/FAIL\n- order rejection: PASS/FAIL\n- API key tests: PASS/FAIL\n- acquisition policy tests: PASS/FAIL\n- typecheck/lint/test/build results\n- remaining blockers\n- unrelated projects touched: NONE\n\nStop after this phase.\n```\n```\n\nURL: https://jules.google.com/session/3128018457996589851\n",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": [
-        "3128018457996589851"
-      ]
-    }
-  ],
+  "attempt_results": [],
   "state_path": "",
-  "attempted_count": 1,
-  "skipped_launched_count": 3,
+  "attempted_count": 0,
+  "skipped_launched_count": 4,
   "force_packet_count": 0,
   "preserve_existing_session_ids": false,
-  "note": "Live launch attempted through the Jules CLI.",
+  "note": "Dry run only; no remote Jules sessions were started.",
   "tracked_count": 4
 }
