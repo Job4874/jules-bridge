@@ -110,6 +110,12 @@ Every module has a **simple typed interface** hiding complex implementation:
 - Keep this distinct from `/jules/dispatch`: AKC subagents handle source
   context, Jules dispatch handles executable Jules task cards.
 
+### Performance & Stability Patterns
+
+- **Per-Route Circuit Breaker**: Middleware in `bridge.py` tracks call frequency and returns 429 when thresholds are exceeded, preventing status-check doom loops.
+- **Selective Result Caching**: High-latency idempotent routes (`/shell`, `/jules/sessions`, `/dashboard/status`) use TTL-based in-memory caching to protect the event loop.
+- **Bypass Gates**: Critical state-dependent operations can bypass caches via `bypass_cache=true` to ensure they always operate on ground truth.
+
 ### Jules Dispatch
 
 - `modules/jules_orchestrator.py` parses pasted Jules task dumps, classifies task

@@ -172,6 +172,14 @@
 - Worker packets must be noninteractive; the installed CLI has no plan-approval command, so `Awaiting Plan` rows are retryable.
 - **CRITICAL**: `/jules/watch`, `/jules/fleet`, `/jules/fleet-watch`, `/jules/cycle`, `/jules/dispatch`, `/jules/launch`, `/jules/pull`, `/jules/cot` are ALL **POST** routes, not GET. Using GET returns 405. Check `GET /tentacles` for the method column.
 
+## Caching & Circuit Breaking
+
+- **Circuit Breaker** — tracks rolling call counts per route in a 60s window. Threshold is 20 for standard routes, 200 for polled routes (`/ping`, `/health`, `/dashboard/status`). Returns 429 when open.
+- **Shell Caching** — `POST /shell` results are cached for 10s by command+cwd+shell hash. Use `bypass_cache=true` to force a fresh execution.
+- **Jules Caching** — `list_remote_sessions` results are cached for 30s. Sub-second cache hits return `cache_hit: true`.
+- **Dashboard Caching** — `GET /dashboard/status` is cached for 5s. Response includes `cache_age_s`.
+- **Orchestrator Bypass** — critical orchestrator cycles (preflight, cycle, fleet) automatically bypass the session cache to ensure state consistency.
+
 ## doom_loop_prevention
 
 - `GET /dashboard/status` was called 814x consecutively in one session — the worst doom loop in bridge history. Ticket 007 (circuit breaker) must be completed before any dashboard polling.
