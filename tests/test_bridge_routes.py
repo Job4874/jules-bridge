@@ -413,7 +413,7 @@ class TestShellRoute(unittest.TestCase):
         self.assertEqual(mock_run.call_args.args[0][:4], ["cmd.exe", "/d", "/s", "/c"])
 
     @patch("modules.shell_executor.shutil.which", return_value=None)
-    def test_shell_invalid_git_bash(self, mock_which):
+    def test_shell_invalid_git_bash(self, _mock_which):
         # Patch os.path.exists with a side_effect so real directories
         # (cwd check in bridge) pass, but bash candidate paths fail.
         real_exists = os.path.exists

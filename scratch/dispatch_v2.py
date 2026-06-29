@@ -1,5 +1,6 @@
+# pylint: disable=redefined-outer-name
+
 """dispatch_v2.py — dispatch tasks to Jules VM with Gemini test first."""
-import json
 import time
 
 import requests

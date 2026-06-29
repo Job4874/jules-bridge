@@ -53,7 +53,7 @@ class TestScreenshot(unittest.TestCase):
         pag.screenshot.side_effect = fake_screenshot
         mock_pag_factory.return_value = pag
 
-        import tempfile as _tmp  # pylint: disable=import-outside-toplevel
+        import tempfile as _tmp  # pylint: disable=import-outside-toplevel, reimported
         with _tmp.TemporaryDirectory() as d:
             from modules.ui_automation import screenshot  # pylint: disable=import-outside-toplevel
             result = screenshot(save=True, screenshot_dir=d)

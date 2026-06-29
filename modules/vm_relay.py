@@ -165,7 +165,7 @@ def send_task_to_vm(task: str, task_type: str = "build", context: str = "") -> d
     The VM agent listens on port 6000 (firewall rule: jules-agent-port).
     Returns the agent's response dict.
     """
-    import requests as _req
+    import requests as _req  # pylint: disable=import-outside-toplevel
     payload = {
         "task": task,
         "task_type": task_type,
@@ -188,7 +188,7 @@ def send_task_to_vm(task: str, task_type: str = "build", context: str = "") -> d
 
 def get_vm_status() -> dict[str, Any]:
     """Poll the VM agent's /status endpoint."""
-    import requests as _req
+    import requests as _req  # pylint: disable=import-outside-toplevel
     try:
         r = _req.get(f"http://{VM_IP}:{VM_PORT}/status", timeout=5)
         return r.json()

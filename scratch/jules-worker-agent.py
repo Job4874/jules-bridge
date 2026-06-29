@@ -1,3 +1,7 @@
+# pylint: disable=subprocess-run-check
+
+# pylint: disable=invalid-name, broad-exception-caught, redefined-outer-name
+
 #!/usr/bin/env python3
 """
 jules-worker-agent.py — runs on the GCP VM (jules-offload-worker)
@@ -8,7 +12,6 @@ import json
 import os
 import subprocess
 import threading
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 

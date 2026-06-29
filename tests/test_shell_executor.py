@@ -1,3 +1,5 @@
+# pylint: disable=import-outside-toplevel
+
 """Unit tests for modules/shell_executor.py.
 
 Tests at the module interface level — subprocess calls are mocked.

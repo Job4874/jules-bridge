@@ -1,4 +1,5 @@
-import sys
+# pylint: disable=missing-module-docstring
+
 import json
 from datetime import datetime, timezone
 import hashlib
@@ -12,7 +13,7 @@ def record():
         "output_snippet": stdout[-1000:],
     }
     evidence_path = "memory/test_evidence.json"
-    
+
     # Load existing
     try:
         with open(evidence_path, "r", encoding="utf-8") as f:
@@ -21,16 +22,16 @@ def record():
                 data = [data]
     except FileNotFoundError:
         data = []
-        
+
     data.append(ev)
-    
+
     # Keep only last 10
     if len(data) > 10:
         data = data[-10:]
-        
+
     with open(evidence_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
-        
+
     print(ev["output_sha256"])
 
 if __name__ == "__main__":

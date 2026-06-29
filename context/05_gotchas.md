@@ -186,3 +186,5 @@
  -   A l l   b r i d g e   r o u t e s   a r e   r a t e - l i m i t e d   t o   2 0   c a l l s   p e r   6 0   s e c o n d s   ( r e t u r n s   H T T P   4 2 9 )   t o   p r e v e n t   d o o m   l o o p s .  
  -   P o l l i n g   r o u t e s   ( \ / p i n g \ ,   \ / h e a l t h \ ,   \ / d a s h b o a r d / s t a t u s \ )   h a v e   a   h i g h e r   c e i l i n g   o f   2 0 0   c a l l s .  
  
+ 
+ 

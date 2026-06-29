@@ -1,5 +1,6 @@
+# pylint: disable=wrong-import-order
+
 """check_openrouter_free.py — find all currently-free models on OpenRouter."""
-import json
 import os
 
 import requests

@@ -1,3 +1,5 @@
+# pylint: disable=broad-exception-caught, wrong-import-position, invalid-name
+
 #!/usr/bin/env python3
 """Test Gemini and OpenRouter connectivity from this VM."""
 import os

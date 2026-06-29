@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name
+
 """write_vm_env.py — write VM environment variables."""
 import re
 import socket

@@ -1,5 +1,6 @@
+# pylint: disable=wrong-import-order
+
 """extract_and_run_tibin.py — pull tibin_core.py from Jules result and run it on VM."""
-import json
 import re
 
 import requests

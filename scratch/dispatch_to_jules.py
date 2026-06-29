@@ -1,3 +1,5 @@
+# pylint: disable=broad-exception-caught
+
 """dispatch_to_jules.py — send work packets directly to Jules VM agent."""
 import json
 import requests

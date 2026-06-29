@@ -73,7 +73,7 @@ class UIActionResult(dict):
 # ---------------------------------------------------------------------------
 
 def _pyautogui():
-    import pyautogui as _pag  # noqa: PLC0415
+    import pyautogui as _pag  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     return _pag
 
 

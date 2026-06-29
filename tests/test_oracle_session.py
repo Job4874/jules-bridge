@@ -1,13 +1,13 @@
+# pylint: disable=import-outside-toplevel
+
 """Unit tests for modules/oracle_session.py.
 
 All subprocess and filesystem calls are mocked — no Oracle or Quantower needed.
 """
 
 import os
-import subprocess
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
 
 
 class TestOracleStatus(unittest.TestCase):
@@ -113,8 +113,8 @@ class TestCodexHandoverIndex(unittest.TestCase):
 
     def test_existing_folder_returns_file_list(self):
         with tempfile.TemporaryDirectory() as d:
-            open(os.path.join(d, "a.md"), "w").close()
-            open(os.path.join(d, "b.md"), "w").close()
+            open(os.path.join(d, "a.md"), "w", encoding="utf-8").close()
+            open(os.path.join(d, "b.md"), "w", encoding="utf-8").close()
             with patch.object(self.os_mod, "_CODEX_HANDOVER_ROOT", d):
                 result = self.os_mod.codex_handover_index()
         self.assertTrue(result["exists"])

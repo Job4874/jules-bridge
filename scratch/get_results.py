@@ -1,7 +1,6 @@
+# pylint: disable=wrong-import-order, invalid-name
+
 """get_results_v2.py — fetch + save all Jules results (UTF-8 safe)."""
-import json
-import os
-import sys
 
 import requests
 from pathlib import Path
