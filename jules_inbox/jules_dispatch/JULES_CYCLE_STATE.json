@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-29T17:19:42.637587+00:00",
+  "generated_at_utc": "2026-06-29T17:44:44.664543+00:00",
   "status": "pending",
   "dry_run": true,
   "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
@@ -12,7 +12,7 @@
   "blockers": [],
   "dispatch": {
     "source": "existing_packets",
-    "generated_at_utc": "2026-06-29T17:19:42.637587+00:00",
+    "generated_at_utc": "2026-06-29T17:44:44.664543+00:00",
     "task_count": 0,
     "selected_count": 4,
     "status_counts": {},
@@ -54,7 +54,7 @@
     "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe"
   },
   "launch_result": {
-    "generated_at_utc": "2026-06-29T17:19:42.650144+00:00",
+    "generated_at_utc": "2026-06-29T17:44:44.676688+00:00",
     "dry_run": true,
     "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
     "selected_count": 4,
@@ -186,110 +186,9 @@
     "preserve_existing_session_ids": false,
     "note": "Dry run only; no remote Jules sessions were started."
   },
-  "pull_results": [
-    {
-      "generated_at_utc": "2026-06-29T17:19:44.523951+00:00",
-      "dry_run": true,
-      "session_id": "18196467418341089057",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "remote",
-        "pull",
-        "--session",
-        "18196467418341089057"
-      ],
-      "jules_command": "jules",
-      "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": [
-        "18196467418341089057"
-      ],
-      "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_18196467418341089057.json",
-      "note": "Dry run only; remote Jules session was not pulled."
-    },
-    {
-      "generated_at_utc": "2026-06-29T17:19:44.537575+00:00",
-      "dry_run": true,
-      "session_id": "224256420467650186",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "remote",
-        "pull",
-        "--session",
-        "224256420467650186"
-      ],
-      "jules_command": "jules",
-      "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": [
-        "224256420467650186"
-      ],
-      "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_224256420467650186.json",
-      "note": "Dry run only; remote Jules session was not pulled."
-    },
-    {
-      "generated_at_utc": "2026-06-29T17:19:44.547446+00:00",
-      "dry_run": true,
-      "session_id": "5740649256591165337",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "remote",
-        "pull",
-        "--session",
-        "5740649256591165337"
-      ],
-      "jules_command": "jules",
-      "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": [
-        "5740649256591165337"
-      ],
-      "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_5740649256591165337.json",
-      "note": "Dry run only; remote Jules session was not pulled."
-    },
-    {
-      "generated_at_utc": "2026-06-29T17:19:44.558022+00:00",
-      "dry_run": true,
-      "session_id": "3128018457996589851",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "remote",
-        "pull",
-        "--session",
-        "3128018457996589851"
-      ],
-      "jules_command": "jules",
-      "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": [
-        "3128018457996589851"
-      ],
-      "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_3128018457996589851.json",
-      "note": "Dry run only; remote Jules session was not pulled."
-    }
-  ],
+  "pull_results": [],
   "cot": {
-    "generated_at_utc": "2026-06-29T17:19:44.567834+00:00",
+    "generated_at_utc": "2026-06-29T17:44:46.987274+00:00",
     "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
     "launch_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
     "report_dir": "",
@@ -299,64 +198,48 @@
     "pending_count": 4,
     "all_complete": false,
     "status_counts": {
-      "report_found_needs_review": 4
+      "not_launched": 4
     },
     "rows": [
       {
         "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
         "packet_id": "JT-002-6b1194",
-        "launch_status": "launched",
-        "session_ids": [
-          "18196467418341089057"
-        ],
+        "launch_status": "dry_run",
+        "session_ids": [],
         "timed_out": false,
-        "exit_code": 0,
-        "cot_status": "report_found_needs_review",
-        "report_files": [
-          "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_18196467418341089057.json"
-        ]
+        "exit_code": null,
+        "cot_status": "not_launched",
+        "report_files": []
       },
       {
         "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
         "packet_id": "JT-003-aab6ea",
-        "launch_status": "launched",
-        "session_ids": [
-          "224256420467650186"
-        ],
+        "launch_status": "dry_run",
+        "session_ids": [],
         "timed_out": false,
-        "exit_code": 0,
-        "cot_status": "report_found_needs_review",
-        "report_files": [
-          "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_224256420467650186.json"
-        ]
+        "exit_code": null,
+        "cot_status": "not_launched",
+        "report_files": []
       },
       {
         "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
         "packet_id": "JT-004-1e0abd",
-        "launch_status": "launched",
-        "session_ids": [
-          "5740649256591165337"
-        ],
+        "launch_status": "dry_run",
+        "session_ids": [],
         "timed_out": false,
-        "exit_code": 0,
-        "cot_status": "report_found_needs_review",
-        "report_files": [
-          "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_5740649256591165337.json"
-        ]
+        "exit_code": null,
+        "cot_status": "not_launched",
+        "report_files": []
       },
       {
         "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
         "packet_id": "JT-001-59ae6d",
-        "launch_status": "launched",
-        "session_ids": [
-          "3128018457996589851"
-        ],
+        "launch_status": "dry_run",
+        "session_ids": [],
         "timed_out": false,
-        "exit_code": 0,
-        "cot_status": "report_found_needs_review",
-        "report_files": [
-          "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_3128018457996589851.json"
-        ]
+        "exit_code": null,
+        "cot_status": "not_launched",
+        "report_files": []
       }
     ],
     "ledger_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.md",

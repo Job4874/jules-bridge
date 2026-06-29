@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-29T17:29:17.095445+00:00",
+  "generated_at_utc": "2026-06-29T17:45:15.594044+00:00",
   "dry_run": true,
   "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
   "selected_count": 4,
@@ -66,66 +66,9 @@
       "session_ids": []
     }
   ],
-  "attempt_results": [
-    {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": []
-    },
-    {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": []
-    },
-    {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": []
-    },
-    {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": []
-    }
-  ],
+  "attempt_results": [],
   "state_path": "",
-  "attempted_count": 4,
+  "attempted_count": 0,
   "skipped_launched_count": 0,
   "force_packet_count": 0,
   "preserve_existing_session_ids": false,
