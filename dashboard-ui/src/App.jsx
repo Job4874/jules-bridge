@@ -29,6 +29,100 @@ ChartJS.register(
 const BRIDGE = import.meta.env.VITE_BRIDGE_URL || 'http://127.0.0.1:5000';
 const TOKEN = import.meta.env.VITE_BRIDGE_TOKEN || '';
 
+const EMPTY_REPO_CONTEXT = {
+  status: 'unknown',
+  summary: { repo_count: 0, collision_count: 0, collision_severity_counts: {} },
+  collisions: [],
+  guardrails: []
+};
+
+const EMPTY_CLOUD = { total: 0, online: 0, vms: [] };
+
+const clampPercent = value => Math.max(0, Math.min(100, Number(value) || 0));
+
+const toneForStatus = status => {
+  const value = String(status || '').toLowerCase();
+  if (['ready', 'ok', 'online', 'running', 'normal', 'pass'].includes(value)) return 'success';
+  if (['partial', 'stale', 'warning', 'warn', 'provisioning'].includes(value)) return 'warn';
+  if (['error', 'offline', 'failed', 'fail', 'danger'].includes(value)) return 'danger';
+  return 'info';
+};
+
+const maskEndpoint = value => {
+  const text = String(value || '').trim();
+  if (!text || text === 'unknown') return 'not configured';
+  const parts = text.split('.');
+  if (parts.length === 4 && parts.every(part => /^\d+$/.test(part))) {
+    return `${parts[0]}.${parts[1]}.x.x`;
+  }
+  return 'configured';
+};
+
+const impactedReposLabel = collision => {
+  const names = Array.isArray(collision?.repo_names) ? collision.repo_names : [];
+  const count = names.length || Number(collision?.repo_count || collision?.affected_repo_count || 0);
+  return count > 0 ? `${count} repo refs` : 'refs hidden';
+};
+
+function SignalTile({ label, value, detail, tone = 'info' }) {
+  return (
+    <div className={`signal-tile ${tone}`}>
+      <div className="signal-label">{label}</div>
+      <div className="signal-value">{value}</div>
+      <div className="signal-detail">{detail}</div>
+    </div>
+  );
+}
+
+function PhaseBar({ fleet }) {
+  const launched = Number(fleet?.launched || 0);
+  const completed = Number(fleet?.completed || 0);
+  const failed = Number(fleet?.failed || 0);
+  const inProgress = Number(fleet?.in_progress || 0);
+  const pending = Number(fleet?.pending || 0);
+  const total = Math.max(launched, completed + failed + inProgress + pending, 1);
+  const segments = [
+    ['complete', completed],
+    ['active', inProgress],
+    ['failed', failed],
+    ['pending', pending],
+  ];
+
+  return (
+    <div className="phase-wrap" aria-label="Fleet phase distribution">
+      <div className="phase-bar">
+        {segments.map(([name, count]) => (
+          <span
+            key={name}
+            className={`phase-segment ${name}`}
+            style={{ width: `${Math.max((count / total) * 100, count > 0 ? 4 : 0)}%` }}
+            title={`${name}: ${count}`}
+          />
+        ))}
+      </div>
+      <div className="phase-legend">
+        <span>DONE {completed}</span>
+        <span>ACTIVE {inProgress}</span>
+        <span>FAILED {failed}</span>
+        <span>PENDING {pending}</span>
+      </div>
+    </div>
+  );
+}
+
+function WorkerRow({ vm }) {
+  const tone = vm?.reachable ? 'success' : toneForStatus(vm?.status);
+  return (
+    <div className="worker-row">
+      <span className={`worker-led ${tone}`} />
+      <span className="worker-provider">{vm?.provider || 'worker'}</span>
+      <span className="worker-name">{vm?.name || 'unnamed'}</span>
+      <span className="worker-endpoint">{maskEndpoint(vm?.ip)}</span>
+      <span className={`worker-state ${tone}`}>{vm?.status || 'unknown'}</span>
+    </div>
+  );
+}
+
 // Chart common options
 const lineOptions = {
   responsive: true,
@@ -61,14 +155,19 @@ function App() {
     uptime: '--',
     online: false,
     tunnel: false,
+    hostname: '--',
+    executionContext: '[SCHOOL_COMPUTE]',
+    quantAllowed: false,
+    resourceStatus: 'unknown',
+    pressureReasons: [],
     cpu: 0,
     mem: 0,
     fleet: { launched: 0, completed: 0, pending: 0 },
-    repoContext: {
-      status: 'unknown',
-      summary: { repo_count: 0, collision_count: 0, collision_severity_counts: {} },
-      collisions: []
-    },
+    cloud: EMPTY_CLOUD,
+    repoContext: EMPTY_REPO_CONTEXT,
+    secretCount: 0,
+    statusTimestamp: '',
+    cacheAge: 0,
     logs: []
   });
 
@@ -97,21 +196,27 @@ function App() {
         
         if (!mounted) return;
 
-        const cpu = d.resource_pressure?.cpu_percent ?? 0;
-        const mem = d.resource_pressure?.memory_percent ?? 0;
+        const cpu = clampPercent(d.resource_pressure?.cpu_percent ?? 0);
+        const mem = clampPercent(d.resource_pressure?.memory_percent ?? 0);
+        const pressure = d.resource_pressure || {};
 
         setSysStatus({
           uptime: d.bridge?.uptime_human || '--',
           online: true,
           tunnel: !!d.bridge?.ngrok_url,
+          hostname: d.hostname || '--',
+          executionContext: d.execution_context || '[SCHOOL_COMPUTE]',
+          quantAllowed: !!d.quant_allowed,
+          resourceStatus: pressure.status || 'unknown',
+          pressureReasons: Array.isArray(pressure.reasons) ? pressure.reasons : [],
           cpu,
           mem,
           fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },
-          repoContext: d.repo_context || {
-            status: 'unknown',
-            summary: { repo_count: 0, collision_count: 0, collision_severity_counts: {} },
-            collisions: []
-          },
+          cloud: d.cloud || EMPTY_CLOUD,
+          repoContext: d.repo_context || EMPTY_REPO_CONTEXT,
+          secretCount: Array.isArray(d.env_keys_present) ? d.env_keys_present.length : 0,
+          statusTimestamp: d.timestamp || '',
+          cacheAge: d.cache_age_s ?? 0,
           logs: d.recent_logs || []
         });
 
@@ -219,7 +324,15 @@ function App() {
   const repoContext = sysStatus.repoContext || {};
   const repoSummary = repoContext.summary || {};
   const repoCollisions = repoContext.collisions || [];
+  const guardrails = Array.isArray(repoContext.guardrails) ? repoContext.guardrails : [];
   const severityCounts = repoSummary.collision_severity_counts || {};
+  const cloud = sysStatus.cloud || EMPTY_CLOUD;
+  const workers = Array.isArray(cloud.vms) ? cloud.vms : [];
+  const fleet = sysStatus.fleet || {};
+  const bridgeTone = sysStatus.online ? (sysStatus.tunnel ? 'success' : 'warn') : 'danger';
+  const runtimeTone = sysStatus.quantAllowed ? 'success' : 'danger';
+  const repoTone = (repoSummary.collision_count ?? 0) > 0 ? 'warn' : toneForStatus(repoContext.status);
+  const pressureTone = sysStatus.mem > 85 || sysStatus.cpu > 85 ? 'warn' : toneForStatus(sysStatus.resourceStatus);
 
   return (
     <div className="dashboard-container">
@@ -235,7 +348,37 @@ function App() {
           <div className={`badge ${sysStatus.tunnel ? 'success' : 'danger'}`}>
             TUNNEL: {sysStatus.tunnel ? 'ACTIVE' : 'OFFLINE'}
           </div>
+          <div className={`badge ${sysStatus.quantAllowed ? 'success' : 'danger'}`}>
+            CTX: {sysStatus.executionContext} / QUANT: {sysStatus.quantAllowed ? 'ENABLED' : 'LOCKED'}
+          </div>
         </div>
+      </div>
+
+      <div className="mission-strip">
+        <SignalTile
+          label="Bridge"
+          value={sysStatus.online ? 'LIVE' : 'OFFLINE'}
+          detail={sysStatus.tunnel ? 'tunnel active' : `cache ${sysStatus.cacheAge}s`}
+          tone={bridgeTone}
+        />
+        <SignalTile
+          label="Runtime Gate"
+          value={sysStatus.executionContext}
+          detail={`${sysStatus.quantAllowed ? 'Quantower allowed' : 'Quantower locked'} on ${sysStatus.hostname}; ${sysStatus.secretCount} key refs`}
+          tone={runtimeTone}
+        />
+        <SignalTile
+          label="Fleet Queue"
+          value={`${fleet.completed ?? 0}/${fleet.launched ?? 0}`}
+          detail={`${fleet.pending ?? 0} pending, ${fleet.failed ?? 0} failed`}
+          tone={(fleet.failed ?? 0) > 0 ? 'danger' : (fleet.pending ?? 0) > 0 ? 'warn' : 'success'}
+        />
+        <SignalTile
+          label="Repo Guard"
+          value={`${repoSummary.collision_count ?? 0} collisions`}
+          detail={`${repoSummary.repo_count ?? 0} repos scanned`}
+          tone={repoTone}
+        />
       </div>
 
       <div className="main-content">
@@ -283,44 +426,63 @@ function App() {
 
           <div className="panel" style={{ height: '140px', flex: 'none', marginBottom: '1rem' }}>
             <div className="panel-header">Fleet Status</div>
-            <div className="panel-content" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-              <div style={{ position: 'relative', height: '80px', width: '80px' }}>
-                <Doughnut
-                  data={{
-                    datasets: [{
-                      data: [sysStatus.fleet.launched, sysStatus.fleet.pending === 0 && sysStatus.fleet.launched === 0 ? 1 : sysStatus.fleet.pending],
-                      backgroundColor: ['#58a6ff', 'rgba(255,255,255,0.05)'],
-                      borderWidth: 0
-                    }]
-                  }}
-                  options={ringOptions}
-                />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 'bold' }}>{sysStatus.fleet.launched}</div>
-                  <div style={{ fontSize: '9px', color: 'var(--text-dim)' }}>LAUNCHED</div>
+            <div className="panel-content fleet-content">
+              <div className="fleet-rings">
+                <div className="ring-wrap">
+                  <Doughnut
+                    data={{
+                      datasets: [{
+                        data: [sysStatus.fleet.launched, sysStatus.fleet.pending === 0 && sysStatus.fleet.launched === 0 ? 1 : sysStatus.fleet.pending],
+                        backgroundColor: ['#58a6ff', 'rgba(255,255,255,0.05)'],
+                        borderWidth: 0
+                      }]
+                    }}
+                    options={ringOptions}
+                  />
+                  <div className="ring-label">
+                    <div>{sysStatus.fleet.launched}</div>
+                    <span>LAUNCHED</span>
+                  </div>
                 </div>
-              </div>
               
-              <div style={{ position: 'relative', height: '80px', width: '80px' }}>
-                <Doughnut
-                  data={{
-                    datasets: [{
-                      data: [sysStatus.fleet.completed, sysStatus.fleet.launched > sysStatus.fleet.completed ? sysStatus.fleet.launched - sysStatus.fleet.completed : (sysStatus.fleet.completed === 0 ? 1 : 0)],
-                      backgroundColor: ['#3fb950', 'rgba(255,255,255,0.05)'],
-                      borderWidth: 0
-                    }]
-                  }}
-                  options={ringOptions}
-                />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 'bold', color: 'var(--accent-green)' }}>{sysStatus.fleet.completed}</div>
-                  <div style={{ fontSize: '9px', color: 'var(--text-dim)' }}>COMPLETED</div>
+                <div className="ring-wrap">
+                  <Doughnut
+                    data={{
+                      datasets: [{
+                        data: [sysStatus.fleet.completed, sysStatus.fleet.launched > sysStatus.fleet.completed ? sysStatus.fleet.launched - sysStatus.fleet.completed : (sysStatus.fleet.completed === 0 ? 1 : 0)],
+                        backgroundColor: ['#3fb950', 'rgba(255,255,255,0.05)'],
+                        borderWidth: 0
+                      }]
+                    }}
+                    options={ringOptions}
+                  />
+                  <div className="ring-label green">
+                    <div>{sysStatus.fleet.completed}</div>
+                    <span>COMPLETED</span>
+                  </div>
                 </div>
               </div>
+              <PhaseBar fleet={sysStatus.fleet} />
             </div>
           </div>
 
-          <div className="panel" style={{ height: '190px', flex: 'none', marginBottom: '1rem' }}>
+          <div className="panel worker-panel">
+            <div className="panel-header">
+              <span>Cloud Workers</span>
+              <span className={`badge ${cloud.online > 0 ? 'success' : 'danger'}`}>
+                {cloud.online ?? 0}/{cloud.total ?? 0} ONLINE
+              </span>
+            </div>
+            <div className="panel-content worker-list">
+              {workers.length === 0 ? (
+                <div className="worker-empty">No cloud workers configured</div>
+              ) : (
+                workers.slice(0, 4).map((vm, i) => <WorkerRow vm={vm} key={`${vm.provider}-${vm.name}-${i}`} />)
+              )}
+            </div>
+          </div>
+
+          <div className="panel" style={{ height: '230px', flex: 'none', marginBottom: '1rem' }}>
             <div className="panel-header">
               <span>Repo Context Guard</span>
               <span className={`badge ${repoContext.status === 'ready' ? 'success' : repoContext.status === 'error' ? 'danger' : ''}`}>
@@ -350,6 +512,11 @@ function App() {
                   <strong>{repoContext.cache_age_s ?? 0}s</strong>
                 </div>
               </div>
+              <div className="guardrail-strip">
+                {guardrails.slice(0, 2).map((rule, i) => (
+                  <span key={`${rule}-${i}`}>{rule}</span>
+                ))}
+              </div>
               <div className="collision-list">
                 {repoCollisions.length === 0 ? (
                   <div className="collision-empty">No collisions reported</div>
@@ -361,7 +528,7 @@ function App() {
                         <strong>{collision.type}</strong>
                         <em>{collision.key}</em>
                       </span>
-                      <span className="collision-repos">{(collision.repo_names || []).join(', ')}</span>
+                      <span className="collision-repos">{impactedReposLabel(collision)}</span>
                     </div>
                   ))
                 )}
@@ -370,8 +537,18 @@ function App() {
           </div>
 
           <div className="panel" style={{ flex: 1 }}>
-            <div className="panel-header">Terminal Stream</div>
+            <div className="panel-header">
+              <span>Terminal Stream</span>
+              <span className={`badge ${pressureTone}`}>{String(sysStatus.resourceStatus).toUpperCase()}</span>
+            </div>
             <div className="panel-content log-feed" ref={logFeedRef}>
+              {sysStatus.pressureReasons.length > 0 && (
+                <div className="pressure-reasons">
+                  {sysStatus.pressureReasons.slice(0, 3).map((reason, i) => (
+                    <span key={`${reason}-${i}`}>{reason}</span>
+                  ))}
+                </div>
+              )}
               {sysStatus.logs.length === 0 ? (
                 <div style={{ color: 'var(--text-dim)' }}>Awaiting telemetry...</div>
               ) : (

@@ -392,3 +392,17 @@ has gone wrong before and what to avoid.
 - Codex scope for this pass stayed connection/orchestration only. No product/dashboard feature implementation was added; Jules owns those branches after rebase.
 - Verification: `python -m pytest tests/ -q` passed 424 tests; `git diff --check` and `git diff --cached --check` had no errors beyond normal Windows CRLF warnings.
 
+## Session 20260630T145701 - Dashboard Jules Context Wiring
+
+- Wired the Jules ZIP context contract into the existing mission-control dashboard without replacing the broader dashboard implementation: `/dashboard/status` now includes `hostname`, `execution_context`, and `quant_allowed` from `JULES_CONTEXT`.
+- Context defaults to `[SCHOOL_COMPUTE]`, and Quantower access is allowed only for `[LOCAL]` and `[REMOTE_VM]`.
+- The React dashboard header now shows the context/Quantower gate as an existing-style badge while preserving live telemetry, fleet, repo guard, and chat panels.
+- Verification: `python -m pytest tests/ -q` passed 428 tests; `npm run lint` and `npm run build` passed in `dashboard-ui`; live bridge restart showed `/dashboard/status` returning the new fields; Browser smoke showed live telemetry and `CTX: [SCHOOL_COMPUTE] / QUANT: LOCKED` with no console errors.
+
+## Session 20260630T151000 - Dashboard Operations Matrix
+
+- Enriched Jules's existing dashboard without replacing the ZIP wiring: added a live mission strip, fleet phase bar, cloud worker rail, guardrail chips, and resource-pressure status using existing `/dashboard/status` fields.
+- Dashboard UI now masks worker endpoints such as `34.132.x.x`, shows only key-reference counts, and shows repo-collision impact counts instead of private repo names.
+- Runtime gotcha: if Browser shows dashboard offline while `Invoke-RestMethod http://127.0.0.1:5000/dashboard/status` works, restart `bridge.py` so the active Flask process serves the current CORS/default status contract.
+- Verification: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, and `python -m pytest tests/ -q` passed; Browser QA verified live desktop data, mobile no-horizontal-overflow, no console warnings/errors, and model selector interaction.
+

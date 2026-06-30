@@ -272,3 +272,17 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Preserved the boundary that Codex only changes connection/orchestration evidence here; Jules owns product/dashboard feature resolution.
 - Evidence: `python -m pytest tests/ -q` passed 424 tests; triage packet commit was `08f1fd0`.
 
+## Session 20260630T145701 - Dashboard Jules Context Wiring
+
+- Wired Jules's ZIP-provided execution context contract into the current dashboard stack without overwriting the existing mission-control implementation.
+- `modules.dashboard_module._runtime_context(...)` now maps `JULES_CONTEXT` to `[LOCAL]`, `[REMOTE_VM]`, or default `[SCHOOL_COMPUTE]`, and exposes `quant_allowed` for local/remote VM only.
+- `dashboard-ui/src/App.jsx` displays the context/Quantower gate in the header, fed by `/dashboard/status`.
+- Evidence: `python -m pytest tests/ -q` passed 428 tests; `npm run lint` and `npm run build` passed; live bridge/browser smoke confirmed the refreshed UI shows live telemetry plus `CTX: [SCHOOL_COMPUTE] / QUANT: LOCKED` with no console errors.
+
+## Session 20260630T151000 - Dashboard Operations Matrix
+
+- Added live dashboard complexity on top of Jules's existing work: mission strip, fleet phase distribution, cloud worker rail, repo guardrail chips, and resource-pressure status.
+- Preserved the privacy/connection boundary: worker endpoints are masked, key names are reduced to counts, and collision rows show impact counts rather than private repo names.
+- Browser QA covered desktop live telemetry, mobile portrait stacking/no horizontal overflow, and the model selector interaction; bridge was restarted locally so the browser picked up live `/dashboard/status` data.
+- Evidence: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, and `python -m pytest tests/ -q` passed.
+

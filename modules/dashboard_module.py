@@ -77,6 +77,18 @@ def _read_json(path: Path) -> dict | None:
         return None
 
 
+def _runtime_context(env: dict[str, str]) -> dict[str, Any]:
+    """Return the Jules execution context gate expected by dashboard clients."""
+    context = (env.get("JULES_CONTEXT") or "").strip().strip("\"'")
+    if context not in ("[LOCAL]", "[REMOTE_VM]", "[SCHOOL_COMPUTE]"):
+        context = "[SCHOOL_COMPUTE]"
+    return {
+        "hostname": socket.gethostname(),
+        "execution_context": context,
+        "quant_allowed": context in ("[LOCAL]", "[REMOTE_VM]"),
+    }
+
+
 def _fleet_status() -> dict[str, Any]:
     """Summarise Jules fleet state from persisted JSON files."""
     cot = _read_json(_COT_LEDGER)
@@ -180,6 +192,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         uptime_s = int((now - bridge_start_utc).total_seconds()) if bridge_start_utc else 0
 
         env = _env_vars()
+        runtime = _runtime_context(env)
         pressure = detect_resource_pressure()
         fleet = _fleet_status()
         cloud = _vm_info(env)
@@ -201,6 +214,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
             "ok": True,
             "timestamp": now.isoformat(),
             "cache_age_s": 0,
+            **runtime,
             "bridge": {
                 "status": "running",
                 "uptime_s": uptime_s,

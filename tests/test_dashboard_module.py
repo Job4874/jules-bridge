@@ -15,7 +15,8 @@ from modules.dashboard_module import (
     _tail_log,
     _read_json,
     _fleet_status,
-    _vm_info
+    _vm_info,
+    _runtime_context,
 )
 
 @pytest.fixture(autouse=True)
@@ -78,6 +79,8 @@ def test_get_dashboard_status_happy_path():
         assert result["ok"] is True
         assert "timestamp" in result
         assert result["cache_age_s"] == 0
+        assert result["execution_context"] == "[SCHOOL_COMPUTE]"
+        assert result["quant_allowed"] is False
 
         assert result["bridge"]["status"] == "running"
         assert result["bridge"]["ngrok_url"] == "https://random-ngrok-url.ngrok.io"
@@ -137,6 +140,28 @@ def test_env_vars_exception():
     with patch('pathlib.Path.read_text', side_effect=Exception("Read error")):
         env = _env_vars()
         assert env == {}
+
+def test_runtime_context_local_allows_quantower():
+    with patch('modules.dashboard_module.socket.gethostname', return_value='jules-local'):
+        status = _runtime_context({"JULES_CONTEXT": "[LOCAL]"})
+    assert status["hostname"] == "jules-local"
+    assert status["execution_context"] == "[LOCAL]"
+    assert status["quant_allowed"] is True
+
+def test_runtime_context_remote_vm_allows_quantower():
+    status = _runtime_context({"JULES_CONTEXT": "[REMOTE_VM]"})
+    assert status["execution_context"] == "[REMOTE_VM]"
+    assert status["quant_allowed"] is True
+
+def test_runtime_context_school_compute_blocks_quantower():
+    status = _runtime_context({"JULES_CONTEXT": "[SCHOOL_COMPUTE]"})
+    assert status["execution_context"] == "[SCHOOL_COMPUTE]"
+    assert status["quant_allowed"] is False
+
+def test_runtime_context_defaults_to_school_compute():
+    status = _runtime_context({})
+    assert status["execution_context"] == "[SCHOOL_COMPUTE]"
+    assert status["quant_allowed"] is False
 
 def test_tcp_reachable():
     with patch('socket.create_connection') as mock_conn:
