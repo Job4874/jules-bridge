@@ -413,3 +413,12 @@ has gone wrong before and what to avoid.
 - Verification: focused chat/deep-health tests passed 27 tests; dashboard/route slice passed 89 tests; full `python -m pytest tests/ -v` passed 427 tests.
 - Runtime proof after clean bridge restart: `/chat` returned `model_used=vm/jules-worker`, `/chat/test` healthy with `vm_worker: ok`, `/health/deep` mapped VM to `pass`, dashboard rendered `TUNNEL: ACTIVE` and `VM CHAT: OK`, and LocalTunnel `https://neat-oranges-wink.loca.lt/ping` returned `Jules Bridge Online`.
 
+## Session 20260630T034900 - Provider Hardening From Jules Session
+
+- Pulled Jules provider-hardening session `2693363866417321141` without applying blindly; ignored duplicate VM fallback hunks and the backup-looking `modules/chat_service_087c5da.py`.
+- `modules.chat_service` now classifies provider failures as `invalid_key`, `quota_limit`, `model_unavailable`, `transient_error`, or `other_error`; live Gemini 400 `API key not valid` and OpenRouter 401 `User not found` map to `invalid_key`.
+- OpenRouter now tries configured fallback model IDs only after a `model_unavailable` response. It does not cycle models for invalid-key or quota failures, but still rotates plural OpenRouter keys for the same model.
+- VM readiness keeps the previous soft timeout behavior, but a provider-unavailable/no-LLM VM failure clears `_LAST_VM_CHAT_SUCCESS` so quota/key failure is not masked as readiness.
+- Verification: focused route/dashboard slice passed `121 passed`; full `python -m pytest tests/ -q` passed `432 passed`. After restart to bridge PID `40772`, `/chat` returned `model_used=vm/jules-worker`, `/chat/test` was healthy with Gemini/OpenRouter `invalid_key` and `vm_worker: ok`, `/health/deep` returned `status=ok`, and Browser dashboard proof showed `TUNNEL: ACTIVE`, `GEMINI: ERROR`, `OPENROUTER: ERROR`, `VM CHAT: OK`, and GCP worker `1/1 ONLINE`.
+- Remaining release blocker: local Gemini/OpenRouter credentials are still invalid, and VM-side provider quota can still intermittently fail health probes; PR #64 remains draft unless those blockers are fixed or explicitly accepted.
+

@@ -18,13 +18,28 @@ from typing import Any, Mapping, Sequence
 _GEMINI_FAST = "gemini-2.0-flash"
 _GEMINI_SMART = "gemini-2.5-pro"
 _OPENROUTER_FAST = "google/gemma-3-27b-it:free"
+_OPENROUTER_FAST_FALLBACKS = [
+    "google/gemma-2-9b-it:free",
+    "mistralai/mistral-7b-instruct:free",
+    "openchat/openchat-7b:free",
+]
 _OPENROUTER_SMART = "deepseek/deepseek-r1:free"
+_OPENROUTER_SMART_FALLBACKS = [
+    "deepseek/deepseek-chat:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "qwen/qwen-2.5-72b-instruct:free",
+]
 _OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 _VM_CHAT_MODEL = "vm/jules-worker"
 _VM_FAILURE_MARKERS = (
     "No LLM available",
     "GEMINI_API_KEY is rate-limited",
     "OpenRouter free models failed",
+)
+_VM_PROVIDER_FAILURE_MARKERS = (
+    "provider unavailable",
+    "no llm available",
+    "quota/key failure",
 )
 _VM_CHAT_FAILURE_TTL_S = 300
 _VM_CHAT_SUCCESS_TTL_S = 300
@@ -102,6 +117,12 @@ def _openrouter_model(alias: str) -> str:
     return _OPENROUTER_FAST if alias == "fast" else _OPENROUTER_SMART
 
 
+def _openrouter_models(alias: str) -> list[str]:
+    if alias == "fast":
+        return [_OPENROUTER_FAST] + _OPENROUTER_FAST_FALLBACKS
+    return [_OPENROUTER_SMART] + _OPENROUTER_SMART_FALLBACKS
+
+
 def _history_messages(history: Any) -> list[dict[str, Any]]:
     messages: list[dict[str, Any]] = []
     if not isinstance(history, Sequence) or isinstance(history, (str, bytes)):
@@ -157,6 +178,24 @@ def _extract_openrouter_text(payload: Any) -> str:
     return str(payload["choices"][0]["message"]["content"])
 
 
+def _classify_error(status_code: int, text: str) -> str:
+    """Classify provider failures without exposing provider-specific payloads."""
+    lower_text = text.lower()
+    if (
+        status_code in (401, 403)
+        or "invalid api key" in lower_text
+        or "api key not valid" in lower_text
+    ):
+        return "invalid_key"
+    if status_code == 429 or "quota" in lower_text or "rate limit" in lower_text:
+        return "quota_limit"
+    if status_code == 404 or "model_not_found" in lower_text or "model not found" in lower_text:
+        return "model_unavailable"
+    if status_code >= 500:
+        return "transient_error"
+    return "other_error"
+
+
 def _vm_response_is_failure(text: str) -> bool:
     return any(marker in text for marker in _VM_FAILURE_MARKERS)
 
@@ -164,6 +203,8 @@ def _vm_response_is_failure(text: str) -> bool:
 def _remember_vm_chat_failure(error: str) -> None:
     _LAST_VM_CHAT_FAILURE.clear()
     _LAST_VM_CHAT_FAILURE.update({"error": error, "ts": time.time()})
+    if any(marker in error.lower() for marker in _VM_PROVIDER_FAILURE_MARKERS):
+        _LAST_VM_CHAT_SUCCESS.clear()
 
 
 def _remember_vm_chat_success() -> None:
@@ -421,6 +462,7 @@ def test_chat_providers(
             else:
                 results["gemini"] = {
                     "status": "error",
+                    "error_type": _classify_error(response.status_code, response.text),
                     "code": response.status_code,
                     "detail": f"HTTP {response.status_code}: {_sanitize_detail(response.text, env_map)}",
                     "ms": elapsed,
@@ -438,32 +480,46 @@ def test_chat_providers(
     if openrouter_keys:
         start = clock()
         last_result: dict[str, Any] = {}
-        for openrouter_key in openrouter_keys:
-            try:
-                if client is None:
-                    raise RuntimeError("requests package unavailable")
-                response = client.post(
-                    _OPENROUTER_API_URL,
-                    json={"model": _OPENROUTER_FAST, "messages": [{"role": "user", "content": "Say OK"}]},
-                    headers={"Authorization": f"Bearer {openrouter_key}"},
-                    timeout=20,
-                )
-                elapsed = _elapsed_ms(start, clock)
-                if response.status_code == 200:
-                    last_result = {"status": "ok", "model": _OPENROUTER_FAST, "ms": elapsed}
-                    break
-                last_result = {
-                    "status": "error",
-                    "code": response.status_code,
-                    "detail": f"HTTP {response.status_code}: {_sanitize_detail(response.text, env_map)}",
-                    "ms": elapsed,
-                }
-            except Exception as exc:  # pylint: disable=broad-exception-caught
-                last_result = {
-                    "status": "exception",
-                    "detail": _sanitize_detail(exc, env_map),
-                    "ms": _elapsed_ms(start, clock),
-                }
+        for model in _openrouter_models("fast"):
+            try_next_model = False
+            for openrouter_key in openrouter_keys:
+                try:
+                    if client is None:
+                        raise RuntimeError("requests package unavailable")
+                    response = client.post(
+                        _OPENROUTER_API_URL,
+                        json={"model": model, "messages": [{"role": "user", "content": "Say OK"}]},
+                        headers={"Authorization": f"Bearer {openrouter_key}"},
+                        timeout=20,
+                    )
+                    elapsed = _elapsed_ms(start, clock)
+                    if response.status_code == 200:
+                        last_result = {"status": "ok", "model": model, "ms": elapsed}
+                        break
+                    error_type = _classify_error(response.status_code, response.text)
+                    last_result = {
+                        "status": "error",
+                        "error_type": error_type,
+                        "code": response.status_code,
+                        "detail": (
+                            f"HTTP {response.status_code} [{error_type}] for {model}: "
+                            f"{_sanitize_detail(response.text, env_map)}"
+                        ),
+                        "ms": elapsed,
+                    }
+                    if error_type == "model_unavailable":
+                        try_next_model = True
+                        break
+                except Exception as exc:  # pylint: disable=broad-exception-caught
+                    last_result = {
+                        "status": "exception",
+                        "detail": f"{model}: {_sanitize_detail(exc, env_map)}",
+                        "ms": _elapsed_ms(start, clock),
+                    }
+            if last_result.get("status") == "ok":
+                break
+            if not try_next_model:
+                break
         results["openrouter"] = last_result
     else:
         results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY(S) not set"}
@@ -538,7 +594,11 @@ def chat(
                 response_text = _extract_gemini_text(response.json())
                 model_used = model
             else:
-                errors.append(f"Gemini {response.status_code}: {_sanitize_detail(response.text, env_map)[:200]}")
+                error_type = _classify_error(response.status_code, response.text)
+                errors.append(
+                    f"Gemini {response.status_code} [{error_type}]: "
+                    f"{_sanitize_detail(response.text, env_map)[:200]}"
+                )
     except Exception as exc:  # pylint: disable=broad-exception-caught
         errors.append(f"Gemini exception: {_sanitize_detail(exc, env_map)}")
 
@@ -548,21 +608,32 @@ def chat(
             if openrouter_keys:
                 if client is None:
                     raise RuntimeError("requests package unavailable")
-                model = _openrouter_model(model_alias)
-                for openrouter_key in openrouter_keys:
-                    response = client.post(
-                        _OPENROUTER_API_URL,
-                        json={"model": model, "messages": _openrouter_messages(message, image_base64, history, system)},
-                        headers={"Authorization": f"Bearer {openrouter_key}"},
-                        timeout=45,
-                    )
-                    if response.status_code == 200:
-                        response_text = _extract_openrouter_text(response.json())
-                        model_used = f"openrouter/{model}"
+                for model in _openrouter_models(model_alias):
+                    try_next_model = False
+                    for openrouter_key in openrouter_keys:
+                        response = client.post(
+                            _OPENROUTER_API_URL,
+                            json={
+                                "model": model,
+                                "messages": _openrouter_messages(message, image_base64, history, system),
+                            },
+                            headers={"Authorization": f"Bearer {openrouter_key}"},
+                            timeout=45,
+                        )
+                        if response.status_code == 200:
+                            response_text = _extract_openrouter_text(response.json())
+                            model_used = f"openrouter/{model}"
+                            break
+                        error_type = _classify_error(response.status_code, response.text)
+                        errors.append(
+                            f"OpenRouter {response.status_code} [{error_type}] for {model}: "
+                            f"{_sanitize_detail(response.text, env_map)[:200]}"
+                        )
+                        if error_type == "model_unavailable":
+                            try_next_model = True
+                            break
+                    if response_text or not try_next_model:
                         break
-                    errors.append(
-                        f"OpenRouter {response.status_code}: {_sanitize_detail(response.text, env_map)[:200]}"
-                    )
         except Exception as exc:  # pylint: disable=broad-exception-caught
             errors.append(f"OpenRouter exception: {_sanitize_detail(exc, env_map)}")
 

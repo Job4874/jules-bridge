@@ -134,8 +134,8 @@ class TestChatCompletion(unittest.TestCase):
         )
 
         self.assertEqual(result["model_used"], "none")
-        self.assertIn("Gemini 429", result["errors"][0])
-        self.assertIn("OpenRouter 500", result["errors"][1])
+        self.assertIn("Gemini 429 [quota_limit]", result["errors"][0])
+        self.assertIn("OpenRouter 500 [transient_error]", result["errors"][1])
         self.assertNotIn("gem-secret", str(result))
         self.assertNotIn("or-secret", str(result))
 
@@ -172,6 +172,44 @@ class TestChatCompletion(unittest.TestCase):
         self.assertEqual(client.calls[1]["headers"]["Authorization"], "Bearer plural-b")
         self.assertNotIn("plural-a", str(result))
         self.assertNotIn("plural-b", str(result))
+
+    def test_chat_openrouter_model_fallback_on_model_unavailable(self):
+        client = FakeRequests(
+            [
+                FakeResponse(404, text="model not found"),
+                FakeResponse(200, {"choices": [{"message": {"content": "fallback ok"}}]}),
+            ]
+        )
+
+        result = chat_service.chat(
+            "hello",
+            env={"OPENROUTER_API_KEY": "or-secret"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.2]),
+            enable_vm_fallback=False,
+        )
+
+        self.assertEqual(result["response"], "fallback ok")
+        self.assertEqual(result["model_used"], "openrouter/google/gemma-2-9b-it:free")
+        self.assertEqual(client.calls[0]["json"]["model"], "google/gemma-3-27b-it:free")
+        self.assertEqual(client.calls[1]["json"]["model"], "google/gemma-2-9b-it:free")
+        self.assertNotIn("or-secret", str(result))
+
+    def test_chat_does_not_model_fallback_on_invalid_openrouter_key(self):
+        client = FakeRequests([FakeResponse(401, text="invalid key for or-secret")])
+
+        result = chat_service.chat(
+            "hello",
+            env={"OPENROUTER_API_KEY": "or-secret"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.2]),
+            enable_vm_fallback=False,
+        )
+
+        self.assertEqual(result["model_used"], "none")
+        self.assertEqual(len(client.calls), 1)
+        self.assertIn("OpenRouter 401 [invalid_key]", result["errors"][0])
+        self.assertNotIn("or-secret", str(result))
 
     def test_chat_uses_vm_fallback_after_local_failures(self):
         client = FakeRequests(
@@ -297,8 +335,19 @@ class TestChatCompletion(unittest.TestCase):
         self.assertFalse(result["healthy"])
         self.assertEqual(result["providers"]["gemini"]["status"], "error")
         self.assertEqual(result["providers"]["openrouter"]["status"], "error")
+        self.assertEqual(result["providers"]["gemini"]["error_type"], "invalid_key")
+        self.assertEqual(result["providers"]["openrouter"]["error_type"], "invalid_key")
         self.assertIn("401", result["providers"]["gemini"]["detail"])
         self.assertIn("401", result["providers"]["openrouter"]["detail"])
+
+    def test_classify_error(self):
+        self.assertEqual(chat_service._classify_error(401, "unauthorized"), "invalid_key")
+        self.assertEqual(chat_service._classify_error(403, "forbidden"), "invalid_key")
+        self.assertEqual(chat_service._classify_error(429, "too many requests"), "quota_limit")
+        self.assertEqual(chat_service._classify_error(200, "quota hit"), "quota_limit")
+        self.assertEqual(chat_service._classify_error(404, "model not found"), "model_unavailable")
+        self.assertEqual(chat_service._classify_error(500, "server error"), "transient_error")
+        self.assertEqual(chat_service._classify_error(400, "bad request"), "other_error")
 
     def test_one_provider_ok_keeps_health_true(self):
         client = FakeRequests(
@@ -348,6 +397,27 @@ class TestChatCompletion(unittest.TestCase):
         self.assertEqual(client.calls[1]["headers"]["Authorization"], "Bearer plural-b")
         self.assertNotIn("plural-a", str(result))
         self.assertNotIn("plural-b", str(result))
+
+    def test_openrouter_health_model_fallback_on_model_unavailable(self):
+        client = FakeRequests(
+            [
+                FakeResponse(404, text="model_not_found"),
+                FakeResponse(200),
+            ]
+        )
+
+        result = chat_service.test_chat_providers(
+            env={"OPENROUTER_API_KEY": "or-secret"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.1, 1.2]),
+        )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["openrouter"]["status"], "ok")
+        self.assertEqual(result["providers"]["openrouter"]["model"], "google/gemma-2-9b-it:free")
+        self.assertEqual(client.calls[0]["json"]["model"], "google/gemma-3-27b-it:free")
+        self.assertEqual(client.calls[1]["json"]["model"], "google/gemma-2-9b-it:free")
+        self.assertNotIn("or-secret", str(result))
 
     def test_provider_health_reports_vm_worker_online(self):
         result = chat_service.test_chat_providers(
@@ -479,6 +549,24 @@ class TestChatCompletion(unittest.TestCase):
         self.assertTrue(result["healthy"])
         self.assertEqual(result["providers"]["vm_worker"]["status"], "ok")
         self.assertIn("recently succeeded", result["providers"]["vm_worker"]["detail"])
+
+    def test_provider_failure_clears_recent_vm_chat_success(self):
+        chat_service._remember_vm_chat_success()
+        chat_service._remember_vm_chat_failure(
+            "VM fallback provider unavailable: worker reported no LLM available"
+        )
+
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.025]),
+            vm_get_status=lambda: {"online": True, "tasks_completed": 6},
+            probe_vm_chat=False,
+        )
+
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "error")
+        self.assertIn("latest local chat fallback failed", result["providers"]["vm_worker"]["detail"])
 
     def test_provider_health_vm_chat_probe_success(self):
         statuses = iter(

@@ -297,3 +297,13 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Restarted to a single clean bridge process, recycled LocalTunnel, and verified `/chat`, `/chat/test`, `/health/deep`, `/dashboard/status`, public `/ping`, Browser dashboard proof, and passive Computer helper reachability.
 - [ ] Remaining release blocker: local Gemini/OpenRouter credentials still fail (`400` invalid Gemini key, `401` OpenRouter user not found); PR remains draft until fixed or explicitly accepted as non-blocking.
 
+## Session 20260630T034900 - Provider Hardening From Jules Session
+
+- [x] Pulled Jules session `2693363866417321141` and manually integrated only the aligned provider-hardening behavior; skipped stale duplicate VM hunks and did not add `modules/chat_service_087c5da.py`.
+- [x] Added provider failure categories to `modules/chat_service.py`: `invalid_key`, `quota_limit`, `model_unavailable`, `transient_error`, and `other_error`.
+- [x] Added OpenRouter model fallback sequencing that only advances models on `model_unavailable`; invalid keys and quota/rate-limit failures do not fan out across fallback models.
+- [x] Preserved plural OpenRouter key rotation and secret redaction, including `OPENROUTER_API_KEYS`.
+- [x] Tightened VM readiness truth: provider-unavailable/no-LLM VM failures clear recent success, while probe timeouts may still be softened by recent real VM chat success.
+- [x] Verification: focused route/dashboard slice passed (`121 passed`), full suite passed (`432 passed`), `git diff --check` passed with only normal CRLF warnings, bridge restarted to PID `40772`, live `/chat` returned `model_used=vm/jules-worker`, `/chat/test` reported Gemini/OpenRouter `invalid_key` and VM worker `ok`, `/health/deep` returned `status=ok`, and Browser dashboard proof rendered `TUNNEL: ACTIVE`, `GEMINI: ERROR`, `OPENROUTER: ERROR`, `VM CHAT: OK`, and GCP worker `1/1 ONLINE`.
+- [ ] Remaining release blocker: local Gemini/OpenRouter credentials are still invalid, and VM-side provider quota can still intermittently fail probes; PR #64 stays draft until fixed or explicitly accepted as non-blocking.
+
