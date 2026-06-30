@@ -21,8 +21,10 @@ from modules.dashboard_module import (
 @pytest.fixture(autouse=True)
 def clear_cache():
     _dashboard_status_cache.clear()
+    _env_vars.cache_clear()
     yield
     _dashboard_status_cache.clear()
+    _env_vars.cache_clear()
 
 def test_get_dashboard_status_happy_path():
     # Mocking dependencies

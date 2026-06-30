@@ -241,12 +241,6 @@ def path_field(data, key="path", default=MISSING):
     return string_field(data, key, default=default, control_safe=True)
 
 
-@app.before_request
-def _circuit_breaker_check():
-    from modules.circuit_breaker import circuit_breaker_hook
-    return circuit_breaker_hook()
-
-
 def existing_path(path, kind="file"):
     if not os.path.exists(path):
         raise BridgeHTTPError(404, "Resource not found", path=path)
@@ -499,6 +493,16 @@ def health():
         "bridge": "Jules Bridge",
         "uptime_s": uptime_s,
     })
+
+
+@app.route("/health/deep", methods=["GET"])
+@route_errors
+def health_deep():
+    """GET /health/deep — Comprehensive system readiness probe.
+
+    Checks cloud VM reachability, LLM provider keys, disk and memory pressure.
+    """
+    return jsonify(modules.get_deep_health())
 
 
 @app.route("/ping", methods=["GET"])

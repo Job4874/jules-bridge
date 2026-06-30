@@ -187,6 +187,10 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         cloud = _vm_info(env)
         logs = _tail_log()
 
+        # Add provider health to dashboard status
+        from modules.chat_service import test_chat_providers
+        providers = test_chat_providers()
+
         ngrok_url = ""
         # Try to extract ngrok URL from recent logs
         for line in reversed(logs):
@@ -217,6 +221,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
             "cloud": cloud,
             "jules_fleet": fleet,
             "recent_logs": logs,
+            "providers": providers.get("providers", {}),
             "env_keys_present": [
                 k for k in ["GEMINI_API_KEY", "GCE_WORKER_IP", "OPENROUTER_API_KEY", "GMAIL_USER"]
                 if env.get(k)

@@ -10,46 +10,43 @@ import os
 import time
 import socket
 from datetime import datetime, timezone
-import requests
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict
 
 from modules.vm_manager import detect_resource_pressure
+from modules.chat_service import test_chat_providers
 
-def _check_gemini() -> Dict[str, Any]:
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        return {"status": "keyless", "detail": "GEMINI_API_KEY unset; using stub mode"}
+def _check_chat_providers() -> Dict[str, Any]:
+    """Re-use chat_service provider probe for deep health."""
+    health = test_chat_providers()
 
-    t0 = time.monotonic()
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-        r = requests.get(url, timeout=10)
-        elapsed = int((time.monotonic() - t0) * 1000)
-        if r.status_code == 200:
-            return {"status": "pass", "ms": elapsed, "detail": "API key valid"}
-        return {"status": "fail", "code": r.status_code, "ms": elapsed, "detail": r.text[:200]}
-    except Exception as exc:
-        elapsed = int((time.monotonic() - t0) * 1000)
-        return {"status": "error", "ms": elapsed, "detail": str(exc)}
+    # Map chat_service status to health_service status
+    # Chat: 'ok', 'error', 'exception', 'no_key'
+    # Health: 'pass', 'fail', 'error', 'keyless'
 
-def _check_openrouter() -> Dict[str, Any]:
-    or_key = os.environ.get("OPENROUTER_API_KEY", "")
-    if not or_key:
-        return {"status": "keyless", "detail": "OPENROUTER_API_KEY unset; using stub mode"}
+    def map_status(res):
+        s = res.get("status")
+        if s == "ok": return "pass"
+        if s == "error": return "fail"
+        if s == "exception": return "error"
+        if s == "no_key": return "keyless"
+        return "unknown"
 
-    t0 = time.monotonic()
-    try:
-        url = "https://openrouter.ai/api/v1/models"
-        headers = {"Authorization": f"Bearer {or_key}"}
-        r = requests.get(url, headers=headers, timeout=10)
-        elapsed = int((time.monotonic() - t0) * 1000)
-        if r.status_code == 200:
-            return {"status": "pass", "ms": elapsed, "detail": "API key valid"}
-        return {"status": "fail", "code": r.status_code, "ms": elapsed, "detail": r.text[:200]}
-    except Exception as exc:
-        elapsed = int((time.monotonic() - t0) * 1000)
-        return {"status": "error", "ms": elapsed, "detail": str(exc)}
+    gemini = health["providers"].get("gemini", {})
+    openrouter = health["providers"].get("openrouter", {})
+
+    return {
+        "gemini": {
+            "status": map_status(gemini),
+            "ms": gemini.get("ms", 0),
+            "detail": gemini.get("detail", "API check performed") if gemini.get("status") != "ok" else "API key valid"
+        },
+        "openrouter": {
+            "status": map_status(openrouter),
+            "ms": openrouter.get("ms", 0),
+            "detail": openrouter.get("detail", "API check performed") if openrouter.get("status") != "ok" else "API key valid"
+        }
+    }
 
 def _check_gcp() -> Dict[str, Any]:
     from modules.reasoning_module import _gcloud_access_token
@@ -89,15 +86,15 @@ def get_disk_usage() -> Dict[str, Any]:
 
 def get_deep_health() -> Dict[str, Any]:
     """Execute all health checks in parallel and return aggregated status."""
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        f_gemini = executor.submit(_check_gemini)
-        f_openrouter = executor.submit(_check_openrouter)
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        f_chat = executor.submit(_check_chat_providers)
         f_gcp = executor.submit(_check_gcp)
         f_azure = executor.submit(_check_azure)
 
+        chat_results = f_chat.result()
         results = {
-            "gemini": f_gemini.result(),
-            "openrouter": f_openrouter.result(),
+            "gemini": chat_results["gemini"],
+            "openrouter": chat_results["openrouter"],
             "gcp": f_gcp.result(),
             "azure": f_azure.result(),
         }

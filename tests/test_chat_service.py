@@ -134,6 +134,54 @@ class TestChatCompletion(unittest.TestCase):
         self.assertIn("offline", result["response"])
         self.assertEqual(result["errors"], [])
 
+    def test_chat_invalid_keys_reports_error(self):
+        client = FakeRequests(
+            [
+                FakeResponse(401, text="Unauthorized"),
+                FakeResponse(401, text='{"error": {"message": "Invalid API key"}}'),
+            ]
+        )
+
+        result = chat_service.test_chat_providers(
+            env={"GEMINI_API_KEY": "bad-gemini", "OPENROUTER_API_KEY": "bad-or"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.1, 1.2, 1.3]),
+        )
+
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["providers"]["gemini"]["status"], "error")
+        self.assertEqual(result["providers"]["openrouter"]["status"], "error")
+        self.assertIn("401", result["providers"]["gemini"]["detail"])
+        self.assertIn("401", result["providers"]["openrouter"]["detail"])
+
+    def test_one_provider_ok(self):
+        client = FakeRequests(
+            [
+                FakeResponse(200),
+                FakeResponse(401, text="Unauthorized"),
+            ]
+        )
+
+        result = chat_service.test_chat_providers(
+            env={"GEMINI_API_KEY": "good-gemini", "OPENROUTER_API_KEY": "bad-or"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.1, 1.2, 1.3]),
+        )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["gemini"]["status"], "ok")
+        self.assertEqual(result["providers"]["openrouter"]["status"], "error")
+
+    def test_keyless_mode(self):
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+        )
+
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["providers"]["gemini"]["status"], "no_key")
+        self.assertEqual(result["providers"]["openrouter"]["status"], "no_key")
+
 
 if __name__ == "__main__":
     unittest.main()

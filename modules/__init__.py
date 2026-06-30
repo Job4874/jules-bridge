@@ -112,6 +112,7 @@ from .context_orchestrator import (
     build_context_subagents,
 )
 from .app_launcher import LaunchResult, launch_browser_to_url
+from .health_service import get_deep_health
 from .chat_service import ChatHealthResult, ChatResult, test_chat_providers, chat
 
 __all__ = [
@@ -224,6 +225,8 @@ __all__ = [
     # app_launcher
     "LaunchResult",
     "launch_browser_to_url",
+    # health_service
+    "get_deep_health",
     # chat_service
     "ChatHealthResult",
     "ChatResult",

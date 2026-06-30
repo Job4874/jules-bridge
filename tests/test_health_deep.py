@@ -8,16 +8,20 @@ class TestHealthDeep(unittest.TestCase):
         self.app.testing = True
         self.token = "JULES-SECURE-999"
 
-    @patch("modules.health_service.requests.get")
+    @patch("modules.health_service.test_chat_providers")
     @patch("modules.health_service.detect_resource_pressure")
     @patch("modules.health_service.get_disk_usage")
     @patch("modules.reasoning_module._gcloud_access_token")
     @patch("socket.create_connection")
-    def test_health_deep_success(self, mock_socket, mock_gcloud, mock_disk, mock_pressure, mock_get):
-        # Mock Gemini
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_get.return_value = mock_resp
+    def test_health_deep_success(self, mock_socket, mock_gcloud, mock_disk, mock_pressure, mock_chat):
+        # Mock Chat Providers
+        mock_chat.return_value = {
+            "healthy": True,
+            "providers": {
+                "gemini": {"status": "ok", "ms": 10},
+                "openrouter": {"status": "ok", "ms": 20}
+            }
+        }
 
         # Mock Pressure
         mock_pressure.return_value = {"cpu_percent": 10.0, "memory_percent": 20.0, "maxed_out": False}

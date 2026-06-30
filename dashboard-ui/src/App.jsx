@@ -64,6 +64,7 @@ function App() {
     cpu: 0,
     mem: 0,
     fleet: { launched: 0, completed: 0, pending: 0 },
+    providers: { gemini: { status: 'no_key' }, openrouter: { status: 'no_key' } },
     logs: []
   });
 
@@ -102,6 +103,7 @@ function App() {
           cpu,
           mem,
           fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },
+          providers: d.providers || { gemini: { status: 'no_key' }, openrouter: { status: 'no_key' } },
           logs: d.recent_logs || []
         });
 
@@ -219,6 +221,12 @@ function App() {
           </div>
           <div className={`badge ${sysStatus.tunnel ? 'success' : 'danger'}`}>
             TUNNEL: {sysStatus.tunnel ? 'ACTIVE' : 'OFFLINE'}
+          </div>
+          <div className={`badge ${sysStatus.providers.gemini.status === 'ok' ? 'success' : (sysStatus.providers.gemini.status === 'no_key' ? '' : 'danger')}`}>
+            GEMINI: {sysStatus.providers.gemini.status.toUpperCase()}
+          </div>
+          <div className={`badge ${sysStatus.providers.openrouter.status === 'ok' ? 'success' : (sysStatus.providers.openrouter.status === 'no_key' ? '' : 'danger')}`}>
+            OPENROUTER: {sysStatus.providers.openrouter.status.toUpperCase()}
           </div>
         </div>
       </div>
