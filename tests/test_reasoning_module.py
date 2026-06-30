@@ -7,6 +7,8 @@ To run:
     python -m pytest tests/test_reasoning_module.py -v
 """
 import pytest
+from types import SimpleNamespace
+import modules.reasoning_module as reasoning_module
 from modules.reasoning_module import (
     HLevelPlan,
     LLevelAction,
@@ -36,6 +38,23 @@ class TestHLevelPlan:
     def test_empty_steps(self):
         plan = HLevelPlan(steps=[], goal_statement="empty", confidence=0.0, reasoning="", model="stub")
         assert plan.step_count == 0
+
+
+def test_gcloud_access_token_tries_windows_sdk_install_path(monkeypatch):
+    calls = []
+
+    def fake_run(cmd, **_kwargs):
+        calls.append(cmd)
+        executable = cmd[0]
+        if "Google\\Cloud SDK\\google-cloud-sdk\\bin\\gcloud.cmd" in executable:
+            return SimpleNamespace(returncode=0, stdout="ya29.fake-token\n")
+        return SimpleNamespace(returncode=1, stdout="")
+
+    monkeypatch.setenv("LOCALAPPDATA", r"C:\Users\abdul\AppData\Local")
+    monkeypatch.setattr(reasoning_module.subprocess, "run", fake_run)
+
+    assert reasoning_module._gcloud_access_token() == "ya29.fake-token"
+    assert any("Google\\Cloud SDK\\google-cloud-sdk\\bin\\gcloud.cmd" in call[0] for call in calls)
 
 
 # ---------------------------------------------------------------------------

@@ -300,7 +300,26 @@ def _gcloud_access_token() -> str:
     including generativelanguage.googleapis.com. Returns empty string on failure.
     On Windows, gcloud is a .cmd batch file so shell=True is required.
     """
-    for cmd in (["gcloud", "auth", "print-access-token"], ["gcloud.cmd", "auth", "print-access-token"]):
+    local_appdata = os.environ.get("LOCALAPPDATA", "")
+    home = os.path.expanduser("~")
+    commands = [
+        ["gcloud", "auth", "print-access-token"],
+        ["gcloud.cmd", "auth", "print-access-token"],
+    ]
+    for root in (local_appdata, os.path.join(home, "AppData", "Local")):
+        if root:
+            commands.append([
+                os.path.join(root, "Google", "Cloud SDK", "google-cloud-sdk", "bin", "gcloud.cmd"),
+                "auth",
+                "print-access-token",
+            ])
+
+    seen: set[str] = set()
+    for cmd in commands:
+        command_key = "\0".join(cmd).lower()
+        if command_key in seen:
+            continue
+        seen.add(command_key)
         try:
             result = subprocess.run(
                 cmd, capture_output=True, text=True, timeout=15, shell=True, check=False,

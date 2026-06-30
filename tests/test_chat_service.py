@@ -1,6 +1,7 @@
 """Tests for chat provider routing."""
 
 import unittest
+from unittest.mock import patch
 
 from modules import chat_service
 
@@ -134,6 +135,100 @@ class TestChatCompletion(unittest.TestCase):
         self.assertIn("offline", result["response"])
         self.assertEqual(result["errors"], [])
 
+    def test_chat_rotates_plural_openrouter_keys(self):
+        client = FakeRequests(
+            [
+                FakeResponse(401, text="router failed for plural-a"),
+                FakeResponse(200, {"choices": [{"message": {"content": "openrouter ok"}}]}),
+            ]
+        )
+
+        result = chat_service.chat(
+            "hello",
+            env={"OPENROUTER_API_KEYS": "plural-a,plural-b"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.2]),
+        )
+
+        self.assertEqual(result["response"], "openrouter ok")
+        self.assertEqual(result["model_used"], "openrouter/google/gemma-3-27b-it:free")
+        self.assertEqual(client.calls[0]["headers"]["Authorization"], "Bearer plural-a")
+        self.assertEqual(client.calls[1]["headers"]["Authorization"], "Bearer plural-b")
+        self.assertNotIn("plural-a", str(result))
+        self.assertNotIn("plural-b", str(result))
+
+    def test_chat_uses_vm_fallback_after_local_failures(self):
+        client = FakeRequests(
+            [
+                FakeResponse(401, text="gemini failed for gem-secret"),
+                FakeResponse(401, text="router failed for or-secret"),
+            ]
+        )
+        status_rows = iter(
+            [
+                {"online": True},
+                {"online": True, "recent": []},
+                {
+                    "online": True,
+                    "recent": [
+                        {
+                            "task": "[chat-fallback-fixedmarker1] hello",
+                            "status": "done",
+                            "result": "hello from vm",
+                        }
+                    ],
+                },
+            ]
+        )
+        sent_tasks = []
+
+        def send_task(task, task_type="build", context=""):
+            sent_tasks.append({"task": task, "task_type": task_type, "context": context})
+            return {"ok": True, "status": "queued"}
+
+        with patch("modules.chat_service.uuid.uuid4") as mock_uuid:
+            mock_uuid.return_value.hex = "fixedmarker123"
+            result = chat_service.chat(
+                "hello",
+                env={"GEMINI_API_KEY": "gem-secret", "OPENROUTER_API_KEY": "or-secret"},
+                requests_client=client,
+                clock=clock_from([1.0, 1.5]),
+                vm_send_task=send_task,
+                vm_get_status=lambda: next(status_rows),
+                sleep_func=lambda _: None,
+                vm_poll_attempts=2,
+            )
+
+        self.assertEqual(result["response"], "hello from vm")
+        self.assertEqual(result["model_used"], "vm/jules-worker")
+        self.assertEqual(sent_tasks[0]["task_type"], "chat")
+        self.assertIn("chat-fallback-fixedmarker1", sent_tasks[0]["task"])
+        self.assertNotIn("gem-secret", str(result))
+        self.assertNotIn("or-secret", str(result))
+
+    def test_chat_vm_fallback_timeout_reports_error(self):
+        statuses = iter(
+            [
+                {"online": True},
+                {"online": True, "recent": []},
+                {"online": True, "recent": []},
+            ]
+        )
+
+        result = chat_service.chat(
+            "hello",
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.1]),
+            vm_send_task=lambda *args, **kwargs: {"ok": True, "status": "queued"},
+            vm_get_status=lambda: next(statuses),
+            sleep_func=lambda _: None,
+            vm_poll_attempts=2,
+        )
+
+        self.assertEqual(result["model_used"], "none")
+        self.assertIn("VM fallback timed out", result["errors"][-1])
+
     def test_chat_invalid_keys_reports_error(self):
         client = FakeRequests(
             [
@@ -181,6 +276,48 @@ class TestChatCompletion(unittest.TestCase):
         self.assertFalse(result["healthy"])
         self.assertEqual(result["providers"]["gemini"]["status"], "no_key")
         self.assertEqual(result["providers"]["openrouter"]["status"], "no_key")
+
+    def test_openrouter_health_rotates_plural_keys_and_redacts(self):
+        client = FakeRequests(
+            [
+                FakeResponse(401, text="bad plural-a"),
+                FakeResponse(200),
+            ]
+        )
+
+        result = chat_service.test_chat_providers(
+            env={"OPENROUTER_API_KEYS": "plural-a,plural-b"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.1, 1.2]),
+        )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["openrouter"]["status"], "ok")
+        self.assertEqual(client.calls[0]["headers"]["Authorization"], "Bearer plural-a")
+        self.assertEqual(client.calls[1]["headers"]["Authorization"], "Bearer plural-b")
+        self.assertNotIn("plural-a", str(result))
+        self.assertNotIn("plural-b", str(result))
+
+    def test_provider_health_reports_vm_worker_online(self):
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.025]),
+            vm_get_status=lambda: {"online": True, "tasks_completed": 3},
+        )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "ok")
+        self.assertEqual(result["providers"]["vm_worker"]["model"], "vm/jules-worker")
+
+    def test_sanitize_detail_redacts_plural_openrouter_keys(self):
+        detail = "failed with key-a and key-b and gem-key"
+        result = chat_service._sanitize_detail(
+            detail,
+            {"GEMINI_API_KEY": "gem-key", "OPENROUTER_API_KEYS": "key-a, key-b"},
+        )
+
+        self.assertEqual(result, "failed with [redacted] and [redacted] and [redacted]")
 
 
 if __name__ == "__main__":

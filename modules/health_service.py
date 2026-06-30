@@ -24,6 +24,7 @@ def _map_chat_provider_result(result: Dict[str, Any]) -> Dict[str, Any]:
         "error": "fail",
         "exception": "error",
         "no_key": "keyless",
+        "offline": "fail",
     }.get(status, "unknown")
 
     mapped_result = {
@@ -40,10 +41,13 @@ def _check_chat_providers() -> Dict[str, Any]:
     """Use the same authenticated probes that power /chat/test."""
     health = test_chat_providers()
     providers = health.get("providers", {})
-    return {
+    mapped = {
         "gemini": _map_chat_provider_result(providers.get("gemini", {})),
         "openrouter": _map_chat_provider_result(providers.get("openrouter", {})),
     }
+    if "vm_worker" in providers:
+        mapped["vm_worker"] = _map_chat_provider_result(providers.get("vm_worker", {}))
+    return mapped
 
 
 def _check_gcp() -> Dict[str, Any]:
@@ -91,8 +95,7 @@ def get_deep_health() -> Dict[str, Any]:
 
         chat_results = f_chat.result()
         results = {
-            "gemini": chat_results["gemini"],
-            "openrouter": chat_results["openrouter"],
+            **chat_results,
             "gcp": f_gcp.result(),
             "azure": f_azure.result(),
         }

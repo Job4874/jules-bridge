@@ -19,6 +19,7 @@ class TestHealthDeep(unittest.TestCase):
             "providers": {
                 "gemini": {"status": "ok", "ms": 10},
                 "openrouter": {"status": "ok", "ms": 20},
+                "vm_worker": {"status": "ok", "ms": 5},
             },
         }
 
@@ -43,6 +44,7 @@ class TestHealthDeep(unittest.TestCase):
         self.assertIn("resources", data)
         self.assertEqual(data["providers"]["gemini"]["status"], "pass")
         self.assertEqual(data["providers"]["openrouter"]["status"], "pass")
+        self.assertEqual(data["providers"]["vm_worker"]["status"], "pass")
         self.assertEqual(data["providers"]["gcp"]["status"], "pass")
         self.assertEqual(data["providers"]["azure"]["status"], "pass")
 
