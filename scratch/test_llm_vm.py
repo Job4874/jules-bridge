@@ -1,3 +1,5 @@
+# pylint: disable=broad-exception-caught, wrong-import-position, invalid-name
+
 #!/usr/bin/env python3
 """Test Gemini and OpenRouter connectivity from this VM."""
 import os
@@ -8,7 +10,7 @@ env_file = Path(os.path.expanduser("~/.jules_worker.env"))
 print(f"Env file: {env_file} exists={env_file.exists()}")
 
 if env_file.exists():
-    for line in env_file.read_text().splitlines():
+    for line in env_file.read_text(encoding='utf-8').splitlines():
         if "=" in line and not line.startswith("#"):
             k, _, v = line.partition("=")
             os.environ[k.strip()] = v.strip()

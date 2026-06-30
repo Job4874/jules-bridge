@@ -1,3 +1,5 @@
+import os
+os.environ["BRIDGE_TOKEN"] = "JULES-SECURE-999"
 """Integration tests for bridge.py HTTP routes.
 
 These test the HTTP surface — validate → call module → JSON response.
@@ -413,7 +415,7 @@ class TestShellRoute(unittest.TestCase):
         self.assertEqual(mock_run.call_args.args[0][:4], ["cmd.exe", "/d", "/s", "/c"])
 
     @patch("modules.shell_executor.shutil.which", return_value=None)
-    def test_shell_invalid_git_bash(self, mock_which):
+    def test_shell_invalid_git_bash(self, _mock_which):
         # Patch os.path.exists with a side_effect so real directories
         # (cwd check in bridge) pass, but bash candidate paths fail.
         real_exists = os.path.exists
@@ -981,6 +983,85 @@ class TestBridgeTokenAuth(unittest.TestCase):
                 headers=BRIDGE_AUTH_HEADER,
             )
         self.assertEqual(response.status_code, 200)
+
+    def test_notify_email_forwards_existing_attachments(self):
+        with tempfile.NamedTemporaryFile(delete=False) as handle:
+            handle.write(b"screen")
+            attachment = handle.name
+        try:
+            with patch("bridge.email_service.send_email", return_value={"status": "sent"}) as mock_send:
+                response = self.client.post(
+                    "/notify/email",
+                    json={"subject": "x", "body": "y", "attachments": [attachment]},
+                    headers=BRIDGE_AUTH_HEADER,
+                )
+
+            self.assertEqual(response.status_code, 200)
+            mock_send.assert_called_once_with(
+                "x",
+                "y",
+                mail_to=None,
+                attachments=[attachment],
+            )
+        finally:
+            os.unlink(attachment)
+
+    def test_notify_email_rejects_missing_attachment_before_send(self):
+        missing = os.path.join(tempfile.gettempdir(), "jules-missing-screenshot.png")
+        if os.path.exists(missing):
+            os.unlink(missing)
+
+        with patch("bridge.email_service.send_email") as mock_send:
+            response = self.client.post(
+                "/notify/email",
+                json={"subject": "x", "body": "y", "attachments": [missing]},
+                headers=BRIDGE_AUTH_HEADER,
+            )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["error"], "Resource not found")
+        mock_send.assert_not_called()
+
+
+class TestChatRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    @patch("modules.test_chat_providers")
+    def test_chat_test_delegates_to_module(self, mock_test):
+        mock_test.return_value = {"healthy": False, "providers": {"gemini": {"status": "no_key"}}}
+
+        response = self.client.get("/chat/test")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.get_json()["healthy"])
+        mock_test.assert_called_once_with()
+
+    @patch("modules.chat")
+    def test_chat_route_is_thin(self, mock_chat):
+        mock_chat.return_value = {"response": "ok", "model_used": "stub", "elapsed_ms": 1, "errors": []}
+
+        response = self.client.post(
+            "/chat",
+            json={
+                "message": "hello",
+                "model": "smart",
+                "system": "system",
+                "image_base64": "abc",
+                "history": [{"role": "user", "content": "prior"}],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["response"], "ok")
+        mock_chat.assert_called_once_with(
+            message="hello",
+            model_alias="smart",
+            system_prompt="system",
+            image_base64="abc",
+            history=[{"role": "user", "content": "prior"}],
+        )
 
 
 if __name__ == "__main__":
