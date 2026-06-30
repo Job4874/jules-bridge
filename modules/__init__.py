@@ -81,8 +81,10 @@ from .reasoning_module import (
     execute_step,
 )
 from .retrospective_module import (
+    MEMORY_DOMAINS,
     LogPattern,
     TestEvidence,
+    EvidenceStaleness,
     DoomLoop,
     RetrospectiveReport,
     analyze_session,
@@ -90,6 +92,9 @@ from .retrospective_module import (
     load_test_evidence,
     load_memory,
     prune_memory,
+    check_test_evidence_staleness,
+    is_evidence_hard_gate_enabled,
+    validate_memory_domain,
 )
 from .akc_module import (
     AKCContext,
@@ -189,8 +194,10 @@ __all__ = [
     "plan_only",
     "execute_step",
     # retrospective_module
+    "MEMORY_DOMAINS",
     "LogPattern",
     "TestEvidence",
+    "EvidenceStaleness",
     "DoomLoop",
     "RetrospectiveReport",
     "analyze_session",
@@ -198,6 +205,9 @@ __all__ = [
     "load_test_evidence",
     "load_memory",
     "prune_memory",
+    "check_test_evidence_staleness",
+    "is_evidence_hard_gate_enabled",
+    "validate_memory_domain",
     # akc_module
     "AKCContext",
     "AKCCheckpoint",

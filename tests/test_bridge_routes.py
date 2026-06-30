@@ -770,6 +770,44 @@ class TestEvidenceGate(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("X-Evidence-Age-Warning", response.headers)
 
+    @patch("modules.oracle_status")
+    def test_clock_skew_hard_mode_returns_423(self, mock_status):
+        mock_status.return_value = {"status": "ok"}
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            future = datetime.now(timezone.utc) + timedelta(hours=2)
+            self._write_evidence(tmp_dir, future)
+            with patch.object(bridge, "ROOT_DIR", tmp_dir), patch.dict(os.environ, {"EVIDENCE_GATE_HARD": "1"}):
+                response = self.client.get("/oracle/status")
+
+        self.assertEqual(response.status_code, 423)
+        self.assertEqual(response.get_json()["reason"], "clock_skew")
+        mock_status.assert_not_called()
+
+    @patch("modules.oracle_status")
+    def test_malformed_evidence_hard_mode_returns_423(self, mock_status):
+        mock_status.return_value = {"status": "ok"}
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            memory_dir = os.path.join(tmp_dir, "memory")
+            os.makedirs(memory_dir, exist_ok=True)
+            with open(os.path.join(memory_dir, "test_evidence.json"), "w", encoding="utf-8") as handle:
+                handle.write("{not valid json")
+            with patch.object(bridge, "ROOT_DIR", tmp_dir), patch.dict(os.environ, {"EVIDENCE_GATE_HARD": "1"}):
+                response = self.client.get("/oracle/status")
+
+        self.assertEqual(response.status_code, 423)
+        self.assertEqual(response.get_json()["reason"], "malformed")
+        mock_status.assert_not_called()
+
+    @patch("modules.oracle_status")
+    def test_missing_evidence_hard_mode_allows_oracle_route(self, mock_status):
+        mock_status.return_value = {"status": "ok"}
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            os.makedirs(os.path.join(tmp_dir, "memory"), exist_ok=True)
+            with patch.object(bridge, "ROOT_DIR", tmp_dir), patch.dict(os.environ, {"EVIDENCE_GATE_HARD": "1"}):
+                response = self.client.get("/oracle/status")
+
+        self.assertEqual(response.status_code, 200)
+
     def test_health_exempt_from_hard_evidence_gate(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             stale = datetime.now(timezone.utc) - timedelta(hours=2)

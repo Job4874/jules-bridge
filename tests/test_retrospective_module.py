@@ -13,14 +13,21 @@ import textwrap
 
 import pytest
 
+from datetime import datetime, timedelta, timezone
+
 from modules.retrospective_module import (
+    MEMORY_DOMAINS,
     DoomLoop,
+    EvidenceStaleness,
     LogPattern,
     RetrospectiveReport,
     analyze_session,
+    check_test_evidence_staleness,
+    is_evidence_hard_gate_enabled,
     load_memory,
     load_test_evidence,
     record_test_evidence,
+    validate_memory_domain,
 )
 
 
@@ -487,3 +494,107 @@ class TestLoadMemory:
         for domain in ("general", "oracle", "quantower", "trading", "reasoning"):
             content = load_memory(memory_path=setup_dirs["memory"], domain=domain)
             assert isinstance(content, str)  # never raises
+
+
+# ---------------------------------------------------------------------------
+# Evidence-gating policy (Initiative C) — extracted from bridge.py middleware.
+# Option A: built on load_test_evidence; fail-CLOSED on malformed / clock-skew.
+# ---------------------------------------------------------------------------
+
+def _write_evidence_json(memory_path: str, record) -> None:
+    """Write a raw test_evidence.json (record may be a dict, list, or str)."""
+    os.makedirs(memory_path, exist_ok=True)
+    path = os.path.join(memory_path, "test_evidence.json")
+    with open(path, "w", encoding="utf-8") as handle:
+        if isinstance(record, str):
+            handle.write(record)
+        else:
+            json.dump(record, handle)
+
+
+def _evidence_record(timestamp_utc: str) -> dict:
+    return {
+        "output_hash": "a" * 64,
+        "timestamp_utc": timestamp_utc,
+        "passed": True,
+        "test_count": 1,
+        "raw_output_tail": "1 passed",
+    }
+
+
+class TestCheckEvidenceStaleness:
+    def test_fresh_evidence_returns_none(self, tmp_dirs):
+        ts = datetime.now(timezone.utc).isoformat()
+        _write_evidence_json(tmp_dirs["memory"], [_evidence_record(ts)])
+        assert check_test_evidence_staleness(tmp_dirs["memory"]) is None
+
+    def test_stale_evidence_flagged_with_reason(self, tmp_dirs):
+        ts = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+        _write_evidence_json(tmp_dirs["memory"], [_evidence_record(ts)])
+        result = check_test_evidence_staleness(tmp_dirs["memory"])
+        assert isinstance(result, EvidenceStaleness)
+        assert result.reason == "stale"
+        assert result.age_s > 3600
+        assert result.threshold_s == 3600
+
+    def test_future_timestamp_is_clock_skew_not_fresh(self, tmp_dirs):
+        ts = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+        _write_evidence_json(tmp_dirs["memory"], [_evidence_record(ts)])
+        result = check_test_evidence_staleness(tmp_dirs["memory"])
+        assert isinstance(result, EvidenceStaleness)
+        assert result.reason == "clock_skew"
+        assert result.age_s < 0
+
+    def test_malformed_json_is_flagged_malformed(self, tmp_dirs):
+        _write_evidence_json(tmp_dirs["memory"], "{not valid json")
+        result = check_test_evidence_staleness(tmp_dirs["memory"])
+        assert isinstance(result, EvidenceStaleness)
+        assert result.reason == "malformed"
+
+    def test_record_missing_timestamp_is_malformed(self, tmp_dirs):
+        _write_evidence_json(tmp_dirs["memory"], [{"output_hash": "x", "passed": True}])
+        result = check_test_evidence_staleness(tmp_dirs["memory"])
+        assert isinstance(result, EvidenceStaleness)
+        assert result.reason == "malformed"
+
+    def test_missing_file_returns_none(self, tmp_dirs):
+        # No test_evidence.json written at all → no evidence yet → proceed.
+        assert check_test_evidence_staleness(tmp_dirs["memory"]) is None
+
+    def test_empty_history_returns_none(self, tmp_dirs):
+        _write_evidence_json(tmp_dirs["memory"], [])
+        assert check_test_evidence_staleness(tmp_dirs["memory"]) is None
+
+    def test_custom_threshold_respected(self, tmp_dirs):
+        ts = (datetime.now(timezone.utc) - timedelta(seconds=120)).isoformat()
+        _write_evidence_json(tmp_dirs["memory"], [_evidence_record(ts)])
+        assert check_test_evidence_staleness(tmp_dirs["memory"], threshold_s=3600) is None
+        result = check_test_evidence_staleness(tmp_dirs["memory"], threshold_s=60)
+        assert result is not None and result.reason == "stale"
+
+
+class TestHardGateEnabled:
+    def test_enabled_when_env_is_one(self):
+        assert is_evidence_hard_gate_enabled({"EVIDENCE_GATE_HARD": "1"}) is True
+
+    def test_disabled_when_env_is_zero(self):
+        assert is_evidence_hard_gate_enabled({"EVIDENCE_GATE_HARD": "0"}) is False
+
+    def test_disabled_when_env_absent(self):
+        assert is_evidence_hard_gate_enabled({}) is False
+
+
+class TestValidateMemoryDomain:
+    def test_valid_domains_return_none(self):
+        for domain in MEMORY_DOMAINS:
+            assert validate_memory_domain(domain) is None
+
+    def test_invalid_domain_returns_message(self):
+        message = validate_memory_domain("bogus")
+        assert message is not None
+        assert "bogus" not in message or "domain" in message.lower()
+        for domain in MEMORY_DOMAINS:
+            assert domain in message
+
+    def test_canonical_domains_present(self):
+        assert set(MEMORY_DOMAINS) == {"general", "oracle", "quantower", "trading", "reasoning"}
