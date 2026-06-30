@@ -859,6 +859,142 @@ def build_cot_ledger(
         )
 
 
+
+def _cycle_dispatch(
+    content: str,
+    source_path: str,
+    max_instances: int,
+    include_statuses: str | Iterable[str] | None,
+    write_packets: bool,
+    base_dir: Path,
+    repo_path: str,
+    generated_at: str,
+) -> JulesDispatchResult:
+    if content or source_path:
+        return build_dispatch(
+            content=content,
+            source_path=source_path,
+            max_instances=max_instances,
+            include_statuses=include_statuses,
+            write_packets=write_packets,
+            output_dir=str(base_dir),
+            repo_path=repo_path,
+        )
+    packets = _resolve_packet_files(packet_dir=str(base_dir))
+    return JulesDispatchResult(
+        source="existing_packets",
+        generated_at_utc=generated_at,
+        task_count=0,
+        selected_count=len(packets),
+        status_counts={},
+        include_statuses=list(_status_filter(include_statuses)),
+        max_instances=max_instances,
+        write_packets=False,
+        output_dir=str(base_dir),
+        repo_path=repo_path,
+        selected_tasks=[],
+        packet_files=[str(packet) for packet in packets],
+        launch_commands=[],
+        note="No task dump supplied; using existing packet files.",
+    )
+
+
+def _cycle_check_remote(
+    check_remote: bool,
+    jules_command: str,
+    timeout_s: int,
+    dry_run: bool,
+) -> JulesRemoteResult:
+    if check_remote:
+        return list_remote_sessions(
+            jules_command=jules_command,
+            timeout_s=timeout_s,
+            dry_run=dry_run,
+        )
+    return JulesRemoteResult(
+        dry_run=True,
+        status="skipped",
+        session_ids=[],
+        note="Remote session check skipped.",
+    )
+
+
+def _cycle_launch(
+    base_dir: Path,
+    repo_path: str,
+    launch: bool,
+    launch_limit: int,
+    dry_run: bool,
+    blockers: list[str],
+    require_remote_ready: bool,
+    remote_ready: bool,
+    timeout_s: int,
+    jules_command: str,
+    content: str,
+    source_path: str,
+) -> tuple[dict, JulesLaunchResult, bool]:
+    launch_dry_run = dry_run or not launch or bool(blockers) or (require_remote_ready and not remote_ready)
+    launch_state_path = base_dir / _DEFAULT_STATE_FILE
+    existing_launch_state = _read_json_file(launch_state_path)
+    has_existing_launch_state = bool(existing_launch_state.get("results"))
+    write_launch_state = launch or bool(content or source_path) or not has_existing_launch_state
+    launch_result = launch_packets(
+        packet_dir=str(base_dir),
+        repo_path=repo_path,
+        limit=launch_limit,
+        dry_run=launch_dry_run,
+        timeout_s=timeout_s,
+        jules_command=jules_command,
+        write_state=write_launch_state,
+        skip_launched=launch,
+    )
+    return existing_launch_state, launch_result, launch_dry_run
+
+
+def _cycle_pull(
+    base_dir: Path,
+    repo_path: str,
+    pull: bool,
+    session_ids: Iterable[str] | None,
+    existing_launch_state: dict,
+    launch_result: JulesLaunchResult,
+    sessions_result: JulesRemoteResult,
+    dry_run: bool,
+    require_remote_ready: bool,
+    remote_ready: bool,
+    timeout_s: int,
+    jules_command: str,
+) -> list[dict]:
+    pull_results = []
+    if pull:
+        existing_ids = _cycle_session_ids(session_ids=None, launch_result=existing_launch_state)
+        candidate_pull_ids = _cycle_session_ids(
+            session_ids=session_ids or existing_ids,
+            launch_result=launch_result,
+        )
+        pull_ids = (
+            _completed_session_ids(candidate_pull_ids, str(sessions_result.get("stdout", "")))
+            if sessions_result.get("status") == "ok"
+            else candidate_pull_ids
+        )
+        already_pulled = _successful_pull_session_ids(base_dir)
+        pull_ids = [session_id for session_id in pull_ids if session_id not in already_pulled]
+        pull_dry_run = dry_run or (require_remote_ready and not remote_ready)
+        for session_id in pull_ids:
+            pull_results.append(
+                dict(pull_remote_session(
+                    session_id=session_id,
+                    repo_path=repo_path,
+                    output_dir=str(base_dir / _DEFAULT_PULL_DIR),
+                    dry_run=pull_dry_run,
+                    timeout_s=timeout_s,
+                    jules_command=jules_command,
+                    write_result=True,
+                ))
+            )
+    return pull_results
+
+
 def run_jules_cycle(
     content: str = "",
     source_path: str = "",
@@ -891,52 +1027,27 @@ def run_jules_cycle(
     generated_at = datetime.now(timezone.utc).isoformat()
     base_dir = Path(packet_dir) if packet_dir else _DEFAULT_OUTPUT_DIR
     try:
-        dispatch_result = None
-        if content or source_path:
-            dispatch_result = build_dispatch(
-                content=content,
-                source_path=source_path,
-                max_instances=max_instances,
-                include_statuses=include_statuses,
-                write_packets=write_packets,
-                output_dir=str(base_dir),
-                repo_path=repo_path,
-            )
-        else:
-            packets = _resolve_packet_files(packet_dir=str(base_dir))
-            dispatch_result = JulesDispatchResult(
-                source="existing_packets",
-                generated_at_utc=generated_at,
-                task_count=0,
-                selected_count=len(packets),
-                status_counts={},
-                include_statuses=list(_status_filter(include_statuses)),
-                max_instances=max_instances,
-                write_packets=False,
-                output_dir=str(base_dir),
-                repo_path=repo_path,
-                selected_tasks=[],
-                packet_files=[str(packet) for packet in packets],
-                launch_commands=[],
-                note="No task dump supplied; using existing packet files.",
-            )
+        dispatch_result = _cycle_dispatch(
+            content=content,
+            source_path=source_path,
+            max_instances=max_instances,
+            include_statuses=include_statuses,
+            write_packets=write_packets,
+            base_dir=base_dir,
+            repo_path=repo_path,
+            generated_at=generated_at,
+        )
 
         blockers = []
         if dispatch_result.get("error"):
             blockers.append(f"Dispatch failed: {dispatch_result.get('error')}")
 
-        sessions_result = JulesRemoteResult(
-            dry_run=True,
-            status="skipped",
-            session_ids=[],
-            note="Remote session check skipped.",
+        sessions_result = _cycle_check_remote(
+            check_remote=check_remote,
+            jules_command=jules_command,
+            timeout_s=timeout_s,
+            dry_run=dry_run,
         )
-        if check_remote:
-            sessions_result = list_remote_sessions(
-                jules_command=jules_command,
-                timeout_s=timeout_s,
-                dry_run=dry_run,
-            )
 
         remote_ready = (not check_remote) or dry_run or sessions_result.get("status") == "ok"
         if check_remote and not dry_run and require_remote_ready and not remote_ready:
@@ -944,56 +1055,42 @@ def run_jules_cycle(
                 "Remote Jules session listing did not return ok; live launch/pull stayed disabled."
             )
 
-        launch_dry_run = dry_run or not launch or bool(blockers) or (require_remote_ready and not remote_ready)
-        launch_state_path = base_dir / _DEFAULT_STATE_FILE
-        existing_launch_state = _read_json_file(launch_state_path)
-        has_existing_launch_state = bool(existing_launch_state.get("results"))
-        write_launch_state = launch or bool(content or source_path) or not has_existing_launch_state
-        launch_result = launch_packets(
-            packet_dir=str(base_dir),
+        existing_launch_state, launch_result, launch_dry_run = _cycle_launch(
+            base_dir=base_dir,
             repo_path=repo_path,
-            limit=launch_limit,
-            dry_run=launch_dry_run,
+            launch=launch,
+            launch_limit=launch_limit,
+            dry_run=dry_run,
+            blockers=blockers,
+            require_remote_ready=require_remote_ready,
+            remote_ready=remote_ready,
             timeout_s=timeout_s,
             jules_command=jules_command,
-            write_state=write_launch_state,
-            skip_launched=launch,
+            content=content,
+            source_path=source_path,
         )
 
-        pull_results = []
-        pull_ids = []
-        if pull:
-            existing_ids = _cycle_session_ids(session_ids=None, launch_result=existing_launch_state)
-            candidate_pull_ids = _cycle_session_ids(
-                session_ids=session_ids or existing_ids,
-                launch_result=launch_result,
-            )
-            pull_ids = (
-                _completed_session_ids(candidate_pull_ids, str(sessions_result.get("stdout", "")))
-                if sessions_result.get("status") == "ok"
-                else candidate_pull_ids
-            )
-            already_pulled = _successful_pull_session_ids(base_dir)
-            pull_ids = [session_id for session_id in pull_ids if session_id not in already_pulled]
-            pull_dry_run = dry_run or (require_remote_ready and not remote_ready)
-            for session_id in pull_ids:
-                pull_results.append(
-                    pull_remote_session(
-                        session_id=session_id,
-                        repo_path=repo_path,
-                        output_dir=str(base_dir / _DEFAULT_PULL_DIR),
-                        dry_run=pull_dry_run,
-                        timeout_s=timeout_s,
-                        jules_command=jules_command,
-                        write_result=True,
-                    )
-                )
+        pull_results = _cycle_pull(
+            base_dir=base_dir,
+            repo_path=repo_path,
+            pull=pull,
+            session_ids=session_ids,
+            existing_launch_state=existing_launch_state,
+            launch_result=launch_result,
+            sessions_result=sessions_result,
+            dry_run=dry_run,
+            require_remote_ready=require_remote_ready,
+            remote_ready=remote_ready,
+            timeout_s=timeout_s,
+            jules_command=jules_command,
+        )
 
         cot_result = build_cot_ledger(packet_dir=str(base_dir), write_ledger=True)
         if cot_result.get("error"):
             blockers.append(f"COT ledger failed: {cot_result.get('error')}")
         all_complete = bool(cot_result.get("all_complete"))
         status = "complete" if all_complete else "blocked" if blockers else "pending"
+
         payload = JulesCycleResult(
             generated_at_utc=generated_at,
             status=status,
@@ -1009,11 +1106,12 @@ def run_jules_cycle(
             dispatch=dict(dispatch_result),
             sessions=dict(sessions_result),
             launch_result=dict(launch_result),
-            pull_results=[dict(result) for result in pull_results],
+            pull_results=pull_results,
             cot=dict(cot_result),
             cycle_state_path="",
             note="COT means completion-of-task evidence summaries, not private chain-of-thought.",
         )
+
         if write_state:
             destination = Path(cycle_state_path) if cycle_state_path else base_dir / _DEFAULT_CYCLE_STATE
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -1034,6 +1132,7 @@ def run_jules_cycle(
             pull_results=[],
             cot={},
         )
+
 
 
 def run_jules_watch(
@@ -1200,34 +1299,15 @@ def run_jules_fleet(
     base_dir = Path(packet_dir) if packet_dir else _DEFAULT_OUTPUT_DIR
     blockers: list[str] = []
     try:
-        if content or source_path:
-            dispatch_result = build_dispatch(
-                content=content,
-                source_path=source_path,
-                max_instances=max_instances,
-                include_statuses=include_statuses,
-                write_packets=True,
-                output_dir=str(base_dir),
-                repo_path=repo_path,
-            )
-        else:
-            packets = _resolve_packet_files(packet_dir=str(base_dir))
-            dispatch_result = JulesDispatchResult(
-                source="existing_packets",
-                generated_at_utc=generated_at,
-                task_count=0,
-                selected_count=len(packets),
-                status_counts={},
-                include_statuses=list(_status_filter(include_statuses)),
-                max_instances=max_instances,
-                write_packets=False,
-                output_dir=str(base_dir),
-                repo_path=repo_path,
-                selected_tasks=[],
-                packet_files=[str(packet) for packet in packets],
-                launch_commands=[],
-                note="No task dump supplied; using existing packet files.",
-            )
+        dispatch_result = _fleet_dispatch(
+            content=content,
+            source_path=source_path,
+            base_dir=base_dir,
+            repo_path=repo_path,
+            max_instances=max_instances,
+            include_statuses=include_statuses,
+            generated_at=generated_at,
+        )
         if dispatch_result.get("error"):
             blockers.append(f"Dispatch failed: {dispatch_result.get('error')}")
 
@@ -1245,74 +1325,37 @@ def run_jules_fleet(
         tracked_ids = _cycle_session_ids(session_ids=None, launch_result=existing_launch_state)
         remote_status_rows = _session_status_rows(tracked_ids, str(sessions_result.get("stdout", "")))
         active_count = _active_remote_session_count(remote_status_rows)
+
         failed_packet_files = _failed_remote_packet_files(existing_launch_state, remote_status_rows)
-        stale_unknown_packet_files = _stale_unknown_remote_packet_files(
-            existing_launch_state,
-            remote_status_rows,
-        )
-        plan_awaiting_packet_files = _plan_awaiting_remote_packet_files(
-            existing_launch_state,
-            remote_status_rows,
-        )
+        stale_unknown_packet_files = _stale_unknown_remote_packet_files(existing_launch_state, remote_status_rows)
+        plan_awaiting_packet_files = _plan_awaiting_remote_packet_files(existing_launch_state, remote_status_rows)
         retry_packet_files = _merge_unique(failed_packet_files, stale_unknown_packet_files)
         retry_packet_files = _merge_unique(retry_packet_files, plan_awaiting_packet_files)
 
-        completed_ids = (
-            _completed_session_ids(tracked_ids, str(sessions_result.get("stdout", "")))
-            if sessions_result.get("status") == "ok"
-            else []
-        )
-        already_pulled = _successful_pull_session_ids(base_dir)
-        pull_ids = [session_id for session_id in completed_ids if session_id not in already_pulled]
-        pull_results = []
-        if not dry_run and remote_ready:
-            for session_id in pull_ids:
-                pull_results.append(
-                    pull_remote_session(
-                        session_id=session_id,
-                        repo_path=repo_path,
-                        output_dir=str(base_dir / _DEFAULT_PULL_DIR),
-                        dry_run=False,
-                        timeout_s=timeout_s,
-                        jules_command=jules_command,
-                        write_result=True,
-                    )
-                )
-
-        capacity = max(0, int(max_concurrent or 0) - active_count)
-        launch_limit = min(max(0, int(launch_batch_size or 0)), capacity)
-        launch_dry_run = dry_run or bool(blockers) or launch_limit <= 0
-        relaunch_limit = min(len(retry_packet_files), launch_limit)
-        remaining_launch_limit = max(0, launch_limit - relaunch_limit)
-        relaunch_result = JulesLaunchResult(results=[], attempt_results=[], attempted_count=0)
-        if relaunch_limit > 0:
-            relaunch_result = launch_packets(
-                packet_dir=str(base_dir),
-                repo_path=repo_path,
-                limit=relaunch_limit,
-                dry_run=launch_dry_run,
-                timeout_s=timeout_s,
-                jules_command=jules_command,
-                write_state=True,
-                skip_launched=False,
-                force_packet_files=retry_packet_files[:relaunch_limit],
-            )
-        launch_result = launch_packets(
-            packet_dir=str(base_dir),
+        completed_ids, already_pulled, pull_results = _fleet_pull_sessions(
+            sessions_result=sessions_result,
+            tracked_ids=tracked_ids,
+            base_dir=base_dir,
+            dry_run=dry_run,
+            remote_ready=remote_ready,
             repo_path=repo_path,
-            limit=remaining_launch_limit if remaining_launch_limit > 0 else -1,
-            dry_run=launch_dry_run,
             timeout_s=timeout_s,
             jules_command=jules_command,
-            write_state=True,
-            skip_launched=True,
         )
-        if relaunch_result.get("attempt_results"):
-            combined_attempts = list(relaunch_result.get("attempt_results", []) or []) + list(
-                launch_result.get("attempt_results", []) or []
-            )
-            launch_result["attempt_results"] = combined_attempts
-            launch_result["attempted_count"] = len(combined_attempts)
+
+        capacity, launch_limit, launch_dry_run, relaunch_limit, launch_result = _fleet_launch(
+            active_count=active_count,
+            max_concurrent=max_concurrent,
+            launch_batch_size=launch_batch_size,
+            blockers=blockers,
+            dry_run=dry_run,
+            retry_packet_files=retry_packet_files,
+            base_dir=base_dir,
+            repo_path=repo_path,
+            timeout_s=timeout_s,
+            jules_command=jules_command,
+        )
+
         cot_result = build_cot_ledger(packet_dir=str(base_dir), write_ledger=True)
         if cot_result.get("error"):
             blockers.append(f"COT ledger failed: {cot_result.get('error')}")
@@ -1888,19 +1931,22 @@ def _resolve_cli_command(command: str) -> str:
 
 def _candidate_jules_commands(command: str) -> list[dict]:
     candidates = []
+    seen = set()
     raw = (command or "").strip() or "jules"
     resolved = shutil.which(raw) or raw
-    _append_candidate(candidates, "requested", raw, resolved)
+    _append_candidate(candidates, seen, "requested", raw, resolved)
     appdata = os.environ.get("APPDATA", "")
     if appdata:
         _append_candidate(
             candidates,
+            seen,
             "npm_bin_exe",
             str(Path(appdata) / "npm" / "bin" / "jules.exe"),
             str(Path(appdata) / "npm" / "bin" / "jules.exe"),
         )
         _append_candidate(
             candidates,
+            seen,
             "npm_cmd",
             str(Path(appdata) / "npm" / "jules.cmd"),
             str(Path(appdata) / "npm" / "jules.cmd"),
@@ -1909,6 +1955,7 @@ def _candidate_jules_commands(command: str) -> list[dict]:
     if temp_dir:
         _append_candidate(
             candidates,
+            seen,
             "temp_exe",
             str(Path(temp_dir) / "jules_tmp" / "jules.exe"),
             str(Path(temp_dir) / "jules_tmp" / "jules.exe"),
@@ -1916,10 +1963,11 @@ def _candidate_jules_commands(command: str) -> list[dict]:
     return candidates
 
 
-def _append_candidate(candidates: list[dict], label: str, requested: str, resolved: str) -> None:
+def _append_candidate(candidates: list[dict], seen: set, label: str, requested: str, resolved: str) -> None:
     key = str(resolved).lower()
-    if any(item.get("resolved", "").lower() == key for item in candidates):
+    if key in seen:
         return
+    seen.add(key)
     candidates.append({
         "label": label,
         "requested": requested,
@@ -2637,3 +2685,126 @@ def _launch_script(commands: list[str]) -> str:
 
 def _ps_quote(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
+
+
+def _fleet_dispatch(
+    content: str,
+    source_path: str,
+    base_dir: Path,
+    repo_path: str,
+    max_instances: int,
+    include_statuses: str | Iterable[str] | None,
+    generated_at: str,
+) -> JulesDispatchResult:
+    if content or source_path:
+        return build_dispatch(
+            content=content,
+            source_path=source_path,
+            max_instances=max_instances,
+            include_statuses=include_statuses,
+            write_packets=True,
+            output_dir=str(base_dir),
+            repo_path=repo_path,
+        )
+    packets = _resolve_packet_files(packet_dir=str(base_dir))
+    return JulesDispatchResult(
+        source="existing_packets",
+        generated_at_utc=generated_at,
+        task_count=0,
+        selected_count=len(packets),
+        status_counts={},
+        include_statuses=list(_status_filter(include_statuses)),
+        max_instances=max_instances,
+        write_packets=False,
+        output_dir=str(base_dir),
+        repo_path=repo_path,
+        selected_tasks=[],
+        packet_files=[str(packet) for packet in packets],
+        launch_commands=[],
+        note="No task dump supplied; using existing packet files.",
+    )
+
+
+def _fleet_pull_sessions(
+    sessions_result: dict,
+    tracked_ids: list[str],
+    base_dir: Path,
+    dry_run: bool,
+    remote_ready: bool,
+    repo_path: str,
+    timeout_s: int,
+    jules_command: str,
+) -> tuple[list[str], set[str], list[dict]]:
+    completed_ids = (
+        _completed_session_ids(tracked_ids, str(sessions_result.get("stdout", "")))
+        if sessions_result.get("status") == "ok"
+        else []
+    )
+    already_pulled = _successful_pull_session_ids(base_dir)
+    pull_ids = [session_id for session_id in completed_ids if session_id not in already_pulled]
+    pull_results = []
+    if not dry_run and remote_ready:
+        for session_id in pull_ids:
+            pull_results.append(
+                pull_remote_session(
+                    session_id=session_id,
+                    repo_path=repo_path,
+                    output_dir=str(base_dir / _DEFAULT_PULL_DIR),
+                    dry_run=False,
+                    timeout_s=timeout_s,
+                    jules_command=jules_command,
+                    write_result=True,
+                )
+            )
+    return completed_ids, already_pulled, pull_results
+
+
+def _fleet_launch(
+    active_count: int,
+    max_concurrent: int,
+    launch_batch_size: int,
+    blockers: list[str],
+    dry_run: bool,
+    retry_packet_files: list[str],
+    base_dir: Path,
+    repo_path: str,
+    timeout_s: int,
+    jules_command: str,
+) -> tuple[int, int, bool, int, JulesLaunchResult]:
+    capacity = max(0, int(max_concurrent or 0) - active_count)
+    launch_limit = min(max(0, int(launch_batch_size or 0)), capacity)
+    launch_dry_run = dry_run or bool(blockers) or launch_limit <= 0
+    relaunch_limit = min(len(retry_packet_files), launch_limit)
+    remaining_launch_limit = max(0, launch_limit - relaunch_limit)
+
+    relaunch_result = JulesLaunchResult(results=[], attempt_results=[], attempted_count=0)
+    if relaunch_limit > 0:
+        relaunch_result = launch_packets(
+            packet_dir=str(base_dir),
+            repo_path=repo_path,
+            limit=relaunch_limit,
+            dry_run=launch_dry_run,
+            timeout_s=timeout_s,
+            jules_command=jules_command,
+            write_state=True,
+            skip_launched=False,
+            force_packet_files=retry_packet_files[:relaunch_limit],
+        )
+    launch_result = launch_packets(
+        packet_dir=str(base_dir),
+        repo_path=repo_path,
+        limit=remaining_launch_limit if remaining_launch_limit > 0 else -1,
+        dry_run=launch_dry_run,
+        timeout_s=timeout_s,
+        jules_command=jules_command,
+        write_state=True,
+        skip_launched=True,
+    )
+    if relaunch_result.get("attempt_results"):
+        combined_attempts = list(relaunch_result.get("attempt_results", []) or []) + list(
+            launch_result.get("attempt_results", []) or []
+        )
+        launch_result["attempt_results"] = combined_attempts
+        launch_result["attempted_count"] = len(combined_attempts)
+
+    return capacity, launch_limit, launch_dry_run, relaunch_limit, launch_result
