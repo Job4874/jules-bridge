@@ -2,7 +2,8 @@
 
 import os
 import time
-from typing import Tuple
+from typing import Tuple, Optional
+from flask import request, jsonify
 
 # In-memory store: route -> list of timestamps
 _call_log: dict[str, list[float]] = {}
@@ -60,3 +61,14 @@ def check_circuit_breaker(route: str) -> Tuple[bool, int]:
     _call_log[route].append(now)
 
     return False, 0
+
+def circuit_breaker_hook():
+    """Hook for bridge.py @app.before_request."""
+    is_open, retry_after = check_circuit_breaker(request.path)
+    if is_open:
+        return jsonify({
+            "error": "circuit_open",
+            "route": request.path,
+            "retry_after_s": retry_after
+        }), 429
+    return None

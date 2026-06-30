@@ -117,8 +117,9 @@ class TestChatCompletion(unittest.TestCase):
         )
 
         self.assertEqual(result["model_used"], "none")
-        self.assertIn("Gemini 429", result["errors"][0])
-        self.assertIn("OpenRouter 500", result["errors"][1])
+        self.assertIn("Gemini 429 [quota_limit]", result["errors"][0])
+        # OpenRouter will try fallbacks, so we expect multiple error entries
+        self.assertIn("OpenRouter 500 [transient_error]", str(result["errors"]))
         self.assertNotIn("gem-secret", str(result))
         self.assertNotIn("or-secret", str(result))
 
@@ -128,11 +129,40 @@ class TestChatCompletion(unittest.TestCase):
             env={},
             requests_client=FakeRequests([]),
             clock=clock_from([1.0, 1.0]),
+            enable_vm_fallback=False,
         )
 
         self.assertEqual(result["model_used"], "none")
         self.assertIn("offline", result["response"])
         self.assertEqual(result["errors"], [])
+
+    def test_classify_error(self):
+        from modules.chat_service import _classify_error
+        self.assertEqual(_classify_error(401, "unauthorized"), "invalid_key")
+        self.assertEqual(_classify_error(403, "forbidden"), "invalid_key")
+        self.assertEqual(_classify_error(429, "too many requests"), "quota_limit")
+        self.assertEqual(_classify_error(200, "quota hit"), "quota_limit")
+        self.assertEqual(_classify_error(404, "not found"), "model_unavailable")
+        self.assertEqual(_classify_error(500, "server error"), "transient_error")
+        self.assertEqual(_classify_error(400, "bad request"), "other_error")
+
+    def test_openrouter_model_fallback(self):
+        # 1st model fails with 404, 2nd model succeeds
+        client = FakeRequests([
+            FakeResponse(404, text="model not found"),
+            FakeResponse(200, {"choices": [{"message": {"content": "fallback success"}}]})
+        ])
+
+        result = chat_service.chat(
+            "hello",
+            env={"OPENROUTER_API_KEY": "or-key"},
+            requests_client=client,
+            enable_vm_fallback=False
+        )
+
+        self.assertEqual(result["response"], "fallback success")
+        self.assertIn("openrouter/", result["model_used"])
+        # No 'errors' key in result when success=True, they are logged but not returned in ChatResult
 
 
 if __name__ == "__main__":
