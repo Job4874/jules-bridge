@@ -462,3 +462,11 @@ has gone wrong before and what to avoid.
 - `dashboard-ui/src/App.jsx` now renders a Codex-style command center: nav rail, command bar, six metric tiles, provider readiness matrix, CPU/memory charts, fleet runway, cloud topology, event stream, terminal filters, and bridge-backed comm panel.
 - Browser proof used Chrome via `playwright-core` because bundled `playwright` lacked `playwright-core`. Final screenshots: `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-realtime-desktop-final.png` and `.../dashboard-realtime-mobile-final.png`; both had no horizontal overflow.
 - Verification: dashboard focused tests passed `20 passed`; `pnpm run lint` and `pnpm run build` passed with bundled Node on PATH; full `python -m pytest tests/ -q` passed `439 passed in 19.38s`; recorded evidence hash prefix `85cafdcec081`.
+
+## Session 20260630T084253 - Cloud Save Handoff
+
+- Saved local branch `codex/jules-production-finish` to `origin/codex/jules-production-finish` for cloud continuation.
+- Code commit `c8b1ff6f51f1c899f2fbad7c382c0131085878be` polished React dashboard polling: background cached polls keep the prior loading state, while manual bypass refreshes still show loading; poll interval is now 10 seconds.
+- Verification before push: dashboard lint passed via bundled Node + `node_modules/oxlint/bin/oxlint`; dashboard production build passed via bundled Node + `node_modules/vite/bin/vite.js build`.
+- Local shell gotcha: `npm` was not on PATH in PowerShell, but bundled Node at `C:\Users\abdul\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe` worked with package entrypoints.
+- Remote proof: `git ls-remote origin refs/heads/codex/jules-production-finish` matched local `HEAD` at `c8b1ff6f51f1c899f2fbad7c382c0131085878be`; `gh auth status` was not authenticated, so no new PR operation was attempted.
