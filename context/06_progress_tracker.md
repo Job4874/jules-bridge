@@ -395,3 +395,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Secret-safe inventory of common local env files found no valid-shaped Gemini/OpenRouter replacement credential to install locally; no raw values were printed or saved.
 - [ ] Jules session `14369052129679399317` stayed `Planning`; no pull was safe. Production readiness still requires fixed credentials/quota/capacity or explicit acceptance of provider failure as non-blocking.
 
+## Session 20260630T092350 - JT-004 Provider Runtime Recovery Dispatch
+
+- [x] Created current-head Jules packet `jules_inbox/jules_provider_runtime_recovery_dispatch/JT-004-current-provider-runtime-recovery.md` against head `64d5357498b83658ca3217355175be0ac7825b97` with the latest provider shape and degraded-runtime evidence.
+- [x] Launched the packet through `/jules/launch` using `C:\Users\abdul\AppData\Local\Temp\jules_tmp\jules.exe`; new session id is `7152730290236054698`.
+- [x] Cleaned `jules_inbox/jules_provider_runtime_recovery_dispatch/JULES_LAUNCH_STATE.json` so structured `session_ids` fields track only `7152730290236054698`; stale ids in packet warning text are not pull targets.
+- [x] Fresh `/jules/sessions` poll reported both `7152730290236054698` and older `14369052129679399317` as `Planning`; nothing was pulled.
+- [ ] Next pull target is `7152730290236054698` only after a fresh session list reports `Completed`.
+

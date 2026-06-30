@@ -271,6 +271,24 @@ direct executable path:
   raw values were printed or saved.
 - Jules session `14369052129679399317` remained `Planning`; no pull was safe.
 
+2026-06-30 09:23 America/Denver JT-004 current-provider runtime recovery launch:
+
+- New packet:
+  `jules_inbox/jules_provider_runtime_recovery_dispatch/JT-004-current-provider-runtime-recovery.md`
+- Launch state:
+  `jules_inbox/jules_provider_runtime_recovery_dispatch/JULES_LAUNCH_STATE.json`
+- Fresh session:
+  `7152730290236054698`
+- Latest live poll after launch reported:
+  - `7152730290236054698` = `Planning`
+  - older `14369052129679399317` = `Planning`
+- The JT-004 launch-state structured `session_ids` fields were narrowed to only
+  `7152730290236054698`; stale ids still present inside packet warning text are
+  not pull targets.
+- Pull only `7152730290236054698` after a fresh session list reports
+  `Completed`. Do not pull JT-003 unless explicitly redirected by current
+  evidence.
+
 ## Dirty-State Discipline
 
 Preserved pre-existing dirty runtime state:
@@ -285,6 +303,7 @@ New intentional untracked artifacts from this pass:
 - `jules_inbox/jules_production_blocker_followup_dispatch/`
 - `jules_inbox/jules_production_readiness_refresh_dispatch/`
 - `jules_inbox/jules_post_retry_readiness_dispatch/`
+- `jules_inbox/jules_provider_runtime_recovery_dispatch/`
 - this handoff packet
 
 ## Next Operator-Safe Action
@@ -295,8 +314,8 @@ Do not mark PR #64 production-ready unless one of these happens:
 2. VM provider quota/capacity recovers and `/chat/test` reports VM OK;
 3. the operator explicitly accepts current provider failures as non-blocking.
 
-Poll Jules session `14369052129679399317` with `bypass_cache=true`. It was
-`Planning` on the latest live poll at 2026-06-30 08:48 America/Denver; do not
+Poll Jules session `7152730290236054698` with `bypass_cache=true`. It was
+`Planning` on the latest live poll at 2026-06-30 09:23 America/Denver; do not
 pull until it reports `Completed`. Inspect output before applying, and reject
 any stale broad diff or provider-error greenwashing.
 

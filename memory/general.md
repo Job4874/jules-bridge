@@ -497,3 +497,9 @@ has gone wrong before and what to avoid.
 - Bridge/dashboard/tunnel boot remains good, but provider execution is currently down: GET `/chat/test` was `healthy: false`, direct `/chat` returned `model_used=none`, local Gemini/OpenRouter stayed `invalid_key`, and latest VM recent tasks all reported `No LLM available`.
 - Secret-safe inventory of common local env files found no valid-shaped Gemini/OpenRouter replacement credential; do not claim production-clean until a credential/quota/capacity change is verified or provider failure is explicitly accepted as non-blocking.
 - Jules session `14369052129679399317` stayed `Planning`; no pull was safe.
+
+## Session 20260630T092350 - JT-004 Provider Runtime Recovery Dispatch
+
+- Created and launched current-head Jules packet `jules_inbox/jules_provider_runtime_recovery_dispatch/JT-004-current-provider-runtime-recovery.md` for head `64d5357498b83658ca3217355175be0ac7825b97`; new session id is `7152730290236054698`.
+- `jules_inbox/jules_provider_runtime_recovery_dispatch/JULES_LAUNCH_STATE.json` was cleaned so structured `session_ids` only contain `7152730290236054698`; stale ids inside packet warning text must not be treated as pull targets.
+- Latest fresh session poll showed both `7152730290236054698` and older `14369052129679399317` in `Planning`; pull only `7152730290236054698` after a fresh list reports `Completed`.
