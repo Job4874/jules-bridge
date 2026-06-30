@@ -5,8 +5,8 @@ param(
     [int]$WatchSeconds = 3600,
     [string]$BridgeUrl = "http://127.0.0.1:5000",
     [string]$RepoPath = "C:\aotp\projects\OracleV5",
-    [string]$PacketDir = "C:\Users\abdul\.jules\jules_inbox\jules_dispatch",
-    [string]$LogDir = "C:\Users\abdul\.jules\jules_inbox\offload_logs"
+    [string]$PacketDir = "$PSScriptRoot\jules_inbox\jules_dispatch",
+    [string]$LogDir = "$PSScriptRoot\jules_inbox\offload_logs"
 )
 
 $ErrorActionPreference = "Continue"
@@ -26,7 +26,7 @@ $headers = @{
     "Content-Type" = "application/json"
 }
 
-$queuePath = "C:\Users\abdul\.jules\jules_inbox\antigravity_offload_queue.txt"
+$queuePath = Join-Path $PSScriptRoot "jules_inbox\antigravity_offload_queue.txt"
 $promptDir = "C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS"
 if (-not (Test-Path $queuePath) -and (Test-Path $promptDir)) {
     $lines = @()
@@ -55,7 +55,7 @@ try {
 }
 
 # Google Cloud compute worker (tibin-terminal-2026) — detached host script, not Cursor
-$gcpBoot = "C:\Users\abdul\.jules\vm_scripts\Boot-GCP-Worker.ps1"
+$gcpBoot = Join-Path $PSScriptRoot "vm_scripts\Boot-GCP-Worker.ps1"
 if (Test-Path $gcpBoot) {
     Log "Spawning GCP worker boot in background host process"
     Start-Process -FilePath "powershell.exe" -ArgumentList @(

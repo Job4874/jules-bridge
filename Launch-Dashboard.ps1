@@ -10,9 +10,9 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$Root = "C:\Users\abdul\.jules"
+$Root = $PSScriptRoot
 $BridgeUrl = "http://127.0.0.1:$BridgePort"
-$Dashboard = Join-Path $Root "dashboard.html"
+$Dashboard = Join-Path $Root "dashboard-ui\dist\index.html"
 
 function Write-Banner($msg, $color = "Cyan") {
     Write-Host "`n$("=" * 60)" -ForegroundColor $color
