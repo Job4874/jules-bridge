@@ -1,0 +1,97 @@
+﻿{
+    "timestamp":  "2026-06-30T10:43:46.3680297-06:00",
+    "head":  "876695bed4aaa81203184e7ba9fc4a0ba33d76a3",
+    "branch":  "codex/jules-production-finish",
+    "pr64":  {
+                 "url":  "https://github.com/Job4874/jules-bridge/pull/64",
+                 "number":  64,
+                 "ok":  true,
+                 "state":  "open",
+                 "head_sha":  "93c85d45db7402595addb690b9ca101e1525ee9d",
+                 "draft":  true
+             },
+    "purpose":  "Secret-free live verification for dashboard cockpit commit 93c85d.",
+    "screenshots":  [
+                        "dashboard-cockpit-93c85d-desktop-1440x900-20260630T1041.png",
+                        "dashboard-cockpit-93c85d-mobile-390x844-20260630T1041.png"
+                    ],
+    "verification":  {
+                         "frontend_build":  "passed: pnpm run build (vite build)",
+                         "frontend_lint":  "passed: pnpm run lint (oxlint)",
+                         "browser_desktop":  "passed: 1440x900 live cockpit, no console warn/error logs, no page-level horizontal overflow",
+                         "focused_python_tests":  "passed: 58 tests via .venv python -m pytest tests/test_dashboard_module.py tests/test_chat_service.py tests/test_health_deep.py tests/test_vm_relay.py -q",
+                         "browser_mobile":  "passed: 390x844 live cockpit after poll settle, no console warn/error logs, no page-level horizontal overflow"
+                     },
+    "live_routes":  {
+                        "health_deep":  {
+                                            "openrouter":  "fail",
+                                            "ok":  true,
+                                            "overall":  null,
+                                            "azure":  null,
+                                            "gcp":  null,
+                                            "vm_worker":  null,
+                                            "gemini":  "fail"
+                                        },
+                        "chat_test":  {
+                                          "healthy":  true,
+                                          "ok":  true,
+                                          "model_used":  null,
+                                          "error_count":  1
+                                      },
+                        "local_dashboard":  {
+                                                "ok":  true,
+                                                "asset_refs":  [
+                                                                   "/assets/index-CPnQGhe0.js",
+                                                                   "/assets/index-BP5lS6yt.css"
+                                                               ],
+                                                "status":  200,
+                                                "length":  475
+                                            },
+                        "chat":  {
+                                     "ok":  true,
+                                     "model_used":  "vm/jules-worker",
+                                     "response_prefix":  "OK",
+                                     "error_count":  1
+                                 },
+                        "public_dashboard":  {
+                                                 "ok":  false,
+                                                 "error":  "The remote server returned an error: (401) Unauthorized.",
+                                                 "status":  401
+                                             },
+                        "vm_status":  {
+                                          "ok":  true,
+                                          "recent_tasks":  1,
+                                          "status":  null,
+                                          "worker":  null
+                                      },
+                        "public_ping":  {
+                                            "ok":  true,
+                                            "data":  {
+                                                         "status":  "Jules Bridge Online"
+                                                     }
+                                        },
+                        "dashboard_status_fresh":  {
+                                                       "cloud_online":  1,
+                                                       "openrouter":  "error",
+                                                       "ok":  true,
+                                                       "gemini":  "error",
+                                                       "route":  null,
+                                                       "vm":  null,
+                                                       "healthy":  true
+                                                   }
+                    },
+    "jules_sessions":  {
+                           "pull_applied":  false,
+                           "pull_reason":  "Primary session was not Completed at verification time.",
+                           "secondary":  "14369052129679399317",
+                           "primary":  "7152730290236054698",
+                           "matched_lines":  [
+                                                 " 7152730290236054698     # Jules Worker Packet JT-004-current-provider-runtime-recov…  Job4874/jules-bridge    10s ago                 In Progress    ",
+                                                 " 14369052129679399317    # Jules Worker Packet JT-003-post-retry-production-readines…  Job4874/jules-bridge    37m35s ago                             "
+                                             ]
+                       },
+    "provider_readiness":  {
+                               "blocker":  "Local Gemini/OpenRouter still report invalid_key/fail; VM fallback remains intermittent/external-provider dependent.",
+                               "production_clean":  false
+                           }
+}
