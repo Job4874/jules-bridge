@@ -23,6 +23,7 @@ has gone wrong before and what to avoid.
 ## Session 20260626T021500 — Phase 5: LLM Integration + Self-Improvement
 
 ### Resolved: GET /health 404 storm
+
 - `bridge.log` had 58 consecutive `GET /health → 404` in a tight loop (19:54 timestamp)
 - Root cause: route never existed; caller (ngrok/monitoring) assumed standard health endpoint
 - Fix: added `GET /health` returning `{status, bridge, uptime_s}` using `_BRIDGE_START_UTC` constant
@@ -30,6 +31,7 @@ has gone wrong before and what to avoid.
 - Also added `/health` to TENTACLES manifest so clients can discover it
 
 ### Resolved: LLM stubs in reasoning_module
+
 - `_h_module_call()` and `_l_module_call()` were pure deterministic stubs
 - Now dispatched via `_MODEL_ALIASES` dict: `"stub"` → None (stub), `"fast"` → gemini-2.0-flash, `"smart"` → gemini-2.5-pro
 - Gemini call in `_gemini_chat()`: lazy-imports `google.generativeai`, reads `GEMINI_API_KEY` from env
@@ -37,12 +39,14 @@ has gone wrong before and what to avoid.
 - Tests still use `model="stub"` (default) — zero network calls, all 133 pass unchanged
 
 ### Added: Evidence gating (soft)
+
 - `/oracle/*` routes now attach `X-Evidence-Age-Warning: stale:{N}s` if `test_evidence.json` is >1h old
 - Implemented as second `@app.after_request` hook: `_evidence_age_check()`
 - NOT a hard block (no 423) — warning header only; harden later when test-first is established
 - Best-effort: if evidence file missing or malformed, request passes through with no header
 
 ### Added: POST /retrospective/prune_memory
+
 - Pruning strategy: age-based (sections with `## Session 20YYMMDDTHHMMSS` stamps older than N days are removed)
 - Sections with no parseable timestamp are KEPT (conservative default — don't lose things we can't date)
 - `## How to use` and `## Initial Notes` headings are always preserved
@@ -50,11 +54,13 @@ has gone wrong before and what to avoid.
 - Default: `max_age_days=30`; callable with `{"max_age_days": 7}` for aggressive pruning
 
 ### Added: Full TENTACLES manifest
+
 - Reasoning routes (`/reasoning/solve`, `/reasoning/plan`, `/reasoning/execute_step`) were missing
 - Retrospective routes (`/retrospective/analyze`, `/retrospective/record_evidence`, `/retrospective/memory`, `/retrospective/prune_memory`) were missing
 - Now all routes discoverable via `GET /tentacles`
 
 ### Pattern: adding a new route (checklist)
+
 1. Add handler in `bridge.py` with `@route_errors`
 2. Add to `TENTACLES` list in `bridge.py`
 3. Add to route table in `context/02_architecture.md`
@@ -237,3 +243,125 @@ has gone wrong before and what to avoid.
 - Packet text includes a Context Handling Policy section: active context is head/tail only, omitted middles must be retrieved before assumptions, heavy source analysis stays in subagent packets, and long-session evals are an evidence gate.
 - Generated packet excerpts now normalize CR/CRLF and trim trailing line whitespace so pasted transcripts do not make `git diff --check` noisy.
 - Evidence: `/akc/subagents` route smoke on the two current pasted sources returned 2 readable sources, 4 role packets, 2 memory refs, and `context_budget.over_budget=false`; `python -m pytest tests/ -q` passed 240 tests with 1 existing warning, SHA-256 `7e42a3ecdcad29604d56efef9775d577985e939d8a503cbb9ef5a1c21c9e1d4c`.
+
+## Session 20260626T000000 - Human-Mimic UI Driver Architecture Red Tests
+
+- Security lock accepted for future UI/VM automation: operator-authorized OS-backed secrets only, no plaintext persistence, no secret leakage in logs/screenshots/evidence/PR text, and runtime `allow_secret_use=true` required before any secret retrieval or typing.
+- Added `implementation_plan.md` with H/L/ACT plan for secure `ui_automation` expansion and future `vm_manager` module.
+- Added first red TDD tests in `tests/test_ui_secret_and_detection.py` for `get_secret(...)` redaction/authorization behavior and `detect_ui_state(...)` Quantower OCR state classification.
+- Targeted evidence: `python -m pytest tests/test_ui_secret_and_detection.py -q` failed as expected because `modules.ui_automation` does not yet export `get_secret` or `detect_ui_state`.
+
+## Session 20260626T203837 - Human-Mimic UI Driver Green Phase
+
+- Implemented minimal `ui_automation.get_secret(...)` and `ui_automation.detect_ui_state(...)` to satisfy the Human-Mimic UI red tests.
+- `get_secret(...)` enforces `allow_secret_use`, supports injected OS-backed/mock providers, returns non-secret username metadata only, and never returns plaintext password fields.
+- Secret-provider failures use sanitized error text so provider exception strings cannot leak credential material.
+- `detect_ui_state(...)` classifies deterministic OCR/template signals for `quantower_login`, `quantower_loading`, `quantower_ready`, and `unknown`.
+- Evidence: `python -m pytest tests/ -q` passed 244 tests with 1 existing warning, SHA-256 `8de1babe4bdad5b8fbc168813686c348a5073fdf758f71cd4b4dd788fddf7007`.
+
+## Session 20260626T204200 - Human-Mimic Quantower ACT Driver
+
+- Added `modules/human_mimic_driver.py` as the H/L/ACT driver layer over `ui_automation.detect_ui_state(...)`, `get_secret(...)`, `type_text(...)`, and `click(...)`.
+- Added `drive_quantower_login(...)` with injectable type/click/secret-provider/notification callbacks for testability and Local Node execution. It never returns plaintext secret material and treats notifications as best-effort.
+- Added `POST /ui/drive_quantower_login` as a thin bridge route: validate OCR text, submit coordinates, `allow_secret_use`, and `notify`; optionally build an email callback; call the module; return JSON.
+- Documented Two-Node Zero-Trust mode: Cloud Node owns policy logic, Local Windows Node is the bridge executor, and Academic Nodes must not host bridge OS-file installs or credential storage.
+- Evidence: `python -m pytest tests/ -q` passed 248 tests with 1 existing warning, SHA-256 `770defafb30620443caac2e1948960ca262a7699951fc8eb49ccc88065acde10`.
+
+## Session 20260626T202607 - Human-Mimic VM Manager TDD
+
+- Added `modules/vm_manager.py`: `detect_resource_pressure(...)` returns typed pressure status from injected metrics or bounded PowerShell/CIM host reads; `boot_secondary_vm(...)` validates simple file names under `JULES_VM_SCRIPT_DIR`, defaults to dry-run, and requires both `dry_run=false` and `allow_vm_boot=true` for real launch.
+- Added thin bridge routes `POST /vm/resource_pressure` and `POST /vm/boot_secondary`, plus exports and TENTACLES entries. Keep policy out of `/vm/*`; routes only validate, call the module, and return JSON.
+- Codex Chrome Extension was re-enabled in Chrome `Default` profile; extension browser connection now attaches and docs were read.
+- Evidence: `python -m pytest tests/ -q` passed 274 tests with 1 existing warning, SHA-256 `9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a`.
+
+## Session 20260627T214922 — 2026-06-27T21:49:22.701894+00:00
+
+- DOOM LOOP: POST /fs/read called 30x consecutively. Route 'POST /fs/read' called 30x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /fs/write called 3x consecutively. Route 'POST /fs/write' called 3x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /inbox/read called 9x consecutively. Route 'POST /inbox/read' called 9x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /shell called 20x consecutively. Route 'POST /shell' called 20x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /ui/click called 6x consecutively. Route 'POST /ui/click' called 6x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /ping called 42x consecutively. Route 'GET /ping' called 42x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /fs/tail called 8x consecutively. Route 'POST /fs/tail' called 8x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /health called 32x consecutively. Route 'GET /health' called 32x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /akc/context called 5x consecutively. Route 'POST /akc/context' called 5x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/dispatch called 4x consecutively. Route 'POST /jules/dispatch' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/launch called 6x consecutively. Route 'POST /jules/launch' called 6x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/sessions called 6x consecutively. Route 'POST /jules/sessions' called 6x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /retrospective/record_evidence called 4x consecutively. Route 'POST /retrospective/record_evidence' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/pull called 3x consecutively. Route 'POST /jules/pull' called 3x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/cycle called 4x consecutively. Route 'POST /jules/cycle' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/fleet called 4x consecutively. Route 'POST /jules/fleet' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /jules/fleet-watch called 34x consecutively. Route 'POST /jules/fleet-watch' called 34x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /akc/subagents called 7x consecutively. Route 'POST /akc/subagents' called 7x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /notify/email called 4x consecutively. Route 'POST /notify/email' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /tentacles called 4x consecutively. Route 'GET /tentacles' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /execute called 8x consecutively. Route 'POST /execute' called 8x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /apps/launch_browser called 3x consecutively. Route 'POST /apps/launch_browser' called 3x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /info called 4x consecutively. Route 'GET /info' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /vm/boot_secondary called 4x consecutively. Route 'POST /vm/boot_secondary' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /dashboard/status called 814x consecutively. Route 'GET /dashboard/status' called 814x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: POST /fs/list called 4x consecutively. Route 'POST /fs/list' called 4x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /ui/screenshot called 4x consecutively. Route 'GET /ui/screenshot' called 4x consecutively. Add a circuit breaker or cache the last response.
+- TIMEOUT: Subprocess/PowerShell calls timing out (232x). Increase timeout or add async handling.
+- HARNESS BUG: Internal server errors (14x). Check module exception handling — add defensive try/except.
+- PERFORMANCE: Route 'POST /shell' averaged 58214ms over 12 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/sessions' averaged 13723ms over 15 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/cycle' averaged 29064ms over 9 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/preflight' averaged 6997ms over 5 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/watch' averaged 103624ms over 5 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/fleet' averaged 31092ms over 14 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /jules/fleet-watch' averaged 441320ms over 54 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'POST /notify/email' averaged 30129ms over 2 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- PERFORMANCE: Route 'GET /dashboard/status' averaged 13820ms over 7 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- RETROSPECTIVE BASELINE: analyze_session found 18 log patterns. Use the domain memories before the next bridge/runtime work.
+
+## Session 20260628T075134 - Notify Email Attachment Evidence
+
+- `/notify/email` now accepts `attachments: list[str]` for screenshot/report evidence. The route validates each path with `existing_path(..., kind="file")` before SMTP so missing screenshots fail fast with 404 instead of being silently skipped.
+- `notify_email.send_email(subject, body, mail_to=None, attachments=None)` keeps the old plain-text path when no attachments are present and switches to multipart only when files are supplied.
+- Added module and route coverage in `tests/test_notify_email_enhanced.py` and `tests/test_bridge_routes.py::TestBridgeTokenAuth`; full evidence recorded: 284 tests passed, SHA-256 `281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4`.
+
+## Session 20260629T092400 - Lint Cleanup Pass (303 tests passing)
+
+### Python Module Fixes
+
+- `modules/dashboard_module.py`: Moved `import time` and `import re` to top-level; removed `import re` from inside loop body.
+- `modules/reasoning_module.py`: Added `import subprocess` + `from datetime import datetime, timezone` to top-level; removed both from inline locations; renamed `_ROOT_DIR` → `_root_dir`; renamed `_l_stub` args `step`→`_step`, `model`→`_model`; renamed `_extract_answer` arg `plan`→`_plan`; added `check=False` to `subprocess.run`; changed f-string logging to lazy `%s` format; stripped trailing whitespace.
+- `modules/oracle_session.py`: Added `check=False` to all 3 `subprocess.run` calls.
+- `modules/ui_automation.py`: Renamed `image_path`→`_image_path` (unused, reserved for future OCR integration).
+
+### Test Fix
+
+- `tests/test_hre_depth.py`: Updated `rm._ROOT_DIR` → `rm._root_dir` to match renamed module attribute. Final count: **303/303 passing**.
+
+### Markdown Fixes
+
+- `context/05_gotchas.md`: Fixed `## modules/**init**.py` heading (MD050); collapsed extra blank lines.
+- `context/07_library_docs.md`: Added `text` language spec to unnamed code fence; simplified table separators.
+- `jules_inbox/JULES_MISSION_001.md`: Converted from plain text to proper Markdown (H1 first, H2 sections, code fences with `text` lang).
+- `jules_inbox/JULES_MISSION_001_RESPONSE.md`: Fixed multiple H1 mid-doc → H2.
+- `jules_inbox/MONDAY_MISSION_20260629.md`, `OPERATOR_PROXY_CORRECTION.md`: Added `text` lang to code fences.
+- `memory/reasoning.md`: Added `# Reasoning Memory` H1 as first line.
+
+### Patterns
+
+- **Private path constants**: use `_root_dir` (snake_case), not `_ROOT_DIR` — pylint sees module-level `_NAME` as variable.
+- **Unused stub params**: prefix with `_` to suppress warning without removing the interface contract.
+- **subprocess.run**: always explicit `check=False` or `check=True`.
+- **Broad except in route handlers**: `except Exception as exc:  # noqa: BLE001` is correct suppression.
+- **Lazy module imports in bridge.py routes**: `from modules.xxx import yyy` inside handlers is intentional; do NOT hoist to top.
+
+## Session 20260629T111500 — Gotchas Recovery & Test Fix (307 tests passing)
+
+- **Test Fix**: Resolved a test collection failure where `tests/test_oracle_session.py` was missing `from unittest.mock import patch`, resulting in `NameError` on patch decorators.
+- **Gotchas Recovery**: Fixed `context/05_gotchas.md` which had been corrupted with Chinese character unicode sequences (e.g., `\u80e2\ue7a3\u8a95...`) due to a double UTF-16LE -> UTF-8 encoding bug in previous agent sessions. Created `scratch/double_recover.py` to reverse this corruption by encoding UTF-8 characters back to UTF-16LE bytes twice, and restored the original clean English gotchas file.
+- **Verification**: Verified the entire test suite is completely green (307/307 passed). Started the bridge server via `python bridge.py` on port 5000 and confirmed both `/health` and `/akc/readiness` respond successfully.
+
+## Session 20260629T122530 — Chat Service Deep Module Cleanup (315 tests passing)
+
+- Extracted Gemini/OpenRouter chat provider routing from `bridge.py` into `modules/chat_service.py`; `/chat` and `/chat/test` are now thin validate -> module -> JSON wrappers.
+- New canonical chat terms: `ChatResult`, `ChatHealthResult`, and `Chat provider routing`. Keep provider payload construction, fallback, timing, and secret redaction inside `chat_service`.
+- Added module-boundary tests in `tests/test_chat_service.py` and route-thinness tests in `tests/test_bridge_routes.py`.
+- Verification: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py`; focused pytest passed 74 tests; full `python -m pytest tests/ -q` passed 315 tests. Evidence hash `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`.
+

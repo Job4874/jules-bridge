@@ -1,0 +1,55 @@
+{
+  "name": "vscode-vrl",
+  "displayName": "VRL Language Support",
+  "description": "Syntax highlighting, snippets, IntelliSense, hovers, and lightweight diagnostics for Vector Remap Language files.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "vrl",
+        "aliases": [
+          "Vector Remap Language",
+          "VRL",
+          "vrl"
+        ],
+        "extensions": [
+          ".vrl"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "vrl",
+        "scopeName": "source.vrl",
+        "path": "./syntaxes/vrl.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "vrl",
+        "path": "./snippets/vrl.snippets.json"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  }
+}

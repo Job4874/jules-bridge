@@ -8,9 +8,11 @@ description: >
 # Imprint Skill
 
 ## Purpose
+
 Ensure that new modules, routes, and API responses strictly match the established conventions and architectural boundaries, preventing code sprawl.
 
 ## Instructions
+
 1. **Analyze Design Patterns**:
    - Inspect newly created routes in `bridge.py` or module wrappers in `modules/`.
    - Verify they align with existing structures (e.g. Flask error handlers, return type formats like `TypedDict`, JSON response envelopes).

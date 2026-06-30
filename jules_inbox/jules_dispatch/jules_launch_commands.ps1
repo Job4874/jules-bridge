@@ -4,32 +4,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-024-389f1d-add-test-for-heartbeatmonitor-isalive.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-025-9e80e5-add-test-for-vixmonitor-reset.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-001-bbe920-add-test-for-resetselectorcandidates.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-002-39436e-serial-execution-of-asynchronous-file-i-o.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-003-9b62c7-add-test-for-volregimedetector-reset.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-006-857c83-add-test-for-secondssincelastpulse.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-007-3bc7a7-add-test-for-heartbeatmonitor-pulse.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-008-8c4589-add-test-for-getstatusreport.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-009-f16b0c-add-test-for-trenddetector-reset.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-010-3c72c1-add-test-for-ispanicmode.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-011-0cd2ff-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-012-5a0b86-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-013-c11719-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-014-25fa82-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-015-b03f71-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-016-025faa-add-test-for-isselectortradeallowed.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-017-10800c-add-test-for-isliquiditybullish.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-018-4fbb5d-add-test-for-hasconfirmedbuysiderejectionsweep.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-019-33b8bc-add-test-for-hasconfirmedsellsiderejectionsweep.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-020-6d589e-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-026-bd5ee7-add-test-for-registerselectorcandidate.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-027-9f8047-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-028-114b6e-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-030-857e5b-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-031-219d0c-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-032-430a34-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-033-64bc77-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-034-385f27-method-with-too-many-parameters.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-035-7bc0c2-add-test-for-getselectorsummary.md' | jules new; Pop-Location
+Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-002-6b1194-codex-master-handover-prompt.md' | jules new; Pop-Location
+Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md' | jules new; Pop-Location
+Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-004-1e0abd-codex-phase1-stabilization-prompt.md' | jules new; Pop-Location
+Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md' | jules new; Pop-Location

@@ -33,19 +33,203 @@ class ClickResult(dict):
     """
 
 
+class SecretResult(dict):
+    """Result of a guarded secret lookup.
+
+    Keys always present:
+      status (str): available, blocked, or error
+      target (str): requested secret target
+      username (str): non-secret username when available
+      secret_available (bool): whether a secret was retrieved without exposing it
+      error (str | None): failure detail, never the secret value
+    """
+
+
+class UIDetectionResult(dict):
+    """Result of OCR/template UI state classification.
+
+    Keys always present:
+      state (str): classified UI state
+      confidence (float): coarse confidence score from deterministic signals
+      signals (list[str]): matched non-secret state signals
+      error (str | None): failure detail
+    """
+
+
+class UIActionResult(dict):
+    """Result of a guarded UI action.
+
+    Keys always present:
+      status (str): success, blocked, unknown, or error
+      state (str): detected UI state
+      acted (bool): whether keyboard/mouse actions were attempted
+      error (str | None): failure detail
+    """
+
+
 # ---------------------------------------------------------------------------
 # Module-level lazy import guard — pyautogui is only imported at call time
 # so that test environments can mock it cleanly.
 # ---------------------------------------------------------------------------
 
 def _pyautogui():
-    import pyautogui as _pag  # noqa: PLC0415
+    import pyautogui as _pag  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     return _pag
 
 
 # ---------------------------------------------------------------------------
 # Public interface
 # ---------------------------------------------------------------------------
+
+
+def get_secret(
+    target: str,
+    allow_secret_use: bool = False,
+    provider: object | None = None,
+) -> SecretResult:
+    """Retrieve only non-secret metadata for an operator-authorized secret.
+
+    Args:
+        target: Logical secret target, for example ``quantower_login``.
+        allow_secret_use: Runtime authorization gate. Secret lookup is blocked
+            unless this is explicitly True.
+        provider: Injected OS-backed provider. Tests may pass a mock provider
+            with ``get_secret(target)``.
+
+    Returns:
+        SecretResult. The plaintext password/secret is never included.
+        This function never raises.
+    """
+    if not allow_secret_use:
+        return SecretResult(
+            status="blocked",
+            target=target,
+            username="",
+            secret_available=False,
+            error="allow_secret_use must be true",
+        )
+
+    if provider is None:
+        return SecretResult(
+            status="error",
+            target=target,
+            username="",
+            secret_available=False,
+            error="secret provider is required",
+        )
+
+    try:
+        raw_secret = provider.get_secret(target)
+        username = ""
+        if isinstance(raw_secret, dict):
+            username = str(raw_secret.get("username", ""))
+        return SecretResult(
+            status="available",
+            target=target,
+            username=username,
+            secret_available=True,
+            error=None,
+        )
+    except Exception:  # pylint: disable=broad-exception-caught
+        return SecretResult(
+            status="error",
+            target=target,
+            username="",
+            secret_available=False,
+            error="secret provider lookup failed",
+        )
+
+
+def detect_ui_state(
+    _image_path: str | None = None,
+    ocr_text: str = "",
+    template_signals: dict | None = None,
+) -> UIDetectionResult:
+    """Classify a UI state from OCR text and optional template signals.
+
+    Args:
+        _image_path: Reserved for later OCR/OpenCV integration.
+        ocr_text: Text extracted from the screen. Tests pass this directly.
+        template_signals: Optional precomputed visual signals.
+
+    Returns:
+        UIDetectionResult with a deterministic state classification.
+        This function never raises.
+    """
+    try:
+        text = ocr_text.casefold()
+        signals: list[str] = []
+        templates = template_signals or {}
+
+        if "quantower" in text:
+            signals.append("quantower")
+        if "login" in text or "sign in" in text:
+            signals.append("login")
+        if "password" in text or "email" in text:
+            signals.append("credentials")
+        if "loading" in text or "please wait" in text:
+            signals.append("loading")
+        if "connecting" in text or "workspace" in text:
+            signals.append("workspace")
+
+        for key, value in templates.items():
+            if value:
+                signals.append(str(key))
+
+        if {"quantower", "login", "credentials"}.issubset(signals):
+            return UIDetectionResult(
+                state="quantower_login",
+                confidence=0.9,
+                signals=signals,
+                error=None,
+            )
+
+        if "login" in signals and "credentials" in signals:
+            return UIDetectionResult(
+                state="auth_prompt",
+                confidence=0.8,
+                signals=signals,
+                error=None,
+            )
+
+        if "quantower" in signals and "loading" in signals:
+            return UIDetectionResult(
+                state="quantower_loading",
+                confidence=0.9,
+                signals=signals,
+                error=None,
+            )
+
+        if "quantower_ready" in signals:
+            return UIDetectionResult(
+                state="quantower_ready",
+                confidence=0.8,
+                signals=signals,
+                error=None,
+            )
+
+        if "error" in text or "failed" in text:
+            return UIDetectionResult(
+                state="error",
+                confidence=0.7,
+                signals=signals,
+                error=None,
+            )
+
+        return UIDetectionResult(
+            state="unknown",
+            confidence=0.0,
+            signals=signals,
+            error=None,
+        )
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        return UIDetectionResult(
+            state="unknown",
+            confidence=0.0,
+            signals=[],
+            error=str(exc),
+        )
+
 
 def screenshot(save: bool = False, screenshot_dir: str | None = None) -> ScreenshotResult:
     """Capture the full desktop as a PNG and return base64-encoded data.

@@ -33,7 +33,7 @@ import json
 import logging
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
@@ -408,7 +408,8 @@ def _extract_learnings(
         elif pattern.pattern_type == "host_operation":
             learnings.append(
                 f"ORACLE/QUANTOWER AUTOMATION: {pattern.description}. "
-                "Treat shell restarts/build/deploy commands as host mutations and pair them with /oracle/status plus screenshot or verify evidence."
+                "Treat shell restarts/build/deploy commands as host mutations "
+                "and pair them with /oracle/status plus screenshot or verify evidence."
             )
 
     if patterns:
@@ -798,11 +799,11 @@ def prune_memory(
 
     # ISO 8601 compact timestamp pattern embedded in session headers
     # e.g. "## Session 20250601T143022" or "## Analysis 20260101T000000"
-    _TS_RE = re.compile(r"(\d{8}T\d{6})")
-    _PRESERVE_PREFIXES = ("## How to use", "## Initial Notes")
+    _ts_re = re.compile(r"(\d{8}T\d{6})")
+    _preserve_prefixes = ("## How to use", "## Initial Notes")
 
     cutoff = datetime.now(timezone.utc).replace(tzinfo=None)
-    from datetime import timedelta
+    from datetime import timedelta  # pylint: disable=import-outside-toplevel
     cutoff -= timedelta(days=max_age_days)
 
     total_pruned = 0
@@ -835,12 +836,12 @@ def prune_memory(
             heading = section[0].rstrip() if section else ""
 
             # Always preserve non-session headers
-            if any(heading.startswith(p) for p in _PRESERVE_PREFIXES):
+            if any(heading.startswith(p) for p in _preserve_prefixes):
                 kept.append(section)
                 continue
 
             # Try to parse a timestamp from the heading
-            m = _TS_RE.search(heading)
+            m = _ts_re.search(heading)
             if not m:
                 # No timestamp found — keep conservatively
                 kept.append(section)
@@ -866,3 +867,59 @@ def prune_memory(
         "domains_affected": domains_affected,
     }
 
+
+# ---------------------------------------------------------------------------
+# Ticket 009 - Memory Quality
+# ---------------------------------------------------------------------------
+
+def assess_memory_quality(memory_path: str) -> dict:
+    """Assess the structural quality of a memory file."""
+    if not os.path.exists(memory_path):
+        return {
+            "total_sections": 0, "dated_sections": 0, "stale_count": 0,
+            "actionable_count": 0, "quality_score": 0.0,
+            "recommendation": "File not found."
+        }
+
+    with open(memory_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    lines = content.splitlines()
+    total_sections = 0
+    dated_sections = 0
+    actionable_count = 0
+
+    _ts_re = re.compile(r"(\d{8}T\d{6})")
+
+    for line in lines:
+        if line.startswith("## "):
+            total_sections += 1
+            if _ts_re.search(line):
+                dated_sections += 1
+        elif line.strip().startswith("- ") or line.strip().startswith("* "):
+            # Bullet point roughly counts as actionable context
+            actionable_count += 1
+
+    if total_sections == 0:
+        quality_score = 0.0
+    else:
+        quality_score = float(actionable_count) / float(total_sections)
+
+    res = {
+        "total_sections": total_sections,
+        "dated_sections": dated_sections,
+        "stale_count": total_sections - dated_sections, # Simple heuristic
+        "actionable_count": actionable_count,
+        "quality_score": quality_score
+    }
+
+    if quality_score < 0.6:
+        quality_pct = f"{quality_score:.2f}"
+        msg = (
+            f"Memory quality for {os.path.basename(memory_path)} is low"
+            f" ({quality_pct}). Consider pruning or summarization."
+        )
+        LOGGER.warning(msg)
+        res["recommendation"] = msg
+
+    return res

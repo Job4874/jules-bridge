@@ -1,247 +1,99 @@
 [
   {
-    "output_hash": "336bf37b82daabb6ff52c71178a9a7b288e6d954813647c10aead3ba2318b79d",
-    "timestamp_utc": "2026-06-26T02:55:01.109143+00:00",
+    "output_hash": "8de1babe4bdad5b8fbc168813686c348a5073fdf758f71cd4b4dd788fddf7007",
+    "timestamp_utc": "2026-06-26T20:38:37.116440+00:00",
     "passed": true,
-    "test_count": 142,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 142 passed, 1 warning in 1.80s ========================"
+    "test_count": 244,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n244 passed, 1 warning in 1.68s"
   },
   {
-    "output_hash": "52f4e7f46cb0d615f6f965406ca6a5457fc92beb44f332dcade9a72d64fc2451",
-    "timestamp_utc": "2026-06-26T02:56:24.990533+00:00",
+    "output_hash": "665ca5504aaad019c608b6186db9fb6e62ab8865aa30f01c05433173abec703d",
+    "timestamp_utc": "2026-06-26T20:50:26.142820+00:00",
     "passed": true,
-    "test_count": 142,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 142 passed, 1 warning in 1.59s ========================"
+    "test_count": 248,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n248 passed, 1 warning in 1.71s"
   },
   {
-    "output_hash": "a7a472b04b322777d3b7a1b72b5d118b298fa202010bac7bd49307d0675f1db4",
-    "timestamp_utc": "2026-06-26T02:58:23.049027+00:00",
+    "output_hash": "770defafb30620443caac2e1948960ca262a7699951fc8eb49ccc88065acde10",
+    "timestamp_utc": "2026-06-26T20:50:54.328377+00:00",
     "passed": true,
-    "test_count": 142,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 142 passed, 1 warning in 1.98s ========================"
+    "test_count": 248,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n248 passed, 1 warning in 1.70s"
   },
   {
-    "output_hash": "11b0c44c3b9fec1057c12d336005f835f6ffe9dd4c768bc8e0abb23fc811ebf6",
-    "timestamp_utc": "2026-06-26T02:59:08.824319+00:00",
+    "output_hash": "345a334043ad604b3bb248efa4ac2a4bea96a4cc8551c9325fb79fe2bcc9ad34",
+    "timestamp_utc": "2026-06-27T02:26:35.709465+00:00",
     "passed": true,
-    "test_count": 143,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 143 passed, 1 warning in 1.84s ========================"
+    "test_count": 274,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n274 passed, 1 warning in 3.93s"
   },
   {
-    "output_hash": "4477b6d05124c81033fde20069723fc39632fe53ba7333a20afb4e914d40cf73",
-    "timestamp_utc": "2026-06-26T02:59:44.780310+00:00",
+    "output_hash": "9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a",
+    "timestamp_utc": "2026-06-27T02:29:02.733206+00:00",
     "passed": true,
-    "test_count": 143,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 143 passed, 1 warning in 1.48s ========================"
+    "test_count": 274,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n274 passed, 1 warning in 4.42s"
   },
   {
-    "output_hash": "d41db55cfb037b6ec4977432e1cd58115cdeef9a1289fac0342a22451332a583",
-    "timestamp_utc": "2026-06-26T03:00:36.532664+00:00",
+    "output_hash": "3bd4877b9b4e3313f93f5ba9f70a4051c373c8045ac0f4747832d81263ccc357",
+    "timestamp_utc": "2026-06-27T21:50:48.627325+00:00",
     "passed": true,
-    "test_count": 143,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 143 passed, 1 warning in 1.60s ========================"
+    "test_count": 280,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 280 passed, 1 warning in 2.21s ========================"
   },
   {
-    "output_hash": "7bf9a8d70c0d8770aa22eb043af76eeb092d734337de29fbce091ef2a8026844",
-    "timestamp_utc": "2026-06-26T03:10:04.823076+00:00",
+    "output_hash": "281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4",
+    "timestamp_utc": "2026-06-28T07:51:34.934759+00:00",
     "passed": true,
-    "test_count": 147,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 147 passed, 1 warning in 1.73s ========================"
+    "test_count": 284,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n284 passed, 1 warning in 3.86s"
   },
   {
-    "output_hash": "fac0a1bf04a306712812bb6001b22016cddafed2e10fe50f5dd53a945401593b",
-    "timestamp_utc": "2026-06-26T03:11:19.236447+00:00",
+    "output_hash": "93c3c248eb977a5969a1ab02fc9d3968a721e6ef40b5947319b117a9874ad68b",
+    "timestamp_utc": "2026-06-29T06:20:13.532671+00:00",
     "passed": true,
-    "test_count": 148,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 148 passed, 1 warning in 1.71s ========================"
+    "test_count": 290,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 290 passed, 1 warning in 2.20s ========================"
   },
   {
-    "output_hash": "8e5b84fc116c2187d58a4b7c8520906721f619ce960398f9f323601e964d0f80",
-    "timestamp_utc": "2026-06-26T03:16:25.655105+00:00",
+    "output_hash": "93c3c248eb977a5969a1ab02fc9d3968a721e6ef40b5947319b117a9874ad68b",
+    "timestamp_utc": "2026-06-29T06:20:37.444096+00:00",
     "passed": true,
-    "test_count": 151,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 151 passed, 1 warning in 2.04s ========================"
+    "test_count": 290,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 290 passed, 1 warning in 2.20s ========================"
   },
   {
-    "output_hash": "effdb29f1f5ce22bce5a1a2163ddc32e27800f882c6beec2974d86702986f390",
-    "timestamp_utc": "2026-06-26T03:20:26.307762+00:00",
-    "passed": true,
-    "test_count": 157,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 157 passed, 1 warning in 1.70s ========================"
+    "timestamp_utc": "2026-06-29T15:26:20.653615+00:00",
+    "type": "pytest_run",
+    "output_sha256": "220249393f995f8939b48b6a6839f7a784a73e6f51636ab9dce145c3b5b61646",
+    "output_snippet": "304 passed in 9.06s"
   },
   {
-    "output_hash": "d8a29098bcb0195ae05c03f940372e2b2e59b92337fa001122047b58e0f220a0",
-    "timestamp_utc": "2026-06-26T03:28:35.151868+00:00",
+    "output_hash": "3031a1ea1e97a8c01522812371f86e98efcd1e265e94f5c83e09ce18f32274f3",
+    "timestamp_utc": "2026-06-29T17:13:33.825254+00:00",
     "passed": true,
-    "test_count": 163,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 163 passed, 1 warning in 1.89s ========================"
+    "test_count": 307,
+    "raw_output_tail": "307 passed in 14.08s"
   },
   {
-    "output_hash": "a8ed044e641040c333364aba801a262224ae55a56cf1affef2e41e64ed58fecb",
-    "timestamp_utc": "2026-06-26T03:33:04.723659+00:00",
+    "output_hash": "40e1389e0c36e3f2471acae69bd158c0022dc0f9257a47ffa0c8a6b0cc65b86a",
+    "timestamp_utc": "2026-06-29T17:21:29.387869+00:00",
     "passed": true,
-    "test_count": 168,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:54: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 168 passed, 1 warning in 1.88s ========================"
+    "test_count": 307,
+    "raw_output_tail": "307 passed in 14.31s"
   },
   {
-    "output_hash": "fef2f1a64eca37d63e39f2c0aaba16788b5f02effde6bcd72328d4cb9111d8ac",
-    "timestamp_utc": "2026-06-26T03:35:40.578059+00:00",
+    "output_hash": "fd5a5a13015e3f4bf8f36720d7acb9aafa4e7b2eee3d0caa1d2714b22fb65022",
+    "timestamp_utc": "2026-06-29T18:25:05.263907+00:00",
     "passed": true,
-    "test_count": 172,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 172 passed, 1 warning in 2.11s ========================"
+    "test_count": 314,
+    "raw_output_tail": "python -m pytest tests/ -q\n314 passed in 13.89s"
   },
   {
-    "output_hash": "5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4",
-    "timestamp_utc": "2026-06-26T03:38:36.079129+00:00",
+    "output_hash": "e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408",
+    "timestamp_utc": "2026-06-29T18:27:32.710356+00:00",
     "passed": true,
-    "test_count": 172,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================= 172 passed, 1 warning in 4.10s ========================"
-  },
-  {
-    "output_hash": "c04d9ae3a3faf5cb63664e8b3acf2bf27c754eb4ca84c28b40df959c4ca519a3",
-    "timestamp_utc": "2026-06-26T04:12:43.410336+00:00",
-    "passed": true,
-    "test_count": 182,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n======================= 182 passed, 1 warning in 2.40s ========================"
-  },
-  {
-    "output_hash": "6fe51e6ec12a2588952101df214cabad9dcbe326bded5734799f16dc85f7e980",
-    "timestamp_utc": "2026-06-26T04:27:25.815130+00:00",
-    "passed": true,
-    "test_count": 190,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n======================= 190 passed, 1 warning in 3.14s ========================"
-  },
-  {
-    "output_hash": "ee4bc99172724ddb0e91defa3bba20402854cae696e6ae43f51d9f90395180ff",
-    "timestamp_utc": "2026-06-26T04:27:40.400490+00:00",
-    "passed": true,
-    "test_count": 191,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n======================= 191 passed, 1 warning in 3.31s ========================"
-  },
-  {
-    "output_hash": "51e1b5e0c2a347586ebbdc3d32f0cd4af3186ee780ab4dfb013c7beea6616d45",
-    "timestamp_utc": "2026-06-26T04:34:02.483270+00:00",
-    "passed": true,
-    "test_count": 198,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n======================= 198 passed, 1 warning in 3.58s ========================"
-  },
-  {
-    "output_hash": "82d90b9b673aa653ed397e53f504f549e7910e14055e653f35e6576abecfa68e",
-    "timestamp_utc": "2026-06-26T04:40:12.133184+00:00",
-    "passed": true,
-    "test_count": 202,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n======================= 202 passed, 1 warning in 4.00s ========================"
-  },
-  {
-    "output_hash": "b122f943ceb75c25def07321a9f9c99ff40c72a0c2b546e11536e02832973b94",
-    "timestamp_utc": "2026-06-26T05:19:14.157157+00:00",
-    "passed": true,
-    "test_count": 206,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n206 passed, 1 warning in 2.29s"
-  },
-  {
-    "output_hash": "7da6cadbb40aa5e20d582f42ea87b718283b02af589a787d5b948d8fd0f3c4d8",
-    "timestamp_utc": "2026-06-26T05:22:53.173477+00:00",
-    "passed": true,
-    "test_count": 207,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n207 passed, 1 warning in 2.43s"
-  },
-  {
-    "output_hash": "e7f3de0b3a8dc4136fa79ce5760b1cc0b8838ce830d4eb00d5e5b39a104153e4",
-    "timestamp_utc": "2026-06-26T05:24:30.368727+00:00",
-    "passed": true,
-    "test_count": 209,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n209 passed, 1 warning in 3.31s"
-  },
-  {
-    "output_hash": "7c28afb012e407c797f32e635c793e16e141956c6ef3a4a649a2cd858cb3e20d",
-    "timestamp_utc": "2026-06-26T05:35:15.478879+00:00",
-    "passed": true,
-    "test_count": 212,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n212 passed, 1 warning in 2.47s"
-  },
-  {
-    "output_hash": "4435f8022a10cc43416ec2a380e6bce1306de293acb071831515f2fd5a1c7e51",
-    "timestamp_utc": "2026-06-26T05:45:11.359371+00:00",
-    "passed": true,
-    "test_count": 216,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n216 passed, 1 warning in 2.39s"
-  },
-  {
-    "output_hash": "af295e6592d10be0b076e589960dfe851b4bc52f7441bb96479afe3a9aea0a0a",
-    "timestamp_utc": "2026-06-26T05:54:01.895826+00:00",
-    "passed": true,
-    "test_count": 217,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n217 passed, 1 warning in 2.95s"
-  },
-  {
-    "output_hash": "c54e8dd38b269a0bff4db699c74ed9b19655761f158a2c99d682b340d5c2193a",
-    "timestamp_utc": "2026-06-26T06:09:07.407061+00:00",
-    "passed": true,
-    "test_count": 221,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n221 passed, 1 warning in 3.49s"
-  },
-  {
-    "output_hash": "57c218af2493c018d59a1baed88f50e40b331fbd3602340f248ef51bf7b5ec11",
-    "timestamp_utc": "2026-06-26T06:29:04.862548+00:00",
-    "passed": true,
-    "test_count": 221,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n221 passed, 1 warning in 3.62s"
-  },
-  {
-    "output_hash": "1ebbceae86f2797ccff7dac394e57a94d85c599a76b1bbeb64555dd5dd01a099",
-    "timestamp_utc": "2026-06-26T07:06:40.442583+00:00",
-    "passed": true,
-    "test_count": 222,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n222 passed, 1 warning in 4.21s"
-  },
-  {
-    "output_hash": "b9717870aba194e7e5754b2362b8e978e87de76f238c244775cd92ddc367bfc3",
-    "timestamp_utc": "2026-06-26T11:57:01.662496+00:00",
-    "passed": true,
-    "test_count": 226,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n226 passed, 1 warning in 4.19s"
-  },
-  {
-    "output_hash": "7d6fff120677f333081efc49e67ee575e0195d1d5d5801791a64f30e02d42cc1",
-    "timestamp_utc": "2026-06-26T13:20:16.810544+00:00",
-    "passed": true,
-    "test_count": 229,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n229 passed, 1 warning in 4.05s"
-  },
-  {
-    "output_hash": "70b209f4c54a74821075b8347cb426337d5989ce9489ec112998885981a1c875",
-    "timestamp_utc": "2026-06-26T17:17:08.667929+00:00",
-    "passed": true,
-    "test_count": 236,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n236 passed, 1 warning in 4.63s"
-  },
-  {
-    "output_hash": "12bfba0193966b06da7d7203d9ba39a819f7f54125d989ab7f818626e10297b8",
-    "timestamp_utc": "2026-06-26T17:18:39.836500+00:00",
-    "passed": true,
-    "test_count": 237,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n237 passed, 1 warning in 4.42s"
-  },
-  {
-    "output_hash": "6148ccf5d6d3e00a2bf4dda03ea5cfad92251f0f5bfd0576abb267d63159eb21",
-    "timestamp_utc": "2026-06-26T17:19:18.189181+00:00",
-    "passed": true,
-    "test_count": 237,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n237 passed, 1 warning in 4.23s"
-  },
-  {
-    "output_hash": "8865ace7945b331b0c04a46826c4ab61a6210499fbff0cdbf3a8c32486001dd6",
-    "timestamp_utc": "2026-06-26T17:30:08.639922+00:00",
-    "passed": true,
-    "test_count": 239,
-    "raw_output_tail": "\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n239 passed, 1 warning in 4.37s"
-  },
-  {
-    "output_hash": "7e42a3ecdcad29604d56efef9775d577985e939d8a503cbb9ef5a1c21c9e1d4c",
-    "timestamp_utc": "2026-06-26T17:36:37.956835+00:00",
-    "passed": true,
-    "test_count": 240,
-    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n240 passed, 1 warning in 4.09s"
+    "test_count": 315,
+    "raw_output_tail": "python -m pytest tests/ -q\n315 passed in 13.10s"
   }
 ]

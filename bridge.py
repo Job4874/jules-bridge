@@ -10,11 +10,13 @@ All business logic lives in modules/:
 """
 
 import errno
+import json
 import logging
 import os
 import re
 import subprocess
 import sys
+from typing import Any
 from collections import deque
 from datetime import datetime, timezone
 from functools import wraps
@@ -24,6 +26,7 @@ from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 
 import notify_email as email_service
+from notify_email import load_env
 import modules
 
 # ---------------------------------------------------------------------------
@@ -38,10 +41,11 @@ _BRIDGE_START_UTC = datetime.now(timezone.utc)  # set once at import time for up
 
 
 def configure_logging():
+    """Attach rotating file + stdout handlers once per process."""
+    if getattr(configure_logging, "configured", False):
+        return
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-    if any(getattr(h, "_jules_bridge_handler", False) for h in root_logger.handlers):
-        return
     formatter = logging.Formatter(
         "%(asctime)s %(levelname)s %(name)s: %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S%z",
@@ -49,15 +53,15 @@ def configure_logging():
     os.makedirs(ROOT_DIR, exist_ok=True)
     fh = RotatingFileHandler(LOG_PATH, maxBytes=10_000_000, backupCount=3, encoding="utf-8")
     fh.setFormatter(formatter)
-    fh._jules_bridge_handler = True
     sh = logging.StreamHandler(sys.stdout)
     sh.setFormatter(formatter)
-    sh._jules_bridge_handler = True
     root_logger.addHandler(fh)
     root_logger.addHandler(sh)
+    configure_logging.configured = True
 
 
 configure_logging()
+load_env()
 LOGGER = logging.getLogger("jules_bridge")
 
 # ---------------------------------------------------------------------------
@@ -65,7 +69,27 @@ LOGGER = logging.getLogger("jules_bridge")
 # ---------------------------------------------------------------------------
 
 app = Flask(__name__)
-CORS(app)
+ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5000,http://127.0.0.1:5000"
+).split(",")
+
+CORS(app, origins=ALLOWED_ORIGINS)
+
+BRIDGE_TOKEN = os.environ.get("BRIDGE_TOKEN")
+if not BRIDGE_TOKEN:
+    raise ValueError("BRIDGE_TOKEN environment variable is missing")
+
+
+@app.before_request
+def require_auth():
+    if request.path in ("/health", "/ping", "/dashboard/status", "/vm/status", "/chat", "/chat/test"):
+        return None
+    auth_header = request.headers.get("Authorization")
+    if auth_header != f"Bearer {BRIDGE_TOKEN}":
+        LOGGER.warning("%s %s -> 401 unauthorized", request.method, request.path)
+        return jsonify({"error": "Unauthorized", "message": "Missing or invalid token"}), 401
+    return None
 
 # ---------------------------------------------------------------------------
 # Error handling infrastructure
@@ -129,7 +153,7 @@ def route_errors(func):
                 return _json_error(404, "Resource not found", path=getattr(exc, "filename", None))
             LOGGER.exception("%s %s -> 500 OSError", request.method, request.path)
             return _json_error(500, "Internal operational failure")
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             LOGGER.exception("%s %s -> 500", request.method, request.path)
             return _json_error(500, "Internal operational failure")
     return wrapper
@@ -262,31 +286,56 @@ def _start_timer():
     g.request_start = datetime.now(timezone.utc)
 
 
-def _evidence_memory_dir():
-    return os.path.join(ROOT_DIR, "memory")
+def _stale_evidence_state():
+    evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
+    threshold_s = 3600
+    try:
+        with open(evidence_path, encoding="utf-8") as _f:
+            ev = json.load(_f)
+        if isinstance(ev, list):
+            ev = ev[-1] if ev else {}
+        if not isinstance(ev, dict):
+            return None
+        ts = ev.get("timestamp_utc", "")
+        if not ts:
+            return None
+        age_s = round((datetime.now(timezone.utc) - datetime.fromisoformat(ts)).total_seconds())
+        if age_s <= threshold_s:
+            return None
+        return {"age_s": age_s, "threshold_s": threshold_s}
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        return None  # evidence file missing or malformed — proceed without warning
 
 
 @app.before_request
 def _evidence_hard_gate():
-    """Pre-route HTTP 423 preempt for /oracle/* when evidence is unusable.
-
-    Policy (staleness detection, threshold, hard-gate toggle) lives in
-    retrospective_module. This hook only maps the module result to HTTP.
-    """
     if not request.path.startswith("/oracle/"):
         return None
-    if not modules.is_evidence_hard_gate_enabled():
+    if os.environ.get("EVIDENCE_GATE_HARD") != "1":
         return None
-    stale = modules.check_test_evidence_staleness(_evidence_memory_dir())
+    stale = _stale_evidence_state()
     if not stale:
         return None
     return jsonify({
         "error": "evidence_stale",
-        "reason": stale.reason,
-        "age_s": stale.age_s,
-        "threshold_s": stale.threshold_s,
+        "age_s": stale["age_s"],
+        "threshold_s": stale["threshold_s"],
     }), 423
 
+
+@app.before_request
+def _circuit_breaker_check():
+    # pylint: disable=import-outside-toplevel
+    from modules.circuit_breaker import check_circuit_breaker
+
+    is_open, retry_after = check_circuit_breaker(request.path)
+    if is_open:
+        LOGGER.warning("Circuit breaker OPEN for %s", request.path)
+        return jsonify({
+            "error": "circuit_open",
+            "route": request.path,
+            "retry_after_s": retry_after
+        }), 429
 
 @app.after_request
 def _finalize_request(response):
@@ -317,9 +366,9 @@ def _evidence_age_check(response):
     """
     if not request.path.startswith("/oracle/"):
         return response
-    stale = modules.check_test_evidence_staleness(_evidence_memory_dir())
+    stale = _stale_evidence_state()
     if stale:
-        response.headers["X-Evidence-Age-Warning"] = f"{stale.reason}:{stale.age_s}s"
+        response.headers["X-Evidence-Age-Warning"] = f"stale:{stale['age_s']}s"
     return response
 
 
@@ -328,54 +377,105 @@ def _evidence_age_check(response):
 # ---------------------------------------------------------------------------
 
 TENTACLES = [
-    {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},
+    {"name": "root",         "route": "GET /",                  "reach": "Authenticated bridge discovery and next-step pointers"},  # pylint: disable=line-too-long
+    {"name": "info",         "route": "GET /info",              "reach": "Authenticated bridge metadata without the full manifest"},  # pylint: disable=line-too-long
+    {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},  # pylint: disable=line-too-long
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
     {"name": "session_log",  "route": "GET /session/log",        "reach": "Audit which tools Jules used recently"},
-    {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},
-    {"name": "read",         "route": "POST /fs/read",           "reach": "Read any file on the host (supports offset/limit)"},
+    {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},  # pylint: disable=line-too-long
+    {"name": "read",         "route": "POST /fs/read",           "reach": "Read any file on the host (supports offset/limit)"},  # pylint: disable=line-too-long
     {"name": "write",        "route": "POST /fs/write",          "reach": "Write any file on the host"},
     {"name": "list",         "route": "POST /fs/list",           "reach": "List a directory like Codex file tree"},
     {"name": "tail",         "route": "POST /fs/tail",           "reach": "Tail log/CSV files"},
     {"name": "grep",         "route": "POST /fs/grep",           "reach": "Search file contents for gate/log strings"},
-    {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},
+    {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},  # pylint: disable=line-too-long
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
-    {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},
+    {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},  # pylint: disable=line-too-long
+    {"name": "operator",     "route": "POST /execute",           "reach": "Universal driver — click, type, and launch shell actions in one call"},  # pylint: disable=line-too-long
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
-    {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},
-    {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},
+    {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},  # pylint: disable=line-too-long
+    {"name": "vm_pressure",       "route": "POST /vm/resource_pressure", "reach": "Detect CPU/memory pressure before local VM actions"},  # pylint: disable=line-too-long
+    {"name": "vm_boot_secondary", "route": "POST /vm/boot_secondary",    "reach": "Dry-run-first allowlisted secondary VM boot script"},  # pylint: disable=line-too-long
+    {"name": "app_browser",       "route": "POST /apps/launch_browser",      "reach": "Explicitly launch Edge to an approved http(s) URL"},  # pylint: disable=line-too-long
+    {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},  # pylint: disable=line-too-long
+    {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},  # pylint: disable=line-too-long
     {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
-    {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},
-    {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},
-    {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},
-    {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},
-    {"name": "jules_pull",      "route": "POST /jules/pull",               "reach": "Pull one remote Jules session with timeout protection"},
-    {"name": "jules_cot",       "route": "POST /jules/cot",                "reach": "Build a completion-of-task ledger from Jules launch and pull artifacts"},
-    {"name": "jules_cycle",     "route": "POST /jules/cycle",              "reach": "Run one dry-run-first Jules dispatch/launch/pull/COT communication cycle"},
-    {"name": "jules_watch",     "route": "POST /jules/watch",              "reach": "Poll Jules sessions, pull completed results, and refresh COT until bounded stop"},
-    {"name": "jules_fleet",     "route": "POST /jules/fleet",              "reach": "Scale Jules workers within max_concurrent and refresh pull/COT state"},
-    {"name": "jules_fleet_watch", "route": "POST /jules/fleet-watch",      "reach": "Loop fleet scale-out, pull, and COT refresh until complete or timed out"},
+    {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},  # pylint: disable=line-too-long
+    {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},  # pylint: disable=line-too-long
+    {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},  # pylint: disable=line-too-long
+    {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},  # pylint: disable=line-too-long
+    {"name": "jules_pull",      "route": "POST /jules/pull",               "reach": "Pull one remote Jules session with timeout protection"},  # pylint: disable=line-too-long
+    {"name": "jules_cot",       "route": "POST /jules/cot",                "reach": "Build a completion-of-task ledger from Jules launch and pull artifacts"},  # pylint: disable=line-too-long
+    {"name": "jules_cycle",     "route": "POST /jules/cycle",              "reach": "Run one dry-run-first Jules dispatch/launch/pull/COT communication cycle"},  # pylint: disable=line-too-long
+    {"name": "jules_watch",     "route": "POST /jules/watch",              "reach": "Poll Jules sessions, pull completed results, and refresh COT until bounded stop"},  # pylint: disable=line-too-long
+    {"name": "jules_fleet",     "route": "POST /jules/fleet",              "reach": "Scale Jules workers within max_concurrent and refresh pull/COT state"},  # pylint: disable=line-too-long
+    {"name": "jules_fleet_watch", "route": "POST /jules/fleet-watch",      "reach": "Loop fleet scale-out, pull, and COT refresh until complete or timed out"},  # pylint: disable=line-too-long
     # Reasoning routes (HRM-inspired H/L/ACT)
-    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},
-    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},
-    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},
+    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},  # pylint: disable=line-too-long
+    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},  # pylint: disable=line-too-long
+    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},  # pylint: disable=line-too-long
+    {"name": "reason_skills",   "route": "GET /reasoning/skills",          "reach": "Inventory of available agent skills"},  # pylint: disable=line-too-long
+    {"name": "reason_gotcha",   "route": "POST /reasoning/inject_gotcha",  "reach": "Inject new edge case into gotchas context"},  # pylint: disable=line-too-long
     # Retrospective routes (self-improving memory)
-    {"name": "retro_analyze",   "route": "POST /retrospective/analyze",    "reach": "Analyze bridge.log and write learnings to memory"},
-    {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},
-    {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},
-    {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},
+    {"name": "retro_analyze",   "route": "POST /retrospective/analyze",    "reach": "Analyze bridge.log and write learnings to memory"},  # pylint: disable=line-too-long
+    {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},  # pylint: disable=line-too-long
+    {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},  # pylint: disable=line-too-long
+    {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},  # pylint: disable=line-too-long
+    {"name": "retro_quality",   "route": "GET /retrospective/memory_quality", "reach": "Assess memory structural quality"},  # pylint: disable=line-too-long
     # Agent Knowledge Context routes
-    {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},
-    {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},
-    {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},
-    {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},
+    {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},  # pylint: disable=line-too-long
+    {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},  # pylint: disable=line-too-long
+    {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},  # pylint: disable=line-too-long
+    {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},  # pylint: disable=line-too-long
+    # Dashboard + Chat routes
+    {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
+    {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},  # pylint: disable=line-too-long
+    {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},  # pylint: disable=line-too-long
 ]
 
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+def bridge_info_payload(include_routes=False):
+    uptime_s = round(
+        (datetime.now(timezone.utc) - _BRIDGE_START_UTC).total_seconds(), 1
+    )
+    payload = {
+        "status": "ok",
+        "bridge": "Jules Bridge",
+        "uptime_s": uptime_s,
+        "auth": {
+            "type": "bearer",
+            "public_routes": ["GET /health", "GET /ping"],
+            "protected_routes": "All other routes require Authorization: Bearer <token>",
+        },
+        "manifest": "GET /tentacles",
+        "session_log": "GET /session/log",
+        "mandatory_read": "jules_inbox/JULES_TOOL_REQUIREMENTS.md",
+        "route_count": len(TENTACLES),
+    }
+    if include_routes:
+        payload["routes"] = TENTACLES
+    return payload
+
+
+@app.route("/", methods=["GET"])
+@route_errors
+def root_info():
+    """GET / - Authenticated bridge discovery for browser/manual probes."""
+    return jsonify(bridge_info_payload(include_routes=True))
+
+
+@app.route("/info", methods=["GET"])
+@route_errors
+def bridge_info():
+    """GET /info - Compact authenticated bridge metadata."""
+    return jsonify(bridge_info_payload(include_routes=False))
+
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -958,6 +1058,79 @@ def codex_handover():
     return jsonify(dict(modules.codex_handover_index()))
 
 
+# — Universal operator route —
+
+@app.route("/execute", methods=["POST"])
+@route_errors
+def execute_operator():
+    """POST /execute — Run one or more host actions in a single request.
+
+    Body (JSON), at least one field required:
+        click (object): {x, y, button?} — mouse click via ui_automation
+        type  (str): text to type at current focus
+        text  (str): alias for type (matches /ui/type)
+        shell (str): command to run; defaults to fire-and-forget spawn via cmd
+        wait  (bool): when true with shell, block on /shell-style execute
+        shell_name (str): shell selector for shell — cmd (default), powershell, bash
+        cwd (str): working directory for shell actions
+        timeout (int): seconds when wait=true
+    """
+    data = json_payload()
+    has_click = "click" in data
+    has_type = "type" in data or "text" in data
+    has_shell = "shell" in data
+    if not (has_click or has_type or has_shell):
+        raise BridgeHTTPError(
+            400,
+            "Invalid input",
+            details="At least one of click, type, text, or shell is required",
+        )
+
+    results = {"status": "executed", "actions": {}}
+
+    if has_shell:
+        command = string_field(data, "shell")
+        shell_name = string_field(data, "shell_name", default="cmd")
+        cwd = path_field(data, "cwd", default=os.getcwd())
+        wait = bool_field(data, "wait", default=False)
+        if cwd:
+            existing_path(cwd, kind="directory")
+        if wait:
+            timeout = int_field(data, "timeout", default=30, min_value=1)
+            LOGGER.info("[JULES EXECUTE] wait shell=%s cwd=%s command=%s", shell_name, cwd, command)
+            shell_result = modules.execute(
+                command,
+                shell=shell_name,
+                cwd=cwd,
+                timeout=timeout,
+            )
+            results["actions"]["shell"] = dict(shell_result)
+        else:
+            LOGGER.info("[JULES EXECUTE] spawn shell=%s cwd=%s command=%s", shell_name, cwd, command)
+            shell_result = modules.spawn(command, shell=shell_name, cwd=cwd)
+            results["actions"]["shell"] = dict(shell_result)
+
+    if has_click:
+        click_data = data["click"]
+        if not isinstance(click_data, dict):
+            raise BridgeHTTPError(400, "Invalid input", details="click must be an object")
+        x = int_field(click_data, "x", min_value=0)
+        y = int_field(click_data, "y", min_value=0)
+        button = string_field(click_data, "button", default="left")
+        LOGGER.info("[JULES EXECUTE] click x=%s y=%s button=%s", x, y, button)
+        results["actions"]["click"] = dict(modules.click(x, y, button=button))
+
+    if has_type:
+        if "type" in data:
+            text = string_field(data, "type", allow_empty=True)
+        else:
+            text = string_field(data, "text", allow_empty=True)
+        LOGGER.info("[JULES EXECUTE] type chars=%s", len(text))
+        results["actions"]["type"] = modules.type_text(text)
+
+    return jsonify(results)
+
+
 # — UI routes —
 
 @app.route("/ui/screenshot", methods=["GET"])
@@ -988,16 +1161,133 @@ def type_text_route():
     return jsonify(result)
 
 
+@app.route("/ui/drive_quantower_login", methods=["POST"])
+@route_errors
+def drive_quantower_login_route():
+    """POST /ui/drive_quantower_login — Run guarded Quantower login ACT loop.
+
+    Body (JSON):
+        ocr_text         (str, optional): OCR text from the current screen
+        submit_x         (int, required): Submit button x-coordinate
+        submit_y         (int, required): Submit button y-coordinate
+        allow_secret_use (bool, optional): Runtime credential-use gate
+        notify           (bool, optional): Send operator email on completion/failure
+
+    Returns JSON with status, detected state, action flag, and message.
+    """
+    data = json_payload()
+    ocr_text = string_field(data, "ocr_text", default="", allow_empty=True)
+    submit_x = int_field(data, "submit_x", min_value=0)
+    submit_y = int_field(data, "submit_y", min_value=0)
+    allow_secret_use = bool_field(data, "allow_secret_use", default=False)
+    notify = bool_field(data, "notify", default=False)
+
+    def _send_completion_email(subject, body):
+        return email_service.send_email(
+            f"[Jules Bridge] {subject}",
+            body,
+        )
+
+    notify_func = _send_completion_email if notify else None
+
+    secret_provider = None
+    if allow_secret_use:
+        secret_provider = modules.build_windows_secret_provider()
+
+    result = modules.drive_quantower_login(
+        ocr_text=ocr_text,
+        submit_x=submit_x,
+        submit_y=submit_y,
+        allow_secret_use=allow_secret_use,
+        secret_provider=secret_provider,
+        notify_func=notify_func,
+    )
+    return jsonify(dict(result))
+
+
+# - VM routes -
+
+@app.route("/vm/resource_pressure", methods=["POST"])
+@route_errors
+def vm_resource_pressure_route():
+    """POST /vm/resource_pressure - Detect local CPU/memory pressure.
+
+    Body (JSON):
+        cpu_percent      (int, optional): Injected CPU percent
+        memory_percent   (int, optional): Injected memory percent
+        cpu_threshold    (int, optional): CPU pressure threshold, default 90
+        memory_threshold (int, optional): Memory pressure threshold, default 90
+    """
+    data = json_payload()
+    result = modules.detect_resource_pressure(
+        cpu_percent=int_field(data, "cpu_percent", default=None, min_value=0, max_value=100),
+        memory_percent=int_field(data, "memory_percent", default=None, min_value=0, max_value=100),
+        thresholds={
+            "cpu_percent": int_field(data, "cpu_threshold", default=90, min_value=1, max_value=100),
+            "memory_percent": int_field(
+                data,
+                "memory_threshold",
+                default=90,
+                min_value=1,
+                max_value=100,
+            ),
+        },
+    )
+    return jsonify(dict(result))
+
+
+@app.route("/vm/boot_secondary", methods=["POST"])
+@route_errors
+def vm_boot_secondary_route():
+    """POST /vm/boot_secondary - Dry-run-first secondary VM boot.
+
+    Body (JSON):
+        script_name    (str, required): Allowlisted script file name
+        allow_vm_boot  (bool, optional): Required for real boot, default false
+        dry_run        (bool, optional): Validate only, default true
+    """
+    data = json_payload()
+    result = modules.boot_secondary_vm(
+        string_field(data, "script_name", control_safe=True),
+        allow_vm_boot=bool_field(data, "allow_vm_boot", default=False),
+        dry_run=bool_field(data, "dry_run", default=True),
+    )
+    return jsonify(dict(result))
+
+
+# - App launcher routes -
+
+@app.route("/apps/launch_browser", methods=["POST"])
+@route_errors
+def launch_browser_route():
+    """POST /apps/launch_browser — Launch Edge to an approved http(s) URL.
+
+    Body (JSON):
+        url (str, required): Target http:// or https:// URL
+        allow_launch (bool, optional): Runtime launch gate (default false)
+    """
+    data = json_payload()
+    url = string_field(data, "url")
+    allow_launch = bool_field(data, "allow_launch", default=False)
+    result = modules.launch_browser_to_url(url, allow_launch=allow_launch)
+    return jsonify(dict(result))
+
+
 # — Notify route —
 
 @app.route("/notify/email", methods=["POST"])
 @route_errors
 def send_notify_email():
+    """POST /notify/email - Email the operator, optionally with local attachments."""
     data = json_payload()
     subject = string_field(data, "subject", default="Jules Bridge update")
     body = string_field(data, "body")
     mail_to = optional_email(data, "to")
-    result = email_service.send_email(subject, body, mail_to=mail_to)
+    attachments = [
+        existing_path(path, kind="file")
+        for path in string_list_field(data, "attachments", default=[], control_safe=True)
+    ]
+    result = email_service.send_email(subject, body, mail_to=mail_to, attachments=attachments)
     return jsonify({"status": "sent", **result})
 
 
@@ -1119,6 +1409,27 @@ def reasoning_execute_step():
     })
 
 
+
+@app.route("/reasoning/skills", methods=["GET"])
+@route_errors
+def reasoning_skills():
+    """GET /reasoning/skills — Inventory of available agent skills."""
+    skills_dir = request.args.get("skills_dir", os.path.join(ROOT_DIR, ".agents", "skills"))
+    skills = modules.reasoning_module.discover_skills(skills_dir)
+    return jsonify({"skills": skills})
+
+
+@app.route("/reasoning/inject_gotcha", methods=["POST"])
+@route_errors
+def reasoning_inject_gotcha():
+    """POST /reasoning/inject_gotcha — Inject new edge case into gotchas context."""
+    data = json_payload()
+    module = string_field(data, "module")
+    text = string_field(data, "text")
+    result = modules.reasoning_module.inject_gotcha(module, text)
+    return jsonify(result)
+
+
 # — Retrospective routes (Nick Ni's "Case" harness pattern) —
 
 @app.route("/retrospective/analyze", methods=["POST"])
@@ -1230,9 +1541,12 @@ def retrospective_memory():
     domain = request.args.get("domain", "general")
     memory_path = request.args.get("memory_path", os.path.join(ROOT_DIR, "memory"))
 
-    domain_error = modules.validate_memory_domain(domain)
-    if domain_error:
-        raise BridgeHTTPError(400, "Invalid input", details=domain_error)
+    if domain not in ("general", "oracle", "quantower", "trading", "reasoning"):
+        raise BridgeHTTPError(
+            400,
+            "Invalid input",
+            details="domain must be one of: general, oracle, quantower, trading, reasoning",
+        )
 
     memory_content = modules.load_memory(memory_path=memory_path, domain=domain)
 
@@ -1270,6 +1584,17 @@ def retrospective_prune_memory():
         "domains_affected": result["domains_affected"],
         "max_age_days": max_age_days,
     })
+
+
+
+@app.route("/retrospective/memory_quality", methods=["GET"])
+@route_errors
+def retrospective_memory_quality():
+    """GET /retrospective/memory_quality — Assess memory structural quality."""
+    domain = request.args.get("domain", "general")
+    memory_path = os.path.join(ROOT_DIR, "memory", f"{domain}.md")
+    result = modules.retrospective_module.assess_memory_quality(memory_path)
+    return jsonify(result)
 
 
 # - AKC routes (Agent Knowledge Context) -
@@ -1390,6 +1715,102 @@ def akc_subagents_post():
 
 
 # ---------------------------------------------------------------------------
+# Dashboard
+# ---------------------------------------------------------------------------
+
+@app.route("/dashboard/status", methods=["GET"])
+@route_errors
+def dashboard_status():
+    """GET /dashboard/status — real-time multi-cloud mission control snapshot."""
+    from modules.dashboard_module import get_dashboard_status  # pylint: disable=import-outside-toplevel
+    result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
+    return jsonify(result), 200 if result.get("ok") else 500
+
+
+# ---------------------------------------------------------------------------
+# VM Two-Way Relay — local bridge <-> jules-worker-agent on GCP VM
+# ---------------------------------------------------------------------------
+
+@app.route("/vm/bootstrap", methods=["POST"])
+@route_errors
+def vm_bootstrap():
+    """POST /vm/bootstrap — install jules-worker-agent on the GCP VM."""
+    from modules.vm_relay import bootstrap_vm  # pylint: disable=import-outside-toplevel
+    result = bootstrap_vm()
+    return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/vm/task", methods=["POST"])
+@route_errors
+def vm_task():
+    """POST /vm/task — dispatch a task to the jules-worker-agent on the GCP VM.
+
+    Body: {"task": "...", "task_type": "build|research|shell|chat", "context": "..."}
+    """
+    data = json_payload()
+    task = string_field(data, "task")
+    task_type = string_field(data, "task_type", default="build", allow_empty=False)
+    context = string_field(data, "context", default="", allow_empty=True)
+    from modules.vm_relay import send_task_to_vm  # pylint: disable=import-outside-toplevel
+    result = send_task_to_vm(task=task, task_type=task_type, context=context)
+    return jsonify(result), 200
+
+
+@app.route("/vm/status", methods=["GET"])
+@route_errors
+def vm_relay_status():
+    """GET /vm/status — get live status from the jules-worker-agent on the VM."""
+    from modules.vm_relay import get_vm_status  # pylint: disable=import-outside-toplevel
+    result = get_vm_status()
+    return jsonify(result), 200
+
+
+# ---------------------------------------------------------------------------
+# Chat — multi-provider conversational endpoint + diagnostics
+# ---------------------------------------------------------------------------
+
+@app.route("/chat/test", methods=["GET"])
+@route_errors
+def chat_test():
+    """GET /chat/test — probe each LLM provider with a minimal request.
+
+    Returns per-provider status so operators can debug which keys work.
+    """
+    result = modules.test_chat_providers()
+    return jsonify(dict(result)), 200
+
+@app.route("/chat", methods=["POST"])
+@route_errors
+def chat() -> Any:
+    """POST /chat — send a message (+ optional screenshot) to Jules.
+
+    Body (JSON):
+        message (str): user message
+        image_base64 (str, optional): base64-encoded PNG/JPEG screenshot
+        model (str, optional): "fast" | "smart" | "stub" (default: "fast")
+        system (str, optional): override system prompt
+        history (list, optional): prior turns [{"role": "user"|"assistant", "content": "..."}]
+    """
+    data = json_payload()
+    LOGGER.debug("[CHAT] Processing payload with keys: %s", list(data.keys()))
+    message = string_field(data, "message", allow_empty=False)
+    model_alias = string_field(data, "model", default="fast", allow_empty=False)
+    system_prompt = string_field(data, "system", default="", allow_empty=True)
+    image_b64 = string_field(data, "image_base64", default="", allow_empty=True)
+    history = data.get("history", [])
+
+    result = modules.chat(
+        message=message,
+        model_alias=model_alias,
+        system_prompt=system_prompt,
+        image_base64=image_b64,
+        history=history,
+    )
+    return jsonify(dict(result)), 200
+
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -1398,5 +1819,6 @@ if __name__ == "__main__":
     LOGGER.info("JULES GOD-MODE BRIDGE ACTIVATED")
     LOGGER.info("Listening on 0.0.0.0:5000")
     LOGGER.info("Log path: %s", LOG_PATH)
+    LOGGER.info("Token auth: ENABLED")
     LOGGER.info("========================================")
     app.run(port=5000, host="0.0.0.0")

@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-06-27T04:37:52.131568+00:00",
+  "dry_run": false,
+  "session_id": "13944901608959609572",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "13944901608959609572"
+  ],
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "status": "pulled",
+  "exit_code": 0,
+  "stdout": "diff --git a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\nindex 99d4acc..d3a97cb 100644\n--- a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n+++ b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n@@ -27,6 +27,7 @@ namespace OracleV5\n \n             TestPositionSizer();\n             TestAccountGuardDrawdown();\n+            TestSelectorSummary();\n \n             OracleLog.Write(\"SELF_TEST\", \"==================================================\");\n             OracleLog.Write(\"SELF_TEST\", \"   SIM-MODE SELF-TEST COMPLETED                   \");\n@@ -113,6 +114,50 @@ namespace OracleV5\n             OracleLog.Write(\"SELF_TEST\", $\"State 3 (Drop): {state3.State}, DD={dd3.DrawdownFromPeak:F2}, Reason={state3.ReasonCode}\");\n         }\n \n+        private void TestSelectorSummary()\n+        {\n+#if NINJATRADER\n+            OracleLog.Write(\"SELF_TEST\", \">>> TESTING SELECTOR SUMMARY\");\n+\n+            // Backup current state\n+            var originalSnapshot = this.currentSelectorSnapshot;\n+\n+            try\n+            {\n+                // Case 1: Snapshot is null\n+                this.currentSelectorSnapshot = null;\n+                string summary1 = GetSelectorSummary();\n+                OracleLog.Write(\"SELF_TEST\", $\"Summary (Null Snapshot): {summary1}\");\n+                if (summary1 != \"Selector snapshot unavailable\")\n+                    throw new Exception($\"SelectorSummary Case 1 failed: expected 'Selector snapshot unavailable', got '{summary1}'\");\n+\n+                // Case 2: Snapshot exists but Summary is null\n+                this.currentSelectorSnapshot = new SelectorSnapshot { Summary = null };\n+                string summary2 = GetSelectorSummary();\n+                OracleLog.Write(\"SELF_TEST\", $\"Summary (Null Summary): '{summary2}'\");\n+                if (summary2 != string.Empty)\n+                    throw new Exception($\"SelectorSummary Case 2 failed: expected empty string, got '{summary2}'\");\n+\n+                // Case 3: Snapshot and Summary exist\n+                string expectedSummary = \"Test Summary 123\";\n+                this.currentSelectorSnapshot = new SelectorSnapshot { Summary = expectedSummary };\n+                string summary3 = GetSelectorSummary();\n+                OracleLog.Write(\"SELF_TEST\", $\"Summary (Valid): {summary3}\");\n+                if (summary3 != expectedSummary)\n+                    throw new Exception($\"SelectorSummary Case 3 failed: expected '{expectedSummary}', got '{summary3}'\");\n+\n+                OracleLog.Write(\"SELF_TEST\", \"Selector Summary tests passed.\");\n+            }\n+            finally\n+            {\n+                // Restore state\n+                this.currentSelectorSnapshot = originalSnapshot;\n+            }\n+#else\n+            OracleLog.Write(\"SELF_TEST\", \">>> SELECTOR SUMMARY TEST SKIPPED (NON-NINJATRADER)\");\n+#endif\n+        }\n+\n         private static AccountGuardSnapshot BuildSelfTestGuardSnapshot(DrawdownMonitorResult drawdown)\n         {\n             return new AccountGuardSnapshot\n\n",
+  "stderr": "",
+  "timed_out": false,
+  "session_ids": [
+    "13944901608959609572",
+    "100644"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_13944901608959609572.json",
+  "note": "Live pull attempted through the Jules CLI."
+}

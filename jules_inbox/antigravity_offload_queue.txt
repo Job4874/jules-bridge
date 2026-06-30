@@ -1,0 +1,4 @@
+﻿Needs review | Antigravity offload: CODEX_DECOUPLE_QUANTOWER_AND_BUILD_API_FOUNDATION.md | repo=C:\aotp\projects\OracleV5
+Needs review | Antigravity offload: CODEX_MASTER_HANDOVER_PROMPT.md | repo=C:\aotp\projects\OracleV5
+Needs review | Antigravity offload: CODEX_PHASE0_REPOSITORY_ARCHAEOLOGY_PROMPT.md | repo=C:\aotp\projects\OracleV5
+Needs review | Antigravity offload: CODEX_PHASE1_STABILIZATION_PROMPT.md | repo=C:\aotp\projects\OracleV5

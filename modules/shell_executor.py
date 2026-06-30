@@ -9,8 +9,12 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
+import hashlib
+import logging
 from typing import Optional
 
+LOGGER = logging.getLogger("jules_bridge")
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -24,6 +28,8 @@ _BASH_CANDIDATES = (
     r"C:\Program Files\Git\usr\bin\bash.exe",
 )
 
+# In-memory cache for shell results: { hash(cmd+cwd+shell): (timestamp, ShellResult) }
+_shell_result_cache = {}
 
 # ---------------------------------------------------------------------------
 # Typed return contract
@@ -118,6 +124,34 @@ def _build_args(shell_name: str, command: str) -> tuple[str, list[str]]:
 # Public interface
 # ---------------------------------------------------------------------------
 
+def spawn(
+    command: str,
+    shell: str = "cmd",
+    cwd: Optional[str] = None,
+) -> ShellResult:
+    """Launch a command without waiting for completion.
+
+    Intended for operator workflows that open apps or detach background jobs.
+    """
+    resolved_shell, args = _build_args(shell, command)
+    effective_cwd = cwd or os.getcwd()
+    proc = subprocess.Popen(
+        args,
+        cwd=effective_cwd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return ShellResult(
+        exit_code=0,
+        code=0,
+        stdout="",
+        stderr="",
+        shell=resolved_shell,
+        pid=proc.pid,
+        spawned=True,
+    )
+
+
 def execute(
     command: str,
     shell: str = "powershell",
@@ -143,26 +177,50 @@ def execute(
         ValueError: wsl/linux shell requested.
         subprocess.TimeoutExpired: if command exceeds timeout.
     """
-    resolved_shell, args = _build_args(shell, command)
     effective_cwd = cwd or os.getcwd()
+    cache_ttl = int(os.environ.get('SHELL_CACHE_TTL_S', '0'))
 
-    res = subprocess.run(
-        args,
-        cwd=effective_cwd,
-        capture_output=True,
-        text=True,
-        input=stdin,
-        timeout=timeout,
-        check=False,
-    )
+    # Cache key: hash(command + cwd + shell)
+    cache_key = hashlib.sha256(f"{command}{effective_cwd}{shell}".encode()).hexdigest()
 
-    return ShellResult(
-        exit_code=res.returncode,
-        code=res.returncode,          # legacy alias
-        stdout=_coerce_text(res.stdout),
-        stderr=_coerce_text(res.stderr),
-        shell=resolved_shell,
-    )
+    now = time.time()
+    if cache_key in _shell_result_cache and cache_ttl > 0:
+        ts, cached_res = _shell_result_cache[cache_key]
+        if now - ts < cache_ttl:
+            return cached_res
+
+    resolved_shell, args = _build_args(shell, command)
+
+    start_time = time.time()
+    try:
+        res = subprocess.run(
+            args,
+            cwd=effective_cwd,
+            capture_output=True,
+            text=True,
+            input=stdin,
+            timeout=timeout,
+            check=False,
+        )
+        duration = time.time() - start_time
+        if duration > 5.0:
+            LOGGER.warning("Slow shell call (>5s): %s (duration: %.2fs)", command[:50], duration)
+
+        result = ShellResult(
+            exit_code=res.returncode,
+            code=res.returncode,          # legacy alias
+            stdout=_coerce_text(res.stdout),
+            stderr=_coerce_text(res.stderr),
+            shell=resolved_shell,
+        )
+
+        # Update cache
+        _shell_result_cache[cache_key] = (now, result)
+        return result
+
+    except subprocess.TimeoutExpired:
+        LOGGER.warning("Shell call timed out: %s", command[:50])
+        raise
 
 
 def available_shells() -> list[str]:

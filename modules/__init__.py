@@ -10,10 +10,35 @@ from .shell_executor import (
     ShellNotAvailableError,
     UnsupportedShellError,
     execute,
+    spawn,
     available_shells,
 )
-from .ui_automation import ScreenshotResult, ClickResult, screenshot, click, type_text
+from .ui_automation import (
+    ScreenshotResult,
+    ClickResult,
+    SecretResult,
+    UIDetectionResult,
+    screenshot,
+    click,
+    type_text,
+    get_secret,
+    detect_ui_state,
+)
 from .inbox_service import InboxMessage, inbox_read, inbox_write
+from .human_mimic_driver import (
+    HumanMimicResult,
+    drive_quantower_login,
+)
+from .vm_manager import (
+    ResourcePressureResult,
+    VMBootResult,
+    detect_resource_pressure,
+    boot_secondary_vm,
+)
+from .windows_secret_provider import (
+    WindowsSecretProvider,
+    build_windows_secret_provider,
+)
 from .jules_orchestrator import (
     JulesTask,
     JulesDispatchResult,
@@ -86,6 +111,8 @@ from .context_orchestrator import (
     ContextSubagentPlan,
     build_context_subagents,
 )
+from .app_launcher import LaunchResult, launch_browser_to_url
+from .chat_service import ChatHealthResult, ChatResult, test_chat_providers, chat
 
 __all__ = [
     # fs_service
@@ -101,13 +128,29 @@ __all__ = [
     "ShellNotAvailableError",
     "UnsupportedShellError",
     "execute",
+    "spawn",
     "available_shells",
     # ui_automation
     "ScreenshotResult",
     "ClickResult",
+    "SecretResult",
+    "UIDetectionResult",
     "screenshot",
     "click",
     "type_text",
+    "get_secret",
+    "detect_ui_state",
+    # human_mimic_driver
+    "HumanMimicResult",
+    "drive_quantower_login",
+    # vm_manager
+    "ResourcePressureResult",
+    "VMBootResult",
+    "detect_resource_pressure",
+    "boot_secondary_vm",
+    # windows_secret_provider
+    "WindowsSecretProvider",
+    "build_windows_secret_provider",
     # inbox_service
     "InboxMessage",
     "inbox_read",
@@ -178,4 +221,12 @@ __all__ = [
     "ContextSubagent",
     "ContextSubagentPlan",
     "build_context_subagents",
+    # app_launcher
+    "LaunchResult",
+    "launch_browser_to_url",
+    # chat_service
+    "ChatHealthResult",
+    "ChatResult",
+    "test_chat_providers",
+    "chat",
 ]

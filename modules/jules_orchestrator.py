@@ -87,6 +87,14 @@ _DEFAULT_FLEET_STATE = "JULES_FLEET_STATE.json"
 _DEFAULT_FLEET_WATCH_STATE = "JULES_FLEET_WATCH_STATE.json"
 _STALE_UNKNOWN_REMOTE_SECONDS = 10 * 60
 _DEFAULT_INCLUDED_STATUSES = ("failed", "needs_review", "ready_for_review", "unknown")
+_DEFAULT_ANTIGRAVITY_PROMPT_DIR = (
+    r"C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover"
+    r"\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS"
+)
+_ANTIGRAVITY_LINE_RE = re.compile(
+    r"^(?P<status>[^|]+)\|\s*Antigravity offload:\s*(?P<prompt>[^|]+?)\s*\|\s*repo=(?P<repo>.+?)\s*$",
+    re.IGNORECASE,
+)
 _TASK_HEADINGS = (
     ("testing", "Testing Improvement Task"),
     ("performance", "Performance Optimization Task"),
@@ -104,6 +112,7 @@ _COMPLETED_COT_STATUSES = {"completed_reported", "pulled_output_reported"}
 
 # ---------------------------------------------------------------------------
 # Public interface
+_session_list_cache = {}
 # ---------------------------------------------------------------------------
 
 def parse_task_dump(content: str, source_name: str = "") -> list[JulesTask]:
@@ -150,8 +159,71 @@ def parse_task_dump(content: str, source_name: str = "") -> list[JulesTask]:
                 raw_excerpt="\n".join(_compact_lines(block_lines[:80])),
             ))
         return tasks
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return [JulesTask(error=f"parse failed: {exc}", status="error")]
+
+
+def parse_antigravity_queue(
+    content: str,
+    source_name: str = "",
+    prompt_dir: str = "",
+) -> list[JulesTask]:
+    """Parse pipe-delimited Antigravity offload queue lines into Jules tasks.
+
+    Expected line format::
+
+        Needs review | Antigravity offload: CODEX_PROMPT.md | repo=C:\\path\\to\\repo
+
+    Args:
+        content: Raw queue text.
+        source_name: Optional label for traceability.
+        prompt_dir: Directory containing Codex prompt markdown files.
+
+    Returns:
+        List of JulesTask dictionaries. Never raises.
+    """
+    try:
+        prompt_root = _antigravity_prompt_dir(prompt_dir)
+        tasks: list[JulesTask] = []
+        ordinal = 0
+        for raw_line in (content or "").replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+            line = raw_line.strip()
+            if not line:
+                continue
+            match = _ANTIGRAVITY_LINE_RE.match(line)
+            if not match:
+                continue
+            ordinal += 1
+            status = _normalize_status(match.group("status")) or "unknown"
+            prompt_name = (match.group("prompt") or "").strip()
+            repo_path = (match.group("repo") or "").strip()
+            prompt_path = prompt_root / prompt_name
+            prompt_excerpt = ""
+            if prompt_path.is_file():
+                prompt_excerpt = prompt_path.read_text(encoding="utf-8", errors="replace")
+            elif prompt_name:
+                prompt_excerpt = f"(prompt file not found: {prompt_path})"
+            title = Path(prompt_name).stem.replace("_", " ") if prompt_name else "Antigravity prompt"
+            fingerprint = _fingerprint("antigravity", prompt_name, title, repo_path)
+            task_id = f"JT-{ordinal:03d}-{fingerprint[:6]}"
+            tasks.append(JulesTask(
+                id=task_id,
+                ordinal=ordinal,
+                fingerprint=fingerprint,
+                task_type="antigravity",
+                status=status,
+                source=source_name,
+                title=title,
+                file=str(prompt_path),
+                issue="Execute Antigravity Codex handover prompt end-to-end",
+                language="markdown",
+                rationale="Offload large Codex handover work to Jules remote workers.",
+                repo_path=repo_path,
+                raw_excerpt=prompt_excerpt[:12000],
+            ))
+        return tasks
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
+        return [JulesTask(error=f"antigravity parse failed: {exc}", status="error")]
 
 
 def build_dispatch(
@@ -198,16 +270,27 @@ def build_dispatch(
 
         max_instances = max(1, int(max_instances or 1))
         statuses = _status_filter(include_statuses)
-        tasks = parse_task_dump(loaded_content, source_name=source_label)
+        if _is_antigravity_queue(loaded_content):
+            tasks = parse_antigravity_queue(loaded_content, source_name=source_label)
+        else:
+            tasks = parse_task_dump(loaded_content, source_name=source_label)
         tasks = [task for task in tasks if not task.get("error")]
         status_counts = _count_statuses(tasks)
         selected = _select_tasks(tasks, statuses, max_instances)
         packets = [
-            _packet_text(task, repo_path=repo_path, instance_index=index + 1)
+            _packet_text(
+                task,
+                repo_path=str(task.get("repo_path") or repo_path),
+                instance_index=index + 1,
+            )
             for index, task in enumerate(selected)
         ]
         commands = [
-            _launch_command(packet_path=None, task=task, repo_path=repo_path)
+            _launch_command(
+                packet_path=None,
+                task=task,
+                repo_path=str(task.get("repo_path") or repo_path),
+            )
             for task in selected
         ]
 
@@ -216,7 +299,6 @@ def build_dispatch(
             packet_files, commands = _write_dispatch_files(
                 selected=selected,
                 packets=packets,
-                commands=commands,
                 output_dir=Path(output_dir) if output_dir else _DEFAULT_OUTPUT_DIR,
                 repo_path=repo_path,
                 source_label=source_label,
@@ -243,7 +325,7 @@ def build_dispatch(
                 "launch; no remote Jules sessions were started."
             ),
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesDispatchResult(
             error=str(exc),
             source=source_path or "inline",
@@ -360,7 +442,7 @@ def launch_packets(
                         stdout=_coerce_text(exc.stdout),
                         stderr=_coerce_text(exc.stderr),
                     )
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
                     result.update(status="error", stderr=str(exc))
             results.append(result)
 
@@ -409,7 +491,7 @@ def launch_packets(
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             payload["state_path"] = str(destination)
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesLaunchResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -419,6 +501,7 @@ def launch_packets(
             timeout_count=0,
             results=[],
         )
+_session_list_cache = {}
 
 
 def list_remote_sessions(
@@ -436,6 +519,15 @@ def list_remote_sessions(
     Returns:
         JulesRemoteResult. Never raises.
     """
+    cache_ttl = int(os.environ.get('JULES_SESSION_CACHE_TTL_S', '30'))
+    now = time.time()
+
+    if not dry_run and jules_command in _session_list_cache and cache_ttl > 0:
+        ts, cached_res = _session_list_cache[jules_command]
+        if now - ts < cache_ttl:
+            cached_res['cache_hit'] = True
+            return cached_res
+
     resolved_jules_command = _resolve_cli_command(jules_command)
     command = [resolved_jules_command, "remote", "list", "--session"]
     if dry_run:
@@ -459,7 +551,7 @@ def list_remote_sessions(
         combined = f"{completed.get('stdout', '')}\n{completed.get('stderr', '')}"
         timed_out = bool(completed.get("timed_out"))
         exit_code = completed.get("exit_code")
-        return JulesRemoteResult(
+        result = JulesRemoteResult(
             dry_run=False,
             command=command,
             status="timeout" if timed_out else "ok" if exit_code == 0 else "failed",
@@ -470,7 +562,11 @@ def list_remote_sessions(
             session_ids=_extract_session_ids(combined),
             jules_command=jules_command,
             resolved_jules_command=resolved_jules_command,
+            cache_hit=False,
         )
+        if not timed_out and exit_code == 0:
+            _session_list_cache[jules_command] = (now, result)
+        return result
     except subprocess.TimeoutExpired as exc:
         return JulesRemoteResult(
             dry_run=False,
@@ -484,7 +580,7 @@ def list_remote_sessions(
             jules_command=jules_command,
             resolved_jules_command=resolved_jules_command,
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesRemoteResult(
             dry_run=False,
             command=command,
@@ -573,7 +669,7 @@ def jules_preflight(
             payload["state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesPreflightResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -670,7 +766,7 @@ def pull_remote_session(
             payload["output_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesPullResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -753,7 +849,7 @@ def build_cot_ledger(
             ledger_path.write_text(_cot_ledger_markdown(payload), encoding="utf-8")
             ledger_path.with_suffix(".json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesCotResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -761,6 +857,142 @@ def build_cot_ledger(
             selected_count=0,
             rows=[],
         )
+
+
+
+def _cycle_dispatch(
+    content: str,
+    source_path: str,
+    max_instances: int,
+    include_statuses: str | Iterable[str] | None,
+    write_packets: bool,
+    base_dir: Path,
+    repo_path: str,
+    generated_at: str,
+) -> JulesDispatchResult:
+    if content or source_path:
+        return build_dispatch(
+            content=content,
+            source_path=source_path,
+            max_instances=max_instances,
+            include_statuses=include_statuses,
+            write_packets=write_packets,
+            output_dir=str(base_dir),
+            repo_path=repo_path,
+        )
+    packets = _resolve_packet_files(packet_dir=str(base_dir))
+    return JulesDispatchResult(
+        source="existing_packets",
+        generated_at_utc=generated_at,
+        task_count=0,
+        selected_count=len(packets),
+        status_counts={},
+        include_statuses=list(_status_filter(include_statuses)),
+        max_instances=max_instances,
+        write_packets=False,
+        output_dir=str(base_dir),
+        repo_path=repo_path,
+        selected_tasks=[],
+        packet_files=[str(packet) for packet in packets],
+        launch_commands=[],
+        note="No task dump supplied; using existing packet files.",
+    )
+
+
+def _cycle_check_remote(
+    check_remote: bool,
+    jules_command: str,
+    timeout_s: int,
+    dry_run: bool,
+) -> JulesRemoteResult:
+    if check_remote:
+        return list_remote_sessions(
+            jules_command=jules_command,
+            timeout_s=timeout_s,
+            dry_run=dry_run,
+        )
+    return JulesRemoteResult(
+        dry_run=True,
+        status="skipped",
+        session_ids=[],
+        note="Remote session check skipped.",
+    )
+
+
+def _cycle_launch(
+    base_dir: Path,
+    repo_path: str,
+    launch: bool,
+    launch_limit: int,
+    dry_run: bool,
+    blockers: list[str],
+    require_remote_ready: bool,
+    remote_ready: bool,
+    timeout_s: int,
+    jules_command: str,
+    content: str,
+    source_path: str,
+) -> tuple[dict, JulesLaunchResult, bool]:
+    launch_dry_run = dry_run or not launch or bool(blockers) or (require_remote_ready and not remote_ready)
+    launch_state_path = base_dir / _DEFAULT_STATE_FILE
+    existing_launch_state = _read_json_file(launch_state_path)
+    has_existing_launch_state = bool(existing_launch_state.get("results"))
+    write_launch_state = launch or bool(content or source_path) or not has_existing_launch_state
+    launch_result = launch_packets(
+        packet_dir=str(base_dir),
+        repo_path=repo_path,
+        limit=launch_limit,
+        dry_run=launch_dry_run,
+        timeout_s=timeout_s,
+        jules_command=jules_command,
+        write_state=write_launch_state,
+        skip_launched=launch,
+    )
+    return existing_launch_state, launch_result, launch_dry_run
+
+
+def _cycle_pull(
+    base_dir: Path,
+    repo_path: str,
+    pull: bool,
+    session_ids: Iterable[str] | None,
+    existing_launch_state: dict,
+    launch_result: JulesLaunchResult,
+    sessions_result: JulesRemoteResult,
+    dry_run: bool,
+    require_remote_ready: bool,
+    remote_ready: bool,
+    timeout_s: int,
+    jules_command: str,
+) -> list[dict]:
+    pull_results = []
+    if pull:
+        existing_ids = _cycle_session_ids(session_ids=None, launch_result=existing_launch_state)
+        candidate_pull_ids = _cycle_session_ids(
+            session_ids=session_ids or existing_ids,
+            launch_result=launch_result,
+        )
+        pull_ids = (
+            _completed_session_ids(candidate_pull_ids, str(sessions_result.get("stdout", "")))
+            if sessions_result.get("status") == "ok"
+            else candidate_pull_ids
+        )
+        already_pulled = _successful_pull_session_ids(base_dir)
+        pull_ids = [session_id for session_id in pull_ids if session_id not in already_pulled]
+        pull_dry_run = dry_run or (require_remote_ready and not remote_ready)
+        for session_id in pull_ids:
+            pull_results.append(
+                dict(pull_remote_session(
+                    session_id=session_id,
+                    repo_path=repo_path,
+                    output_dir=str(base_dir / _DEFAULT_PULL_DIR),
+                    dry_run=pull_dry_run,
+                    timeout_s=timeout_s,
+                    jules_command=jules_command,
+                    write_result=True,
+                ))
+            )
+    return pull_results
 
 
 def run_jules_cycle(
@@ -795,52 +1027,27 @@ def run_jules_cycle(
     generated_at = datetime.now(timezone.utc).isoformat()
     base_dir = Path(packet_dir) if packet_dir else _DEFAULT_OUTPUT_DIR
     try:
-        dispatch_result = None
-        if content or source_path:
-            dispatch_result = build_dispatch(
-                content=content,
-                source_path=source_path,
-                max_instances=max_instances,
-                include_statuses=include_statuses,
-                write_packets=write_packets,
-                output_dir=str(base_dir),
-                repo_path=repo_path,
-            )
-        else:
-            packets = _resolve_packet_files(packet_dir=str(base_dir))
-            dispatch_result = JulesDispatchResult(
-                source="existing_packets",
-                generated_at_utc=generated_at,
-                task_count=0,
-                selected_count=len(packets),
-                status_counts={},
-                include_statuses=list(_status_filter(include_statuses)),
-                max_instances=max_instances,
-                write_packets=False,
-                output_dir=str(base_dir),
-                repo_path=repo_path,
-                selected_tasks=[],
-                packet_files=[str(packet) for packet in packets],
-                launch_commands=[],
-                note="No task dump supplied; using existing packet files.",
-            )
+        dispatch_result = _cycle_dispatch(
+            content=content,
+            source_path=source_path,
+            max_instances=max_instances,
+            include_statuses=include_statuses,
+            write_packets=write_packets,
+            base_dir=base_dir,
+            repo_path=repo_path,
+            generated_at=generated_at,
+        )
 
         blockers = []
         if dispatch_result.get("error"):
             blockers.append(f"Dispatch failed: {dispatch_result.get('error')}")
 
-        sessions_result = JulesRemoteResult(
-            dry_run=True,
-            status="skipped",
-            session_ids=[],
-            note="Remote session check skipped.",
+        sessions_result = _cycle_check_remote(
+            check_remote=check_remote,
+            jules_command=jules_command,
+            timeout_s=timeout_s,
+            dry_run=dry_run,
         )
-        if check_remote:
-            sessions_result = list_remote_sessions(
-                jules_command=jules_command,
-                timeout_s=timeout_s,
-                dry_run=dry_run,
-            )
 
         remote_ready = (not check_remote) or dry_run or sessions_result.get("status") == "ok"
         if check_remote and not dry_run and require_remote_ready and not remote_ready:
@@ -848,56 +1055,42 @@ def run_jules_cycle(
                 "Remote Jules session listing did not return ok; live launch/pull stayed disabled."
             )
 
-        launch_dry_run = dry_run or not launch or bool(blockers) or (require_remote_ready and not remote_ready)
-        launch_state_path = base_dir / _DEFAULT_STATE_FILE
-        existing_launch_state = _read_json_file(launch_state_path)
-        has_existing_launch_state = bool(existing_launch_state.get("results"))
-        write_launch_state = launch or bool(content or source_path) or not has_existing_launch_state
-        launch_result = launch_packets(
-            packet_dir=str(base_dir),
+        existing_launch_state, launch_result, launch_dry_run = _cycle_launch(
+            base_dir=base_dir,
             repo_path=repo_path,
-            limit=launch_limit,
-            dry_run=launch_dry_run,
+            launch=launch,
+            launch_limit=launch_limit,
+            dry_run=dry_run,
+            blockers=blockers,
+            require_remote_ready=require_remote_ready,
+            remote_ready=remote_ready,
             timeout_s=timeout_s,
             jules_command=jules_command,
-            write_state=write_launch_state,
-            skip_launched=launch,
+            content=content,
+            source_path=source_path,
         )
 
-        pull_results = []
-        pull_ids = []
-        if pull:
-            existing_ids = _cycle_session_ids(session_ids=None, launch_result=existing_launch_state)
-            candidate_pull_ids = _cycle_session_ids(
-                session_ids=session_ids or existing_ids,
-                launch_result=launch_result,
-            )
-            pull_ids = (
-                _completed_session_ids(candidate_pull_ids, str(sessions_result.get("stdout", "")))
-                if sessions_result.get("status") == "ok"
-                else candidate_pull_ids
-            )
-            already_pulled = _successful_pull_session_ids(base_dir)
-            pull_ids = [session_id for session_id in pull_ids if session_id not in already_pulled]
-            pull_dry_run = dry_run or (require_remote_ready and not remote_ready)
-            for session_id in pull_ids:
-                pull_results.append(
-                    pull_remote_session(
-                        session_id=session_id,
-                        repo_path=repo_path,
-                        output_dir=str(base_dir / _DEFAULT_PULL_DIR),
-                        dry_run=pull_dry_run,
-                        timeout_s=timeout_s,
-                        jules_command=jules_command,
-                        write_result=True,
-                    )
-                )
+        pull_results = _cycle_pull(
+            base_dir=base_dir,
+            repo_path=repo_path,
+            pull=pull,
+            session_ids=session_ids,
+            existing_launch_state=existing_launch_state,
+            launch_result=launch_result,
+            sessions_result=sessions_result,
+            dry_run=dry_run,
+            require_remote_ready=require_remote_ready,
+            remote_ready=remote_ready,
+            timeout_s=timeout_s,
+            jules_command=jules_command,
+        )
 
         cot_result = build_cot_ledger(packet_dir=str(base_dir), write_ledger=True)
         if cot_result.get("error"):
             blockers.append(f"COT ledger failed: {cot_result.get('error')}")
         all_complete = bool(cot_result.get("all_complete"))
         status = "complete" if all_complete else "blocked" if blockers else "pending"
+
         payload = JulesCycleResult(
             generated_at_utc=generated_at,
             status=status,
@@ -913,18 +1106,19 @@ def run_jules_cycle(
             dispatch=dict(dispatch_result),
             sessions=dict(sessions_result),
             launch_result=dict(launch_result),
-            pull_results=[dict(result) for result in pull_results],
+            pull_results=pull_results,
             cot=dict(cot_result),
             cycle_state_path="",
             note="COT means completion-of-task evidence summaries, not private chain-of-thought.",
         )
+
         if write_state:
             destination = Path(cycle_state_path) if cycle_state_path else base_dir / _DEFAULT_CYCLE_STATE
             destination.parent.mkdir(parents=True, exist_ok=True)
             payload["cycle_state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesCycleResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -938,6 +1132,7 @@ def run_jules_cycle(
             pull_results=[],
             cot={},
         )
+
 
 
 def run_jules_watch(
@@ -1060,7 +1255,7 @@ def run_jules_watch(
             payload["watch_state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesWatchResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -1104,34 +1299,15 @@ def run_jules_fleet(
     base_dir = Path(packet_dir) if packet_dir else _DEFAULT_OUTPUT_DIR
     blockers: list[str] = []
     try:
-        if content or source_path:
-            dispatch_result = build_dispatch(
-                content=content,
-                source_path=source_path,
-                max_instances=max_instances,
-                include_statuses=include_statuses,
-                write_packets=True,
-                output_dir=str(base_dir),
-                repo_path=repo_path,
-            )
-        else:
-            packets = _resolve_packet_files(packet_dir=str(base_dir))
-            dispatch_result = JulesDispatchResult(
-                source="existing_packets",
-                generated_at_utc=generated_at,
-                task_count=0,
-                selected_count=len(packets),
-                status_counts={},
-                include_statuses=list(_status_filter(include_statuses)),
-                max_instances=max_instances,
-                write_packets=False,
-                output_dir=str(base_dir),
-                repo_path=repo_path,
-                selected_tasks=[],
-                packet_files=[str(packet) for packet in packets],
-                launch_commands=[],
-                note="No task dump supplied; using existing packet files.",
-            )
+        dispatch_result = _fleet_dispatch(
+            content=content,
+            source_path=source_path,
+            base_dir=base_dir,
+            repo_path=repo_path,
+            max_instances=max_instances,
+            include_statuses=include_statuses,
+            generated_at=generated_at,
+        )
         if dispatch_result.get("error"):
             blockers.append(f"Dispatch failed: {dispatch_result.get('error')}")
 
@@ -1149,74 +1325,37 @@ def run_jules_fleet(
         tracked_ids = _cycle_session_ids(session_ids=None, launch_result=existing_launch_state)
         remote_status_rows = _session_status_rows(tracked_ids, str(sessions_result.get("stdout", "")))
         active_count = _active_remote_session_count(remote_status_rows)
+
         failed_packet_files = _failed_remote_packet_files(existing_launch_state, remote_status_rows)
-        stale_unknown_packet_files = _stale_unknown_remote_packet_files(
-            existing_launch_state,
-            remote_status_rows,
-        )
-        plan_awaiting_packet_files = _plan_awaiting_remote_packet_files(
-            existing_launch_state,
-            remote_status_rows,
-        )
+        stale_unknown_packet_files = _stale_unknown_remote_packet_files(existing_launch_state, remote_status_rows)
+        plan_awaiting_packet_files = _plan_awaiting_remote_packet_files(existing_launch_state, remote_status_rows)
         retry_packet_files = _merge_unique(failed_packet_files, stale_unknown_packet_files)
         retry_packet_files = _merge_unique(retry_packet_files, plan_awaiting_packet_files)
 
-        completed_ids = (
-            _completed_session_ids(tracked_ids, str(sessions_result.get("stdout", "")))
-            if sessions_result.get("status") == "ok"
-            else []
-        )
-        already_pulled = _successful_pull_session_ids(base_dir)
-        pull_ids = [session_id for session_id in completed_ids if session_id not in already_pulled]
-        pull_results = []
-        if not dry_run and remote_ready:
-            for session_id in pull_ids:
-                pull_results.append(
-                    pull_remote_session(
-                        session_id=session_id,
-                        repo_path=repo_path,
-                        output_dir=str(base_dir / _DEFAULT_PULL_DIR),
-                        dry_run=False,
-                        timeout_s=timeout_s,
-                        jules_command=jules_command,
-                        write_result=True,
-                    )
-                )
-
-        capacity = max(0, int(max_concurrent or 0) - active_count)
-        launch_limit = min(max(0, int(launch_batch_size or 0)), capacity)
-        launch_dry_run = dry_run or bool(blockers) or launch_limit <= 0
-        relaunch_limit = min(len(retry_packet_files), launch_limit)
-        remaining_launch_limit = max(0, launch_limit - relaunch_limit)
-        relaunch_result = JulesLaunchResult(results=[], attempt_results=[], attempted_count=0)
-        if relaunch_limit > 0:
-            relaunch_result = launch_packets(
-                packet_dir=str(base_dir),
-                repo_path=repo_path,
-                limit=relaunch_limit,
-                dry_run=launch_dry_run,
-                timeout_s=timeout_s,
-                jules_command=jules_command,
-                write_state=True,
-                skip_launched=False,
-                force_packet_files=retry_packet_files[:relaunch_limit],
-            )
-        launch_result = launch_packets(
-            packet_dir=str(base_dir),
+        completed_ids, already_pulled, pull_results = _fleet_pull_sessions(
+            sessions_result=sessions_result,
+            tracked_ids=tracked_ids,
+            base_dir=base_dir,
+            dry_run=dry_run,
+            remote_ready=remote_ready,
             repo_path=repo_path,
-            limit=remaining_launch_limit if remaining_launch_limit > 0 else -1,
-            dry_run=launch_dry_run,
             timeout_s=timeout_s,
             jules_command=jules_command,
-            write_state=True,
-            skip_launched=True,
         )
-        if relaunch_result.get("attempt_results"):
-            combined_attempts = list(relaunch_result.get("attempt_results", []) or []) + list(
-                launch_result.get("attempt_results", []) or []
-            )
-            launch_result["attempt_results"] = combined_attempts
-            launch_result["attempted_count"] = len(combined_attempts)
+
+        capacity, launch_limit, launch_dry_run, relaunch_limit, launch_result = _fleet_launch(
+            active_count=active_count,
+            max_concurrent=max_concurrent,
+            launch_batch_size=launch_batch_size,
+            blockers=blockers,
+            dry_run=dry_run,
+            retry_packet_files=retry_packet_files,
+            base_dir=base_dir,
+            repo_path=repo_path,
+            timeout_s=timeout_s,
+            jules_command=jules_command,
+        )
+
         cot_result = build_cot_ledger(packet_dir=str(base_dir), write_ledger=True)
         if cot_result.get("error"):
             blockers.append(f"COT ledger failed: {cot_result.get('error')}")
@@ -1227,7 +1366,12 @@ def run_jules_fleet(
             if item.get("status") == "launched"
         )
         all_complete = bool(cot_result.get("all_complete"))
-        status = "complete" if all_complete else "blocked" if blockers else "scaled" if launched_this_cycle else "pending"
+        status = (
+            "complete" if all_complete
+            else "blocked" if blockers
+            else "scaled" if launched_this_cycle
+            else "pending"
+        )
         payload = JulesFleetResult(
             generated_at_utc=generated_at,
             status=status,
@@ -1271,7 +1415,7 @@ def run_jules_fleet(
             payload["fleet_state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesFleetResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -1422,7 +1566,7 @@ def run_jules_fleet_watch(
             payload["fleet_watch_state_path"] = str(destination)
             destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesFleetWatchResult(
             error=str(exc),
             generated_at_utc=generated_at,
@@ -1439,6 +1583,22 @@ def run_jules_fleet_watch(
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
+
+def _antigravity_prompt_dir(prompt_dir: str = "") -> Path:
+    if prompt_dir:
+        return Path(prompt_dir)
+    configured = os.environ.get("JULES_ANTIGRAVITY_PROMPT_DIR", "").strip()
+    if configured:
+        return Path(configured)
+    return Path(_DEFAULT_ANTIGRAVITY_PROMPT_DIR)
+
+
+def _is_antigravity_queue(content: str) -> bool:
+    for raw_line in (content or "").replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        if _ANTIGRAVITY_LINE_RE.match(raw_line.strip()):
+            return True
+    return False
+
 
 def _heading_type(line: str) -> str | None:
     for task_type, phrase in _TASK_HEADINGS:
@@ -1590,6 +1750,11 @@ def _slug(text: str) -> str:
 
 def _packet_text(task: JulesTask, repo_path: str, instance_index: int) -> str:
     title = task.get("title", "Jules task")
+    objective = (
+        f"Execute this Antigravity Codex handover prompt: {title}"
+        if task.get("task_type") == "antigravity"
+        else f"Complete exactly this Jules card: {title}"
+    )
     lines = [
         f"# Jules Worker Packet {task.get('id')}",
         "",
@@ -1601,7 +1766,7 @@ def _packet_text(task: JulesTask, repo_path: str, instance_index: int) -> str:
         f"- repo_path: {repo_path or '(use current repository)'}",
         "",
         "## Objective",
-        f"Complete exactly this Jules card: {title}",
+        objective,
         "",
         "## Task Details",
         f"- File: {task.get('file', '') or '(not provided)'}",
@@ -1611,11 +1776,13 @@ def _packet_text(task: JulesTask, repo_path: str, instance_index: int) -> str:
         "",
         "## Operating Rules",
         "- Work on one card only; do not opportunistically refactor unrelated code.",
-        "- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.",
+        "- Do not stop at a plan or ask for plan approval; plan briefly in the report"
+        " and proceed unless a hard blocker prevents work.",
         "- Preserve existing behavior unless the card explicitly asks for behavior change.",
         "- Run the narrowest relevant verification first, then the broader suite if practical.",
         "- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.",
-        "- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.",
+        "- Do not reveal private chain-of-thought."
+        " Use a concise rationale, decision log, and evidence checklist instead.",
         "- If blocked, write the blocker, attempted evidence, and the exact next question.",
         "",
         "## Completion report",
@@ -1652,12 +1819,13 @@ def _launch_command(packet_path: str | None, task: JulesTask, repo_path: str) ->
 def _write_dispatch_files(
     selected: list[JulesTask],
     packets: list[str],
-    commands: list[str],
     output_dir: Path,
     repo_path: str,
     source_label: str,
     source_hash: str,
 ) -> tuple[list[str], list[str]]:
+    if not selected:
+        return [], []
     output_dir.mkdir(parents=True, exist_ok=True)
     _clear_previous_dispatch(output_dir)
     packet_files: list[str] = []
@@ -1667,7 +1835,9 @@ def _write_dispatch_files(
         path = output_dir / filename
         path.write_text(packet, encoding="utf-8")
         packet_files.append(str(path))
-        packet_commands.append(_launch_command(str(path), task, repo_path))
+        packet_commands.append(
+            _launch_command(str(path), task, str(task.get("repo_path") or repo_path))
+        )
 
     index = _dispatch_index(selected, packet_files, source_label, source_hash, repo_path)
     (output_dir / "JULES_DISPATCH_INDEX.md").write_text(index, encoding="utf-8")
@@ -1717,7 +1887,7 @@ def _packet_files_from_index(packet_dir: Path) -> list[Path]:
             if key not in seen and packet.is_file():
                 ordered.append(packet)
                 seen.add(key)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return []
     return ordered
 
@@ -1761,19 +1931,22 @@ def _resolve_cli_command(command: str) -> str:
 
 def _candidate_jules_commands(command: str) -> list[dict]:
     candidates = []
+    seen = set()
     raw = (command or "").strip() or "jules"
     resolved = shutil.which(raw) or raw
-    _append_candidate(candidates, "requested", raw, resolved)
+    _append_candidate(candidates, seen, "requested", raw, resolved)
     appdata = os.environ.get("APPDATA", "")
     if appdata:
         _append_candidate(
             candidates,
+            seen,
             "npm_bin_exe",
             str(Path(appdata) / "npm" / "bin" / "jules.exe"),
             str(Path(appdata) / "npm" / "bin" / "jules.exe"),
         )
         _append_candidate(
             candidates,
+            seen,
             "npm_cmd",
             str(Path(appdata) / "npm" / "jules.cmd"),
             str(Path(appdata) / "npm" / "jules.cmd"),
@@ -1782,6 +1955,7 @@ def _candidate_jules_commands(command: str) -> list[dict]:
     if temp_dir:
         _append_candidate(
             candidates,
+            seen,
             "temp_exe",
             str(Path(temp_dir) / "jules_tmp" / "jules.exe"),
             str(Path(temp_dir) / "jules_tmp" / "jules.exe"),
@@ -1789,10 +1963,11 @@ def _candidate_jules_commands(command: str) -> list[dict]:
     return candidates
 
 
-def _append_candidate(candidates: list[dict], label: str, requested: str, resolved: str) -> None:
+def _append_candidate(candidates: list[dict], seen: set, label: str, requested: str, resolved: str) -> None:
     key = str(resolved).lower()
-    if any(item.get("resolved", "").lower() == key for item in candidates):
+    if key in seen:
         return
+    seen.add(key)
     candidates.append({
         "label": label,
         "requested": requested,
@@ -1838,7 +2013,7 @@ def _safe_child_count(path: Path) -> int:
         if path.is_dir():
             return len(list(path.iterdir()))
         return 1
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return 0
 
 
@@ -1910,7 +2085,7 @@ def _run_cli_command(
             "stderr": stderr,
             "timed_out": True,
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         _terminate_process_tree(process)
         return {
             "exit_code": None,
@@ -1934,11 +2109,11 @@ def _terminate_process_tree(process: subprocess.Popen) -> None:
                 check=False,
             )
             return
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
     try:
         process.kill()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
 
 
@@ -1955,7 +2130,7 @@ def _read_json_file(path: Path) -> dict:
         if not path.is_file():
             return {}
         return json.loads(path.read_text(encoding="utf-8-sig", errors="replace"))
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return {}
 
 
@@ -2510,3 +2685,126 @@ def _launch_script(commands: list[str]) -> str:
 
 def _ps_quote(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
+
+
+def _fleet_dispatch(
+    content: str,
+    source_path: str,
+    base_dir: Path,
+    repo_path: str,
+    max_instances: int,
+    include_statuses: str | Iterable[str] | None,
+    generated_at: str,
+) -> JulesDispatchResult:
+    if content or source_path:
+        return build_dispatch(
+            content=content,
+            source_path=source_path,
+            max_instances=max_instances,
+            include_statuses=include_statuses,
+            write_packets=True,
+            output_dir=str(base_dir),
+            repo_path=repo_path,
+        )
+    packets = _resolve_packet_files(packet_dir=str(base_dir))
+    return JulesDispatchResult(
+        source="existing_packets",
+        generated_at_utc=generated_at,
+        task_count=0,
+        selected_count=len(packets),
+        status_counts={},
+        include_statuses=list(_status_filter(include_statuses)),
+        max_instances=max_instances,
+        write_packets=False,
+        output_dir=str(base_dir),
+        repo_path=repo_path,
+        selected_tasks=[],
+        packet_files=[str(packet) for packet in packets],
+        launch_commands=[],
+        note="No task dump supplied; using existing packet files.",
+    )
+
+
+def _fleet_pull_sessions(
+    sessions_result: dict,
+    tracked_ids: list[str],
+    base_dir: Path,
+    dry_run: bool,
+    remote_ready: bool,
+    repo_path: str,
+    timeout_s: int,
+    jules_command: str,
+) -> tuple[list[str], set[str], list[dict]]:
+    completed_ids = (
+        _completed_session_ids(tracked_ids, str(sessions_result.get("stdout", "")))
+        if sessions_result.get("status") == "ok"
+        else []
+    )
+    already_pulled = _successful_pull_session_ids(base_dir)
+    pull_ids = [session_id for session_id in completed_ids if session_id not in already_pulled]
+    pull_results = []
+    if not dry_run and remote_ready:
+        for session_id in pull_ids:
+            pull_results.append(
+                pull_remote_session(
+                    session_id=session_id,
+                    repo_path=repo_path,
+                    output_dir=str(base_dir / _DEFAULT_PULL_DIR),
+                    dry_run=False,
+                    timeout_s=timeout_s,
+                    jules_command=jules_command,
+                    write_result=True,
+                )
+            )
+    return completed_ids, already_pulled, pull_results
+
+
+def _fleet_launch(
+    active_count: int,
+    max_concurrent: int,
+    launch_batch_size: int,
+    blockers: list[str],
+    dry_run: bool,
+    retry_packet_files: list[str],
+    base_dir: Path,
+    repo_path: str,
+    timeout_s: int,
+    jules_command: str,
+) -> tuple[int, int, bool, int, JulesLaunchResult]:
+    capacity = max(0, int(max_concurrent or 0) - active_count)
+    launch_limit = min(max(0, int(launch_batch_size or 0)), capacity)
+    launch_dry_run = dry_run or bool(blockers) or launch_limit <= 0
+    relaunch_limit = min(len(retry_packet_files), launch_limit)
+    remaining_launch_limit = max(0, launch_limit - relaunch_limit)
+
+    relaunch_result = JulesLaunchResult(results=[], attempt_results=[], attempted_count=0)
+    if relaunch_limit > 0:
+        relaunch_result = launch_packets(
+            packet_dir=str(base_dir),
+            repo_path=repo_path,
+            limit=relaunch_limit,
+            dry_run=launch_dry_run,
+            timeout_s=timeout_s,
+            jules_command=jules_command,
+            write_state=True,
+            skip_launched=False,
+            force_packet_files=retry_packet_files[:relaunch_limit],
+        )
+    launch_result = launch_packets(
+        packet_dir=str(base_dir),
+        repo_path=repo_path,
+        limit=remaining_launch_limit if remaining_launch_limit > 0 else -1,
+        dry_run=launch_dry_run,
+        timeout_s=timeout_s,
+        jules_command=jules_command,
+        write_state=True,
+        skip_launched=True,
+    )
+    if relaunch_result.get("attempt_results"):
+        combined_attempts = list(relaunch_result.get("attempt_results", []) or []) + list(
+            launch_result.get("attempt_results", []) or []
+        )
+        launch_result["attempt_results"] = combined_attempts
+        launch_result["attempted_count"] = len(combined_attempts)
+
+    return capacity, launch_limit, launch_dry_run, relaunch_limit, launch_result
