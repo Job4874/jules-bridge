@@ -56,13 +56,24 @@ class UIDetectionResult(dict):
     """
 
 
+class UIActionResult(dict):
+    """Result of a guarded UI action.
+
+    Keys always present:
+      status (str): success, blocked, unknown, or error
+      state (str): detected UI state
+      acted (bool): whether keyboard/mouse actions were attempted
+      error (str | None): failure detail
+    """
+
+
 # ---------------------------------------------------------------------------
 # Module-level lazy import guard — pyautogui is only imported at call time
 # so that test environments can mock it cleanly.
 # ---------------------------------------------------------------------------
 
 def _pyautogui():
-    import pyautogui as _pag  # noqa: PLC0415
+    import pyautogui as _pag  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     return _pag
 
 
@@ -119,7 +130,7 @@ def get_secret(
             secret_available=True,
             error=None,
         )
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return SecretResult(
             status="error",
             target=target,
@@ -130,14 +141,14 @@ def get_secret(
 
 
 def detect_ui_state(
-    image_path: str | None = None,
+    _image_path: str | None = None,
     ocr_text: str = "",
     template_signals: dict | None = None,
 ) -> UIDetectionResult:
     """Classify a UI state from OCR text and optional template signals.
 
     Args:
-        image_path: Reserved for later OCR/OpenCV integration.
+        _image_path: Reserved for later OCR/OpenCV integration.
         ocr_text: Text extracted from the screen. Tests pass this directly.
         template_signals: Optional precomputed visual signals.
 
@@ -173,6 +184,14 @@ def detect_ui_state(
                 error=None,
             )
 
+        if "login" in signals and "credentials" in signals:
+            return UIDetectionResult(
+                state="auth_prompt",
+                confidence=0.8,
+                signals=signals,
+                error=None,
+            )
+
         if "quantower" in signals and "loading" in signals:
             return UIDetectionResult(
                 state="quantower_loading",
@@ -189,13 +208,21 @@ def detect_ui_state(
                 error=None,
             )
 
+        if "error" in text or "failed" in text:
+            return UIDetectionResult(
+                state="error",
+                confidence=0.7,
+                signals=signals,
+                error=None,
+            )
+
         return UIDetectionResult(
             state="unknown",
             confidence=0.0,
             signals=signals,
             error=None,
         )
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return UIDetectionResult(
             state="unknown",
             confidence=0.0,

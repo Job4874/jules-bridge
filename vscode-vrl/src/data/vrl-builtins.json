@@ -14,26 +14,26 @@
   {
     "name": "del",
     "detail": "del(target: any, [compact: boolean])",
-    "doc": "Removes the field specified by the static path from the target.",
-    "insertText": "del(${1:target})"
+    "doc": "Removes the field specified by the static path from the target. Use remove for dynamic path deletion.",
+    "insertText": "del(${1:.field})"
   },
   {
     "name": "downcase",
     "detail": "downcase(value: string)",
-    "doc": "Downcases the value string, where downcase is defined according to the Unicode Derived Core Property Lowercase.",
+    "doc": "Downcases the value string using Unicode lowercase rules.",
     "insertText": "downcase(${1:value})"
   },
   {
     "name": "exists",
     "detail": "exists(field: any)",
-    "doc": "Checks whether the path exists for the target.",
-    "insertText": "exists(${1:field})"
+    "doc": "Checks whether the path exists for the target, distinguishing missing paths from null values.",
+    "insertText": "exists(${1:.field})"
   },
   {
     "name": "get",
     "detail": "get(value: object | array, path: array)",
-    "doc": "Dynamically get the value of a given path.",
-    "insertText": "get(${1:value}, ${2:path})"
+    "doc": "Dynamically gets the value of a given path from an object or array.",
+    "insertText": "get!(${1:value}, ${2:path})"
   },
   {
     "name": "includes",
@@ -44,7 +44,7 @@
   {
     "name": "length",
     "detail": "length(value: string | object | array)",
-    "doc": "Returns the length of the value.",
+    "doc": "Returns the byte length of a string, the number of array elements, or the number of top-level object keys.",
     "insertText": "length(${1:value})"
   },
   {
@@ -61,8 +61,8 @@
   },
   {
     "name": "parse_json",
-    "detail": "parse_json!(value: string)",
-    "doc": "Parses the provided value as JSON.",
+    "detail": "parse_json(value: string, [max_depth: integer, lossy: boolean])",
+    "doc": "Parses the provided value as JSON and returns a structured JSON value.",
     "insertText": "parse_json!(${1:value})"
   },
   {
@@ -79,15 +79,15 @@
   },
   {
     "name": "replace",
-    "detail": "replace(value: string, pattern: string | regex, with: string, [count: integer])",
+    "detail": "replace(value: string, pattern: string | regex, with: string)",
     "doc": "Replaces all matching instances of pattern in value.",
     "insertText": "replace(${1:value}, ${2:pattern}, ${3:with})"
   },
   {
     "name": "set",
     "detail": "set(value: object | array, path: array, data: any)",
-    "doc": "Dynamically insert data into the path of a given object or array.",
-    "insertText": "set(${1:value}, ${2:path}, ${3:data})"
+    "doc": "Dynamically inserts data into the path of a given object or array.",
+    "insertText": "set!(${1:value}, ${2:path}, ${3:data})"
   },
   {
     "name": "split",
@@ -98,25 +98,25 @@
   {
     "name": "strip_whitespace",
     "detail": "strip_whitespace(value: string)",
-    "doc": "Strips whitespace from the start and end of value.",
+    "doc": "Strips Unicode whitespace from the start and end of value.",
     "insertText": "strip_whitespace(${1:value})"
   },
   {
     "name": "to_int",
     "detail": "to_int(value: any)",
     "doc": "Coerces the value into an integer.",
-    "insertText": "to_int(${1:value})"
+    "insertText": "to_int!(${1:value})"
   },
   {
     "name": "to_string",
     "detail": "to_string(value: any)",
     "doc": "Coerces the value into a string.",
-    "insertText": "to_string(${1:value})"
+    "insertText": "to_string!(${1:value})"
   },
   {
     "name": "upcase",
     "detail": "upcase(value: string)",
-    "doc": "Upcases value, where upcase is defined according to the Unicode Derived Core Property Uppercase.",
+    "doc": "Upcases value using Unicode uppercase rules.",
     "insertText": "upcase(${1:value})"
   }
 ]
