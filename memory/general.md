@@ -365,3 +365,11 @@ has gone wrong before and what to avoid.
 - Added module-boundary tests in `tests/test_chat_service.py` and route-thinness tests in `tests/test_bridge_routes.py`.
 - Verification: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py`; focused pytest passed 74 tests; full `python -m pytest tests/ -q` passed 315 tests. Evidence hash `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`.
 
+## Session 20260630T000027 - Jules Production Readiness PR
+
+- Integrated completed Jules worker output into branch `codex/jules-production-finish` and opened draft PR #64 at `https://github.com/Job4874/jules-bridge/pull/64`.
+- Added `GET /health/deep`, evidence hard-gate reason handling, durable dashboard tunnel discovery from bridge log, `jules_inbox/LOCAL_TUNNEL_CURRENT.log`, and env fallback, plus dashboard UI active-tunnel badge support.
+- Reconciled Jules-derived runtime fixes: removed duplicate `ui_automation` shadows, exported `check_and_scale_compute`, preserved future-dated evidence memory during pruning, and carried staged shell/inbox/orchestrator hardening into the PR.
+- Verification: Python 3.12.10 full suite passed `406 passed`; dashboard `pnpm run build` passed with bundled Node; `git diff --check` passed; local bridge, public LocalTunnel, and in-app browser dashboard were verified.
+- Current public tunnel at handoff: `https://silly-pumas-dance.loca.lt`. `/health/deep` overall status was `ok`, but live provider readiness still warned that GCP lacked an active gcloud session and Gemini had an invalid API key.
+
