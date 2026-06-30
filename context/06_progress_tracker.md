@@ -307,3 +307,12 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Verification: focused route/dashboard slice passed (`121 passed`), full suite passed (`432 passed`), `git diff --check` passed with only normal CRLF warnings, bridge restarted to PID `40772`, live `/chat` returned `model_used=vm/jules-worker`, `/chat/test` reported Gemini/OpenRouter `invalid_key` and VM worker `ok`, `/health/deep` returned `status=ok`, and Browser dashboard proof rendered `TUNNEL: ACTIVE`, `GEMINI: ERROR`, `OPENROUTER: ERROR`, `VM CHAT: OK`, and GCP worker `1/1 ONLINE`.
 - [ ] Remaining release blocker: local Gemini/OpenRouter credentials are still invalid, and VM-side provider quota can still intermittently fail probes; PR #64 stays draft until fixed or explicitly accepted as non-blocking.
 
+## Session 20260630T041930 - Deep Health Provider Error Type Surface
+
+- [x] Reviewed Jules session `3580112715401585773`; left its stale 30-file diff unapplied because it removed circuit-breaker wiring and did not supply a safe focused patch.
+- [x] Added `error_type` passthrough in `modules/health_service.py` so `/health/deep` preserves `/chat/test` provider classifications.
+- [x] Added focused `tests/test_health_deep.py` assertions for Gemini/OpenRouter `invalid_key` error types.
+- [x] Verification: focused health/chat/dashboard slice passed (`50 passed`), full suite passed (`432 passed`), and `git diff --check` passed with only normal CRLF warnings.
+- [x] Restarted bridge to PID `24292`, recycled LocalTunnel to `https://tall-rice-invite.loca.lt`, verified public `/ping`, `/health`, and `/dashboard/status`, and captured native Chrome dashboard proof at `jules_inbox/jules_dashboard_cloud_panel_dispatch/evidence/dashboard-provider-error-type-20260630T0420Z.png`.
+- [ ] Remaining release blocker: local Gemini/OpenRouter credentials still fail as `invalid_key`; VM worker is online and cloud worker is `1/1 ONLINE`, but VM chat can still flip to `No LLM available` from Gemini quota/OpenRouter free-model failure. PR #64 stays draft until fixed or explicitly accepted as non-blocking.
+

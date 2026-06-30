@@ -422,3 +422,11 @@ has gone wrong before and what to avoid.
 - Verification: focused route/dashboard slice passed `121 passed`; full `python -m pytest tests/ -q` passed `432 passed`. After restart to bridge PID `40772`, `/chat` returned `model_used=vm/jules-worker`, `/chat/test` was healthy with Gemini/OpenRouter `invalid_key` and `vm_worker: ok`, `/health/deep` returned `status=ok`, and Browser dashboard proof showed `TUNNEL: ACTIVE`, `GEMINI: ERROR`, `OPENROUTER: ERROR`, `VM CHAT: OK`, and GCP worker `1/1 ONLINE`.
 - Remaining release blocker: local Gemini/OpenRouter credentials are still invalid, and VM-side provider quota can still intermittently fail health probes; PR #64 remains draft unless those blockers are fixed or explicitly accepted.
 
+## Session 20260630T041930 - Deep Health Provider Error Type Surface
+
+- Pulled Jules provider-classification session `3580112715401585773` without applying it; the diff was a stale 30-file replay and again removed circuit-breaker wiring, so only the current-head health gap was integrated.
+- `modules.health_service._map_chat_provider_result()` now preserves provider `error_type` from `/chat/test` into `/health/deep`, so Gemini/OpenRouter `invalid_key` classifications are visible on deep health and dashboard consumers.
+- Verification: focused health/chat/dashboard tests passed `50 passed`; full `python -m pytest tests/ -q` passed `432 passed`; `git diff --check` passed with only normal CRLF warnings. Bridge restarted to PID `24292`.
+- Runtime proof: local `/health/deep` now reports Gemini/OpenRouter `error_type: invalid_key`; LocalTunnel was recycled to `https://tall-rice-invite.loca.lt`, whose `/ping`, `/health`, and `/dashboard/status` passed. Native Chrome dashboard proof saved `jules_inbox/jules_dashboard_cloud_panel_dispatch/evidence/dashboard-provider-error-type-20260630T0420Z.png` and rendered `TUNNEL: ACTIVE`, `GEMINI: ERROR`, `OPENROUTER: ERROR`, `VM CHAT: ERROR`, and cloud workers `1/1 ONLINE`.
+- Remaining release blocker: local Gemini/OpenRouter credentials remain invalid, and the VM worker is online but intermittently returns `No LLM available` from Gemini quota/OpenRouter free-model failure; do not mark PR #64 production-ready until fixed or explicitly accepted.
+

@@ -34,6 +34,8 @@ def _map_chat_provider_result(result: Dict[str, Any]) -> Dict[str, Any]:
     }
     if "code" in result:
         mapped_result["code"] = result["code"]
+    if "error_type" in result:
+        mapped_result["error_type"] = result["error_type"]
     return mapped_result
 
 

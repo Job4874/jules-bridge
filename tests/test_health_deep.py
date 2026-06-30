@@ -64,8 +64,18 @@ class TestHealthDeep(unittest.TestCase):
         mock_chat.return_value = {
             "healthy": False,
             "providers": {
-                "gemini": {"status": "error", "code": 400, "detail": "HTTP 400: invalid"},
-                "openrouter": {"status": "error", "code": 401, "detail": "HTTP 401: user not found"},
+                "gemini": {
+                    "status": "error",
+                    "code": 400,
+                    "error_type": "invalid_key",
+                    "detail": "HTTP 400: invalid",
+                },
+                "openrouter": {
+                    "status": "error",
+                    "code": 401,
+                    "error_type": "invalid_key",
+                    "detail": "HTTP 401: user not found",
+                },
             },
         }
         mock_pressure.return_value = {"cpu_percent": 10.0, "memory_percent": 20.0, "maxed_out": False}
@@ -77,8 +87,10 @@ class TestHealthDeep(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data["providers"]["gemini"]["status"], "fail")
         self.assertEqual(data["providers"]["gemini"]["code"], 400)
+        self.assertEqual(data["providers"]["gemini"]["error_type"], "invalid_key")
         self.assertEqual(data["providers"]["openrouter"]["status"], "fail")
         self.assertEqual(data["providers"]["openrouter"]["code"], 401)
+        self.assertEqual(data["providers"]["openrouter"]["error_type"], "invalid_key")
 
     def test_health_deep_unauthorized(self):
         response = self.app.get('/health/deep')
