@@ -11,6 +11,19 @@ At the start of every Jules Bridge coding session:
 3. **Check oracle status**: `GET /oracle/status` (understand current system state)
 4. **Check inbox**: `GET /inbox/read` (any pending messages from human?)
 5. **Read the relevant context files** before touching any module
+6. **Read self-unblocking rules**: `jules_inbox/JULES_SELF_UNBLOCKING_PROTOCOL.md`
+
+## HRE Self-Unblocking Protocol
+
+When blocked, do not immediately ask the operator. Run a bounded HRE loop:
+
+1. **Hypothesis**: classify the blocker as tool gap, knowledge gap, environment gap, contract gap, implementation gap, evidence gap, or human-policy gap.
+2. **Route**: choose the narrowest route, tool, extension, skill, file, or repo check that can test the hypothesis.
+3. **Evidence**: capture exact output, path, status code, screenshot path, hash, commit, or error text.
+
+Run up to three HRE passes before escalation. Between passes, check `GET /tentacles`, `GET /session/log`, `context/05_gotchas.md`, `memory/reasoning.md`, relevant domain memory, and `.agents/skills/`. If tests fail repeatedly or a loop repeats, run `recover`.
+
+Escalation is valid only when the remaining need is external to Jules, such as live-order approval, secret disclosure, paid scaling approval, unavailable UI/CLI capability, or a Jules CLI plan-approval state. The escalation must list what was tried and the smallest operator action needed.
 
 ## Scope Discipline
 
@@ -24,6 +37,7 @@ Nick Ni: "You want to guide the model, not prescribe it."
 ## Evidence-First Rules (Nick Ni)
 
 **Before reviewing any code, the following evidence must exist:**
+
 1. `POST /retrospective/record_evidence` with actual test output → SHA-256 hash
 2. If UI was changed: a screenshot via `GET /ui/screenshot`
 3. If Oracle was changed: `oracle_status()` output showing the fix
@@ -45,12 +59,14 @@ Do NOT make architectural decisions autonomously. Do NOT assume the user wants t
 ## Scope Boundaries
 
 The agent MUST NOT:
+
 - Modify `bridge.py` header or middleware (lines 1-230)
 - Delete any existing module file
 - Change any existing public function signature
 - Add dependencies to `requirements.txt` without noting it
 
 The agent MAY:
+
 - Add new functions to existing modules (with docstrings)
 - Add new routes following the route handler template
 - Create new module files following the module template
@@ -65,6 +81,7 @@ The agent MAY:
 3. Read the learning written to `memory/general.md`
 4. Update the gotchas file (`context/05_gotchas.md`) if a new pattern is found
 5. Patch the module, not the route handler
+6. Update `memory/reasoning.md` when the lesson is about tool choice, blocker classification, or recovery flow
 
 ## HRE Self-Unblocking Protocol (Operator Directive)
 

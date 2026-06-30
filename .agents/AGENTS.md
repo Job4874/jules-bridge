@@ -25,7 +25,18 @@ Every session MUST begin with:
 2. Read all context files in the order above
 3. Load memory: read `memory/general.md` (and domain-specific files if relevant)
 4. Check the progress tracker to understand current phase and what's next
-5. Only then proceed to the task
+5. Read `jules_inbox/JULES_SELF_UNBLOCKING_PROTOCOL.md` when the session has bridge/inbox access
+6. Only then proceed to the task
+
+## Self-Unblocking Requirement
+
+If blocked, do not immediately ask the operator. Use the HRE loop from `JULES_SELF_UNBLOCKING_PROTOCOL.md`:
+
+1. Hypothesis: classify the blocker.
+2. Route: inspect the relevant tool, route, extension, skill, file, or repo surface.
+3. Evidence: capture exact output before deciding.
+
+Run up to three bounded passes. Check `GET /tentacles`, request logs, gotchas, memory, and `.agents/skills/` before declaring a tool or extension unavailable. Escalate only with exact attempted tools/files, error output, and the smallest operator action required.
 
 ## Session End Protocol
 

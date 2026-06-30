@@ -8,7 +8,7 @@
 ## Google Cloud — Projectmywebsite
 
 | Resource | Status | Notes |
-|----------|--------|-------|
+| ---------- | -------- | ------- |
 | GCP Project | `projectmywebsite` | Console logged in (operator verified) |
 | Generative Language API | **Required** | Enable at APIs & Services → Library → "Generative Language API" |
 | Agent Platform API key | In `.env` as `GEMINI_API_KEY` | Prefix `AQ.*` — **429 depleted prepayment credits** |
@@ -19,7 +19,7 @@
 Bridge routes `POST /reasoning/solve`, `/reasoning/plan`, `/reasoning/execute_step` use:
 
 | Alias | Model | Env |
-|-------|-------|-----|
+| ------- | ------- | ----- |
 | `stub` | deterministic | no key |
 | `fast` | `gemini-2.0-flash` | `GEMINI_API_KEY` |
 | `smart` | `gemini-2.5-pro` | `GEMINI_API_KEY` |
@@ -27,12 +27,14 @@ Bridge routes `POST /reasoning/solve`, `/reasoning/plan`, `/reasoning/execute_st
 **Required:** A Generative Language API key with billing/credits active — NOT Agent Platform-only.
 
 Steps:
+
 1. GCP Console → APIs & Services → Enable **Generative Language API**
 2. Create new API key OR edit "62 APIs" key → add **Generative Language API** to restrictions (or unrestricted for dev)
 3. Set `GEMINI_API_KEY=<AIzaSy...>` in `C:\Users\abdul\.jules\.env`
 4. Restart bridge: `python bridge.py` (loads `.env` via `notify_email.load_env()`)
 
 Service accounts visible in project (for future agent deploy):
+
 - `vertex-express@projectmywebsite.iam.gserviceaccount.com`
 - `trading-bot-deployer@projectmywebsite.iam.gserviceaccount.com`
 - Compute Engine default SA
@@ -42,7 +44,7 @@ Service accounts visible in project (for future agent deploy):
 ## Azure — tibin-agent-vm-01
 
 | Field | Value |
-|-------|-------|
+| ------- | ------- |
 | VM Name | `tibin-agent-vm-01` |
 | Public IP | `74.249.129.209` |
 | OS | Linux |
@@ -57,7 +59,7 @@ Service accounts visible in project (for future agent deploy):
 ## Jules Remote Agent Fleet (Google OAuth)
 
 | Component | Path / Value |
-|-----------|--------------|
+| ----------- | -------------- |
 | Jules CLI | `C:\Users\abdul\AppData\Roaming\npm\bin\jules.exe` v0.1.42 |
 | OAuth Client | `716860248198-...apps.googleusercontent.com` |
 | Remote repo | `Job4874/OracleV5` |
@@ -75,7 +77,7 @@ Jules auth paths checked — none exist locally (`~/.jules_auth`, etc.). Remote 
 ## Bridge Local Agents (Cursor / skills)
 
 | Agent type | Location | Invoke |
-|------------|----------|--------|
+| ------------ | ---------- | -------- |
 | Context subagents | `POST /akc/subagents` | cartographer, memory_curator, planner, verification |
 | HRM reasoning | `POST /reasoning/solve` | H/L/ACT with Gemini |
 | Human-mimic driver | `POST /ui/drive_quantower_login` | credential manager |
@@ -91,12 +93,12 @@ Skills (`.agents/skills/`): architect, imprint, review, recover, remember, grill
 ## Subscriptions & Access (operator logged in)
 
 | Service | Account | Status |
-|---------|---------|--------|
-| Google Account | atibin@student.cccs.edu | Logged in |
+| --------- | --------- | -------- |
+| Google Account | <atibin@student.cccs.edu> | Logged in |
 | GCP Console | Projectmywebsite | Logged in |
 | Google Gemini (web) | gemini.google.com Pro | Logged in |
 | Azure Portal | CCCS student | Logged in, VM running |
-| Gmail bridge | atibin7@gmail.com → iCloud | SMTP working |
+| Gmail bridge | <atibin7@gmail.com> → iCloud | SMTP working |
 | Jules CLI | Google OAuth | Remote sessions active |
 
 ---

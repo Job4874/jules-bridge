@@ -9,7 +9,9 @@ description: >
 # Write PRD Skill
 
 ## Purpose
+
 Create a **destination document** that captures the shared design concept from the grilling session. This document:
+
 - Defines the full scope of the feature
 - Captures all decisions made
 - Provides user stories as an acceptance baseline
@@ -21,10 +23,13 @@ This is NOT "specs to code". The code and codebase are kept in mind throughout.
 ## Instructions
 
 ### Step 1: Gather Input
+
 If no grilling session has occurred yet, ask the user for a detailed description of the problem. Then optionally run a brief grilling session (or use the existing conversation).
 
 ### Step 2: Explore the Codebase (if not already done)
+
 Use a sub-agent to identify:
+
 - The modules most likely to be affected
 - Existing patterns to follow
 - Any constraints or gotchas
@@ -32,6 +37,7 @@ Use a sub-agent to identify:
 Present a list of **proposed modules to modify** to the user for confirmation before writing the PRD.
 
 ### Step 3: Write the PRD
+
 Output a markdown document with this structure:
 
 ```markdown
@@ -67,9 +73,11 @@ Given [context], when [action], then [outcome].
 ```
 
 ### Step 4: Save the PRD
+
 Save the PRD to `./issues/prd-[feature-name].md` (or to a GitHub issue if configured).
 
 ## Rules
+
 - Keep the PRD focused on WHAT and WHY, not HOW
 - Every user story should be independently testable
 - Include testing decisions — they are as important as implementation decisions

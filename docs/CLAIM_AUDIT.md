@@ -8,7 +8,7 @@
 Status legend:
 
 | Status | Meaning |
-|---|---|
+| --- | --- |
 | `VERIFIED_SOURCE` | Confirmed in OracleV5 source code at cited path |
 | `PENDING_RUNTIME` | Source confirmed; live Quantower / telemetry / bridge evidence not yet collected this audit cycle |
 | `MISMATCH` | Source vs deployed instance disagree — needs operator resolution |
@@ -19,7 +19,7 @@ Status legend:
 ## Audit Summary
 
 | # | Target | Status | Last checked |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Penalty weights (19 GodScore weights sum = 1.0) | `VERIFIED_SOURCE` | 2026-06-26 |
 | 2 | Kelly breakpoints | `VERIFIED_SOURCE` | 2026-06-26 |
 | 3 | GodScore factor count | `VERIFIED_SOURCE` | 2026-06-26 |
@@ -45,7 +45,7 @@ Status legend:
 **Verified values (defaults):**
 
 | Factor | Weight |
-|---|---:|
+| --- | ---: |
 | VPIN | 0.10 |
 | Regime | 0.08 |
 | Volatility | 0.07 |
@@ -86,7 +86,7 @@ Status legend:
 **Source of truth:** `OracleV5.Strategy/Risk/KellyCalculator.cs`
 
 | Breakpoint | Value | Behavior |
-|---|---|---|
+| --- | --- | --- |
 | Invalid input | — | `ReasonCode = KELLY_INVALID_INPUT`, not ready |
 | Insufficient stats | `trades <= 0` or non-positive avg win/loss | `KELLY_INSUFFICIENT_STATS` |
 | Raw Kelly formula | `(b*p - q) / b` | Standard Kelly |
@@ -112,7 +112,7 @@ Status legend:
 **Threshold constants:**
 
 | Constant | Value |
-|---|---:|
+| --- | ---: |
 | ScalpThreshold / ENTRY_MIN_SCORE | 12.0 |
 | SwingThreshold / SWING_MIN_SCORE | 14.0 |
 | AssassinThreshold | 18.0 |
@@ -152,7 +152,7 @@ Status legend:
 **Source of truth:** `OracleConstants.GodScore`
 
 | Constant | Value |
-|---|---:|
+| --- | ---: |
 | `DirectionConflictPenalty` | **0.75** |
 | `MinDirectionalConviction` | **0.15** |
 
@@ -181,7 +181,7 @@ Status legend:
 **Source of truth:** `OracleStrategy_Part16_Execution.cs`
 
 | Constant | Value |
-|---|---:|
+| --- | ---: |
 | `_pendingOrderTimeout` | **20 seconds** |
 | `_executionLockTimeout` | **30 seconds** |
 | Accessor | `GetPendingOrderTimeout()` returns `_pendingOrderTimeout` |
@@ -201,7 +201,7 @@ Status legend:
 **Primary mapping (source):**
 
 | Constant | Location | Value |
-|---|---|---:|
+| --- | --- | ---: |
 | `Risk.WarningUtilization` | `OracleConstants.cs` | **0.80** (80%) |
 | `DrawdownMonitor` private const | `Risk/DrawdownMonitor.cs` | **0.80** |
 | Size at warning | `Risk.SizeWarning` | **0.50** |
@@ -210,7 +210,7 @@ Status legend:
 **Related Assassin trail buffer (profit lock, not warn utilization):**
 
 | Constant | Value |
-|---|---:|
+| --- | ---: |
 | `AccountGuard.AssassinTrailBuffer` | **700.00** USD |
 | `AccountGuard.AssassinActivationProfit` | **1000.00** USD |
 | `AccountGuard.AssassinInitialLockProfit` | **300.00** USD |

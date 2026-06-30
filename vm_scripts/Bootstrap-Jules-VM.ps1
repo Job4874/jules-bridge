@@ -1,3 +1,7 @@
+param(
+    [string]$LocalBridgeToken = ""
+)
+
 # Generate SSH key and push to GCP VM via gcloud OS Login / metadata
 # Then install jules-worker-agent
 
@@ -63,12 +67,6 @@ if (-not (Test-Path $agentSrc)) {
     --zone=$VM_ZONE --project=$VM_PROJECT 2>&1
 
 # Push env file
-$envContent = @"
-GEMINI_API_KEY=$(& python -c "import os; exec(open('C:\\Users\\abdul\\.jules\\.env').read().replace('=', '=\`"').replace('`n', '\`"=\nX=\`"')); print(os.environ.get('GEMINI_API_KEY',''))" 2>$null)
-OPENROUTER_API_KEY=$(& python -c "import os; [setattr(os, 'environ', {**os.environ, **dict(l.split('=',1) for l in open('C:/Users/abdul/.jules/.env') if '=' in l and not l.startswith('#'))})" 2>$null)
-LOCAL_BRIDGE_URL=http://10.0.0.48:5000
-LOCAL_BRIDGE_TOKEN=JULES-SECURE-999
-"@
 
 # Simpler env extraction
 $envRaw = Get-Content "C:\Users\abdul\.jules\.env" -Raw
@@ -76,11 +74,27 @@ $geminiKey = ($envRaw | Select-String "GEMINI_API_KEY=(.+)").Matches[0].Groups[1
 $orKey = ($envRaw | Select-String "OPENROUTER_API_KEY=([^`r`n]+)").Matches[0].Groups[1].Value.Trim()
 $localIP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.*" } | Select-Object -First 1).IPAddress
 
+# Determine LOCAL_BRIDGE_TOKEN
+$bridgeToken = $LocalBridgeToken
+if (-not $bridgeToken) {
+    if ($env:LOCAL_BRIDGE_TOKEN) {
+        $bridgeToken = $env:LOCAL_BRIDGE_TOKEN
+    } elseif (Test-Path "C:\Users\abdul\.jules\.env") {
+        $envRaw = Get-Content "C:\Users\abdul\.jules\.env" -Raw
+        if ($envRaw -match "LOCAL_BRIDGE_TOKEN=([^`r`n]+)") {
+            $bridgeToken = $matches[1].Trim()
+        }
+    }
+}
+if (-not $bridgeToken) {
+    Write-Host "[WARNING] LOCAL_BRIDGE_TOKEN not found. Remote communication may fail." -ForegroundColor Red
+}
+
 $envContent = @"
 GEMINI_API_KEY=$geminiKey
 OPENROUTER_API_KEY=$orKey
 LOCAL_BRIDGE_URL=http://${localIP}:5000
-LOCAL_BRIDGE_TOKEN=JULES-SECURE-999
+LOCAL_BRIDGE_TOKEN=$bridgeToken
 "@
 $envContent | Out-File -FilePath "$env:TEMP\vm_jules.env" -Encoding UTF8 -NoNewline
 
