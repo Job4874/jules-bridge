@@ -993,6 +993,25 @@ class TestDiscoveryRoutes(unittest.TestCase):
         self.assertNotIn("routes", payload)
 
 
+class TestDashboardRoute(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    @patch("modules.dashboard_module.get_dashboard_status")
+    def test_dashboard_status_passes_bypass_cache_query(self, mock_dashboard):
+        mock_dashboard.return_value = {"ok": True, "cache_age_s": 0}
+
+        response = self.client.get("/dashboard/status?bypass_cache=true")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["cache_age_s"], 0)
+        mock_dashboard.assert_called_once()
+        _, kwargs = mock_dashboard.call_args
+        self.assertIs(kwargs["bypass_cache"], True)
+        self.assertIs(kwargs["bridge_start_utc"], bridge._BRIDGE_START_UTC)
+
+
 class TestBridgeTokenAuth(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True

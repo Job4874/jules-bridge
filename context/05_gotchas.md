@@ -381,3 +381,8 @@
 - All bridge routes are rate-limited to 20 calls per 60 seconds (returns HTTP 429) to prevent doom loops.
 
 - Polling routes (\/ping\, \/health\, \/dashboard/status\) have a higher ceiling of 200 calls.
+
+
+## dashboard_status
+
+- `GET /dashboard/status?bypass_cache=true` is for explicit operator refreshes only. The React dashboard should keep normal polling cached and build live feeling from client-side history/diffing; do not put cache bypass in the interval loop.

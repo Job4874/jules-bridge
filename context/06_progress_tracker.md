@@ -346,3 +346,12 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Launched fresh Jules current-head audit session `14369052129679399317` from `jules_inbox/jules_post_retry_readiness_dispatch/JT-003-post-retry-production-readiness-audit.md` after `10937231877503281057` stayed stale/blank; cleaned generated launch-state session arrays to track only the fresh ID. The fresh session briefly reported `Awaiting Plan Approval`, then moved to `In Progress` on a later fresh poll without any local pull.
 - [ ] Remaining release blockers: local Gemini/OpenRouter credentials are still invalid, and Jules current-head audit session `14369052129679399317` has not completed. PR #64 stays draft unless local credential failures are fixed or explicitly accepted as non-blocking.
 
+## Session 20260630T083000 - Real-Time Dashboard Enhancement
+
+- [x] Added `bypass_cache` support to `modules.dashboard_module.get_dashboard_status(...)` and `GET /dashboard/status?bypass_cache=true` for explicit operator refreshes while keeping normal polling cached.
+- [x] Rebuilt the React dashboard into a real-time command center with left rail navigation, command/status bar, metric strip, provider readiness matrix, resource charts, fleet runway, cloud topology, live event stream, terminal filters, and bridge-backed comm panel.
+- [x] Preserved current provider truth: Gemini/OpenRouter remain visible as invalid-key errors, VM fallback is separate, and GCP worker status is pulled from `/dashboard/status.cloud`.
+- [x] Captured Chrome/Playwright visual proof at `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-realtime-desktop-final.png` and `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-realtime-mobile-final.png`; desktop and mobile reported no horizontal overflow.
+- [x] Verification: dashboard cache/module/route tests passed (`20 passed`), `pnpm run lint` passed, `pnpm run build` passed, full `python -m pytest tests/ -q` passed (`439 passed in 19.38s`), and test evidence was recorded with SHA-256 prefix `85cafdcec081`.
+- [ ] Remaining release blockers are unchanged: local Gemini/OpenRouter credentials still fail, and Jules current-head audit session `14369052129679399317` has not completed. PR #64 stays draft unless those blockers are fixed or accepted as non-blocking.
+

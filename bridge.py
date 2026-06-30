@@ -1743,7 +1743,8 @@ def akc_subagents_post():
 def dashboard_status():
     """GET /dashboard/status â€” real-time multi-cloud mission control snapshot."""
     from modules.dashboard_module import get_dashboard_status  # pylint: disable=import-outside-toplevel
-    result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
+    bypass_cache = request.args.get("bypass_cache", "").lower() in ("1", "true", "yes")
+    result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC, bypass_cache=bypass_cache)
     return jsonify(result), 200 if result.get("ok") else 500
 
 

@@ -79,3 +79,37 @@ Public functions to add:
 ## Status
 
 - 2026-06-26: Steps 3-6 completed for `vm_manager`. Added module-boundary tests, `modules/vm_manager.py`, exports, and thin `/vm/resource_pressure` plus `/vm/boot_secondary` routes. Full suite passed 274 tests with 1 existing warning; evidence hash `9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a`.
+
+---
+
+# Real-Time Jules Nexus Dashboard Enhancement Plan
+
+## Goal
+
+Turn the existing Vite/React dashboard into a real-time Codex-style command
+center for Jules Bridge without inventing data sources or bypassing the
+dashboard circuit-breaker discipline.
+
+## Design Decisions
+
+- Keep `/dashboard/status` as the single dashboard data contract.
+- Add an explicit `bypass_cache=true` query path for operator-triggered refreshes
+  while leaving normal polling cached by default.
+- Make the frontend feel live through client-side history, event diffing,
+  freshness indicators, and pause/resume controls instead of high-frequency API
+  calls.
+- Preserve provider truth: Gemini/OpenRouter failures stay visible, VM fallback
+  is shown separately, and PR/readiness blockers are not greenwashed.
+- Keep chat as a real bridge-backed comm panel with existing `/chat` behavior.
+
+## Implementation Slices
+
+1. Extend `modules.dashboard_module.get_dashboard_status(...)` with a
+   `bypass_cache` option and route it from `GET /dashboard/status`.
+2. Rebuild `dashboard-ui/src/App.jsx` around reusable dashboard primitives:
+   command bar, metric tiles, provider matrix, fleet timeline, worker topology,
+   event stream, terminal log, and comm panel.
+3. Replace `dashboard-ui/src/index.css` with responsive dense dashboard styles
+   that keep text inside stable containers on desktop and mobile.
+4. Verify with targeted Python dashboard tests, dashboard lint/build, live
+   route checks, and browser screenshot inspection.

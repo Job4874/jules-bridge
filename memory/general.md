@@ -455,3 +455,10 @@ has gone wrong before and what to avoid.
 - Runtime proof: direct `/chat` returned `model_used=vm/jules-worker` and `OK` on 5/5 post-retry stability probes, `/chat/test` stayed `healthy=true`, and LocalTunnel `https://shaggy-kiwis-shout.loca.lt` returned public `/ping`, `/health`, and `/dashboard/status` HTTP 200 after recycling stale helpers.
 - Follow-up: launched fresh Jules current-head audit session `14369052129679399317` from `jules_inbox/jules_post_retry_readiness_dispatch/JT-003-post-retry-production-readiness-audit.md` after `10937231877503281057` stayed stale/blank; launch state was cleaned to track only the fresh session. The fresh session briefly reported `Awaiting Plan Approval`, then moved to `In Progress` on a later fresh poll without any local pull.
 - Remaining blockers: local Gemini/OpenRouter credentials still fail as invalid-key, and Jules current-head audit session `14369052129679399317` is not completed. PR #64 remains draft unless local credential failures are fixed or explicitly accepted as non-blocking.
+
+## Session 20260630T083000 - Real-Time Dashboard Enhancement
+
+- `/dashboard/status?bypass_cache=true` is now the manual fresh-read path; normal React polling must keep using cached `/dashboard/status` and create live feel through client-side history, status diffs, and event rows.
+- `dashboard-ui/src/App.jsx` now renders a Codex-style command center: nav rail, command bar, six metric tiles, provider readiness matrix, CPU/memory charts, fleet runway, cloud topology, event stream, terminal filters, and bridge-backed comm panel.
+- Browser proof used Chrome via `playwright-core` because bundled `playwright` lacked `playwright-core`. Final screenshots: `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-realtime-desktop-final.png` and `.../dashboard-realtime-mobile-final.png`; both had no horizontal overflow.
+- Verification: dashboard focused tests passed `20 passed`; `pnpm run lint` and `pnpm run build` passed with bundled Node on PATH; full `python -m pytest tests/ -q` passed `439 passed in 19.38s`; recorded evidence hash prefix `85cafdcec081`.

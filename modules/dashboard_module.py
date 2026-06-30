@@ -183,13 +183,16 @@ _dashboard_status_cache: dict = {}
 # Public interface
 # ---------------------------------------------------------------------------
 
-def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, Any]:
+def get_dashboard_status(
+    bridge_start_utc: datetime | None = None,
+    bypass_cache: bool = False,
+) -> dict[str, Any]:
     """Aggregate full dashboard status. Never raises."""
     try:
         cache_ttl = int(os.environ.get('DASHBOARD_CACHE_TTL_S', '5'))
         now_ts = time.time()
 
-        if _dashboard_status_cache:
+        if not bypass_cache and _dashboard_status_cache:
             ts, cached_res = _dashboard_status_cache.get('last', (0, {}))
             if now_ts - ts < cache_ttl:
                 cached_res['cache_age_s'] = int(now_ts - ts)
