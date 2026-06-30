@@ -3,7 +3,6 @@ import sys
 import time
 import subprocess
 import requests
-import json
 from datetime import datetime, timezone
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
