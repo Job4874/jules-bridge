@@ -373,3 +373,11 @@ has gone wrong before and what to avoid.
 - Verification: Python 3.12.10 full suite passed `406 passed`; dashboard `pnpm run build` passed with bundled Node; `git diff --check` passed; local bridge, public LocalTunnel, and in-app browser dashboard were verified.
 - Current public tunnel at handoff: `https://silly-pumas-dance.loca.lt`. `/health/deep` overall status was `ok`, but live provider readiness still warned that GCP lacked an active gcloud session and Gemini had an invalid API key.
 
+## Session 20260630T004438 - Provider Readiness Truth Patch
+
+- Launched Jules provider-readiness worker `4817979060578580922`; reconciled its useful diff without applying stale hunks that would remove the circuit breaker or duplicate `/health/deep`.
+- `modules.health_service.get_deep_health()` now maps Gemini/OpenRouter readiness through `chat_service.test_chat_providers()` so deep health does not falsely pass OpenRouter via the public `/models` endpoint.
+- `/dashboard/status` now includes provider statuses and the React dashboard shows `GEMINI` / `OPENROUTER` badges beside `SYS_UP` and `TUNNEL`.
+- Verification: focused tests passed 29 tests; full suite passed `410 passed`; dashboard build passed; local `/health/deep`, `/chat/test`, `/chat`, `/dashboard/status`, public tunnel, and in-app browser dashboard were verified.
+- Current public tunnel at handoff: `https://olive-paws-shine.loca.lt`. Live provider truth is still degraded: Gemini invalid key, OpenRouter 401 `User not found`, GCP no active gcloud / worker not configured, Azure reachable.
+
