@@ -388,6 +388,7 @@ has gone wrong before and what to avoid.
 - `master` now includes the repo-context dashboard connection (#78), oracle build/deploy tests (#65), tunnel watchdog spam fix (#66), and the public Jules PR triage packet at `jules_inbox/JULES_OPEN_PR_TRIAGE_20260630.md`.
 - Remaining open draft PRs #64 and #67-#77 were rechecked against current `origin/master`; all remained `DIRTY` after GitHub recalculation.
 - Exact conflict files were generated with `git merge-tree origin/master origin/<headRefName>` and recorded in the triage packet. Do not merge these PRs by title or timestamp; rebase/split by family first: VM contract, chat/provider/health contract, dashboard display, docs/evidence.
+- Exact conflict coordinator comments were later posted on each remaining dirty draft PR (#64, #67-#77) from master `9f482b9`; the comment URLs are recorded in the triage packet.
 - Codex scope for this pass stayed connection/orchestration only. No product/dashboard feature implementation was added; Jules owns those branches after rebase.
 - Verification: `python -m pytest tests/ -q` passed 424 tests; `git diff --check` and `git diff --cached --check` had no errors beyond normal Windows CRLF warnings.
 

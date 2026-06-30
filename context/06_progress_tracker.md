@@ -268,6 +268,7 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Merged safe PRs #65 and #66 after simulated merge tests; PR #78 was already merged as the repo-context dashboard connection.
 - Added `jules_inbox/JULES_OPEN_PR_TRIAGE_20260630.md` conflict matrix from `git merge-tree origin/master origin/<headRefName>`.
 - Reconfirmed all remaining open drafts #64 and #67-#77 are `DIRTY` on current `master`; they must stay draft until rebased, split by family, and retested.
+- Posted exact conflict coordinator comments on each remaining dirty draft PR (#64, #67-#77) and recorded the public comment URLs in the triage packet.
 - Preserved the boundary that Codex only changes connection/orchestration evidence here; Jules owns product/dashboard feature resolution.
 - Evidence: `python -m pytest tests/ -q` passed 424 tests; triage packet commit was `08f1fd0`.
 

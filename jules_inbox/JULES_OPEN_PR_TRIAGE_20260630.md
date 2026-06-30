@@ -107,3 +107,22 @@ Coordinator rebase/split comments were posted on all remaining dirty draft PRs:
 - Broad umbrella/reference branch: #64
 
 The first comment pass included a literal `$master` placeholder from PowerShell escaping. Follow-up correction comments were posted on each PR with the actual current master ref: `dc089f5`. The instructions otherwise stand.
+
+## Exact Conflict Comments Sent
+
+After the conflict matrix was added, per-PR coordinator comments were posted from current master `9f482b9`. Each comment includes the exact `git merge-tree` conflict files and the family-specific Jules next action.
+
+| PR | Comment |
+| --- | --- |
+| #77 | https://github.com/Job4874/jules-bridge/pull/77#issuecomment-4847783627 |
+| #76 | https://github.com/Job4874/jules-bridge/pull/76#issuecomment-4847783789 |
+| #75 | https://github.com/Job4874/jules-bridge/pull/75#issuecomment-4847783921 |
+| #74 | https://github.com/Job4874/jules-bridge/pull/74#issuecomment-4847784043 |
+| #73 | https://github.com/Job4874/jules-bridge/pull/73#issuecomment-4847784279 |
+| #72 | https://github.com/Job4874/jules-bridge/pull/72#issuecomment-4847784395 |
+| #71 | https://github.com/Job4874/jules-bridge/pull/71#issuecomment-4847784515 |
+| #70 | https://github.com/Job4874/jules-bridge/pull/70#issuecomment-4847784640 |
+| #69 | https://github.com/Job4874/jules-bridge/pull/69#issuecomment-4847784889 |
+| #68 | https://github.com/Job4874/jules-bridge/pull/68#issuecomment-4847785043 |
+| #67 | https://github.com/Job4874/jules-bridge/pull/67#issuecomment-4847785143 |
+| #64 | https://github.com/Job4874/jules-bridge/pull/64#issuecomment-4847785264 |
