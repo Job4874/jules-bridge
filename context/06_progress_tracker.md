@@ -340,7 +340,8 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Increased direct `/chat` VM fallback attempts from `2` to `4` so user-facing chat can ride through transient VM provider misses.
 - [x] Kept provider-health `/chat/test` on its lighter active probe behavior; this patch only hardens direct chat.
 - [x] Added regression coverage for two transient VM `No LLM available` results followed by a successful VM response.
-- [x] Verification: `tests/test_chat_service.py` passed (`33 passed`), full suite passed (`438 passed in 19.65s`), and `git diff --check` passed with only normal CRLF warnings.
-- [x] Restarted bridge to PID `7648`; direct `/chat` returned `model_used=vm/jules-worker` with `OK`, `/chat/test` returned `healthy=true`, and `/vm/status` showed the retry sequence.
-- [ ] Remaining release blockers: local Gemini/OpenRouter credentials are still invalid, the required ngrok route remains offline/unauthenticated, and the provider-audit Jules session still needs external Jules-side feedback or completion of the replacement session. PR #64 stays draft.
+- [x] Verification: `tests/test_chat_service.py` passed (`33 passed`), full suite passed (`438 passed in 19.93s`), and `git diff --check` passed with only normal CRLF warnings.
+- [x] Restarted bridge to PID `41428`; direct `/chat` stability sample returned `model_used=vm/jules-worker` with `OK` on 5/5 attempts after the retry change.
+- [x] Recycled LocalTunnel to `https://shaggy-kiwis-shout.loca.lt`; public `/ping`, `/health`, and `/dashboard/status` returned HTTP 200.
+- [ ] Remaining release blockers: local Gemini/OpenRouter credentials are still invalid, and Jules replacement session `10937231877503281057` has not completed. PR #64 stays draft unless local credential failures are fixed or explicitly accepted as non-blocking.
 

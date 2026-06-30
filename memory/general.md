@@ -451,7 +451,7 @@ has gone wrong before and what to avoid.
 
 - Direct `modules.chat_service.chat()` now gives VM fallback `4` bounded attempts, while `/chat/test` keeps the lighter provider-health attempt count. This targets the live pattern where VM tasks alternate between `No LLM available` and `OK`.
 - Added `test_chat_vm_fallback_retries_transient_worker_provider_failure` to prove direct chat retries transient VM provider misses and returns the later VM response without hiding final failures.
-- Verification: focused `tests/test_chat_service.py` passed `33 passed`; full `python -m pytest tests/ -q` passed `438 passed`; `git diff --check` had only normal CRLF warnings. Bridge restarted to PID `7648`.
-- Runtime proof: direct `/chat` returned `model_used=vm/jules-worker` and `OK` after a fresh provider miss, `/chat/test` stayed `healthy=true`, and `/vm/status` showed both the miss and later `OK`.
-- Remaining blockers: local Gemini/OpenRouter credentials still fail as invalid-key, ngrok is unauthenticated/offline, and Jules provider audit session `14998673751325827002` remains `Awaiting User` while replacement `10937231877503281057` is not completed.
+- Verification: focused `tests/test_chat_service.py` passed `33 passed`; full `python -m pytest tests/ -q` passed `438 passed`; `git diff --check` had only normal CRLF warnings. Bridge restarted to PID `41428`.
+- Runtime proof: direct `/chat` returned `model_used=vm/jules-worker` and `OK` on 5/5 post-retry stability probes, `/chat/test` stayed `healthy=true`, and LocalTunnel `https://shaggy-kiwis-shout.loca.lt` returned public `/ping`, `/health`, and `/dashboard/status` HTTP 200 after recycling stale helpers.
+- Remaining blockers: local Gemini/OpenRouter credentials still fail as invalid-key, and Jules replacement session `10937231877503281057` is not completed. PR #64 remains draft unless local credential failures are fixed or explicitly accepted as non-blocking.
 

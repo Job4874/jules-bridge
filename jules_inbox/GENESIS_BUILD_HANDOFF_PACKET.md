@@ -153,6 +153,26 @@ Only pull `10937231877503281057` after a fresh session list reports it as
   provider unavailable; `/chat` returned `model_used=none`; `/health/deep`
   maps Gemini/OpenRouter/VM worker to `fail` while GCP/Azure pass.
 
+2026-06-30 08:04 America/Denver retry-hardening verification:
+
+- Direct `/chat` VM fallback attempts were increased from `2` to `4` in
+  `modules/chat_service.py`.
+- Regression coverage was added in `tests/test_chat_service.py` for transient
+  VM `No LLM available` results followed by a later successful VM response.
+- Focused tests passed:
+  `33 passed in 0.68s`.
+- Full Python suite passed:
+  `438 passed in 19.93s`.
+- Bridge restarted from source and is live on port 5000 with PID `41428`.
+- Dashboard preview remains live on port 5173 with PID `39320`.
+- Public LocalTunnel was recycled to:
+  `https://shaggy-kiwis-shout.loca.lt`.
+- Public `/ping`, `/health`, and `/dashboard/status` returned HTTP 200.
+- Post-retry direct `/chat` stability sample returned
+  `model_used=vm/jules-worker` with `OK` on 5/5 attempts.
+- Local Gemini/OpenRouter credentials still classify as invalid-key, and Jules
+  replacement session `10937231877503281057` has not completed.
+
 If `jules remote list --session` fails due CLI self-update or DNS, use the
 direct executable path:
 `C:\Users\abdul\AppData\Local\Temp\jules_tmp\jules.exe`.
