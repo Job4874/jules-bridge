@@ -75,6 +75,70 @@ class TestShellExecutorExecute(unittest.TestCase):
         self.assertEqual(result["shell"], "powershell")
 
 
+
+    @patch("modules.shell_executor.subprocess.Popen")
+    def test_spawn(self, mock_popen):
+        mock_proc = MagicMock()
+        mock_proc.pid = 12345
+        mock_popen.return_value = mock_proc
+        result = self.se.spawn("echo 1")
+        self.assertEqual(result["exit_code"], 0)
+        self.assertEqual(result["spawned"], True)
+        self.assertEqual(result["pid"], 12345)
+        self.assertEqual(result["shell"], "cmd")
+        args = mock_popen.call_args.args[0]
+        self.assertEqual(args[:4], ["cmd.exe", "/d", "/s", "/c"])
+
+    def test_coerce_text_none(self):
+        self.assertEqual(self.se._coerce_text(None), "")
+
+    @patch("modules.shell_executor.os.path.exists")
+    @patch.dict("os.environ", {"JULES_BASH_PATH": "/custom/bash"})
+    def test_discover_bash_from_env_exists(self, mock_exists):
+        mock_exists.return_value = True
+        self.assertEqual(self.se._discover_bash(), "/custom/bash")
+
+    @patch("modules.shell_executor.os.path.exists")
+    @patch.dict("os.environ", {"JULES_BASH_PATH": "/custom/missing_bash"})
+    def test_discover_bash_from_env_missing(self, mock_exists):
+        mock_exists.return_value = False
+        with self.assertRaises(self.se.ShellNotAvailableError):
+            self.se._discover_bash()
+
+    @patch("modules.shell_executor.os.path.exists")
+    @patch("modules.shell_executor.shutil.which")
+    @patch.dict("os.environ", {"JULES_BASH_PATH": ""})
+    def test_discover_bash_via_which(self, mock_which, mock_exists):
+        mock_exists.return_value = False
+        mock_which.side_effect = lambda x: "/usr/bin/bash" if x == "bash" else None
+        self.assertEqual(self.se._discover_bash(), "/usr/bin/bash")
+
+    @patch("modules.shell_executor.time.time")
+    @patch("modules.shell_executor.subprocess.run")
+    def test_execute_slow_call_warning(self, mock_run, mock_time):
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        mock_time.side_effect = [100.0, 100.0, 106.0, 106.0, 106.0, 106.0]
+        with self.assertLogs("jules_bridge", level="WARNING") as cm:
+            self.se.execute("sleep 6")
+        self.assertTrue(any("Slow shell call (>5s)" in log for log in cm.output))
+
+    @patch("modules.shell_executor.subprocess.run")
+    @patch.dict("os.environ", {"SHELL_CACHE_TTL_S": "60"})
+    def test_execute_cache(self, mock_run):
+        mock_run.return_value = MagicMock(returncode=0, stdout="cached_out", stderr="")
+        res1 = self.se.execute("echo cache_test")
+        res2 = self.se.execute("echo cache_test")
+        self.assertEqual(res1["stdout"], "cached_out")
+        self.assertEqual(res2["stdout"], "cached_out")
+        mock_run.assert_called_once()
+
+    @patch("modules.shell_executor.subprocess.run")
+    def test_execute_timeout_explicit(self, mock_run):
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd="sleep 10", timeout=5.0)
+        with self.assertRaises(subprocess.TimeoutExpired):
+            self.se.execute("sleep 10", timeout=5.0)
+
+
 class TestAvailableShells(unittest.TestCase):
     def setUp(self):
         from modules import shell_executor
