@@ -117,6 +117,42 @@ Follow-up launched after that blocker:
 Only pull `4009579503888711152` after it reports `Completed`. Do not pull stale
 session ids that appear in older packets or warning text.
 
+2026-06-30 07:33 America/Denver refresh:
+
+- `4009579503888711152` later appeared as blank status with last active older
+  than the repo stale-unknown threshold, so it was not pulled.
+- Fresh packet:
+  `jules_inbox/jules_production_readiness_refresh_dispatch/JT-002-current-head-production-readiness-refresh.md`
+- Fresh session: `10937231877503281057`
+- current observed status: `Planning`
+- launch state:
+  `jules_inbox/jules_production_readiness_refresh_dispatch/JULES_LAUNCH_STATE.json`
+- The launch-state `session_ids` arrays were corrected to track only
+  `10937231877503281057`; stale ids mentioned inside packet warning text must
+  not be treated as tracked sessions.
+
+Only pull `10937231877503281057` after a fresh session list reports it as
+`Completed`.
+
+2026-06-30 07:39 America/Denver verification after restart:
+
+- Concurrent VM-readiness patch validated in `modules/chat_service.py` with
+  matching tests in `tests/test_chat_service.py`.
+- Focused tests passed:
+  `34 passed in 0.84s`.
+- Full Python suite passed:
+  `436 passed in 17.80s`.
+- Bridge restarted from source and is live on port 5000 with PID `29640`.
+- Dashboard preview remains live on port 5173 with PID `39320`.
+- Public tunnel remains live:
+  `https://shaggy-kiwis-shout.loca.lt`.
+- Local and public `/ping`, `/health`, and public `/dashboard/status` return
+  HTTP 200 after restart.
+- Provider readiness is still not production-clean:
+  `/chat/test` reports Gemini invalid-key, OpenRouter invalid-key, and VM worker
+  provider unavailable; `/chat` returned `model_used=none`; `/health/deep`
+  maps Gemini/OpenRouter/VM worker to `fail` while GCP/Azure pass.
+
 If `jules remote list --session` fails due CLI self-update or DNS, use the
 direct executable path:
 `C:\Users\abdul\AppData\Local\Temp\jules_tmp\jules.exe`.
@@ -133,6 +169,7 @@ New intentional untracked artifacts from this pass:
 
 - `jules_inbox/genesis_indexing_agents/`
 - `jules_inbox/jules_production_blocker_followup_dispatch/`
+- `jules_inbox/jules_production_readiness_refresh_dispatch/`
 - this handoff packet
 
 ## Next Operator-Safe Action

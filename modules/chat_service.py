@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 import time
 import uuid
+from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
 _GEMINI_FAST = "gemini-2.0-flash"
@@ -254,7 +255,20 @@ def _should_use_vm(
     return requests_client is None or vm_send_task is not None or vm_get_status is not None
 
 
-def _latest_vm_chat_result(status: Mapping[str, Any]) -> tuple[str, str] | None:
+def _parse_vm_completed_ts(value: Any) -> float | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.timestamp()
+
+
+def _latest_vm_chat_result(status: Mapping[str, Any]) -> tuple[str, str, float | None] | None:
     recent = status.get("recent", [])
     if not isinstance(recent, Sequence) or isinstance(recent, (str, bytes)):
         return None
@@ -267,7 +281,7 @@ def _latest_vm_chat_result(status: Mapping[str, Any]) -> tuple[str, str] | None:
         result = str(entry.get("result") or "").strip()
         if not result:
             continue
-        return task_text, result
+        return task_text, result, _parse_vm_completed_ts(entry.get("ended"))
     return None
 
 
@@ -277,8 +291,8 @@ def _vm_worker_status(
     sleep_func: Any = time.sleep,
     probe_chat: bool = True,
     task_attempts: int = 2,
-    poll_attempts: int = 3,
-    poll_interval_s: float = 1.5,
+    poll_attempts: int = 6,
+    poll_interval_s: float = 2.0,
 ) -> dict[str, Any]:
     _, status_fn = _default_vm_functions() if vm_get_status is None else (None, vm_get_status)
     status = status_fn()
@@ -328,6 +342,26 @@ def _vm_worker_status(
             "tasks_completed": status.get("tasks_completed"),
         }
 
+    latest_chat = _latest_vm_chat_result(status)
+    if latest_chat is not None:
+        _, result, completed_ts = latest_chat
+        if _vm_response_is_failure(result):
+            return {
+                "status": "error",
+                "model": _VM_CHAT_MODEL,
+                "detail": "VM worker online but latest chat fallback reported provider quota/key failure",
+                "tasks_completed": status.get("tasks_completed"),
+            }
+        failure_ts = float(_LAST_VM_CHAT_FAILURE.get("ts") or 0.0)
+        if not failure_ts or (completed_ts is not None and completed_ts >= failure_ts):
+            _clear_vm_chat_failure()
+            return {
+                "status": "ok",
+                "model": _VM_CHAT_MODEL,
+                "detail": "VM worker online; latest chat fallback succeeded",
+                "tasks_completed": status.get("tasks_completed"),
+            }
+
     local_failure = _latest_local_vm_chat_failure()
     if local_failure:
         return {
@@ -336,17 +370,6 @@ def _vm_worker_status(
             "detail": f"VM worker online but latest local chat fallback failed: {local_failure}",
             "tasks_completed": status.get("tasks_completed"),
         }
-
-    latest_chat = _latest_vm_chat_result(status)
-    if latest_chat is not None:
-        _, result = latest_chat
-        if _vm_response_is_failure(result):
-            return {
-                "status": "error",
-                "model": _VM_CHAT_MODEL,
-                "detail": "VM worker online but latest chat fallback reported provider quota/key failure",
-                "tasks_completed": status.get("tasks_completed"),
-            }
 
     return {
         "status": "ok",

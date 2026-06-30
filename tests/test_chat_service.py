@@ -1,5 +1,6 @@
 """Tests for chat provider routing."""
 
+from datetime import datetime, timezone
 import unittest
 from unittest.mock import patch
 
@@ -484,6 +485,66 @@ class TestChatCompletion(unittest.TestCase):
         self.assertEqual(result["providers"]["vm_worker"]["status"], "error")
         self.assertIn("latest local chat fallback failed", result["providers"]["vm_worker"]["detail"])
 
+    def test_provider_health_newer_vm_success_clears_local_failure(self):
+        chat_service._remember_vm_chat_failure("VM fallback timed out waiting for a completed chat task")
+        ended = datetime.fromtimestamp(
+            chat_service._LAST_VM_CHAT_FAILURE["ts"] + 1,
+            timezone.utc,
+        ).isoformat()
+
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.025]),
+            vm_get_status=lambda: {
+                "online": True,
+                "tasks_completed": 5,
+                "recent": [
+                    {
+                        "task": "[chat-fallback-recovered] hello",
+                        "status": "done",
+                        "result": "OK",
+                        "ended": ended,
+                    }
+                ],
+            },
+            probe_vm_chat=False,
+        )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "ok")
+        self.assertIn("latest chat fallback succeeded", result["providers"]["vm_worker"]["detail"])
+
+    def test_provider_health_older_vm_success_does_not_clear_local_failure(self):
+        chat_service._remember_vm_chat_failure("VM fallback timed out waiting for a completed chat task")
+        ended = datetime.fromtimestamp(
+            chat_service._LAST_VM_CHAT_FAILURE["ts"] - 1,
+            timezone.utc,
+        ).isoformat()
+
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.025]),
+            vm_get_status=lambda: {
+                "online": True,
+                "tasks_completed": 5,
+                "recent": [
+                    {
+                        "task": "[chat-fallback-stale] hello",
+                        "status": "done",
+                        "result": "OK",
+                        "ended": ended,
+                    }
+                ],
+            },
+            probe_vm_chat=False,
+        )
+
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "error")
+        self.assertIn("latest local chat fallback failed", result["providers"]["vm_worker"]["detail"])
+
     def test_provider_health_uses_recent_vm_chat_success_when_probe_times_out(self):
         chat_service._remember_vm_chat_success()
 
@@ -595,6 +656,44 @@ class TestChatCompletion(unittest.TestCase):
                 vm_send_task=lambda *args, **kwargs: {"ok": True, "status": "queued"},
                 vm_get_status=lambda: next(statuses),
                 sleep_func=lambda _: None,
+            )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "ok")
+
+    def test_provider_health_vm_chat_probe_waits_for_slow_completion(self):
+        statuses = iter(
+            [
+                {"online": True, "tasks_completed": 4},
+                {"online": True, "tasks_completed": 4},
+                {"online": True, "recent": []},
+                {"online": True, "recent": []},
+                {"online": True, "recent": []},
+                {"online": True, "recent": []},
+                {"online": True, "recent": []},
+                {
+                    "online": True,
+                    "recent": [
+                        {
+                            "task": "[chat-fallback-fixedmarker1] Health probe",
+                            "status": "done",
+                            "result": "OK",
+                        }
+                    ],
+                },
+            ]
+        )
+
+        with patch("modules.chat_service.uuid.uuid4") as mock_uuid:
+            mock_uuid.return_value.hex = "fixedmarker123"
+            result = chat_service.test_chat_providers(
+                env={},
+                requests_client=FakeRequests([]),
+                clock=clock_from([1.0, 1.2]),
+                vm_send_task=lambda *args, **kwargs: {"ok": True, "status": "queued"},
+                vm_get_status=lambda: next(statuses),
+                sleep_func=lambda _: None,
+                vm_task_attempts=1,
             )
 
         self.assertTrue(result["healthy"])
