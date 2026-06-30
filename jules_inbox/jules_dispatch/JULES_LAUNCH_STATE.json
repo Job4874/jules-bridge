@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-30T18:33:48.513962+00:00",
+  "generated_at_utc": "2026-06-30T18:34:38.395805+00:00",
   "dry_run": false,
   "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
   "selected_count": 4,
@@ -19,11 +19,11 @@
       "repo_path": "C:\\aotp\\projects\\OracleV5",
       "status": "launched",
       "exit_code": 0,
-      "stdout": "15416495847535199574  Planning  0s ago  JT-002-6b1194-codex-master-handover-prompt",
+      "stdout": "11847292096100569266  Planning  0s ago  JT-002-6b1194-codex-master-handover-prompt",
       "stderr": "",
       "timed_out": false,
       "session_ids": [
-        "15416495847535199574"
+        "11847292096100569266"
       ],
       "transport": "rest"
     },
@@ -37,11 +37,11 @@
       "repo_path": "C:\\aotp\\projects\\OracleV5",
       "status": "launched",
       "exit_code": 0,
-      "stdout": "9799640680793839774  Planning  0s ago  JT-003-aab6ea-codex-phase0-repository-archaeology-prompt",
+      "stdout": "4422295034306055481  Planning  0s ago  JT-003-aab6ea-codex-phase0-repository-archaeology-prompt",
       "stderr": "",
       "timed_out": false,
       "session_ids": [
-        "9799640680793839774"
+        "4422295034306055481"
       ],
       "transport": "rest"
     },
@@ -55,11 +55,11 @@
       "repo_path": "C:\\aotp\\projects\\OracleV5",
       "status": "launched",
       "exit_code": 0,
-      "stdout": "929051437881417972  Planning  0s ago  JT-004-1e0abd-codex-phase1-stabilization-prompt",
+      "stdout": "3137837830710772283  Planning  0s ago  JT-004-1e0abd-codex-phase1-stabilization-prompt",
       "stderr": "",
       "timed_out": false,
       "session_ids": [
-        "929051437881417972"
+        "3137837830710772283"
       ],
       "transport": "rest"
     },
