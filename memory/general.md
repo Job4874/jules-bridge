@@ -381,3 +381,11 @@ has gone wrong before and what to avoid.
 - Verification: focused tests passed 29 tests; full suite passed `410 passed`; dashboard build passed; local `/health/deep`, `/chat/test`, `/chat`, `/dashboard/status`, public tunnel, and in-app browser dashboard were verified.
 - Current public tunnel at handoff: `https://olive-paws-shine.loca.lt`. Live provider truth is still degraded: Gemini invalid key, OpenRouter 401 `User not found`, GCP no active gcloud / worker not configured, Azure reachable.
 
+## Session 20260630T005100 - Provider Readiness Handoff Refresh
+
+- Refreshed PR #64 and automation truth after restarting the bridge with the installed Google Cloud SDK on PATH.
+- Current public tunnel: `https://clever-seas-go.loca.lt`; local and public `/health` pass, and authenticated `/health/deep` returns `status: ok`.
+- Current deep-health provider truth: GCP token pass, Azure SSH pass, Gemini fail invalid API key, OpenRouter fail 401 `User not found`; `/dashboard/status` still reports `jules-offload-worker` as `not_configured` because `GCE_WORKER_IP` is unset.
+- Jules duplicate session `11181112389803823618` completed after `4817979060578580922`; its patch was reviewed without `--apply` and left unapplied because it overlapped the pushed fix and dropped useful HTTP status detail.
+- Updated heartbeat automation `jules-bridge-overnight-production-loop` with head `090d7bb`, current tunnel, reviewed duplicate session state, and remaining external readiness blockers.
+
