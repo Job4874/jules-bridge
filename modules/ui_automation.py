@@ -307,3 +307,31 @@ def type_text(text: str) -> dict:
     pag = _pyautogui()
     pag.write(text, interval=0.01)
     return {"status": "Typed successfully"}
+
+class SecretAccessError(Exception):
+    pass
+
+def get_secret(secret_name: str, allow_secret_use: bool = False) -> str:
+    """Retrieve an OS-backed secret (Windows Credential Manager / DPAPI mock)."""
+    if not allow_secret_use:
+        raise SecretAccessError(f"Access to secret '{secret_name}' denied: allow_secret_use=False")
+
+    # Mocking retrieval from OS-backed store.
+    # In reality, we'd fetch the password here, but we MUST redact plaintext
+    # from ever being returned directly as a usable string to logging/output.
+    # For automation, the bridge would use it directly in the shell without
+    # passing the literal value back up the stack.
+
+    return "REDACTED"
+
+def detect_ui_state(ocr_text: str) -> str:
+    """Detect Quantower UI state from OCR text."""
+    text_lower = ocr_text.lower()
+
+    if "disconnect" in text_lower and "strategy manager" in text_lower:
+        return "LOGGED_IN"
+
+    if "login" in text_lower and "password" in text_lower:
+        return "LOGGED_OUT"
+
+    return "UNKNOWN"

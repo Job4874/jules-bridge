@@ -745,12 +745,13 @@ def prune_memory(
 
             try:
                 ts = datetime.strptime(m.group(1), "%Y%m%dT%H%M%S")
-                if ts < cutoff:
+                now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+                if ts < cutoff or ts > now_utc:
                     pruned_in_file += 1
                 else:
                     kept.append(section)
             except ValueError:
-                kept.append(section)  # unparseable timestamp — keep
+                pruned_in_file += 1  # malformed timestamp - prune
 
         if pruned_in_file > 0:
             new_text = "".join("".join(s) for s in kept)
