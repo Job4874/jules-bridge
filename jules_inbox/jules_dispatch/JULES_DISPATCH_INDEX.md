@@ -1,6 +1,6 @@
 # Jules Dispatch Index
 
-- generated_at_utc: 2026-06-30T18:31:46.511162+00:00
+- generated_at_utc: 2026-06-30T18:33:25.416615+00:00
 - source: C:\Users\abdul\jules-bridge\jules_inbox\antigravity_offload_queue.txt
 - source_sha256: 64ddfce8735c3a9c74b3cc7090aa4db4b457dc18ae4f8494df86a7d768bf6d17
 - repo_path: C:\aotp\projects\OracleV5

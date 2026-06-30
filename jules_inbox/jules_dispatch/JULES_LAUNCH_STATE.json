@@ -1,106 +1,93 @@
 {
-  "generated_at_utc": "2026-06-29T19:25:25.114138+00:00",
-  "dry_run": true,
-  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "generated_at_utc": "2026-06-30T18:33:48.513962+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
   "selected_count": 4,
-  "launched_count": 0,
+  "launched_count": 4,
   "timeout_count": 0,
   "jules_command": "jules",
-  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-  "repo_path": "",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
   "results": [
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
       "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
+        "REST",
+        "POST",
+        "https://jules.googleapis.com/v1alpha/sessions"
       ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "15416495847535199574  Planning  0s ago  JT-002-6b1194-codex-master-handover-prompt",
       "stderr": "",
       "timed_out": false,
-      "session_ids": []
+      "session_ids": [
+        "15416495847535199574"
+      ],
+      "transport": "rest"
     },
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
       "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
+        "REST",
+        "POST",
+        "https://jules.googleapis.com/v1alpha/sessions"
       ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "9799640680793839774  Planning  0s ago  JT-003-aab6ea-codex-phase0-repository-archaeology-prompt",
       "stderr": "",
       "timed_out": false,
-      "session_ids": []
+      "session_ids": [
+        "9799640680793839774"
+      ],
+      "transport": "rest"
     },
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
       "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
+        "REST",
+        "POST",
+        "https://jules.googleapis.com/v1alpha/sessions"
       ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "929051437881417972  Planning  0s ago  JT-004-1e0abd-codex-phase1-stabilization-prompt",
       "stderr": "",
       "timed_out": false,
-      "session_ids": []
+      "session_ids": [
+        "929051437881417972"
+      ],
+      "transport": "rest"
     },
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
       "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
+        "REST",
+        "POST",
+        "https://jules.googleapis.com/v1alpha/sessions"
       ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
+      "repo_path": "C:\\aotp\\projects\\OracleV5",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "9846266639795693525  Planning  0s ago  JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation",
       "stderr": "",
       "timed_out": false,
-      "session_ids": []
+      "session_ids": [
+        "9846266639795693525"
+      ],
+      "transport": "rest"
     }
   ],
-  "attempt_results": [
-    {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": []
-    },
-    {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
-      "repo_path": "",
-      "status": "dry_run",
-      "exit_code": null,
-      "stdout": "",
-      "stderr": "",
-      "timed_out": false,
-      "session_ids": []
-    }
-  ],
+  "attempt_results": [],
   "state_path": "",
-  "attempted_count": 2,
-  "skipped_launched_count": 0,
+  "attempted_count": 0,
+  "skipped_launched_count": 4,
   "force_packet_count": 0,
   "preserve_existing_session_ids": false,
-  "note": "Dry run only; no remote Jules sessions were started.",
+  "note": "Live launch attempted through the Jules CLI.",
   "tracked_count": 4
 }

@@ -1,4 +1,4 @@
-# Boot-GCP-Worker.ps1 — enable Compute API and ensure a Jules offload worker VM exists
+# Boot-GCP-Worker.ps1 - enable Compute API and ensure a Jules offload worker VM exists
 #
 # PREREQUISITE (one-time, manual):
 #   Service Usage API must be enabled on tibin-terminal-2026 via the Cloud Console:
@@ -48,7 +48,7 @@ Write-Log "Checking existing VM $VmName"
 $describe = & $gcloud compute instances describe $VmName `
     --zone=$Zone --project=$Project --format="value(status)" 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Log "VM not found — creating $VmName ($MachineType) in $Zone"
+    Write-Log "VM not found - creating $VmName ($MachineType) in $Zone"
     & $gcloud compute instances create $VmName `
         --project=$Project `
         --zone=$Zone `
