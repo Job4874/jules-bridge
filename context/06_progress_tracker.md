@@ -263,3 +263,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Sensitive key material was not saved; pasted API/token material should be rotated outside the repo.
 - Verification: direct `jules.exe version` OK, preflight remote status OK, `Open-JulesCLI.cmd version` OK, PowerShell parser OK, and `python -m pytest tests/ -v` passed 416 tests.
 
+## Session 20260630T223000 - Jules GitHub PR Collision Triage
+
+- Merged safe PRs #65 and #66 after simulated merge tests; PR #78 was already merged as the repo-context dashboard connection.
+- Added `jules_inbox/JULES_OPEN_PR_TRIAGE_20260630.md` conflict matrix from `git merge-tree origin/master origin/<headRefName>`.
+- Reconfirmed all remaining open drafts #64 and #67-#77 are `DIRTY` on current `master`; they must stay draft until rebased, split by family, and retested.
+- Preserved the boundary that Codex only changes connection/orchestration evidence here; Jules owns product/dashboard feature resolution.
+- Evidence: `python -m pytest tests/ -q` passed 424 tests; triage packet commit was `08f1fd0`.
+

@@ -383,3 +383,11 @@ has gone wrong before and what to avoid.
 - Sensitive key material was not stored in repo memory. Any API key or token fragment pasted in chat should be rotated outside the repo.
 - Verification: direct `jules.exe version` returned v0.1.42; `jules_preflight(check_remote=True)` returned `ready=true` with remote status `ok`; `cmd /c Open-JulesCLI.cmd version` worked; PowerShell parser check passed; `python -m pytest tests/ -q` and `python -m pytest tests/ -v` both passed 416 tests.
 
+## Session 20260630T223000 - Jules PR Collision Matrix
+
+- `master` now includes the repo-context dashboard connection (#78), oracle build/deploy tests (#65), tunnel watchdog spam fix (#66), and the public Jules PR triage packet at `jules_inbox/JULES_OPEN_PR_TRIAGE_20260630.md`.
+- Remaining open draft PRs #64 and #67-#77 were rechecked against current `origin/master`; all remained `DIRTY` after GitHub recalculation.
+- Exact conflict files were generated with `git merge-tree origin/master origin/<headRefName>` and recorded in the triage packet. Do not merge these PRs by title or timestamp; rebase/split by family first: VM contract, chat/provider/health contract, dashboard display, docs/evidence.
+- Codex scope for this pass stayed connection/orchestration only. No product/dashboard feature implementation was added; Jules owns those branches after rebase.
+- Verification: `python -m pytest tests/ -q` passed 424 tests; `git diff --check` and `git diff --cached --check` had no errors beyond normal Windows CRLF warnings.
+
