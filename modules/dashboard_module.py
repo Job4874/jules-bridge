@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 from functools import lru_cache
 
+from modules.chat_service import test_chat_providers
 from modules.vm_manager import detect_resource_pressure
 
 _ROOT = Path(__file__).parent.parent
@@ -187,6 +188,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         fleet = _fleet_status()
         cloud = _vm_info(env)
         logs = _tail_log()
+        providers = test_chat_providers(env=env).get("providers", {})
 
         ngrok_url = ""
         tunnel_url = ""
@@ -243,6 +245,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
             "cloud": cloud,
             "jules_fleet": fleet,
             "recent_logs": logs,
+            "providers": providers,
             "env_keys_present": [
                 k for k in ["GEMINI_API_KEY", "GCE_WORKER_IP", "OPENROUTER_API_KEY", "GMAIL_USER"]
                 if env.get(k)

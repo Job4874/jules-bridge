@@ -10,46 +10,41 @@ import os
 import time
 import socket
 from datetime import datetime, timezone
-import requests
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict
 
+from modules.chat_service import test_chat_providers
 from modules.vm_manager import detect_resource_pressure
 
-def _check_gemini() -> Dict[str, Any]:
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        return {"status": "keyless", "detail": "GEMINI_API_KEY unset; using stub mode"}
 
-    t0 = time.monotonic()
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-        r = requests.get(url, timeout=10)
-        elapsed = int((time.monotonic() - t0) * 1000)
-        if r.status_code == 200:
-            return {"status": "pass", "ms": elapsed, "detail": "API key valid"}
-        return {"status": "fail", "code": r.status_code, "ms": elapsed, "detail": r.text[:200]}
-    except Exception as exc:
-        elapsed = int((time.monotonic() - t0) * 1000)
-        return {"status": "error", "ms": elapsed, "detail": str(exc)}
+def _map_chat_provider_result(result: Dict[str, Any]) -> Dict[str, Any]:
+    status = result.get("status")
+    mapped = {
+        "ok": "pass",
+        "error": "fail",
+        "exception": "error",
+        "no_key": "keyless",
+    }.get(status, "unknown")
 
-def _check_openrouter() -> Dict[str, Any]:
-    or_key = os.environ.get("OPENROUTER_API_KEY", "")
-    if not or_key:
-        return {"status": "keyless", "detail": "OPENROUTER_API_KEY unset; using stub mode"}
+    mapped_result = {
+        "status": mapped,
+        "ms": result.get("ms", 0),
+        "detail": "chat probe succeeded" if status == "ok" else result.get("detail", "API check performed"),
+    }
+    if "code" in result:
+        mapped_result["code"] = result["code"]
+    return mapped_result
 
-    t0 = time.monotonic()
-    try:
-        url = "https://openrouter.ai/api/v1/models"
-        headers = {"Authorization": f"Bearer {or_key}"}
-        r = requests.get(url, headers=headers, timeout=10)
-        elapsed = int((time.monotonic() - t0) * 1000)
-        if r.status_code == 200:
-            return {"status": "pass", "ms": elapsed, "detail": "API key valid"}
-        return {"status": "fail", "code": r.status_code, "ms": elapsed, "detail": r.text[:200]}
-    except Exception as exc:
-        elapsed = int((time.monotonic() - t0) * 1000)
-        return {"status": "error", "ms": elapsed, "detail": str(exc)}
+
+def _check_chat_providers() -> Dict[str, Any]:
+    """Use the same authenticated probes that power /chat/test."""
+    health = test_chat_providers()
+    providers = health.get("providers", {})
+    return {
+        "gemini": _map_chat_provider_result(providers.get("gemini", {})),
+        "openrouter": _map_chat_provider_result(providers.get("openrouter", {})),
+    }
+
 
 def _check_gcp() -> Dict[str, Any]:
     from modules.reasoning_module import _gcloud_access_token
@@ -89,15 +84,15 @@ def get_disk_usage() -> Dict[str, Any]:
 
 def get_deep_health() -> Dict[str, Any]:
     """Execute all health checks in parallel and return aggregated status."""
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        f_gemini = executor.submit(_check_gemini)
-        f_openrouter = executor.submit(_check_openrouter)
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        f_chat = executor.submit(_check_chat_providers)
         f_gcp = executor.submit(_check_gcp)
         f_azure = executor.submit(_check_azure)
 
+        chat_results = f_chat.result()
         results = {
-            "gemini": f_gemini.result(),
-            "openrouter": f_openrouter.result(),
+            "gemini": chat_results["gemini"],
+            "openrouter": chat_results["openrouter"],
             "gcp": f_gcp.result(),
             "azure": f_azure.result(),
         }

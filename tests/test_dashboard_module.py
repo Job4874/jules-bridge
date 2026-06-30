@@ -32,7 +32,8 @@ def test_get_dashboard_status_happy_path():
          patch('modules.dashboard_module.detect_resource_pressure') as mock_pressure, \
          patch('modules.dashboard_module._fleet_status') as mock_fleet, \
          patch('modules.dashboard_module._vm_info') as mock_vm, \
-         patch('modules.dashboard_module._tail_log') as mock_tail:
+         patch('modules.dashboard_module._tail_log') as mock_tail, \
+         patch('modules.dashboard_module.test_chat_providers') as mock_providers:
 
         mock_env_vars.return_value = {
             "GEMINI_API_KEY": "yes",
@@ -63,6 +64,12 @@ def test_get_dashboard_status_happy_path():
             "Log line 1",
             "Starting ngrok at https://random-ngrok-url.ngrok.io/"
         ]
+        mock_providers.return_value = {
+            "providers": {
+                "gemini": {"status": "ok"},
+                "openrouter": {"status": "no_key"},
+            }
+        }
 
         # Call get_dashboard_status
         start_utc = datetime.now(timezone.utc)
@@ -85,6 +92,7 @@ def test_get_dashboard_status_happy_path():
 
         assert result["cloud"]["total"] == 1
         assert result["jules_fleet"]["launched"] == 1
+        assert result["providers"]["gemini"]["status"] == "ok"
 
         assert result["recent_logs"] == ["Log line 1", "Starting ngrok at https://random-ngrok-url.ngrok.io/"]
         assert "GEMINI_API_KEY" in result["env_keys_present"]

@@ -158,7 +158,7 @@ def test_chat_providers(
                 results["gemini"] = {
                     "status": "error",
                     "code": response.status_code,
-                    "detail": _sanitize_detail(response.text, env_map),
+                    "detail": f"HTTP {response.status_code}: {_sanitize_detail(response.text, env_map)}",
                     "ms": elapsed,
                 }
         except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -189,7 +189,7 @@ def test_chat_providers(
                 results["openrouter"] = {
                     "status": "error",
                     "code": response.status_code,
-                    "detail": _sanitize_detail(response.text, env_map),
+                    "detail": f"HTTP {response.status_code}: {_sanitize_detail(response.text, env_map)}",
                     "ms": elapsed,
                 }
         except Exception as exc:  # pylint: disable=broad-exception-caught
