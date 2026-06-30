@@ -1,0 +1,71 @@
+{
+  "timestamp_local": "2026-06-30T10:54:00-06:00",
+  "branch": "codex/jules-production-finish",
+  "head_before_evidence_commit": "db959b29a2beea6ad3c916db0f3fa1c7839cb46f",
+  "purpose": "Secret-free full-suite and live-route recheck after cockpit and quick-boot verification commits.",
+  "test_results": {
+    "python_full_suite": {
+      "command": "C:\\Users\\abdul\\Documents\\Codex\\2026-06-29\\github-plugin-github-openai-curated-remote\\work\\jules-bridge\\.venv\\Scripts\\python.exe -m pytest tests/ -q",
+      "result": "passed",
+      "summary": "439 passed in 18.13s"
+    },
+    "dashboard_lint": {
+      "command": "pnpm run lint",
+      "working_directory": "dashboard-ui",
+      "result": "passed",
+      "summary": "oxlint completed with exit code 0"
+    },
+    "dashboard_build": {
+      "command": "pnpm run build",
+      "working_directory": "dashboard-ui",
+      "result": "passed",
+      "summary": "vite build completed with exit code 0; assets index-CPnQGhe0.js and index-BP5lS6yt.css"
+    }
+  },
+  "live_routes_at_recheck": {
+    "bridge_ping": "online",
+    "dashboard_page": {
+      "status": 200,
+      "asset_refs": [
+        "/assets/index-CPnQGhe0.js",
+        "/assets/index-BP5lS6yt.css"
+      ]
+    },
+    "public_ping": "online",
+    "public_dashboard": {
+      "status": 401,
+      "note": "public tunnel ping is online; direct public /dashboard still returned 401 Unauthorized during this recheck"
+    },
+    "dashboard_status_bypass_cache": {
+      "healthy": true,
+      "cloud_online": 1,
+      "gemini": "error",
+      "openrouter": "error"
+    },
+    "health_deep": {
+      "gemini": "fail",
+      "openrouter": "fail"
+    },
+    "chat_test": {
+      "healthy": true,
+      "error_count": 1
+    },
+    "chat_probe": {
+      "model_used": "vm/jules-worker",
+      "response_prefix": "OK",
+      "error_count": 1
+    }
+  },
+  "jules_sessions": {
+    "primary": "7152730290236054698",
+    "primary_status": "In Progress",
+    "secondary": "14369052129679399317",
+    "pull_applied": false,
+    "pull_reason": "Primary Jules session was not Completed in the fresh /jules/sessions poll."
+  },
+  "production_readiness": {
+    "ready_to_mark_clean": false,
+    "remaining_blocker": "Provider readiness remains degraded: local Gemini/OpenRouter still fail provider checks, while VM fallback can answer but remains external-provider dependent.",
+    "pr64_should_remain_draft": true
+  }
+}
