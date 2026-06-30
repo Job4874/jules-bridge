@@ -73,7 +73,10 @@ def compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     gain = delta.clip(lower=0).rolling(period).mean()
     loss = (-delta.clip(upper=0)).rolling(period).mean()
     rs = gain / loss.replace(0, np.nan)
-    return 100 - (100 / (1 + rs))
+    res = 100 - (100 / (1 + rs))
+    res.loc[(gain > 0) & (loss == 0)] = 100.0
+    res.loc[(gain == 0) & (loss == 0)] = 50.0
+    return res
 
 def compute_macd(series: pd.Series, fast=12, slow=26, signal=9):
     ema_fast = series.ewm(span=fast, adjust=False).mean()
