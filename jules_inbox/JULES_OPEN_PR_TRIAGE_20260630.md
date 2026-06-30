@@ -74,3 +74,16 @@ Open draft PRs after PR #78, #65, and #66 merge:
 4. Use repo context guard before dispatching more workers; do not reuse ports, server nodes, local dependencies, or project extensions across repos without operator approval.
 5. Keep math/analysis capability work tied to its owning repo/module and evidence-backed fixtures.
 6. Remaining open PRs are all `DIRTY` as of the post-merge recheck; do not mark them ready until they are rebased and retested on current `master`.
+
+## GitHub Comments Sent
+
+Coordinator rebase/split comments were posted on all remaining dirty draft PRs:
+
+- VM family: #70, #77
+- Dashboard family: #72, #75
+- Chat/provider/health family: #68, #69, #71, #73, #74
+- Production/security hardening: #76
+- Provider/dashboard mixed source branch: #67
+- Broad umbrella/reference branch: #64
+
+The first comment pass included a literal `$master` placeholder from PowerShell escaping. Follow-up correction comments were posted on each PR with the actual current master ref: `dc089f5`. The instructions otherwise stand.
