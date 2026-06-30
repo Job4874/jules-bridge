@@ -27,6 +27,25 @@ const DEFAULT_PROVIDERS = {
   vm_worker: { status: 'offline' },
 };
 
+const REQUIRED_PROVIDER_KEYS = ['vm_worker'];
+
+function isRequiredProvider(key) {
+  return REQUIRED_PROVIDER_KEYS.includes(key);
+}
+
+function providerStateLabel(snapshot, key, tone) {
+  if (tone === 'good') return 'Ready';
+  if (isRequiredProvider(key)) return tone === 'bad' ? 'Blocker' : 'Watch';
+  if (providerStatus(snapshot, 'vm_worker') === 'ok') return 'Bypassed';
+  return tone === 'bad' ? 'Watch' : 'Optional';
+}
+
+function countProviderFailures(snapshot) {
+  return PROVIDER_KEYS.filter(([key]) => (
+    isRequiredProvider(key) && statusTone(providerStatus(snapshot, key)) === 'bad'
+  )).length;
+}
+
 const emptySnapshot = {
   ok: false,
   timestamp: '',
@@ -120,6 +139,7 @@ function normalizeDashboard(raw) {
 function statusTone(status) {
   const normalized = String(status || '').toLowerCase();
   if (['ok', 'online', 'running', 'active', 'pass', 'complete'].includes(normalized)) return 'good';
+  if (['skipped', 'optional'].includes(normalized)) return 'warn';
   if (['error', 'failed', 'offline', 'exception', 'invalid_key'].includes(normalized)) return 'bad';
   if (['no_key', 'unknown', 'provisioning', 'planning', 'blocked', 'in progress'].includes(normalized)) return 'warn';
   return 'neutral';
@@ -131,14 +151,15 @@ function providerStatus(snapshot, key) {
 
 function providerLabel(status) {
   if (status === 'no_key') return 'NO KEY';
+  if (status === 'skipped') return 'BYPASSED';
   if (status === 'invalid_key') return 'INVALID';
   return String(status || 'unknown').replaceAll('_', ' ').toUpperCase();
 }
 
 function routeLabel(snapshot) {
+  if (providerStatus(snapshot, 'vm_worker') === 'ok') return 'VM primary';
   if (providerStatus(snapshot, 'gemini') === 'ok') return 'Gemini primary';
   if (providerStatus(snapshot, 'openrouter') === 'ok') return 'OpenRouter route';
-  if (providerStatus(snapshot, 'vm_worker') === 'ok') return 'VM fallback';
   return 'No chat route';
 }
 
@@ -330,14 +351,14 @@ function TopBar({ connection, snapshot, onPause, onRefresh }) {
 }
 
 function TaskTimeline({ snapshot, connection }) {
-  const providerFailures = PROVIDER_KEYS.filter(([key]) => statusTone(providerStatus(snapshot, key)) === 'bad').length;
+  const failures = countProviderFailures(snapshot);
   const vmReady = providerStatus(snapshot, 'vm_worker') === 'ok';
   const tasks = [
     {
       name: 'provider audit',
       owner: 'Jules-01',
-      status: providerFailures ? 'waiting feedback' : 'clear',
-      tone: providerFailures ? 'warn' : 'good',
+      status: failures ? 'waiting feedback' : 'clear',
+      tone: failures ? 'warn' : 'good',
       offset: 7,
       span: 38,
     },
@@ -421,13 +442,13 @@ function ProviderMatrix({ snapshot }) {
         const provider = snapshot.providers?.[key] || {};
         const status = provider.status || 'unknown';
         const tone = statusTone(status);
-        const detail = provider.error_type || provider.http_status || provider.model || (key === 'vm_worker' ? 'vm/jules-worker' : 'env key');
+        const detail = provider.route || provider.error_type || provider.http_status || provider.model || (key === 'vm_worker' ? 'vm/jules-worker' : 'env key');
         return (
           <div className={cx('provider-line', tone)} key={key}>
             <span><Dot tone={tone} />{label}</span>
             <span>{providerLabel(status)}</span>
             <span>{String(detail || '--')}</span>
-            <span>{tone === 'good' ? 'Ready' : tone === 'bad' ? 'Blocker' : 'Watch'}</span>
+            <span>{providerStateLabel(snapshot, key, tone)}</span>
           </div>
         );
       })}
@@ -484,7 +505,7 @@ function EventQueue({ events, snapshot }) {
   const fallbackEvents = [
     {
       id: 'provider-baseline',
-      tone: PROVIDER_KEYS.some(([key]) => statusTone(providerStatus(snapshot, key)) === 'bad') ? 'bad' : 'good',
+      tone: countProviderFailures(snapshot) ? 'bad' : 'good',
       title: 'Provider readiness sampled',
       detail: routeLabel(snapshot),
       at: snapshot.timestamp,

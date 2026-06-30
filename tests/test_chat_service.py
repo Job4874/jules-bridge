@@ -6,6 +6,11 @@ from unittest.mock import patch
 
 from modules import chat_service
 
+GEMINI_TEST_KEY = "AIza" + ("x" * 35)
+OPENROUTER_TEST_KEY = "sk-or-v1-" + ("x" * 20)
+OPENROUTER_TEST_KEY_A = "sk-or-v1-" + ("a" * 20)
+OPENROUTER_TEST_KEY_B = "sk-or-v1-" + ("b" * 20)
+
 
 class FakeResponse:
     def __init__(self, status_code, payload=None, text=""):
@@ -48,11 +53,39 @@ class TestChatProviderHealth(unittest.TestCase):
         self.assertEqual(result["providers"]["gemini"]["status"], "no_key")
         self.assertEqual(result["providers"]["openrouter"]["status"], "no_key")
 
+    def test_malformed_local_keys_are_skipped_not_blockers(self):
+        result = chat_service.test_chat_providers(
+            env={
+                "GEMINI_API_KEY": "placeholder-not-gemini",
+                "OPENROUTER_API_KEY": "bad-key",
+            },
+            requests_client=FakeRequests([]),
+        )
+
+        self.assertEqual(result["providers"]["gemini"]["status"], "skipped")
+        self.assertEqual(result["providers"]["openrouter"]["status"], "skipped")
+        self.assertFalse(result["healthy"])
+
+    def test_malformed_keys_auto_prefer_vm_route(self):
+        with patch.object(chat_service, "_vm_chat_fallback", return_value=("vm ok", None)):
+            result = chat_service.chat(
+                "hello",
+                env={
+                    "GEMINI_API_KEY": "placeholder-not-gemini",
+                    "OPENROUTER_API_KEY": "bad-key",
+                },
+                requests_client=None,
+                clock=clock_from([1.0, 1.5]),
+            )
+
+        self.assertEqual(result["response"], "vm ok")
+        self.assertEqual(result["model_used"], "vm/jules-worker")
+
     def test_gemini_health_success_redacts_from_result_shape(self):
         client = FakeRequests([FakeResponse(200)])
 
         result = chat_service.test_chat_providers(
-            env={"GEMINI_API_KEY": "secret-key"},
+            env={"GEMINI_API_KEY": "AIza" + ("x" * 35)},
             requests_client=client,
             clock=clock_from([1.0, 1.025]),
         )
@@ -86,7 +119,7 @@ class TestChatCompletion(unittest.TestCase):
             "hello",
             image_base64="abc123",
             history=[{"role": "assistant", "content": "prior"}],
-            env={"GEMINI_API_KEY": "gem-secret"},
+            env={"GEMINI_API_KEY": GEMINI_TEST_KEY},
             requests_client=client,
             clock=clock_from([10.0, 10.5]),
         )
@@ -109,7 +142,7 @@ class TestChatCompletion(unittest.TestCase):
         result = chat_service.chat(
             "hello",
             model_alias="smart",
-            env={"GEMINI_API_KEY": "gem-secret", "OPENROUTER_API_KEY": "or-secret"},
+            env={"GEMINI_API_KEY": GEMINI_TEST_KEY, "OPENROUTER_API_KEY": OPENROUTER_TEST_KEY},
             requests_client=client,
             clock=clock_from([1.0, 1.2]),
         )
@@ -122,14 +155,14 @@ class TestChatCompletion(unittest.TestCase):
     def test_chat_offline_redacts_provider_errors(self):
         client = FakeRequests(
             [
-                FakeResponse(429, text="quota hit for gem-secret"),
-                FakeResponse(500, text="router failed for or-secret"),
+                FakeResponse(429, text=f"quota hit for {GEMINI_TEST_KEY}"),
+                FakeResponse(500, text=f"router failed for {OPENROUTER_TEST_KEY}"),
             ]
         )
 
         result = chat_service.chat(
             "hello",
-            env={"GEMINI_API_KEY": "gem-secret", "OPENROUTER_API_KEY": "or-secret"},
+            env={"GEMINI_API_KEY": GEMINI_TEST_KEY, "OPENROUTER_API_KEY": OPENROUTER_TEST_KEY},
             requests_client=client,
             clock=clock_from([1.0, 1.2]),
         )
@@ -137,8 +170,8 @@ class TestChatCompletion(unittest.TestCase):
         self.assertEqual(result["model_used"], "none")
         self.assertIn("Gemini 429 [quota_limit]", result["errors"][0])
         self.assertIn("OpenRouter 500 [transient_error]", result["errors"][1])
-        self.assertNotIn("gem-secret", str(result))
-        self.assertNotIn("or-secret", str(result))
+        self.assertNotIn(GEMINI_TEST_KEY, str(result))
+        self.assertNotIn(OPENROUTER_TEST_KEY, str(result))
 
     def test_chat_offline_response_is_stable(self):
         result = chat_service.chat(
@@ -162,15 +195,15 @@ class TestChatCompletion(unittest.TestCase):
 
         result = chat_service.chat(
             "hello",
-            env={"OPENROUTER_API_KEYS": "plural-a,plural-b"},
+            env={"OPENROUTER_API_KEYS": f"{OPENROUTER_TEST_KEY_A},{OPENROUTER_TEST_KEY_B}"},
             requests_client=client,
             clock=clock_from([1.0, 1.2]),
         )
 
         self.assertEqual(result["response"], "openrouter ok")
         self.assertEqual(result["model_used"], "openrouter/google/gemma-3-27b-it:free")
-        self.assertEqual(client.calls[0]["headers"]["Authorization"], "Bearer plural-a")
-        self.assertEqual(client.calls[1]["headers"]["Authorization"], "Bearer plural-b")
+        self.assertEqual(client.calls[0]["headers"]["Authorization"], f"Bearer {OPENROUTER_TEST_KEY_A}")
+        self.assertEqual(client.calls[1]["headers"]["Authorization"], f"Bearer {OPENROUTER_TEST_KEY_B}")
         self.assertNotIn("plural-a", str(result))
         self.assertNotIn("plural-b", str(result))
 
@@ -184,7 +217,7 @@ class TestChatCompletion(unittest.TestCase):
 
         result = chat_service.chat(
             "hello",
-            env={"OPENROUTER_API_KEY": "or-secret"},
+            env={"OPENROUTER_API_KEY": OPENROUTER_TEST_KEY},
             requests_client=client,
             clock=clock_from([1.0, 1.2]),
             enable_vm_fallback=False,
@@ -197,11 +230,11 @@ class TestChatCompletion(unittest.TestCase):
         self.assertNotIn("or-secret", str(result))
 
     def test_chat_does_not_model_fallback_on_invalid_openrouter_key(self):
-        client = FakeRequests([FakeResponse(401, text="invalid key for or-secret")])
+        client = FakeRequests([FakeResponse(401, text=f"invalid key for {OPENROUTER_TEST_KEY}")])
 
         result = chat_service.chat(
             "hello",
-            env={"OPENROUTER_API_KEY": "or-secret"},
+            env={"OPENROUTER_API_KEY": OPENROUTER_TEST_KEY},
             requests_client=client,
             clock=clock_from([1.0, 1.2]),
             enable_vm_fallback=False,
@@ -210,7 +243,7 @@ class TestChatCompletion(unittest.TestCase):
         self.assertEqual(result["model_used"], "none")
         self.assertEqual(len(client.calls), 1)
         self.assertIn("OpenRouter 401 [invalid_key]", result["errors"][0])
-        self.assertNotIn("or-secret", str(result))
+        self.assertNotIn(OPENROUTER_TEST_KEY, str(result))
 
     def test_chat_uses_vm_fallback_after_local_failures(self):
         client = FakeRequests(
@@ -245,7 +278,7 @@ class TestChatCompletion(unittest.TestCase):
             mock_uuid.return_value.hex = "fixedmarker123"
             result = chat_service.chat(
                 "hello",
-                env={"GEMINI_API_KEY": "gem-secret", "OPENROUTER_API_KEY": "or-secret"},
+                env={"GEMINI_API_KEY": GEMINI_TEST_KEY, "OPENROUTER_API_KEY": OPENROUTER_TEST_KEY},
                 requests_client=client,
                 clock=clock_from([1.0, 1.5]),
                 vm_send_task=send_task,
@@ -371,7 +404,7 @@ class TestChatCompletion(unittest.TestCase):
         )
 
         result = chat_service.test_chat_providers(
-            env={"GEMINI_API_KEY": "bad-gemini", "OPENROUTER_API_KEY": "bad-or"},
+            env={"GEMINI_API_KEY": GEMINI_TEST_KEY, "OPENROUTER_API_KEY": OPENROUTER_TEST_KEY},
             requests_client=client,
             clock=clock_from([1.0, 1.1, 1.2, 1.3]),
         )
@@ -402,7 +435,7 @@ class TestChatCompletion(unittest.TestCase):
         )
 
         result = chat_service.test_chat_providers(
-            env={"GEMINI_API_KEY": "good-gemini", "OPENROUTER_API_KEY": "bad-or"},
+            env={"GEMINI_API_KEY": GEMINI_TEST_KEY, "OPENROUTER_API_KEY": OPENROUTER_TEST_KEY},
             requests_client=client,
             clock=clock_from([1.0, 1.1, 1.2, 1.3]),
         )
@@ -430,15 +463,15 @@ class TestChatCompletion(unittest.TestCase):
         )
 
         result = chat_service.test_chat_providers(
-            env={"OPENROUTER_API_KEYS": "plural-a,plural-b"},
+            env={"OPENROUTER_API_KEYS": f"{OPENROUTER_TEST_KEY_A},{OPENROUTER_TEST_KEY_B}"},
             requests_client=client,
             clock=clock_from([1.0, 1.1, 1.2]),
         )
 
         self.assertTrue(result["healthy"])
         self.assertEqual(result["providers"]["openrouter"]["status"], "ok")
-        self.assertEqual(client.calls[0]["headers"]["Authorization"], "Bearer plural-a")
-        self.assertEqual(client.calls[1]["headers"]["Authorization"], "Bearer plural-b")
+        self.assertEqual(client.calls[0]["headers"]["Authorization"], f"Bearer {OPENROUTER_TEST_KEY_A}")
+        self.assertEqual(client.calls[1]["headers"]["Authorization"], f"Bearer {OPENROUTER_TEST_KEY_B}")
         self.assertNotIn("plural-a", str(result))
         self.assertNotIn("plural-b", str(result))
 
@@ -451,7 +484,7 @@ class TestChatCompletion(unittest.TestCase):
         )
 
         result = chat_service.test_chat_providers(
-            env={"OPENROUTER_API_KEY": "or-secret"},
+            env={"OPENROUTER_API_KEY": OPENROUTER_TEST_KEY},
             requests_client=client,
             clock=clock_from([1.0, 1.1, 1.2]),
         )

@@ -8,9 +8,10 @@ import start
 
 
 @pytest.fixture
-def watchdog_fixture(tmp_path):
+def watchdog_fixture(tmp_path, monkeypatch):
+    monkeypatch.setattr(start, "configure_ngrok_auth", lambda: True)
     watchdog = start.TunnelWatchdog(inbox_dir=tmp_path)
-    # mock the sleep in the run loop if we ever call it, but we'll test check_tunnel directly
+    watchdog.auth_blocked = False
     return watchdog
 
 
@@ -60,14 +61,11 @@ def test_reconnect_failure_escalation(mock_subrun, mock_ngrok, mock_urlopen, wat
     mock_urlopen.side_effect = OSError("Connection refused")
     mock_ngrok.connect.side_effect = Exception("ngrok error")
 
-    # Trigger 3 reconnect failures by checking 5 times.
-    # 1st, 2nd, 3rd check -> ping fails -> consecutive=3 -> reconnect fails (reconnect_fails=1)
-    # 4th check -> ping fails -> consecutive=4 -> reconnect fails (reconnect_fails=2)
-    # 5th check -> ping fails -> consecutive=5 -> reconnect fails (reconnect_fails=3, escalated!)
     for _ in range(5):
         watchdog_fixture.check_tunnel()
 
     assert watchdog_fixture.reconnect_failures == 3
+    assert watchdog_fixture.escalated is True
 
     blocker_file = tmp_path / "TUNNEL_BLOCKER.md"
     assert blocker_file.exists()
@@ -76,9 +74,14 @@ def test_reconnect_failure_escalation(mock_subrun, mock_ngrok, mock_urlopen, wat
     assert response_file.exists()
     assert "[TUNNEL_DEAD]" in response_file.read_text()
 
-    # Verify git commands
-    assert mock_subrun.call_count == 3
-    calls = mock_subrun.call_args_list
-    assert "add" in calls[0][0][0]
-    assert "commit" in calls[1][0][0]
-    assert "push" in calls[2][0][0]
+    mock_subrun.assert_not_called()
+
+
+@patch("start.configure_ngrok_auth", return_value=False)
+def test_auth_blocked_skips_reconnect(mock_configure_auth, watchdog_fixture, tmp_path):
+    watchdog_fixture.auth_blocked = True
+    watchdog_fixture.check_tunnel()
+
+    health = json.loads((tmp_path / "TUNNEL_HEALTH.json").read_text())
+    assert health["status"] == "auth_required"
+    assert watchdog_fixture.reconnect_failures == 0

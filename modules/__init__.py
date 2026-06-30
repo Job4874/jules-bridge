@@ -115,6 +115,7 @@ from .context_orchestrator import (
 from .app_launcher import LaunchResult, launch_browser_to_url
 from .chat_service import ChatHealthResult, ChatResult, test_chat_providers, chat
 from .health_service import get_deep_health
+from . import jules_api
 
 __all__ = [
     # fs_service
@@ -234,4 +235,6 @@ __all__ = [
     "chat",
     # health_service
     "get_deep_health",
+    # jules_api
+    "jules_api",
 ]

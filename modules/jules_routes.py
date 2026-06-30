@@ -433,3 +433,51 @@ def jules_fleet_watch():
     )
     status = 400 if result.get("error") else 200
     return jsonify(dict(result)), status
+
+
+@jules_bp.route("/api/sources", methods=["POST"])
+@route_errors
+def jules_api_sources():
+    """POST /jules/api/sources - List Jules REST API sources."""
+    from modules import jules_api  # pylint: disable=import-outside-toplevel
+
+    data = json_payload()
+    result = jules_api.list_sources(timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=120))
+    status = 200 if result.get("ok") else 502
+    return jsonify(dict(result)), status
+
+
+@jules_bp.route("/api/sessions", methods=["POST"])
+@route_errors
+def jules_api_create_session():
+    """POST /jules/api/sessions - Create a Jules REST API session."""
+    from modules import jules_api  # pylint: disable=import-outside-toplevel
+
+    data = json_payload()
+    result = jules_api.create_session(
+        prompt=string_field(data, "prompt"),
+        source=string_field(data, "source", default="", allow_empty=True),
+        title=string_field(data, "title", default="", allow_empty=True),
+        starting_branch=string_field(data, "starting_branch", default="main"),
+        automation_mode=string_field(data, "automation_mode", default="", allow_empty=True),
+        require_plan_approval=bool_field(data, "require_plan_approval", default=False),
+        timeout_s=int_field(data, "timeout_s", default=60, min_value=1, max_value=300),
+    )
+    status = 200 if result.get("ok") else 502
+    return jsonify(dict(result)), status
+
+
+@jules_bp.route("/api/sessions/list", methods=["POST"])
+@route_errors
+def jules_api_list_sessions():
+    """POST /jules/api/sessions/list - List Jules REST API sessions."""
+    from modules import jules_api  # pylint: disable=import-outside-toplevel
+
+    data = json_payload()
+    result = jules_api.list_sessions(
+        page_size=int_field(data, "page_size", default=30, min_value=1, max_value=100),
+        page_token=string_field(data, "page_token", default="", allow_empty=True),
+        timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=120),
+    )
+    status = 200 if result.get("ok") else 502
+    return jsonify(dict(result)), status

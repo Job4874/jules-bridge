@@ -22,6 +22,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+from modules import jules_api
+
 
 # ---------------------------------------------------------------------------
 # Typed return contracts
@@ -412,38 +414,56 @@ def launch_packets(
             }
             if not dry_run:
                 packet_text = packet.read_text(encoding="utf-8", errors="replace")
-                try:
-                    completed = _run_cli_command(
-                        command,
+                if jules_api.use_rest_api():
+                    api_result = jules_api.create_session(
+                        prompt=_packet_prompt(packet_text),
+                        title=packet.stem,
                         timeout_s=timeout_s,
-                        cwd=repo_path or None,
-                        input_text=packet_text,
                     )
-                    timed_out = bool(completed.get("timed_out"))
-                    exit_code = completed.get("exit_code")
-                    combined = f"{completed.get('stdout', '')}\n{completed.get('stderr', '')}"
-                    session_ids = _extract_session_ids(combined)
+                    session_ids = list(api_result.get("session_ids") or [])
                     result.update(
-                        status=(
-                            "timeout"
-                            if timed_out
-                            else "launched" if _launch_succeeded(exit_code, combined, session_ids) else "failed"
-                        ),
-                        exit_code=exit_code,
-                        stdout=completed.get("stdout", ""),
-                        stderr=completed.get("stderr", ""),
-                        timed_out=timed_out,
+                        command=["REST", "POST", "https://jules.googleapis.com/v1alpha/sessions"],
+                        status="launched" if api_result.get("ok") and session_ids else "failed",
+                        exit_code=0 if api_result.get("ok") else 1,
+                        stdout=str(api_result.get("stdout") or ""),
+                        stderr=str(api_result.get("error") or ""),
+                        timed_out=False,
                         session_ids=session_ids,
+                        transport="rest",
                     )
-                except subprocess.TimeoutExpired as exc:
-                    result.update(
-                        status="timeout",
-                        timed_out=True,
-                        stdout=_coerce_text(exc.stdout),
-                        stderr=_coerce_text(exc.stderr),
-                    )
-                except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
-                    result.update(status="error", stderr=str(exc))
+                else:
+                    try:
+                        completed = _run_cli_command(
+                            command,
+                            timeout_s=timeout_s,
+                            cwd=repo_path or None,
+                            input_text=packet_text,
+                        )
+                        timed_out = bool(completed.get("timed_out"))
+                        exit_code = completed.get("exit_code")
+                        combined = f"{completed.get('stdout', '')}\n{completed.get('stderr', '')}"
+                        session_ids = _extract_session_ids(combined)
+                        result.update(
+                            status=(
+                                "timeout"
+                                if timed_out
+                                else "launched" if _launch_succeeded(exit_code, combined, session_ids) else "failed"
+                            ),
+                            exit_code=exit_code,
+                            stdout=completed.get("stdout", ""),
+                            stderr=completed.get("stderr", ""),
+                            timed_out=timed_out,
+                            session_ids=session_ids,
+                        )
+                    except subprocess.TimeoutExpired as exc:
+                        result.update(
+                            status="timeout",
+                            timed_out=True,
+                            stdout=_coerce_text(exc.stdout),
+                            stderr=_coerce_text(exc.stderr),
+                        )
+                    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
+                        result.update(status="error", stderr=str(exc))
             results.append(result)
 
         launched_count = sum(1 for item in results if item.get("status") == "launched")
@@ -549,6 +569,22 @@ def list_remote_sessions(
             jules_command=jules_command,
             resolved_jules_command=resolved_jules_command,
         )
+    if jules_api.use_rest_api():
+        api_result = jules_api.list_sessions(page_size=30, timeout_s=timeout_s)
+        return JulesRemoteResult(
+            dry_run=False,
+            command=["REST", "GET", "https://jules.googleapis.com/v1alpha/sessions"],
+            status="ok" if api_result.get("ok") else "failed",
+            exit_code=0 if api_result.get("ok") else 1,
+            stdout=str(api_result.get("stdout") or ""),
+            stderr=str(api_result.get("error") or ""),
+            timed_out=False,
+            session_ids=list(api_result.get("session_ids") or []),
+            jules_command="jules-rest-api",
+            resolved_jules_command="jules-rest-api",
+            cache_hit=False,
+            transport="rest",
+        )
     try:
         completed = _run_cli_command(
             command,
@@ -622,6 +658,45 @@ def jules_preflight(
     """
     generated_at = datetime.now(timezone.utc).isoformat()
     try:
+        if jules_api.use_rest_api():
+            api_result = jules_api.api_preflight(timeout_s=timeout_s)
+            sources = jules_api.list_sources(timeout_s=timeout_s) if api_result.get("ok") else api_result
+            remote_result = JulesRemoteResult(
+                dry_run=False,
+                command=["REST", "GET", "https://jules.googleapis.com/v1alpha/sources"],
+                status="ok" if sources.get("ok") else "failed",
+                exit_code=0 if sources.get("ok") else 1,
+                stdout=str(sources.get("stdout") or ""),
+                stderr=str(sources.get("error") or api_result.get("error") or ""),
+                timed_out=False,
+                session_ids=[],
+                jules_command="jules-rest-api",
+                resolved_jules_command="jules-rest-api",
+                transport="rest",
+            )
+            ready = bool(api_result.get("ok"))
+            likely_blocker = "" if ready else "jules_rest_api_auth"
+            payload = JulesPreflightResult(
+                generated_at_utc=generated_at,
+                ready=ready,
+                likely_blocker=likely_blocker,
+                jules_command="jules-rest-api",
+                resolved_jules_command="jules-rest-api",
+                preferred_jules_command="jules-rest-api",
+                candidate_commands=[{"label": "rest_api", "requested": "jules-rest-api", "resolved": "jules-rest-api", "exists": True}],
+                version={"exit_code": 0 if ready else 1, "stdout": "Jules REST API", "stderr": api_result.get("error") or ""},
+                remote=dict(remote_result),
+                auth_indicators={"transport": "rest", "default_source": jules_api.default_source()},
+                login_command=[],
+                state_path="",
+                note="Preflight used Jules REST API via JULES_API_KEY.",
+            )
+            if write_state:
+                destination = Path(state_path) if state_path else _DEFAULT_OUTPUT_DIR / _DEFAULT_PREFLIGHT_STATE
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                payload["state_path"] = str(destination)
+                destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            return payload
         resolved = _resolve_cli_command(jules_command)
         candidates = _candidate_jules_commands(jules_command)
         preferred = (
@@ -749,22 +824,35 @@ def pull_remote_session(
             ),
         )
         if not dry_run:
-            completed = _run_cli_command(
-                command,
-                timeout_s=timeout_s,
-                cwd=repo_path or None,
-            )
-            combined = f"{completed.get('stdout', '')}\n{completed.get('stderr', '')}"
-            timed_out = bool(completed.get("timed_out"))
-            exit_code = completed.get("exit_code")
-            payload.update(
-                status="timeout" if timed_out else "pulled" if exit_code == 0 else "failed",
-                exit_code=exit_code,
-                stdout=completed.get("stdout", ""),
-                stderr=completed.get("stderr", ""),
-                timed_out=timed_out,
-                session_ids=_merge_unique([clean_session_id], _extract_session_ids(combined)),
-            )
+            if jules_api.use_rest_api():
+                api_result = jules_api.pull_session_snapshot(clean_session_id, timeout_s=timeout_s)
+                payload.update(
+                    command=["REST", "GET", f"https://jules.googleapis.com/v1alpha/sessions/{clean_session_id}"],
+                    status="pulled" if api_result.get("ok") else "failed",
+                    exit_code=0 if api_result.get("ok") else 1,
+                    stdout=str(api_result.get("stdout") or ""),
+                    stderr=str(api_result.get("error") or ""),
+                    timed_out=False,
+                    session_ids=_merge_unique([clean_session_id], list(api_result.get("session_ids") or [])),
+                    transport="rest",
+                )
+            else:
+                completed = _run_cli_command(
+                    command,
+                    timeout_s=timeout_s,
+                    cwd=repo_path or None,
+                )
+                combined = f"{completed.get('stdout', '')}\n{completed.get('stderr', '')}"
+                timed_out = bool(completed.get("timed_out"))
+                exit_code = completed.get("exit_code")
+                payload.update(
+                    status="timeout" if timed_out else "pulled" if exit_code == 0 else "failed",
+                    exit_code=exit_code,
+                    stdout=completed.get("stdout", ""),
+                    stderr=completed.get("stderr", ""),
+                    timed_out=timed_out,
+                    session_ids=_merge_unique([clean_session_id], _extract_session_ids(combined)),
+                )
         if write_result:
             destination_dir = Path(output_dir) if output_dir else _DEFAULT_OUTPUT_DIR / _DEFAULT_PULL_DIR
             destination_dir.mkdir(parents=True, exist_ok=True)
@@ -1913,6 +2001,18 @@ def _state_path_for(
     else:
         base = _DEFAULT_OUTPUT_DIR
     return base / _DEFAULT_STATE_FILE
+
+
+def _packet_prompt(packet_text: str) -> str:
+    text = (packet_text or "").strip()
+    if not text:
+        return "Run the Jules worker packet attached to this session."
+    match = re.search(r"## Objective\s*\n(.*?)(?:\n## |\Z)", text, flags=re.S)
+    if match:
+        objective = match.group(1).strip()
+        if objective:
+            return objective[:8000]
+    return text[:8000]
 
 
 def _extract_session_ids(text: str) -> list[str]:

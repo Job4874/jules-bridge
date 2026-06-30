@@ -91,6 +91,44 @@ def _openrouter_keys(env: Mapping[str, str]) -> list[str]:
     return keys
 
 
+def _gemini_key_valid(key: str) -> bool:
+    return key.startswith("AIza") and len(key) >= 30
+
+
+def _openrouter_key_valid(key: str) -> bool:
+    return key.startswith("sk-or-v1-") and len(key) >= 20
+
+
+def _valid_openrouter_keys(env: Mapping[str, str]) -> list[str]:
+    return [key for key in _openrouter_keys(env) if _openrouter_key_valid(key)]
+
+
+def _prefer_vm_route(env: Mapping[str, str]) -> bool:
+    route = _env_value(env, "CHAT_ROUTE").lower()
+    if route in ("local", "gemini", "openrouter"):
+        return False
+    if route in ("vm", "vm_only", "vm_primary"):
+        return True
+    gemini_key = _env_value(env, "GEMINI_API_KEY")
+    openrouter_keys = _openrouter_keys(env)
+    if not gemini_key and not openrouter_keys:
+        return False
+    local_keys_valid = (
+        (not gemini_key or _gemini_key_valid(gemini_key))
+        and (not openrouter_keys or bool(_valid_openrouter_keys(env)))
+    )
+    return not local_keys_valid
+
+
+def _skipped_local_provider(name: str, reason: str) -> dict[str, Any]:
+    return {
+        "status": "skipped",
+        "detail": reason,
+        "optional": True,
+        "route": f"{name}/bypassed",
+    }
+
+
 def _redaction_values(env: Mapping[str, str]) -> list[str]:
     values: list[str] = []
     for value in (_env_value(env, "GEMINI_API_KEY"), *_openrouter_keys(env)):
@@ -468,7 +506,12 @@ def test_chat_providers(
     results: dict[str, dict[str, Any]] = {}
 
     gemini_key = _env_value(env_map, "GEMINI_API_KEY")
-    if gemini_key:
+    if gemini_key and not _gemini_key_valid(gemini_key):
+        results["gemini"] = _skipped_local_provider(
+            "gemini",
+            "Malformed GEMINI_API_KEY; using VM route",
+        )
+    elif gemini_key:
         start = clock()
         try:
             if client is None:
@@ -497,10 +540,16 @@ def test_chat_providers(
                 "ms": _elapsed_ms(start, clock),
             }
     else:
-        results["gemini"] = {"status": "no_key", "detail": "GEMINI_API_KEY not set"}
+        results["gemini"] = {"status": "no_key", "detail": "GEMINI_API_KEY not set", "optional": True}
 
-    openrouter_keys = _openrouter_keys(env_map)
-    if openrouter_keys:
+    openrouter_keys = _valid_openrouter_keys(env_map)
+    malformed_openrouter = bool(_openrouter_keys(env_map)) and not openrouter_keys
+    if malformed_openrouter:
+        results["openrouter"] = _skipped_local_provider(
+            "openrouter",
+            "Malformed OPENROUTER_API_KEY(S); using VM route",
+        )
+    elif openrouter_keys:
         start = clock()
         last_result: dict[str, Any] = {}
         for model in _openrouter_models("fast"):
@@ -545,7 +594,11 @@ def test_chat_providers(
                 break
         results["openrouter"] = last_result
     else:
-        results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY(S) not set"}
+        results["openrouter"] = {
+            "status": "no_key",
+            "detail": "OPENROUTER_API_KEY(S) not set",
+            "optional": True,
+        }
 
     if _should_use_vm(enable_vm_fallback, requests_client, vm_send_task, vm_get_status):
         start = clock()
@@ -598,9 +651,36 @@ def chat(
     model_used: str | None = None
     errors: list[str] = []
 
+    def _try_vm_chat() -> None:
+        nonlocal response_text, model_used
+        if not _should_use_vm(enable_vm_fallback, requests_client, vm_send_task, vm_get_status):
+            return
+        try:
+            response_text, vm_error = _vm_chat_fallback(
+                message=message,
+                system_prompt=system,
+                vm_send_task=vm_send_task,
+                vm_get_status=vm_get_status,
+                sleep_func=sleep_func,
+                task_attempts=vm_task_attempts,
+                poll_attempts=vm_poll_attempts,
+                poll_interval_s=vm_poll_interval_s,
+            )
+            if response_text:
+                model_used = _VM_CHAT_MODEL
+            elif vm_error:
+                errors.append(vm_error)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            errors.append(f"VM fallback exception: {str(exc)[:120]}")
+
+    if _prefer_vm_route(env_map):
+        _try_vm_chat()
+
     try:
         gemini_key = _env_value(env_map, "GEMINI_API_KEY")
-        if gemini_key:
+        if gemini_key and not _gemini_key_valid(gemini_key):
+            pass
+        elif gemini_key and not response_text:
             if client is None:
                 raise RuntimeError("requests package unavailable")
             model = _gemini_model(model_alias)
@@ -627,7 +707,7 @@ def chat(
 
     if not response_text:
         try:
-            openrouter_keys = _openrouter_keys(env_map)
+            openrouter_keys = _valid_openrouter_keys(env_map)
             if openrouter_keys:
                 if client is None:
                     raise RuntimeError("requests package unavailable")
@@ -660,24 +740,8 @@ def chat(
         except Exception as exc:  # pylint: disable=broad-exception-caught
             errors.append(f"OpenRouter exception: {_sanitize_detail(exc, env_map)}")
 
-    if not response_text and _should_use_vm(enable_vm_fallback, requests_client, vm_send_task, vm_get_status):
-        try:
-            response_text, vm_error = _vm_chat_fallback(
-                message=message,
-                system_prompt=system,
-                vm_send_task=vm_send_task,
-                vm_get_status=vm_get_status,
-                sleep_func=sleep_func,
-                task_attempts=vm_task_attempts,
-                poll_attempts=vm_poll_attempts,
-                poll_interval_s=vm_poll_interval_s,
-            )
-            if response_text:
-                model_used = _VM_CHAT_MODEL
-            elif vm_error:
-                errors.append(vm_error)
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            errors.append(f"VM fallback exception: {str(exc)[:120]}")
+    if not response_text and not _prefer_vm_route(env_map):
+        _try_vm_chat()
 
     elapsed_ms = _elapsed_ms(start, clock)
     if response_text:
