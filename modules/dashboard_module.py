@@ -17,6 +17,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from functools import lru_cache
 
 from modules.vm_manager import detect_resource_pressure
 
@@ -34,6 +35,7 @@ _LOG_TAIL_LINES = 40
 # Helpers
 # ---------------------------------------------------------------------------
 
+@lru_cache(maxsize=1)
 def _env_vars() -> dict[str, str]:
     """Read .env file into a dict (no process env side effects)."""
     env: dict[str, str] = {}
