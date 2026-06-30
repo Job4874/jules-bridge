@@ -83,7 +83,7 @@ if not BRIDGE_TOKEN:
 
 @app.before_request
 def require_auth():
-    if request.path in ("/health", "/ping", "/dashboard/status", "/vm/status", "/chat", "/chat/test"):
+    if request.path in ("/health", "/ping"):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -241,10 +241,6 @@ def path_field(data, key="path", default=MISSING):
     return string_field(data, key, default=default, control_safe=True)
 
 
-@app.before_request
-def _circuit_breaker_check():
-    from modules.circuit_breaker import circuit_breaker_hook
-    return circuit_breaker_hook()
 
 
 def existing_path(path, kind="file"):
@@ -293,37 +289,36 @@ def _start_timer():
 
 
 def _stale_evidence_state():
-    evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
-    threshold_s = 3600
-    try:
-        with open(evidence_path, encoding="utf-8") as _f:
-            ev = json.load(_f)
-        if isinstance(ev, list):
-            ev = ev[-1] if ev else {}
-        if not isinstance(ev, dict):
-            return None
-        ts = ev.get("timestamp_utc", "")
-        if not ts:
-            return None
-        age_s = round((datetime.now(timezone.utc) - datetime.fromisoformat(ts)).total_seconds())
-        if age_s <= threshold_s:
-            return None
-        return {"age_s": age_s, "threshold_s": threshold_s}
-    except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return None  # evidence file missing or malformed — proceed without warning
+    memory_path = os.path.join(ROOT_DIR, "memory")
+    staleness = modules.check_test_evidence_staleness(memory_path)
+    if staleness:
+        return {
+            "age_s": staleness.age_s,
+            "threshold_s": staleness.threshold_s,
+            "reason": staleness.reason
+        }
+    return None
 
 
 @app.before_request
 def _evidence_hard_gate():
     if not request.path.startswith("/oracle/"):
         return None
-    if os.environ.get("EVIDENCE_GATE_HARD") != "1":
+    if not modules.is_evidence_hard_gate_enabled():
         return None
     stale = _stale_evidence_state()
     if not stale:
         return None
+
+    # Map the EvidenceStaleness reasons to HTTP 423 errors
+    error_map = {
+        "stale": "evidence_stale",
+        "clock_skew": "evidence_future",
+        "malformed": "evidence_malformed",
+    }
     return jsonify({
-        "error": "evidence_stale",
+        "error": error_map.get(stale["reason"], "evidence_invalid"),
+        "reason": stale["reason"],
         "age_s": stale["age_s"],
         "threshold_s": stale["threshold_s"],
     }), 423
@@ -504,6 +499,13 @@ def health():
 @app.route("/ping", methods=["GET"])
 def ping():
     return jsonify({"status": "Jules Bridge Online"})
+
+
+@app.route("/health/deep", methods=["GET"])
+@route_errors
+def health_deep():
+    """GET /health/deep - Proof of system readiness."""
+    return jsonify(dict(modules.health_service.get_deep_health()))
 
 
 @app.route("/tentacles", methods=["GET"])
@@ -990,7 +992,14 @@ def run_shell():
 
     LOGGER.info("[JULES SHELL] shell=%s cwd=%s command=%s bypass_cache=%s", shell_name, cwd, command, bypass_cache)
     try:
-        result = modules.execute(command, shell=shell_name, cwd=cwd, timeout=timeout, stdin=stdin, bypass_cache=bypass_cache)
+        result = modules.execute(
+            command,
+            shell=shell_name,
+            cwd=cwd,
+            timeout=timeout,
+            stdin=stdin,
+            bypass_cache=bypass_cache,
+        )
         return jsonify(dict(result))
     except subprocess.TimeoutExpired as exc:
         LOGGER.warning("[JULES SHELL] command timed out: %s", command)

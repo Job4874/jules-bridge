@@ -294,3 +294,22 @@ def boot_secondary_vm(
             dry_run=dry_run,
             error=str(exc),
         )
+
+
+def check_and_scale_compute(
+    dry_run: bool = True,
+    allow_vm_boot: bool = False,
+    script_name: str = "Boot-GCP-Worker.ps1",
+) -> None:
+    """Detect resource pressure and optionally scale compute by booting a VM.
+
+    This function is used by the main daemon loop to maintain host health.
+    """
+    pressure = detect_resource_pressure()
+    if pressure.get("maxed_out"):
+        # We have pressure, attempt to scale
+        boot_secondary_vm(
+            script_name=script_name,
+            allow_vm_boot=allow_vm_boot,
+            dry_run=dry_run,
+        )

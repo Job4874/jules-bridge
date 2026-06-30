@@ -1,3 +1,5 @@
+import os
+os.environ["BRIDGE_TOKEN"] = "JULES-SECURE-999"
 import unittest
 from unittest.mock import patch, MagicMock
 from bridge import app

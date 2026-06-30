@@ -35,7 +35,6 @@ _LOG_TAIL_LINES = 40
 # Helpers
 # ---------------------------------------------------------------------------
 
-@lru_cache(maxsize=1)
 def _env_vars() -> dict[str, str]:
     """Read .env file into a dict (no process env side effects)."""
     env: dict[str, str] = {}

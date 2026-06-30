@@ -1064,7 +1064,7 @@ class TestBridgeTokenAuth(unittest.TestCase):
 class TestChatRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     @patch("modules.test_chat_providers")
     def test_chat_test_delegates_to_module(self, mock_test):
