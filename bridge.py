@@ -16,6 +16,7 @@ import os
 import re
 import subprocess
 import sys
+from typing import Any
 from collections import deque
 from datetime import datetime, timezone
 from functools import wraps
@@ -1773,7 +1774,7 @@ def chat_test():
 
 @app.route("/chat", methods=["POST"])
 @route_errors
-def chat():
+def chat() -> Any:
     """POST /chat — send a message (+ optional screenshot) to Jules.
 
     Body (JSON):
@@ -1784,6 +1785,7 @@ def chat():
         history (list, optional): prior turns [{"role": "user"|"assistant", "content": "..."}]
     """
     data = json_payload()
+    LOGGER.debug("[CHAT] Processing payload with keys: %s", list(data.keys()))
     message = string_field(data, "message", allow_empty=False)
     model_alias = string_field(data, "model", default="fast", allow_empty=False)
     system_prompt = string_field(data, "system", default="", allow_empty=True)
