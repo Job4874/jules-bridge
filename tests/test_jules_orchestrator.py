@@ -8,7 +8,12 @@ import os
 import json
 import sys
 import tempfile
+import pytest
 from unittest.mock import patch
+
+@pytest.fixture(autouse=True)
+def disable_session_cache(monkeypatch):
+    monkeypatch.setenv("JULES_SESSION_CACHE_TTL_S", "0")
 
 from modules.jules_orchestrator import (
     _run_cli_command,

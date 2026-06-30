@@ -1,4 +1,5 @@
 # MONDAY MISSION DIRECTIVE — Enterprise Ship Standard
+
 ## Issued: 2026-06-29 | Operator: Abdul
 
 ---
@@ -17,12 +18,14 @@ You unblock yourself, you ship, you record evidence, you go again.
 ## YOUR ACTIVE TICKETS (work these IN ORDER)
 
 ### 🔴 TICKET 007 — Circuit Breaker (CRITICAL, do first)
+
 File: `doc/tickets/007_dashboard_circuit_breaker.md`
 
 `/dashboard/status` was called **814 times consecutively** with zero throttle.
 That kills performance and burns log space.
 
 Deliverable: `_circuit_breaker_check()` as `@app.before_request` hook.
+
 - Default threshold: 20 calls / 60s window
 - HTTP 429 + `retry_after_s` on breach
 - Env vars: `CIRCUIT_BREAKER_THRESHOLD`, `CIRCUIT_BREAKER_WINDOW_S`, `CIRCUIT_BREAKER_ENABLED`
@@ -30,11 +33,13 @@ Deliverable: `_circuit_breaker_check()` as `@app.before_request` hook.
 - All 288 existing tests must still pass
 
 ### 🟠 TICKET 008 — Route Performance Caching (do second)
+
 File: `doc/tickets/008_shell_route_performance.md`
 
 Shell routes averaging 58s. Fleet-watch averaging 7 minutes. Unacceptable.
 
 Deliverables:
+
 - `shell_executor`: result cache, 10s TTL, `SHELL_CACHE_TTL_S` env var
 - `jules_orchestrator`: session list cache, 30s TTL, `JULES_SESSION_CACHE_TTL_S`
 - `dashboard_module`: status cache, 5s TTL, `DASHBOARD_CACHE_TTL_S`
@@ -42,11 +47,13 @@ Deliverables:
 - TDD: 3 new test files, red → green
 
 ### 🟠 TICKET 009 — HRE Depth & Skill Auto-Discovery (do third)
+
 File: `doc/tickets/009_hrm_skill_depth.md`
 
 You escalate too early. Fix it from the inside.
 
 Deliverables:
+
 - `score_hre_depth(trace)` in `reasoning_module` — depth_score, self_unblock_rate
 - `discover_skills(skills_dir)` — reads `.agents/skills/*/SKILL.md` at session start
 - `GET /reasoning/skills` — live skill inventory route
@@ -62,13 +69,14 @@ Deliverables:
 
 Before any escalation, run THREE full HRE passes:
 
-```
+```text
 1. Hypothesis: name the SINGLE blocker in one sentence
 2. Route: pick the narrowest available tool/endpoint/file to test it
 3. Evidence: capture exact output before deciding
 ```
 
 Check in this order:
+
 1. `GET /tentacles` — what routes are live
 2. `jules_inbox/JULES_TOOL_REQUIREMENTS.md`
 3. `context/05_gotchas.md`
@@ -77,6 +85,7 @@ Check in this order:
 6. `context/04_ai_workflow_rules.md`
 
 After each resolved blocker:
+
 - Write to `memory/reasoning.md`
 - Inject gotcha via `POST /reasoning/inject_gotcha` (once ticket 009 lands)
 - Update `JULES_RESPONSE.md`
@@ -86,7 +95,7 @@ After each resolved blocker:
 ## SKILL INVOCATION MAP (use these exactly)
 
 | When | Skill | What it does |
-|---|---|---|
+| --- | --- | --- |
 | Before ANY new code | `architect` | Plan, interview, surface decisions |
 | After building/modifying | `imprint` | Capture API patterns into gotchas |
 | After any feature done | `review` | Check vs plan, architecture, standards |
@@ -98,6 +107,7 @@ After each resolved blocker:
 ## EVIDENCE STANDARDS
 
 Every "done" claim requires:
+
 1. `python -m pytest tests/ -q` output showing passing count
 2. SHA-256 recorded via `POST /retrospective/record_evidence`
 3. Entry added to `context/06_progress_tracker.md`
@@ -110,11 +120,13 @@ No evidence = not done. Full stop.
 ## SKILLS TO USE HEAVILY
 
 Matt Porter / Matt Pocco discipline:
+
 - Deep modules: simple interfaces hiding complex implementation
 - Every public function never raises — partial data over exceptions
 - TDD: write failing tests FIRST, then implement
 
 Nick Ni harness discipline:
+
 - Every failure becomes data
 - Evidence before done
 - Memory grows every session

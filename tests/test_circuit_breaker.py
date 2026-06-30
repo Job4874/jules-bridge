@@ -1,74 +1,103 @@
+import os
+os.environ["BRIDGE_TOKEN"] = "JULES-SECURE-999"
+"""Tests for the circuit breaker middleware."""
+
+# pylint: disable=redefined-outer-name,protected-access
+
+import os
+from unittest.mock import patch
 import pytest
-import time
-from unittest.mock import MagicMock, patch
-from flask import Flask, jsonify
-from modules.circuit_breaker import circuit_breaker_hook
+
+from bridge import app
+from modules import circuit_breaker
+
 
 @pytest.fixture
-def app():
-    from modules.circuit_breaker import _route_calls
-    _route_calls.clear()
-    app = Flask(__name__)
-    app.config['TESTING'] = True
+def client():
+    # Force enabled and specific defaults for tests
+    os.environ["CIRCUIT_BREAKER_ENABLED"] = "1"
+    os.environ["CIRCUIT_BREAKER_THRESHOLD"] = "3"
+    os.environ["CIRCUIT_BREAKER_WINDOW_S"] = "60"
+    circuit_breaker._call_log.clear()
 
-    @app.before_request
-    def before_request():
-        return circuit_breaker_hook()
+    app.config["TESTING"] = True
 
-    @app.route('/test')
-    def test_route():
-        return jsonify({"ok": True})
+    class AuthenticatedClient:
+        def __init__(self, test_client):
+            self.client = test_client
 
-    @app.route('/health')
-    def health_route():
-        return jsonify({"ok": True})
+        def get(self, path):
+            return self.client.get(path, headers={"Authorization": "Bearer JULES-SECURE-999"})
 
-    return app
+    with app.test_client() as client:
+        yield AuthenticatedClient(client)
 
-@pytest.fixture
-def client(app):
-    return app.test_client()
+    os.environ.pop("CIRCUIT_BREAKER_ENABLED", None)
+    os.environ.pop("CIRCUIT_BREAKER_THRESHOLD", None)
+    os.environ.pop("CIRCUIT_BREAKER_WINDOW_S", None)
+    circuit_breaker._call_log.clear()
 
-def test_circuit_breaker_threshold(client, monkeypatch):
-    monkeypatch.setenv('CIRCUIT_BREAKER_THRESHOLD', '3')
-    monkeypatch.setenv('CIRCUIT_BREAKER_WINDOW_S', '60')
-    monkeypatch.setenv('CIRCUIT_BREAKER_ENABLED', '1')
 
-    # First 3 calls should succeed
+def test_circuit_breaker_allows_under_threshold(client):
+    # Route that does not exist will return 404, but not 429
     for _ in range(3):
-        res = client.get('/test')
-        assert res.status_code == 200
+        res = client.get("/does_not_exist")
+        assert res.status_code == 404
 
-    # 4th call should fail with 429
-    res = client.get('/test')
+
+def test_circuit_breaker_blocks_over_threshold(client):
+    for _ in range(3):
+        client.get("/test_route_1")
+
+    # 4th call should be blocked
+    res = client.get("/test_route_1")
     assert res.status_code == 429
-    assert res.json['error'] == 'circuit_open'
+    data = res.get_json()
+    assert data["error"] == "circuit_open"
+    assert data["route"] == "/test_route_1"
+    assert "retry_after_s" in data
 
-def test_circuit_breaker_exempt_route(client, monkeypatch):
-    monkeypatch.setenv('CIRCUIT_BREAKER_THRESHOLD', '3')
-    monkeypatch.setenv('CIRCUIT_BREAKER_ENABLED', '1')
 
-    # /health is exempt and has higher threshold (default 200, but let's just test it exceeds 3)
+@patch("modules.circuit_breaker._get_time")
+def test_circuit_breaker_resets_after_window(mock_time, client):
+    mock_time.return_value = 1000.0
+
+    for _ in range(3):
+        client.get("/test_route_2")
+
+    # Blocked
+    res = client.get("/test_route_2")
+    assert res.status_code == 429
+
+    # Fast forward past window (60s default)
+    mock_time.return_value = 1061.0
+
+    # Should be allowed again
+    res = client.get("/test_route_2")
+    assert res.status_code == 404  # Not 429
+
+
+def test_circuit_breaker_exempt_routes_have_higher_threshold(client):
+    # Exempt route threshold is 200, so 3 calls should not block it
+    for _ in range(4):
+        res = client.get("/ping")
+        assert res.status_code == 200  # Normal ping response
+
+    # Override the environment variable to test the exempt threshold
+    os.environ["CIRCUIT_BREAKER_THRESHOLD"] = "5"
+
+    # Fill the normal limit
+    for _ in range(10):
+        client.get("/ping")
+
+    # Exempt routes have a fixed higher threshold of 200 regardless of the standard threshold.
+    res = client.get("/ping")
+    assert res.status_code == 200
+
+
+def test_circuit_breaker_can_be_disabled(client):
+    os.environ["CIRCUIT_BREAKER_ENABLED"] = "0"
+
     for _ in range(5):
-        res = client.get('/health')
-        assert res.status_code == 200
-
-def test_circuit_breaker_disabled(client, monkeypatch):
-    monkeypatch.setenv('CIRCUIT_BREAKER_THRESHOLD', '3')
-    monkeypatch.setenv('CIRCUIT_BREAKER_ENABLED', '0')
-
-    for _ in range(5):
-        res = client.get('/test')
-        assert res.status_code == 200
-
-def test_circuit_breaker_window_reset(client, monkeypatch):
-    monkeypatch.setenv('CIRCUIT_BREAKER_THRESHOLD', '1')
-    monkeypatch.setenv('CIRCUIT_BREAKER_WINDOW_S', '1')
-    monkeypatch.setenv('CIRCUIT_BREAKER_ENABLED', '1')
-
-    assert client.get('/test').status_code == 200
-    assert client.get('/test').status_code == 429
-
-    time.sleep(1.1)
-
-    assert client.get('/test').status_code == 200
+        res = client.get("/disabled_route")
+        assert res.status_code == 404

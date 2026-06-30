@@ -151,7 +151,7 @@ Follow `diagnostics/REPLAY_POST_DEPLOY_CHECKLIST.md` on the **Windows host** via
 ## Path corrections (do not drift)
 
 | Wrong | Correct |
-|-------|---------|
+| ------- | --------- |
 | `test_contracts.py` on Windows | **Does not exist** — use playbook gates + `dotnet test` |
 | Quantower-c-sat LFS zip pointers | Canonical build tree: `C:\aotp\projects\OracleV5` |
 | Shell-only for Quantower UI | Use **`/ui/*` tentacles** |

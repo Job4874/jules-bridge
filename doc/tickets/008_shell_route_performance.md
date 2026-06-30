@@ -7,7 +7,7 @@ Status: DONE
 Retrospective baseline detected severe performance regressions on high-value routes:
 
 | Route | Avg Response Time | Threshold |
-|---|---|---|
+| --- | --- | --- |
 | `POST /shell` | **58,214ms** | 5,000ms |
 | `POST /jules/watch` | **103,624ms** | 5,000ms |
 | `POST /jules/fleet` | **31,092ms** | 5,000ms |
@@ -26,17 +26,20 @@ These are not acceptable for Monday enterprise-grade shipping.
 ## Objective
 
 ### Shell Route
+
 - Add result caching: identical command + cwd hashed → cached response for 10s (configurable `SHELL_CACHE_TTL_S`)
 - Enforce hard timeout: if `shell_executor` call exceeds `SHELL_MAX_S` (default 30), return partial output + `timed_out: true` instead of blocking forever
 - Log slow calls: any shell call >5s emits a WARNING with command hash and duration
 
 ### Jules Routes
+
 - Cache `jules remote list --session` output for 30s (`JULES_SESSION_CACHE_TTL_S`)
 - Return cached session list on repeated calls within TTL window
 - Add `cache_hit: true/false` to all fleet/watch/cycle response payloads
 - Do NOT cache launch or pull calls (they are state-mutating)
 
 ### Dashboard Status
+
 - Cache `GET /dashboard/status` for 5s (configurable `DASHBOARD_CACHE_TTL_S`)
 - Return `cache_age_s` in response so caller knows data freshness
 - Emit stale-cache header `X-Cache-Age: {age_s}` on every response

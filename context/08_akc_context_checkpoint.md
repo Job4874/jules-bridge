@@ -10,7 +10,7 @@
 ## Source Inventory
 
 | name | path_ref | readable | sha256 | lines | bytes |
-|---|---|---:|---|---:|---:|
+| --- | --- | ---: | --- | ---: | ---: |
 | pasted-text-1.txt | path-ref:056a0d4c8729 | True | a886f3a19d985307 | 8140 | 344586 |
 | pasted-text-2.txt | path-ref:1c7be4ed40cd | True | 8f3a168d909e6211 | 5520 | 263580 |
 | pasted-text-3.txt | path-ref:5932c64a9a69 | True | 02557d5675b91ba1 | 5341 | 229045 |

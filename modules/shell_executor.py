@@ -14,11 +14,9 @@ import hashlib
 import logging
 from typing import Optional
 
-
-# ---------------------------------------------------------------------------
 LOGGER = logging.getLogger("jules_bridge")
 
-_shell_result_cache = {}
+# ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
@@ -30,6 +28,8 @@ _BASH_CANDIDATES = (
     r"C:\Program Files\Git\usr\bin\bash.exe",
 )
 
+# In-memory cache for shell results: { hash(cmd+cwd+shell): (timestamp, ShellResult) }
+_shell_result_cache = {}
 
 # ---------------------------------------------------------------------------
 # Typed return contract
@@ -158,7 +158,6 @@ def execute(
     cwd: Optional[str] = None,
     timeout: int = 30,
     stdin: Optional[str] = None,
-    bypass_cache: bool = False,
 ) -> ShellResult:
     """Execute a command in the specified shell.
 
@@ -185,7 +184,7 @@ def execute(
     cache_key = hashlib.sha256(f"{command}{effective_cwd}{shell}".encode()).hexdigest()
 
     now = time.time()
-    if not bypass_cache and cache_key in _shell_result_cache and cache_ttl > 0:
+    if cache_key in _shell_result_cache and cache_ttl > 0:
         ts, cached_res = _shell_result_cache[cache_key]
         if now - ts < cache_ttl:
             return cached_res

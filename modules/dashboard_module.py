@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import socket
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from functools import lru_cache
 
 from modules.vm_manager import detect_resource_pressure
 
@@ -33,6 +35,7 @@ _LOG_TAIL_LINES = 40
 # Helpers
 # ---------------------------------------------------------------------------
 
+@lru_cache(maxsize=1)
 def _env_vars() -> dict[str, str]:
     """Read .env file into a dict (no process env side effects)."""
     env: dict[str, str] = {}
@@ -43,7 +46,7 @@ def _env_vars() -> dict[str, str]:
                 continue
             key, _, val = line.partition("=")
             env[key.strip()] = val.strip()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
     return env
 
@@ -55,7 +58,7 @@ def _tcp_reachable(host: str, port: int = 22, timeout: float = 3.0) -> bool:
     try:
         with socket.create_connection((host, port), timeout=timeout):
             return True
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return False
 
 
@@ -65,14 +68,14 @@ def _tail_log(n: int = _LOG_TAIL_LINES) -> list[str]:
         text = _LOG_PATH.read_text(encoding="utf-8", errors="replace")
         lines = text.splitlines()
         return lines[-n:] if len(lines) >= n else lines
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return []
 
 
 def _read_json(path: Path) -> dict | None:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return None
 
 
@@ -158,9 +161,9 @@ def _vm_info(env: dict[str, str]) -> dict[str, Any]:
     return {"vms": vms, "total": len(vms), "online": sum(1 for v in vms if v["reachable"])}
 
 
+_dashboard_status_cache: dict = {}
 # ---------------------------------------------------------------------------
 # Public interface
-_dashboard_status_cache = {}
 # ---------------------------------------------------------------------------
 
 def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, Any]:
@@ -169,7 +172,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         cache_ttl = int(os.environ.get('DASHBOARD_CACHE_TTL_S', '5'))
         now_ts = time.time()
 
-        if _dashboard_status_cache and cache_ttl > 0:
+        if _dashboard_status_cache:
             ts, cached_res = _dashboard_status_cache.get('last', (0, {}))
             if now_ts - ts < cache_ttl:
                 cached_res['cache_age_s'] = int(now_ts - ts)
@@ -188,7 +191,6 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         # Try to extract ngrok URL from recent logs
         for line in reversed(logs):
             if "ngrok-free.dev" in line or "ngrok.io" in line:
-                import re
                 match = re.search(r"https://[a-z0-9\-]+\.ngrok[a-z.\-]*/", line)
                 if match:
                     ngrok_url = match.group(0).rstrip("/")
@@ -222,7 +224,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         }
         _dashboard_status_cache['last'] = (now_ts, result)
         return result
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return {"ok": False, "error": str(exc)}
 
 

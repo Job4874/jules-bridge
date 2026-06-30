@@ -16,6 +16,7 @@ import os
 import re
 import subprocess
 import sys
+from typing import Any
 from collections import deque
 from datetime import datetime, timezone
 from functools import wraps
@@ -68,9 +69,16 @@ LOGGER = logging.getLogger("jules_bridge")
 # ---------------------------------------------------------------------------
 
 app = Flask(__name__)
-CORS(app)
+ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5000,http://127.0.0.1:5000"
+).split(",")
 
-BRIDGE_TOKEN = "JULES-SECURE-999"
+CORS(app, origins=ALLOWED_ORIGINS)
+
+BRIDGE_TOKEN = os.environ.get("BRIDGE_TOKEN")
+if not BRIDGE_TOKEN:
+    raise ValueError("BRIDGE_TOKEN environment variable is missing")
 
 
 @app.before_request
@@ -321,6 +329,20 @@ def _evidence_hard_gate():
     }), 423
 
 
+@app.before_request
+def _circuit_breaker_check():
+    # pylint: disable=import-outside-toplevel
+    from modules.circuit_breaker import check_circuit_breaker
+
+    is_open, retry_after = check_circuit_breaker(request.path)
+    if is_open:
+        LOGGER.warning("Circuit breaker OPEN for %s", request.path)
+        return jsonify({
+            "error": "circuit_open",
+            "route": request.path,
+            "retry_after_s": retry_after
+        }), 429
+
 @app.after_request
 def _finalize_request(response):
     started = getattr(g, "request_start", None)
@@ -361,60 +383,63 @@ def _evidence_age_check(response):
 # ---------------------------------------------------------------------------
 
 TENTACLES = [
-    {"name": "root",         "route": "GET /",                  "reach": "Authenticated bridge discovery and next-step pointers"},
-    {"name": "info",         "route": "GET /info",              "reach": "Authenticated bridge metadata without the full manifest"},
-    {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},
+    {"name": "root",         "route": "GET /",                  "reach": "Authenticated bridge discovery and next-step pointers"},  # pylint: disable=line-too-long
+    {"name": "info",         "route": "GET /info",              "reach": "Authenticated bridge metadata without the full manifest"},  # pylint: disable=line-too-long
+    {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},  # pylint: disable=line-too-long
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
     {"name": "session_log",  "route": "GET /session/log",        "reach": "Audit which tools Jules used recently"},
-    {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},
-    {"name": "read",         "route": "POST /fs/read",           "reach": "Read any file on the host (supports offset/limit)"},
+    {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},  # pylint: disable=line-too-long
+    {"name": "read",         "route": "POST /fs/read",           "reach": "Read any file on the host (supports offset/limit)"},  # pylint: disable=line-too-long
     {"name": "write",        "route": "POST /fs/write",          "reach": "Write any file on the host"},
     {"name": "list",         "route": "POST /fs/list",           "reach": "List a directory like Codex file tree"},
     {"name": "tail",         "route": "POST /fs/tail",           "reach": "Tail log/CSV files"},
     {"name": "grep",         "route": "POST /fs/grep",           "reach": "Search file contents for gate/log strings"},
-    {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},
+    {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},  # pylint: disable=line-too-long
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
-    {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},
-    {"name": "operator",     "route": "POST /execute",           "reach": "Universal driver — click, type, and launch shell actions in one call"},
+    {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},  # pylint: disable=line-too-long
+    {"name": "operator",     "route": "POST /execute",           "reach": "Universal driver — click, type, and launch shell actions in one call"},  # pylint: disable=line-too-long
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
-    {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},
-    {"name": "vm_pressure",       "route": "POST /vm/resource_pressure", "reach": "Detect CPU/memory pressure before local VM actions"},
-    {"name": "vm_boot_secondary", "route": "POST /vm/boot_secondary",    "reach": "Dry-run-first allowlisted secondary VM boot script"},
-    {"name": "app_browser",       "route": "POST /apps/launch_browser",      "reach": "Explicitly launch Edge to an approved http(s) URL"},
-    {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},
-    {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},
+    {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},  # pylint: disable=line-too-long
+    {"name": "vm_pressure",       "route": "POST /vm/resource_pressure", "reach": "Detect CPU/memory pressure before local VM actions"},  # pylint: disable=line-too-long
+    {"name": "vm_boot_secondary", "route": "POST /vm/boot_secondary",    "reach": "Dry-run-first allowlisted secondary VM boot script"},  # pylint: disable=line-too-long
+    {"name": "app_browser",       "route": "POST /apps/launch_browser",      "reach": "Explicitly launch Edge to an approved http(s) URL"},  # pylint: disable=line-too-long
+    {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},  # pylint: disable=line-too-long
+    {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},  # pylint: disable=line-too-long
     {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
-    {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},
-    {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},
-    {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},
-    {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},
-    {"name": "jules_pull",      "route": "POST /jules/pull",               "reach": "Pull one remote Jules session with timeout protection"},
-    {"name": "jules_cot",       "route": "POST /jules/cot",                "reach": "Build a completion-of-task ledger from Jules launch and pull artifacts"},
-    {"name": "jules_cycle",     "route": "POST /jules/cycle",              "reach": "Run one dry-run-first Jules dispatch/launch/pull/COT communication cycle"},
-    {"name": "jules_watch",     "route": "POST /jules/watch",              "reach": "Poll Jules sessions, pull completed results, and refresh COT until bounded stop"},
-    {"name": "jules_fleet",     "route": "POST /jules/fleet",              "reach": "Scale Jules workers within max_concurrent and refresh pull/COT state"},
-    {"name": "jules_fleet_watch", "route": "POST /jules/fleet-watch",      "reach": "Loop fleet scale-out, pull, and COT refresh until complete or timed out"},
+    {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},  # pylint: disable=line-too-long
+    {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},  # pylint: disable=line-too-long
+    {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},  # pylint: disable=line-too-long
+    {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},  # pylint: disable=line-too-long
+    {"name": "jules_pull",      "route": "POST /jules/pull",               "reach": "Pull one remote Jules session with timeout protection"},  # pylint: disable=line-too-long
+    {"name": "jules_cot",       "route": "POST /jules/cot",                "reach": "Build a completion-of-task ledger from Jules launch and pull artifacts"},  # pylint: disable=line-too-long
+    {"name": "jules_cycle",     "route": "POST /jules/cycle",              "reach": "Run one dry-run-first Jules dispatch/launch/pull/COT communication cycle"},  # pylint: disable=line-too-long
+    {"name": "jules_watch",     "route": "POST /jules/watch",              "reach": "Poll Jules sessions, pull completed results, and refresh COT until bounded stop"},  # pylint: disable=line-too-long
+    {"name": "jules_fleet",     "route": "POST /jules/fleet",              "reach": "Scale Jules workers within max_concurrent and refresh pull/COT state"},  # pylint: disable=line-too-long
+    {"name": "jules_fleet_watch", "route": "POST /jules/fleet-watch",      "reach": "Loop fleet scale-out, pull, and COT refresh until complete or timed out"},  # pylint: disable=line-too-long
     # Reasoning routes (HRM-inspired H/L/ACT)
-    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},
-    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},
-    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},
+    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},  # pylint: disable=line-too-long
+    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},  # pylint: disable=line-too-long
+    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},  # pylint: disable=line-too-long
+    {"name": "reason_skills",   "route": "GET /reasoning/skills",          "reach": "Inventory of available agent skills"},  # pylint: disable=line-too-long
+    {"name": "reason_gotcha",   "route": "POST /reasoning/inject_gotcha",  "reach": "Inject new edge case into gotchas context"},  # pylint: disable=line-too-long
     # Retrospective routes (self-improving memory)
-    {"name": "retro_analyze",   "route": "POST /retrospective/analyze",    "reach": "Analyze bridge.log and write learnings to memory"},
-    {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},
-    {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},
-    {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},
+    {"name": "retro_analyze",   "route": "POST /retrospective/analyze",    "reach": "Analyze bridge.log and write learnings to memory"},  # pylint: disable=line-too-long
+    {"name": "retro_evidence",  "route": "POST /retrospective/record_evidence", "reach": "SHA-256 test output for cryptographic proof"},  # pylint: disable=line-too-long
+    {"name": "retro_memory",    "route": "GET /retrospective/memory",      "reach": "Load accumulated memory for a domain"},  # pylint: disable=line-too-long
+    {"name": "retro_prune",     "route": "POST /retrospective/prune_memory", "reach": "Age-based pruning of memory files"},  # pylint: disable=line-too-long
+    {"name": "retro_quality",   "route": "GET /retrospective/memory_quality", "reach": "Assess memory structural quality"},  # pylint: disable=line-too-long
     # Agent Knowledge Context routes
-    {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},
-    {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},
-    {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},
-    {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},
+    {"name": "akc_context",      "route": "GET /akc/context",               "reach": "Load the current Agent Knowledge Context checkpoint"},  # pylint: disable=line-too-long
+    {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},  # pylint: disable=line-too-long
+    {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},  # pylint: disable=line-too-long
+    {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},  # pylint: disable=line-too-long
     # Dashboard + Chat routes
-    {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},
-    {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},
-    {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},
+    {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
+    {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},  # pylint: disable=line-too-long
+    {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},  # pylint: disable=line-too-long
 ]
 
 # ---------------------------------------------------------------------------
@@ -1404,6 +1429,27 @@ def reasoning_execute_step():
     })
 
 
+
+@app.route("/reasoning/skills", methods=["GET"])
+@route_errors
+def reasoning_skills():
+    """GET /reasoning/skills — Inventory of available agent skills."""
+    skills_dir = request.args.get("skills_dir", os.path.join(ROOT_DIR, ".agents", "skills"))
+    skills = modules.reasoning_module.discover_skills(skills_dir)
+    return jsonify({"skills": skills})
+
+
+@app.route("/reasoning/inject_gotcha", methods=["POST"])
+@route_errors
+def reasoning_inject_gotcha():
+    """POST /reasoning/inject_gotcha — Inject new edge case into gotchas context."""
+    data = json_payload()
+    module = string_field(data, "module")
+    text = string_field(data, "text")
+    result = modules.reasoning_module.inject_gotcha(module, text)
+    return jsonify(result)
+
+
 # — Retrospective routes (Nick Ni's "Case" harness pattern) —
 
 @app.route("/retrospective/analyze", methods=["POST"])
@@ -1560,6 +1606,17 @@ def retrospective_prune_memory():
     })
 
 
+
+@app.route("/retrospective/memory_quality", methods=["GET"])
+@route_errors
+def retrospective_memory_quality():
+    """GET /retrospective/memory_quality — Assess memory structural quality."""
+    domain = request.args.get("domain", "general")
+    memory_path = os.path.join(ROOT_DIR, "memory", f"{domain}.md")
+    result = modules.retrospective_module.assess_memory_quality(memory_path)
+    return jsonify(result)
+
+
 # - AKC routes (Agent Knowledge Context) -
 
 @app.route("/akc/context", methods=["GET"])
@@ -1685,7 +1742,7 @@ def akc_subagents_post():
 @route_errors
 def dashboard_status():
     """GET /dashboard/status — real-time multi-cloud mission control snapshot."""
-    from modules.dashboard_module import get_dashboard_status
+    from modules.dashboard_module import get_dashboard_status  # pylint: disable=import-outside-toplevel
     result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
     return jsonify(result), 200 if result.get("ok") else 500
 
@@ -1698,7 +1755,7 @@ def dashboard_status():
 @route_errors
 def vm_bootstrap():
     """POST /vm/bootstrap — install jules-worker-agent on the GCP VM."""
-    from modules.vm_relay import bootstrap_vm
+    from modules.vm_relay import bootstrap_vm  # pylint: disable=import-outside-toplevel
     result = bootstrap_vm()
     return jsonify(result), 200 if result.get("ok") else 500
 
@@ -1714,7 +1771,7 @@ def vm_task():
     task = string_field(data, "task")
     task_type = string_field(data, "task_type", default="build", allow_empty=False)
     context = string_field(data, "context", default="", allow_empty=True)
-    from modules.vm_relay import send_task_to_vm
+    from modules.vm_relay import send_task_to_vm  # pylint: disable=import-outside-toplevel
     result = send_task_to_vm(task=task, task_type=task_type, context=context)
     return jsonify(result), 200
 
@@ -1723,7 +1780,7 @@ def vm_task():
 @route_errors
 def vm_relay_status():
     """GET /vm/status — get live status from the jules-worker-agent on the VM."""
-    from modules.vm_relay import get_vm_status
+    from modules.vm_relay import get_vm_status  # pylint: disable=import-outside-toplevel
     result = get_vm_status()
     return jsonify(result), 200
 
@@ -1739,55 +1796,12 @@ def chat_test():
 
     Returns per-provider status so operators can debug which keys work.
     """
-    import time as _time
-    import requests as _req
-
-    results = {}
-
-    # --- Gemini ---
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if api_key:
-        t0 = _time.monotonic()
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
-            payload = {"contents": [{"role": "user", "parts": [{"text": "Say OK"}]}]}
-            r = _req.post(url, json=payload, timeout=15)
-            elapsed = int((_time.monotonic() - t0) * 1000)
-            if r.status_code == 200:
-                results["gemini"] = {"status": "ok", "model": "gemini-2.0-flash", "ms": elapsed}
-            else:
-                results["gemini"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}
-        except Exception as exc:
-            elapsed = int((_time.monotonic() - t0) * 1000)
-            results["gemini"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
-    else:
-        results["gemini"] = {"status": "no_key", "detail": "GEMINI_API_KEY not set"}
-
-    # --- OpenRouter ---
-    or_key = os.environ.get("OPENROUTER_API_KEY", "")
-    if or_key:
-        t0 = _time.monotonic()
-        try:
-            or_url = "https://openrouter.ai/api/v1/chat/completions"
-            r = _req.post(or_url, json={"model": "google/gemma-3-27b-it:free", "messages": [{"role": "user", "content": "Say OK"}]},
-                          headers={"Authorization": f"Bearer {or_key}"}, timeout=20)
-            elapsed = int((_time.monotonic() - t0) * 1000)
-            if r.status_code == 200:
-                results["openrouter"] = {"status": "ok", "model": "google/gemma-3-27b-it:free", "ms": elapsed}
-            else:
-                results["openrouter"] = {"status": "error", "code": r.status_code, "detail": r.text[:300], "ms": elapsed}
-        except Exception as exc:
-            elapsed = int((_time.monotonic() - t0) * 1000)
-            results["openrouter"] = {"status": "exception", "detail": str(exc)[:300], "ms": elapsed}
-    else:
-        results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY not set"}
-
-    any_ok = any(v.get("status") == "ok" for v in results.values())
-    return jsonify({"healthy": any_ok, "providers": results}), 200
+    result = modules.test_chat_providers()
+    return jsonify(dict(result)), 200
 
 @app.route("/chat", methods=["POST"])
 @route_errors
-def chat():
+def chat() -> Any:
     """POST /chat — send a message (+ optional screenshot) to Jules.
 
     Body (JSON):
@@ -1798,113 +1812,22 @@ def chat():
         history (list, optional): prior turns [{"role": "user"|"assistant", "content": "..."}]
     """
     data = json_payload()
+    LOGGER.debug("[CHAT] Processing payload with keys: %s", list(data.keys()))
     message = string_field(data, "message", allow_empty=False)
     model_alias = string_field(data, "model", default="fast", allow_empty=False)
     system_prompt = string_field(data, "system", default="", allow_empty=True)
     image_b64 = string_field(data, "image_base64", default="", allow_empty=True)
     history = data.get("history", [])
 
-    if not system_prompt:
-        system_prompt = (
-            "You are Jules — a powerful AI engineering agent built on Jules Bridge. "
-            "You are direct, honest, and focused on shipping production-grade software. "
-            "You have access to cloud VMs (GCP jules-offload-worker, Azure workers), "
-            "a local Flask bridge at port 5000, and a fleet of Jules AI workers. "
-            "When shown a screenshot, describe what you see and suggest concrete next actions. "
-            "Be concise but complete. Never refuse to help with technical tasks."
-        )
+    result = modules.chat(
+        message=message,
+        model_alias=model_alias,
+        system_prompt=system_prompt,
+        image_base64=image_b64,
+        history=history,
+    )
+    return jsonify(dict(result)), 200
 
-    # Build messages list
-    messages = []
-    for turn in (history or []):
-        if isinstance(turn, dict) and turn.get("role") in ("user", "assistant"):
-            messages.append({"role": turn["role"], "content": turn["content"]})
-
-    # Add current user message (with image if provided)
-    if image_b64:
-        user_content = [
-            {"type": "text", "text": message},
-            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64}"}},
-        ]
-    else:
-        user_content = message
-    messages.append({"role": "user", "content": user_content})
-
-    # Try Gemini first via reasoning module's LLM call
-    import time as _time
-    t0 = _time.monotonic()
-    response_text = None
-    model_used = None
-    error_chain = []
-
-    # --- Gemini path ---
-    try:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-        if api_key:
-            import requests as _req
-            gemini_model = "gemini-2.0-flash" if model_alias == "fast" else "gemini-2.5-pro"
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={api_key}"
-            # Build Gemini parts
-            parts = [{"text": message}]
-            if image_b64:
-                parts.append({"inline_data": {"mime_type": "image/png", "data": image_b64}})
-            payload = {
-                "system_instruction": {"parts": [{"text": system_prompt}]},
-                "contents": [{"role": "user", "parts": parts}],
-            }
-            # Add history to contents
-            if history:
-                hist_contents = []
-                for turn in history:
-                    role = "user" if turn.get("role") == "user" else "model"
-                    hist_contents.append({"role": role, "parts": [{"text": turn.get("content", "")}]})
-                hist_contents.append({"role": "user", "parts": parts})
-                payload["contents"] = hist_contents
-
-            r = _req.post(url, json=payload, timeout=30)
-            if r.status_code == 200:
-                resp = r.json()
-                response_text = resp["candidates"][0]["content"]["parts"][0]["text"]
-                model_used = gemini_model
-            else:
-                error_chain.append(f"Gemini {r.status_code}: {r.text[:200]}")
-    except Exception as exc:
-        error_chain.append(f"Gemini exception: {exc}")
-
-    # --- OpenRouter fallback ---
-    if not response_text:
-        try:
-            or_key = os.environ.get("OPENROUTER_API_KEY", "")
-            if or_key:
-                import requests as _req
-                or_model = "google/gemma-3-27b-it:free" if model_alias == "fast" else "deepseek/deepseek-r1:free"
-                or_url = "https://openrouter.ai/api/v1/chat/completions"
-                or_messages = [{"role": "system", "content": system_prompt}] + messages
-                r = _req.post(or_url, json={"model": or_model, "messages": or_messages},
-                              headers={"Authorization": f"Bearer {or_key}"}, timeout=45)
-                if r.status_code == 200:
-                    response_text = r.json()["choices"][0]["message"]["content"]
-                    model_used = f"openrouter/{or_model}"
-                else:
-                    error_chain.append(f"OpenRouter {r.status_code}: {r.text[:200]}")
-        except Exception as exc:
-            error_chain.append(f"OpenRouter exception: {exc}")
-
-    elapsed_ms = int((_time.monotonic() - t0) * 1000)
-
-    if response_text:
-        return jsonify({
-            "response": response_text,
-            "model_used": model_used,
-            "elapsed_ms": elapsed_ms,
-        }), 200
-
-    return jsonify({
-        "response": "I'm offline right now — no API keys responded. Check GEMINI_API_KEY or OPENROUTER_API_KEY in .env.",
-        "model_used": "none",
-        "elapsed_ms": elapsed_ms,
-        "errors": error_chain,
-    }), 200
 
 
 # ---------------------------------------------------------------------------
@@ -1916,6 +1839,6 @@ if __name__ == "__main__":
     LOGGER.info("JULES GOD-MODE BRIDGE ACTIVATED")
     LOGGER.info("Listening on 0.0.0.0:5000")
     LOGGER.info("Log path: %s", LOG_PATH)
-    LOGGER.info("Token auth: ENABLED (Bearer JULES-SECURE-999)")
+    LOGGER.info("Token auth: ENABLED")
     LOGGER.info("========================================")
     app.run(port=5000, host="0.0.0.0")

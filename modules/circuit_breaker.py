@@ -1,49 +1,62 @@
+"""Circuit breaker module to prevent request doom loops."""
+
 import os
 import time
-import logging
-from flask import request, jsonify
+from typing import Tuple
 
-LOGGER = logging.getLogger("jules_bridge")
+# In-memory store: route -> list of timestamps
+_call_log: dict[str, list[float]] = {}
 
-# Tracks rolling call counts per route: { route_path: [timestamp1, timestamp2, ...] }
-_route_calls = {}
 
-def circuit_breaker_hook():
+def _get_time() -> float:
+    """Wrapper for time.time() to allow easy mocking in tests."""
+    return time.time()
+
+
+def check_circuit_breaker(route: str) -> Tuple[bool, int]:
     """
-    Circuit breaker pre-request hook for Flask.
-    Tracks call frequency per route and returns 429 if threshold is exceeded.
+    Check if the given route has exceeded the rate limit threshold.
+    Returns (is_open, retry_after_s).
     """
-    enabled = os.environ.get('CIRCUIT_BREAKER_ENABLED', '1') == '1'
-    if not enabled:
-        return None
+    enabled = os.environ.get("CIRCUIT_BREAKER_ENABLED", "1")
+    if enabled == "0":
+        return False, 0
 
-    route = request.path
-    now = time.time()
+    try:
+        threshold = int(os.environ.get("CIRCUIT_BREAKER_THRESHOLD", "20"))
+    except ValueError:
+        threshold = 20
 
-    # Configuration
-    threshold = int(os.environ.get('CIRCUIT_BREAKER_THRESHOLD', '20'))
-    window_s = int(os.environ.get('CIRCUIT_BREAKER_WINDOW_S', '60'))
+    try:
+        window_s = int(os.environ.get("CIRCUIT_BREAKER_WINDOW_S", "60"))
+    except ValueError:
+        window_s = 60
 
-    # Exempt routes and routes with higher thresholds
-    # GET /ping, GET /health, GET /dashboard/status allowed higher thresholds (200)
-    if route in ('/ping', '/health', '/dashboard/status'):
+    # Exempt routes have a higher fixed ceiling
+    exempt_routes = {"/ping", "/health", "/dashboard/status"}
+    if route in exempt_routes:
         threshold = 200
 
-    # Clean up old timestamps outside the window
-    if route not in _route_calls:
-        _route_calls[route] = []
+    now = _get_time()
 
-    _route_calls[route] = [ts for ts in _route_calls[route] if now - ts < window_s]
+    if route not in _call_log:
+        _call_log[route] = []
+
+    # Prune old timestamps
+    cutoff = now - window_s
+    _call_log[route] = [ts for ts in _call_log[route] if ts > cutoff]
 
     # Check threshold
-    if len(_route_calls[route]) >= threshold:
-        LOGGER.warning("Circuit breaker OPEN for route %s (count: %d)", route, len(_route_calls[route]))
-        return jsonify({
-            "error": "circuit_open",
-            "route": route,
-            "retry_after_s": window_s - (now - _route_calls[route][0]) if _route_calls[route] else window_s
-        }), 429
+    if len(_call_log[route]) >= threshold:
+        # Circuit is open.
+        # Calculate when the oldest request in the window expires.
+        oldest_in_window = _call_log[route][0]
+        retry_after = int((oldest_in_window + window_s) - now)
+        if retry_after < 1:
+            retry_after = 1
+        return True, retry_after
 
-    # Record this call
-    _route_calls[route].append(now)
-    return None
+    # Log the successful call
+    _call_log[route].append(now)
+
+    return False, 0

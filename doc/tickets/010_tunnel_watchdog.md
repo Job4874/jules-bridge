@@ -1,6 +1,7 @@
 # Ticket 010 — Ngrok Tunnel Health Watchdog
 
-Status: OPEN
+Status: DONE
+Evidence Hash: 05EB250F560A08F5A53930FF6D4F3731AE0BD1491E92FBD15DC6C2D232F73994
 
 ## Priority: CRITICAL
 
@@ -41,6 +42,7 @@ Add a tunnel health watchdog to `start.py` that:
 ## Offline Escalation Path
 
 When tunnel is confirmed dead and cannot self-heal:
+
 1. Jules writes blocker to `JULES_RESPONSE.md` via **git commit + push** (not via bridge)
 2. The commit message includes `[TUNNEL_DEAD]` tag
 3. This gives the operator visibility even when the bridge is unreachable
