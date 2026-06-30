@@ -19,10 +19,12 @@ from pathlib import Path
 from typing import Any
 from functools import lru_cache
 
+from modules.chat_service import test_chat_providers
 from modules.vm_manager import detect_resource_pressure
 
 _ROOT = Path(__file__).parent.parent
 _LOG_PATH = _ROOT / "bridge.log"
+_LT_LOG_PATH = _ROOT / "jules_inbox" / "LOCAL_TUNNEL_CURRENT.log"
 _LAUNCH_STATE = _ROOT / "JULES_LAUNCH_STATE.json"
 _COT_LEDGER = _ROOT / "JULES_COT_LEDGER.json"
 _WATCH_STATE = _ROOT / "JULES_WATCH_STATE.json"
@@ -70,6 +72,21 @@ def _tail_log(n: int = _LOG_TAIL_LINES) -> list[str]:
         return lines[-n:] if len(lines) >= n else lines
     except Exception:  # pylint: disable=broad-exception-caught
         return []
+
+
+def _read_text_with_encoding_fallback(path: Path) -> str:
+    """Read log text written by either Python or PowerShell redirection."""
+    for encoding in ("utf-8", "utf-8-sig", "utf-16"):
+        try:
+            return path.read_text(encoding=encoding)
+        except UnicodeError:
+            continue
+        except OSError:
+            return ""
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
 
 
 def _read_json(path: Path) -> dict | None:
@@ -186,15 +203,40 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         fleet = _fleet_status()
         cloud = _vm_info(env)
         logs = _tail_log()
+        providers = test_chat_providers(env=env, probe_vm_chat=False).get("providers", {})
 
         ngrok_url = ""
-        # Try to extract ngrok URL from recent logs
+        tunnel_url = ""
+        # 1. Try to discover tunnel from bridge.log.
         for line in reversed(logs):
             if "ngrok-free.dev" in line or "ngrok.io" in line:
                 match = re.search(r"https://[a-z0-9\-]+\.ngrok[a-z.\-]*/", line)
                 if match:
                     ngrok_url = match.group(0).rstrip("/")
+                    tunnel_url = ngrok_url
                     break
+            if "loca.lt" in line:
+                match = re.search(r"https://[a-z0-9\-]+\.loca\.lt", line)
+                if match:
+                    tunnel_url = match.group(0).rstrip("/")
+                    break
+
+        # 2. Try to discover fallback tunnel from the LocalTunnel process log.
+        if not tunnel_url and _LT_LOG_PATH.exists():
+            try:
+                lt_content = _read_text_with_encoding_fallback(_LT_LOG_PATH).strip()
+                for line in reversed(lt_content.splitlines()):
+                    if "loca.lt" in line:
+                        match = re.search(r"https://[a-z0-9\-]+\.loca\.lt", line)
+                        if match:
+                            tunnel_url = match.group(0).rstrip("/")
+                            break
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+
+        # 3. Try to discover fallback tunnel from .env.
+        if not tunnel_url:
+            tunnel_url = env.get("FALLBACK_TUNNEL_URL") or env.get("PUBLIC_BRIDGE_URL") or ""
 
         result = {
             "ok": True,
@@ -205,6 +247,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
                 "uptime_s": uptime_s,
                 "uptime_human": _fmt_uptime(uptime_s),
                 "ngrok_url": ngrok_url,
+                "tunnel_url": tunnel_url,
                 "local_url": "http://127.0.0.1:5000",
             },
             "resource_pressure": {
@@ -217,6 +260,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
             "cloud": cloud,
             "jules_fleet": fleet,
             "recent_logs": logs,
+            "providers": providers,
             "env_keys_present": [
                 k for k in ["GEMINI_API_KEY", "GCE_WORKER_IP", "OPENROUTER_API_KEY", "GMAIL_USER"]
                 if env.get(k)

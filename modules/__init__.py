@@ -34,6 +34,7 @@ from .vm_manager import (
     VMBootResult,
     detect_resource_pressure,
     boot_secondary_vm,
+    check_and_scale_compute,
 )
 from .windows_secret_provider import (
     WindowsSecretProvider,
@@ -113,6 +114,7 @@ from .context_orchestrator import (
 )
 from .app_launcher import LaunchResult, launch_browser_to_url
 from .chat_service import ChatHealthResult, ChatResult, test_chat_providers, chat
+from .health_service import get_deep_health
 
 __all__ = [
     # fs_service
@@ -148,6 +150,7 @@ __all__ = [
     "VMBootResult",
     "detect_resource_pressure",
     "boot_secondary_vm",
+    "check_and_scale_compute",
     # windows_secret_provider
     "WindowsSecretProvider",
     "build_windows_secret_provider",
@@ -229,4 +232,6 @@ __all__ = [
     "ChatResult",
     "test_chat_providers",
     "chat",
+    # health_service
+    "get_deep_health",
 ]

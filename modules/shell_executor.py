@@ -7,6 +7,7 @@ subprocess management, and output coercion.
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -30,6 +31,19 @@ _BASH_CANDIDATES = (
 
 # In-memory cache for shell results: { hash(cmd+cwd+shell): (timestamp, ShellResult) }
 _shell_result_cache = {}
+
+_UNIX_SHELL_PATTERNS = (
+    re.compile(r"\|\s*head\b"),
+    re.compile(r"\|\s*tail\b"),
+    re.compile(r"\|\s*grep\b"),
+    re.compile(r"\|\s*awk\b"),
+    re.compile(r"\|\s*sed\b"),
+    re.compile(r"\bls\s+-[a-zA-Z]"),
+    re.compile(r"/tmp/"),
+    re.compile(r"\$\("),
+    re.compile(r"\bhead\s+-n\b"),
+    re.compile(r"\btail\s+-n\b"),
+)
 
 # ---------------------------------------------------------------------------
 # Typed return contract
@@ -64,6 +78,33 @@ def _coerce_text(value) -> str:
     if isinstance(value, bytes):
         return value.decode("utf-8", errors="replace")
     return str(value)
+
+
+def _looks_like_unix_command(command: str) -> bool:
+    """Return True when the command string uses common Unix shell idioms."""
+    return any(pattern.search(command) for pattern in _UNIX_SHELL_PATTERNS)
+
+
+def _resolve_shell_for_command(command: str, shell: str) -> tuple[str, bool]:
+    """Pick the effective shell, auto-routing Unix syntax to Git Bash when needed."""
+    requested = (shell or "powershell").strip().lower()
+    normalized = requested
+    if requested in ("ps", "windows-powershell"):
+        normalized = "powershell"
+
+    if normalized != "powershell" or not _looks_like_unix_command(command):
+        return normalized, False
+
+    try:
+        _discover_bash()
+    except ShellNotAvailableError as exc:
+        raise ShellNotAvailableError(
+            "Command uses Unix shell syntax (pipes, head, /tmp/, etc.) but Git Bash "
+            "is not installed on this host. Install Git for Windows or set "
+            "JULES_BASH_PATH, then retry with \"shell\": \"bash\". "
+            f"Original error: {exc}"
+        ) from exc
+    return "bash", True
 
 
 def _discover_bash() -> str:
@@ -158,6 +199,7 @@ def execute(
     cwd: Optional[str] = None,
     timeout: int = 30,
     stdin: Optional[str] = None,
+    bypass_cache: bool = False,
 ) -> ShellResult:
     """Execute a command in the specified shell.
 
@@ -178,18 +220,23 @@ def execute(
         subprocess.TimeoutExpired: if command exceeds timeout.
     """
     effective_cwd = cwd or os.getcwd()
-    cache_ttl = int(os.environ.get('SHELL_CACHE_TTL_S', '0'))
+    resolved_shell, shell_auto_selected = _resolve_shell_for_command(command, shell)
+    cache_ttl = 0 if bypass_cache else int(os.environ.get("SHELL_CACHE_TTL_S", "0"))
 
     # Cache key: hash(command + cwd + shell)
-    cache_key = hashlib.sha256(f"{command}{effective_cwd}{shell}".encode()).hexdigest()
+    cache_key = hashlib.sha256(
+        f"{command}{effective_cwd}{resolved_shell}".encode()
+    ).hexdigest()
 
     now = time.time()
     if cache_key in _shell_result_cache and cache_ttl > 0:
         ts, cached_res = _shell_result_cache[cache_key]
         if now - ts < cache_ttl:
-            return cached_res
+            cached = ShellResult(cached_res)
+            cached["cache_hit"] = True
+            return cached
 
-    resolved_shell, args = _build_args(shell, command)
+    resolved_shell, args = _build_args(resolved_shell, command)
 
     start_time = time.time()
     try:
@@ -212,10 +259,15 @@ def execute(
             stdout=_coerce_text(res.stdout),
             stderr=_coerce_text(res.stderr),
             shell=resolved_shell,
+            cache_hit=False,
         )
+        if shell_auto_selected:
+            result["shell_auto_selected"] = True
+            result["requested_shell"] = (shell or "powershell").strip().lower()
 
         # Update cache
-        _shell_result_cache[cache_key] = (now, result)
+        if cache_ttl > 0:
+            _shell_result_cache[cache_key] = (now, result)
         return result
 
     except subprocess.TimeoutExpired:

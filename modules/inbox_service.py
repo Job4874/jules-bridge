@@ -64,10 +64,15 @@ def inbox_read(
     path = os.path.join(base, name)
 
     if not os.path.isfile(path):
-        available = sorted(
-            f for f in os.listdir(base)
-            if os.path.isfile(os.path.join(base, f))
-        ) if os.path.isdir(base) else []
+        available: list[str] = []
+        if os.path.isdir(base):
+            try:
+                available = sorted(
+                    f for f in os.listdir(base)
+                    if os.path.isfile(os.path.join(base, f))
+                )
+            except OSError:
+                available = []
         return (
             InboxMessage(
                 error=f"inbox file not found: {name}",
@@ -77,8 +82,20 @@ def inbox_read(
             404,
         )
 
-    with open(path, "r", encoding="utf-8", errors="replace") as handle:
-        return InboxMessage(file=name, content=handle.read()), 200
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as handle:
+            content = handle.read()
+    except OSError as exc:
+        return (
+            InboxMessage(
+                error=f"unable to read inbox file: {name}",
+                hint=str(exc),
+                file=name,
+            ),
+            403,
+        )
+
+    return InboxMessage(file=name, content=content), 200
 
 
 def inbox_write(

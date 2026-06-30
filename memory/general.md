@@ -365,3 +365,59 @@ has gone wrong before and what to avoid.
 - Added module-boundary tests in `tests/test_chat_service.py` and route-thinness tests in `tests/test_bridge_routes.py`.
 - Verification: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py`; focused pytest passed 74 tests; full `python -m pytest tests/ -q` passed 315 tests. Evidence hash `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`.
 
+## Session 20260630T000027 - Jules Production Readiness PR
+
+- Integrated completed Jules worker output into branch `codex/jules-production-finish` and opened draft PR #64 at `https://github.com/Job4874/jules-bridge/pull/64`.
+- Added `GET /health/deep`, evidence hard-gate reason handling, durable dashboard tunnel discovery from bridge log, `jules_inbox/LOCAL_TUNNEL_CURRENT.log`, and env fallback, plus dashboard UI active-tunnel badge support.
+- Reconciled Jules-derived runtime fixes: removed duplicate `ui_automation` shadows, exported `check_and_scale_compute`, preserved future-dated evidence memory during pruning, and carried staged shell/inbox/orchestrator hardening into the PR.
+- Verification: Python 3.12.10 full suite passed `406 passed`; dashboard `pnpm run build` passed with bundled Node; `git diff --check` passed; local bridge, public LocalTunnel, and in-app browser dashboard were verified.
+- Current public tunnel at handoff: `https://silly-pumas-dance.loca.lt`. `/health/deep` overall status was `ok`, but live provider readiness still warned that GCP lacked an active gcloud session and Gemini had an invalid API key.
+
+## Session 20260630T004438 - Provider Readiness Truth Patch
+
+- Launched Jules provider-readiness worker `4817979060578580922`; reconciled its useful diff without applying stale hunks that would remove the circuit breaker or duplicate `/health/deep`.
+- `modules.health_service.get_deep_health()` now maps Gemini/OpenRouter readiness through `chat_service.test_chat_providers()` so deep health does not falsely pass OpenRouter via the public `/models` endpoint.
+- `/dashboard/status` now includes provider statuses and the React dashboard shows `GEMINI` / `OPENROUTER` badges beside `SYS_UP` and `TUNNEL`.
+- Verification: focused tests passed 29 tests; full suite passed `410 passed`; dashboard build passed; local `/health/deep`, `/chat/test`, `/chat`, `/dashboard/status`, public tunnel, and in-app browser dashboard were verified.
+- Current public tunnel at handoff: `https://olive-paws-shine.loca.lt`. Live provider truth is still degraded: Gemini invalid key, OpenRouter 401 `User not found`, GCP no active gcloud / worker not configured, Azure reachable.
+
+## Session 20260630T005100 - Provider Readiness Handoff Refresh
+
+- Refreshed PR #64 and automation truth after restarting the bridge with the installed Google Cloud SDK on PATH.
+- Current public tunnel: `https://clever-seas-go.loca.lt`; local and public `/health` pass, and authenticated `/health/deep` returns `status: ok`.
+- Current deep-health provider truth: GCP token pass, Azure SSH pass, Gemini fail invalid API key, OpenRouter fail 401 `User not found`; `/dashboard/status` still reports `jules-offload-worker` as `not_configured` because `GCE_WORKER_IP` is unset.
+- Jules duplicate session `11181112389803823618` completed after `4817979060578580922`; its patch was reviewed without `--apply` and left unapplied because it overlapped the pushed fix and dropped useful HTTP status detail.
+- Updated heartbeat automation `jules-bridge-overnight-production-loop` with source/readiness head `090d7bb`, current tunnel, reviewed duplicate session state, and remaining external readiness blockers.
+
+## Session 20260630T010000 - GCP Worker Online Runtime Fix
+
+- Resolved the dashboard GCP worker configuration gap locally by discovering `jules-offload-worker` through gcloud and adding non-secret worker coordinates to ignored `.env`.
+- Restarted the bridge with Google Cloud SDK on PATH; local `/dashboard/status` and public tunnel `/dashboard/status` now report GCP `online: 1`, IP `34.132.193.73`, `reachable: true`, `status: online`.
+- Verified VM relay through local and public `/vm/status`: worker `online: true`, `tasks_running: 0`, and VM-side Gemini/OpenRouter flags true.
+- Recycled the stale public tunnel after restart. Current fallback public URL: `https://wet-ducks-try.loca.lt`.
+- Remaining provider blockers are now narrowed to local bridge credentials: Gemini invalid API key and OpenRouter 401 `User not found`.
+
+## Session 20260630T073000 - Dashboard Cloud Workers Panel
+
+- Launched 10 read-only indexing agents across bridge API, Jules orchestration, dashboard UI, cloud workers, provider readiness, tests, local skills/extensions, handoff docs, install/runtime, and PR readiness; the reports converged on the same release blocker: local Gemini/OpenRouter credentials still fail while GCP worker readiness is online.
+- Pulled Jules session `12782098339635048796` without `--apply` and integrated the aligned dashboard cloud-worker panel while preserving current `bridge.tunnel_url || bridge.ngrok_url` tunnel detection and provider badges.
+- Dashboard now renders a compact `Cloud Workers` panel from `/dashboard/status.cloud` with online/total count, provider, VM name, status, IP, and reachable state. Default viewport proof shows `GCP`, `ONLINE`, `Reachable`, `jules-offload-worker`, and `34.132.193.73`.
+- Verification: dashboard `pnpm run lint` and `pnpm run build` pass; in-app Browser DOM and screenshot proof pass; local/public `/dashboard/status` report `cloud.online: 1`; `/vm/status` reports worker online; `/health/deep` reports GCP/Azure pass but Gemini 400 invalid key and OpenRouter 401 remain.
+- Full suite evidence was refreshed through `POST /retrospective/record_evidence`: `python -m pytest tests/ -q` passed 410 tests, SHA-256 `51b715cd2515449c8acb4d90af4e35ebde3496f904b73055e91a7acad8422379`.
+
+## Session 20260630T091700 - VM Chat Readiness Consistency
+
+- Jules session `2648582880137579851` stayed planning/no-diff, so Codex applied the narrow emergency fix for VM readiness consistency.
+- `modules.chat_service` now keeps a bounded `_LAST_VM_CHAT_SUCCESS` marker. Recent real VM chat success can override a flaky follow-up health-probe timeout/provider-unavailable result, while expired success or no-success failure still reports VM failure.
+- Dashboard lightweight checks still do not enqueue VM work; they report `VM worker online; VM chat recently succeeded` when fresh local success exists.
+- Verification: focused chat/deep-health tests passed 27 tests; dashboard/route slice passed 89 tests; full `python -m pytest tests/ -v` passed 427 tests.
+- Runtime proof after clean bridge restart: `/chat` returned `model_used=vm/jules-worker`, `/chat/test` healthy with `vm_worker: ok`, `/health/deep` mapped VM to `pass`, dashboard rendered `TUNNEL: ACTIVE` and `VM CHAT: OK`, and LocalTunnel `https://neat-oranges-wink.loca.lt/ping` returned `Jules Bridge Online`.
+
+## Session 20260630T034900 - Provider Hardening From Jules Session
+
+- Pulled Jules provider-hardening session `2693363866417321141` without applying blindly; ignored duplicate VM fallback hunks and the backup-looking `modules/chat_service_087c5da.py`.
+- `modules.chat_service` now classifies provider failures as `invalid_key`, `quota_limit`, `model_unavailable`, `transient_error`, or `other_error`; live Gemini 400 `API key not valid` and OpenRouter 401 `User not found` map to `invalid_key`.
+- OpenRouter now tries configured fallback model IDs only after a `model_unavailable` response. It does not cycle models for invalid-key or quota failures, but still rotates plural OpenRouter keys for the same model.
+- VM readiness keeps the previous soft timeout behavior, but a provider-unavailable/no-LLM VM failure clears `_LAST_VM_CHAT_SUCCESS` so quota/key failure is not masked as readiness.
+- Verification: focused route/dashboard slice passed `121 passed`; full `python -m pytest tests/ -q` passed `432 passed`. After restart to bridge PID `40772`, `/chat` returned `model_used=vm/jules-worker`, `/chat/test` was healthy with Gemini/OpenRouter `invalid_key` and `vm_worker: ok`, `/health/deep` returned `status=ok`, and Browser dashboard proof showed `TUNNEL: ACTIVE`, `GEMINI: ERROR`, `OPENROUTER: ERROR`, `VM CHAT: OK`, and GCP worker `1/1 ONLINE`.
+- Remaining release blocker: local Gemini/OpenRouter credentials are still invalid, and VM-side provider quota can still intermittently fail health probes; PR #64 remains draft unless those blockers are fixed or explicitly accepted.

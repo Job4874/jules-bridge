@@ -29,6 +29,36 @@ ChartJS.register(
 const BRIDGE = import.meta.env.VITE_BRIDGE_URL || 'http://127.0.0.1:5000';
 const TOKEN = import.meta.env.VITE_BRIDGE_TOKEN || '';
 
+const DEFAULT_PROVIDERS = {
+  gemini: { status: 'no_key' },
+  openrouter: { status: 'no_key' },
+  vm_worker: { status: 'offline' },
+};
+
+const providerStatus = (providers, key) => providers?.[key]?.status || DEFAULT_PROVIDERS[key]?.status || 'unknown';
+
+const badgeClassFor = (status) => {
+  if (status === 'ok') return 'success';
+  if (status === 'error' || status === 'exception' || status === 'offline') return 'danger';
+  return '';
+};
+
+const labelForStatus = (status) => {
+  if (status === 'ok') return 'OK';
+  if (status === 'no_key') return 'NO_KEY';
+  return String(status || 'unknown').toUpperCase();
+};
+
+const chatRouteLabel = (providers) => {
+  const gemini = providerStatus(providers, 'gemini');
+  const openrouter = providerStatus(providers, 'openrouter');
+  const vmWorker = providerStatus(providers, 'vm_worker');
+  if (gemini === 'ok') return 'ROUTE: GEMINI';
+  if (openrouter === 'ok') return 'ROUTE: OPENROUTER';
+  if (vmWorker === 'ok') return 'ROUTE: VM FALLBACK';
+  return 'ROUTE: OFFLINE';
+};
+
 // Chart common options
 const lineOptions = {
   responsive: true,
@@ -62,8 +92,11 @@ function App() {
     online: false,
     tunnel: false,
     cpu: 0,
+    maxed_out: false,
     mem: 0,
     fleet: { launched: 0, completed: 0, pending: 0 },
+    cloud: { total: 0, online: 0, vms: [] },
+    providers: DEFAULT_PROVIDERS,
     logs: []
   });
 
@@ -94,14 +127,22 @@ function App() {
 
         const cpu = d.resource_pressure?.cpu_percent ?? 0;
         const mem = d.resource_pressure?.memory_percent ?? 0;
+        const cloud = {
+          total: d.cloud?.total ?? 0,
+          online: d.cloud?.online ?? 0,
+          vms: Array.isArray(d.cloud?.vms) ? d.cloud.vms : []
+        };
 
         setSysStatus({
           uptime: d.bridge?.uptime_human || '--',
           online: true,
-          tunnel: !!d.bridge?.ngrok_url,
+          tunnel: !!(d.bridge?.tunnel_url || d.bridge?.ngrok_url),
           cpu,
+          maxed_out: d.resource_pressure?.maxed_out || false,
           mem,
           fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },
+          cloud,
+          providers: { ...DEFAULT_PROVIDERS, ...(d.providers || {}) },
           logs: d.recent_logs || []
         });
 
@@ -116,7 +157,7 @@ function App() {
           return next;
         });
 
-      } catch (err) {
+      } catch {
         if (mounted) {
           setSysStatus(s => ({ ...s, online: false, uptime: 'OFFLINE' }));
         }
@@ -206,6 +247,11 @@ function App() {
     }
   };
 
+  const geminiStatus = providerStatus(sysStatus.providers, 'gemini');
+  const openrouterStatus = providerStatus(sysStatus.providers, 'openrouter');
+  const vmWorkerStatus = providerStatus(sysStatus.providers, 'vm_worker');
+  const routeLabel = chatRouteLabel(sysStatus.providers);
+
   return (
     <div className="dashboard-container">
       <div className="header">
@@ -219,6 +265,15 @@ function App() {
           </div>
           <div className={`badge ${sysStatus.tunnel ? 'success' : 'danger'}`}>
             TUNNEL: {sysStatus.tunnel ? 'ACTIVE' : 'OFFLINE'}
+          </div>
+          <div className={`badge ${badgeClassFor(geminiStatus)}`}>
+            GEMINI: {labelForStatus(geminiStatus)}
+          </div>
+          <div className={`badge ${badgeClassFor(openrouterStatus)}`}>
+            OPENROUTER: {labelForStatus(openrouterStatus)}
+          </div>
+          <div className={`badge ${badgeClassFor(vmWorkerStatus)}`}>
+            VM CHAT: {labelForStatus(vmWorkerStatus)}
           </div>
         </div>
       </div>
@@ -267,7 +322,12 @@ function App() {
           </div>
 
           <div className="panel" style={{ height: '140px', flex: 'none', marginBottom: '1rem' }}>
-            <div className="panel-header">Fleet Status</div>
+            <div className="panel-header">
+              <span>Fleet Status</span>
+              {sysStatus.maxed_out && (
+                <span className="badge danger" style={{ fontSize: '10px', padding: '2px 6px' }}>PRESSURE</span>
+              )}
+            </div>
             <div className="panel-content" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
               <div style={{ position: 'relative', height: '80px', width: '80px' }}>
                 <Doughnut
@@ -305,6 +365,52 @@ function App() {
             </div>
           </div>
 
+          <div className="panel cloud-workers-panel" style={{ flex: '0 0 180px', marginBottom: '1rem' }}>
+            <div className="panel-header">
+              <span>Cloud Workers</span>
+              <span className="badge">{sysStatus.cloud.online}/{sysStatus.cloud.total} ONLINE</span>
+            </div>
+            <div className="panel-content worker-panel-content">
+              {sysStatus.cloud.vms.length === 0 ? (
+                <div className="worker-empty">No workers active.</div>
+              ) : (
+                <div className="worker-list">
+                  {sysStatus.cloud.vms.map((vm, i) => {
+                    const provider = vm.provider || 'unknown';
+                    const status = vm.status || 'unknown';
+                    const reachableLabel = vm.reachable ? 'Reachable' : 'Not reachable';
+
+                    return (
+                      <div className="worker-row" key={`${provider}-${vm.name || vm.ip || i}`}>
+                        <div className="worker-main">
+                          <span className={`provider-tag ${provider.toLowerCase()}`}>{provider}</span>
+                          <span className={`status-text ${status === 'online' ? 'success' : ''}`}>
+                            {status.toUpperCase()}
+                          </span>
+                          <span className="worker-reach">
+                            <span
+                              className={`status-dot small ${!vm.reachable ? 'offline' : ''}`}
+                              title={reachableLabel}
+                            />
+                            {reachableLabel}
+                          </span>
+                        </div>
+                        <div className="worker-detail">
+                          <span>Name</span>
+                          <strong className="mono" title={vm.name || ''}>{vm.name || '--'}</strong>
+                        </div>
+                        <div className="worker-detail">
+                          <span>IP</span>
+                          <strong className="mono">{vm.ip || '--'}</strong>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="panel" style={{ flex: 1 }}>
             <div className="panel-header">Terminal Stream</div>
             <div className="panel-content log-feed" ref={logFeedRef}>
@@ -335,23 +441,20 @@ function App() {
         <div className="panel right-panel">
           <div className="panel-header">
             <span>Comm Link</span>
-            <select
-              value={model}
-              onChange={e => setModel(e.target.value)}
-              title="Select LLM model"
-              style={{
-                background: 'transparent',
-                color: 'var(--accent-blue)',
-                border: 'none',
-                outline: 'none',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="fast">flash (fast)</option>
-              <option value="smart">pro (smart)</option>
-            </select>
+            <div className="comm-link-controls">
+              <span className={`route-chip ${routeLabel.includes('OFFLINE') ? 'danger' : 'success'}`}>
+                {routeLabel}
+              </span>
+              <select
+                value={model}
+                onChange={e => setModel(e.target.value)}
+                title="Select LLM model"
+                className="model-select"
+              >
+                <option value="fast">flash (fast)</option>
+                <option value="smart">pro (smart)</option>
+              </select>
+            </div>
           </div>
           <div className="panel-content chat-messages" ref={chatBoxRef}>
             {chatHistory.map((m, i) => (

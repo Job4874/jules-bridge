@@ -21,8 +21,10 @@ from modules.dashboard_module import (
 @pytest.fixture(autouse=True)
 def clear_cache():
     _dashboard_status_cache.clear()
+    _env_vars.cache_clear()
     yield
     _dashboard_status_cache.clear()
+    _env_vars.cache_clear()
 
 def test_get_dashboard_status_happy_path():
     # Mocking dependencies
@@ -30,7 +32,8 @@ def test_get_dashboard_status_happy_path():
          patch('modules.dashboard_module.detect_resource_pressure') as mock_pressure, \
          patch('modules.dashboard_module._fleet_status') as mock_fleet, \
          patch('modules.dashboard_module._vm_info') as mock_vm, \
-         patch('modules.dashboard_module._tail_log') as mock_tail:
+         patch('modules.dashboard_module._tail_log') as mock_tail, \
+         patch('modules.dashboard_module.test_chat_providers') as mock_providers:
 
         mock_env_vars.return_value = {
             "GEMINI_API_KEY": "yes",
@@ -61,6 +64,12 @@ def test_get_dashboard_status_happy_path():
             "Log line 1",
             "Starting ngrok at https://random-ngrok-url.ngrok.io/"
         ]
+        mock_providers.return_value = {
+            "providers": {
+                "gemini": {"status": "ok"},
+                "openrouter": {"status": "no_key"},
+            }
+        }
 
         # Call get_dashboard_status
         start_utc = datetime.now(timezone.utc)
@@ -73,6 +82,7 @@ def test_get_dashboard_status_happy_path():
 
         assert result["bridge"]["status"] == "running"
         assert result["bridge"]["ngrok_url"] == "https://random-ngrok-url.ngrok.io"
+        assert result["bridge"]["tunnel_url"] == "https://random-ngrok-url.ngrok.io"
         assert result["bridge"]["local_url"] == "http://127.0.0.1:5000"
 
         assert result["resource_pressure"]["status"] == "normal"
@@ -82,6 +92,7 @@ def test_get_dashboard_status_happy_path():
 
         assert result["cloud"]["total"] == 1
         assert result["jules_fleet"]["launched"] == 1
+        assert result["providers"]["gemini"]["status"] == "ok"
 
         assert result["recent_logs"] == ["Log line 1", "Starting ngrok at https://random-ngrok-url.ngrok.io/"]
         assert "GEMINI_API_KEY" in result["env_keys_present"]
@@ -200,3 +211,69 @@ def test_vm_info():
         assert vms[0]["ip"] == "10.0.0.2"
         assert vms[1]["provider"] == "GCP"
         assert vms[1]["ip"] == "10.0.0.1"
+
+def test_get_dashboard_status_localtunnel():
+    # Mocking dependencies
+    with patch('modules.dashboard_module._env_vars') as mock_env_vars, \
+         patch('modules.dashboard_module.detect_resource_pressure') as mock_pressure, \
+         patch('modules.dashboard_module._fleet_status') as mock_fleet, \
+         patch('modules.dashboard_module._vm_info') as mock_vm, \
+         patch('modules.dashboard_module._tail_log') as mock_tail:
+
+        mock_env_vars.return_value = {}
+        mock_pressure.return_value = {"status": "normal"}
+        mock_fleet.return_value = {"launched": 0}
+        mock_vm.return_value = {"vms": [], "total": 0, "online": 0}
+        mock_tail.return_value = [
+            "starting localtunnel...",
+            "your url is: https://pretty-otters-shout.loca.lt"
+        ]
+
+        result = get_dashboard_status()
+
+        assert result["ok"] is True
+        assert result["bridge"]["ngrok_url"] == ""
+        assert result["bridge"]["tunnel_url"] == "https://pretty-otters-shout.loca.lt"
+
+
+def test_get_dashboard_status_localtunnel_log_file():
+    with patch('modules.dashboard_module._env_vars', return_value={}), \
+         patch('modules.dashboard_module.detect_resource_pressure', return_value={"status": "normal"}), \
+         patch('modules.dashboard_module._fleet_status', return_value={"launched": 0}), \
+         patch('modules.dashboard_module._vm_info', return_value={"vms": [], "total": 0, "online": 0}), \
+         patch('modules.dashboard_module._tail_log', return_value=[]), \
+         patch('pathlib.Path.exists', return_value=True), \
+         patch('pathlib.Path.read_text', return_value="your url is: https://eighty-ads-wish.loca.lt"):
+
+        result = get_dashboard_status()
+        assert result["ok"] is True
+        assert result["bridge"]["tunnel_url"] == "https://eighty-ads-wish.loca.lt"
+
+
+def test_get_dashboard_status_localtunnel_utf16_log_file(tmp_path):
+    tunnel_log = tmp_path / "LOCAL_TUNNEL_CURRENT.log"
+    tunnel_log.write_text("your url is: https://calm-harbor-test.loca.lt", encoding="utf-16")
+
+    with patch('modules.dashboard_module._env_vars', return_value={}), \
+         patch('modules.dashboard_module.detect_resource_pressure', return_value={"status": "normal"}), \
+         patch('modules.dashboard_module._fleet_status', return_value={"launched": 0}), \
+         patch('modules.dashboard_module._vm_info', return_value={"vms": [], "total": 0, "online": 0}), \
+         patch('modules.dashboard_module._tail_log', return_value=[]), \
+         patch('modules.dashboard_module._LT_LOG_PATH', tunnel_log):
+
+        result = get_dashboard_status()
+        assert result["ok"] is True
+        assert result["bridge"]["tunnel_url"] == "https://calm-harbor-test.loca.lt"
+
+
+def test_get_dashboard_status_env_fallback():
+    with patch('modules.dashboard_module._env_vars', return_value={"FALLBACK_TUNNEL_URL": "https://env-fallback.loca.lt"}), \
+         patch('modules.dashboard_module.detect_resource_pressure', return_value={"status": "normal"}), \
+         patch('modules.dashboard_module._fleet_status', return_value={"launched": 0}), \
+         patch('modules.dashboard_module._vm_info', return_value={"vms": [], "total": 0, "online": 0}), \
+         patch('modules.dashboard_module._tail_log', return_value=[]), \
+         patch('pathlib.Path.exists', return_value=False):
+
+        result = get_dashboard_status()
+        assert result["ok"] is True
+        assert result["bridge"]["tunnel_url"] == "https://env-fallback.loca.lt"

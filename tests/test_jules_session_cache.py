@@ -34,6 +34,23 @@ def test_jules_session_cache(monkeypatch):
         assert mock_run.call_count == 2
         assert res3.get('cache_hit') is False
 
+def test_jules_session_bypass_cache(monkeypatch):
+    monkeypatch.setenv('JULES_SESSION_CACHE_TTL_S', '60')
+    from modules import jules_orchestrator
+    jules_orchestrator._session_list_cache.clear()
+
+    with patch('modules.jules_orchestrator._run_cli_command') as mock_run:
+        mock_run.return_value = {
+            "exit_code": 0,
+            "stdout": "session 123456",
+            "stderr": "",
+            "timed_out": False
+        }
+
+        list_remote_sessions(dry_run=False)
+        list_remote_sessions(dry_run=False, bypass_cache=True)
+        assert mock_run.call_count == 2
+
 def test_jules_launch_bypasses_cache():
     # Caching should only apply to list_remote_sessions
     pass
