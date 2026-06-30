@@ -2,8 +2,9 @@
 
 ## Current Base
 
-- `master` includes PR #78: repo context guard dashboard connection.
-- Local verification after merge: `python -m pytest tests/ -q` passed 422 tests, and `npm.cmd run build` passed.
+- `master` includes PR #78, PR #65, and PR #66.
+- Local verification after PR #78: `python -m pytest tests/ -q` passed 422 tests, and `npm.cmd run build` passed.
+- Local verification after PR #65 and PR #66: `python -m pytest tests/ -q` passed 424 tests.
 - Private inventory remains local-only. Do not put account-wide private repo names in public PR text.
 
 ## Queue Summary
@@ -24,6 +25,25 @@ Open draft PRs after PR #78, #65, and #66 merge:
 | #68 | DIRTY | 9 | +122/-51 | health/chat/dashboard readiness | Rebase with #69/#71/#73/#74 |
 | #67 | DIRTY | 30 | +1837/-226 | provider classification/dashboard | Rebase or supersede with narrower PRs |
 | #64 | DIRTY | 193 | +16794/-1490 | broad production readiness | Treat as umbrella/reference, not direct merge until split |
+
+## Exact Merge Conflict Matrix
+
+Source: `git merge-tree origin/master origin/<headRefName>` on 2026-06-30. No PR branch was checked out or merged during this scan.
+
+| PR | Conflict files from current `origin/master` | Collision note |
+| --- | --- | --- |
+| #77 | `modules/vm_manager.py` | VM contract overlaps #70 |
+| #76 | `bridge.py`; `modules/shell_executor.py`; `modules/vm_manager.py` | broad production/security branch crosses bridge, shell execution, and VM contracts |
+| #75 | `dashboard-ui/src/App.jsx` | dashboard worker visibility must rebase over repo-context status panel |
+| #74 | `modules/chat_service.py` | chat fallback work overlaps provider readiness stack |
+| #73 | `modules/chat_service.py` | provider probe contract overlaps chat fallback stack |
+| #72 | `dashboard-ui/src/App.jsx` | dashboard VM worker readiness overlaps #75 and repo-context panel |
+| #71 | `bridge.py`; `modules/dashboard_module.py` | health/readiness contract crosses bridge route and dashboard module |
+| #70 | `modules/vm_manager.py` | duplicate VM scale entry family with #77 |
+| #69 | `modules/chat_service.py`; `modules/circuit_breaker.py` | provider hardening must pick canonical chat/circuit-breaker semantics |
+| #68 | `bridge.py`; `dashboard-ui/src/App.jsx` | health/chat readiness crosses bridge API and dashboard display |
+| #67 | `.env.example`; `bridge.py`; `context/06_progress_tracker.md`; `dashboard-ui/src/App.jsx`; `jules_inbox/JULES_RESPONSE.md`; `jules_inbox/TUNNEL_HEALTH.json`; `memory/general.md`; `memory/test_evidence.json`; `modules/chat_service.py`; `modules/dashboard_module.py`; `modules/jules_orchestrator.py`; `modules/retrospective_module.py`; `modules/shell_executor.py`; `modules/vm_manager.py`; `tests/test_dashboard_module.py` | too broad for one safe merge; split by contract |
+| #64 | `.env.example`; `bridge.py`; `context/06_progress_tracker.md`; `dashboard-ui/src/App.jsx`; `dashboard-ui/src/index.css`; `implementation_plan.md`; `jules_inbox/jules_dispatch/JULES_COT_LEDGER.json`; `jules_inbox/jules_dispatch/JULES_COT_LEDGER.md`; `jules_inbox/jules_dispatch/JULES_FLEET_STATE.json`; `jules_inbox/jules_dispatch/JULES_LAUNCH_STATE.json`; `jules_inbox/jules_dispatch/JULES_PREFLIGHT.json`; `jules_inbox/JULES_RESPONSE.md`; `jules_inbox/TUNNEL_HEALTH.json`; `Launch-Dashboard.ps1`; `memory/general.md`; `memory/test_evidence.json`; `modules/chat_service.py`; `modules/dashboard_module.py`; `modules/jules_api.py`; `modules/jules_orchestrator.py`; `modules/retrospective_module.py`; `modules/shell_executor.py`; `modules/vm_manager.py`; `Open-Dashboard.cmd`; `start.py`; `tests/test_dashboard_cache.py`; `tests/test_dashboard_module.py`; `tests/test_jules_api.py`; `tests/test_tunnel_watchdog.py` | umbrella/reference branch only until split into reviewable PRs |
 
 ## Merged During Triage
 
