@@ -12,9 +12,6 @@
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": [
-    "onLanguage:vrl"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [

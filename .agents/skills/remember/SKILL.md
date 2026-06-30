@@ -9,9 +9,11 @@ description: >
 # Remember Skill
 
 ## Purpose
+
 Ensure continuity across separate sessions. Instead of starting from scratch or re-explaining context, this skill preserves the history of decisions, gotchas, and architectural choices.
 
 ## Instructions
+
 1. **Analyze the Session**:
    - Scan the git history or modified files to review changes made.
    - Scan the `bridge.log` or test outputs for errors or behavior solved.

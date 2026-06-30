@@ -48,6 +48,22 @@ class TestLaunchBrowserToUrl(unittest.TestCase):
         self.assertEqual(result["status"], "error")
         self.assertEqual(result["error"], "Invalid target URL")
 
+
+    def test_rejects_url_with_newline(self):
+        result = self.launcher.launch_browser_to_url("https://example.com\nmalicious", allow_launch=True)
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["error"], "Invalid target URL")
+
+    def test_launches_edge_with_shutil_which(self):
+        with patch("modules.app_launcher.subprocess.Popen") as mock_popen:
+            mock_popen.return_value.pid = 4242
+            with patch("modules.app_launcher.shutil.which", side_effect=lambda x: "/usr/bin/msedge" if x == "msedge" else None):
+                with patch("modules.app_launcher.os.path.isfile", side_effect=lambda x: x == "/usr/bin/msedge"):
+                    with patch("modules.app_launcher.os.path.isabs", return_value=True):
+                        result = self.launcher.launch_browser_to_url("https://www.google.com", allow_launch=True)
+                        self.assertEqual(result["status"], "success")
+                        args = mock_popen.call_args.args[0]
+                        self.assertEqual(args, ["/usr/bin/msedge", "https://www.google.com"])
     @patch("modules.app_launcher._resolve_edge_executable", return_value="msedge")
     @patch("modules.app_launcher.subprocess.Popen")
     def test_launches_edge_when_authorized(self, mock_popen, _mock_resolve):
@@ -78,7 +94,7 @@ class TestLaunchBrowserToUrl(unittest.TestCase):
             side_effect=lambda path: path == edge_path,
         ), patch(
             "modules.app_launcher.os.path.isabs",
-            return_value=True,
+            side_effect=lambda path: path.startswith("C:\\") or path.startswith("/"),
         ), patch(
             "modules.app_launcher.shutil.which",
             return_value=None,

@@ -1,5 +1,9 @@
+# pylint: disable=wrong-import-order
+
 """extract_and_run_tibin.py — pull tibin_core.py from Jules result and run it on VM."""
-import requests, re, json
+import re
+
+import requests
 from pathlib import Path
 
 VM = "http://34.132.193.73:6000"
