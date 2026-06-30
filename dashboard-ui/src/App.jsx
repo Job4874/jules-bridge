@@ -62,8 +62,10 @@ function App() {
     online: false,
     tunnel: false,
     cpu: 0,
+    maxed_out: false,
     mem: 0,
     fleet: { launched: 0, completed: 0, pending: 0 },
+    cloud: { total: 0, online: 0, vms: [] },
     logs: []
   });
 
@@ -100,8 +102,10 @@ function App() {
           online: true,
           tunnel: !!d.bridge?.ngrok_url,
           cpu,
+          maxed_out: d.resource_pressure?.maxed_out || false,
           mem,
           fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },
+          cloud: d.cloud || { total: 0, online: 0, vms: [] },
           logs: d.recent_logs || []
         });
 
@@ -267,7 +271,12 @@ function App() {
           </div>
 
           <div className="panel" style={{ height: '140px', flex: 'none', marginBottom: '1rem' }}>
-            <div className="panel-header">Fleet Status</div>
+            <div className="panel-header">
+              <span>Fleet Status</span>
+              {sysStatus.maxed_out && (
+                <span className="badge danger" style={{ fontSize: '10px', padding: '2px 6px' }}>PRESSURE</span>
+              )}
+            </div>
             <div className="panel-content" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
               <div style={{ position: 'relative', height: '80px', width: '80px' }}>
                 <Doughnut
@@ -302,6 +311,51 @@ function App() {
                   <div style={{ fontSize: '9px', color: 'var(--text-dim)' }}>COMPLETED</div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="panel" style={{ flex: '0 0 180px', marginBottom: '1rem' }}>
+            <div className="panel-header">
+              <span>Cloud Workers</span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <span className="badge">{sysStatus.cloud.online}/{sysStatus.cloud.total} ONLINE</span>
+              </div>
+            </div>
+            <div className="panel-content" style={{ padding: '0.5rem 1rem' }}>
+              <table className="worker-table">
+                <thead>
+                  <tr>
+                    <th>PROVIDER</th>
+                    <th>NAME</th>
+                    <th>STATUS</th>
+                    <th>IP</th>
+                    <th>REACHABLE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sysStatus.cloud.vms.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '1rem' }}>No workers active.</td>
+                    </tr>
+                  ) : (
+                    sysStatus.cloud.vms.map((vm, i) => (
+                      <tr key={i}>
+                        <td><span className={`provider-tag ${vm.provider.toLowerCase()}`}>{vm.provider}</span></td>
+                        <td className="mono" title={vm.name}>{vm.name}</td>
+                        <td>
+                          <span className={`status-text ${vm.status === 'online' ? 'success' : ''}`}>
+                            {vm.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="mono">{vm.ip}</td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div className={`status-dot small ${!vm.reachable ? 'offline' : ''}`} />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
