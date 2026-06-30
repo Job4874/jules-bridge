@@ -8,7 +8,7 @@
 
 ## Queue Summary
 
-Open draft PRs after PR #78 merge:
+Open draft PRs after PR #78, #65, and #66 merge:
 
 | PR | Merge state | Files | Add/Del | Main area | Action |
 | --- | --- | ---: | ---: | --- | --- |
@@ -23,9 +23,14 @@ Open draft PRs after PR #78 merge:
 | #69 | DIRTY | 4 | +456/-66 | provider credential hardening | Rebase with chat/health stack |
 | #68 | DIRTY | 9 | +122/-51 | health/chat/dashboard readiness | Rebase with #69/#71/#73/#74 |
 | #67 | DIRTY | 30 | +1837/-226 | provider classification/dashboard | Rebase or supersede with narrower PRs |
-| #66 | CLEAN | 2 | +5/-4 | tunnel watchdog spam | Candidate for review/merge after preserving test proof |
-| #65 | CLEAN | 1 | +80/-1 | Oracle build/deploy tests | Candidate for review/merge after preserving test proof |
 | #64 | DIRTY | 193 | +16794/-1490 | broad production readiness | Treat as umbrella/reference, not direct merge until split |
+
+## Merged During Triage
+
+| PR | Result | Verification |
+| --- | --- | --- |
+| #65 | Merged into `master` at `97eff99` | Simulated merge on current `origin/master`: `tests/test_oracle_session.py` passed 13 tests; full `python -m pytest tests/ -q` passed 424 tests |
+| #66 | Merged into `master` at `b085201` | Simulated merge after #65: `tests/test_tunnel_watchdog.py` passed 3 tests; full `python -m pytest tests/ -q` passed 424 tests |
 
 ## Dependency Families
 
@@ -68,4 +73,4 @@ Open draft PRs after PR #78 merge:
    - `npm.cmd run build` passing when dashboard files are touched
 4. Use repo context guard before dispatching more workers; do not reuse ports, server nodes, local dependencies, or project extensions across repos without operator approval.
 5. Keep math/analysis capability work tied to its owning repo/module and evidence-backed fixtures.
-
+6. Remaining open PRs are all `DIRTY` as of the post-merge recheck; do not mark them ready until they are rebased and retested on current `master`.
