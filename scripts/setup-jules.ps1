@@ -82,6 +82,18 @@ function Test-CommandExists([string]$Name) {
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
+function Invoke-Npm {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & npm @Arguments | Out-Host
+        return $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $prev
+    }
+}
+
 function Get-ExistingNodeDirectory {
     $candidates = @(
         $NodeInstallRoot,
@@ -193,9 +205,12 @@ function Configure-NpmPrefix {
     New-Item -ItemType Directory -Force -Path $NpmPrefix | Out-Null
     New-Item -ItemType Directory -Force -Path $NpmBin | Out-Null
 
-    & npm config set prefix $NpmPrefix --location=user 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        & npm config set prefix $NpmPrefix
+    $exitCode = Invoke-Npm config set prefix $NpmPrefix --location=user
+    if ($exitCode -ne 0) {
+        $exitCode = Invoke-Npm config set prefix $NpmPrefix
+        if ($exitCode -ne 0) {
+            throw "npm config set prefix failed with exit code $exitCode"
+        }
     }
     Write-Ok "npm prefix set to $NpmPrefix"
 
@@ -205,9 +220,9 @@ function Configure-NpmPrefix {
 
 function Install-JulesCli {
     Write-Step "Installing @google/jules globally (user prefix)"
-    & npm install -g @google/jules
-    if ($LASTEXITCODE -ne 0) {
-        throw "npm install -g @google/jules failed with exit code $LASTEXITCODE"
+    $exitCode = Invoke-Npm install -g @google/jules
+    if ($exitCode -ne 0) {
+        throw "npm install -g @google/jules failed with exit code $exitCode"
     }
 
     $julesCmd = Get-Command jules -ErrorAction SilentlyContinue
