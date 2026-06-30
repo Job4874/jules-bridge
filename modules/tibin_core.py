@@ -147,11 +147,11 @@ def run_paper_trading(df: pd.DataFrame) -> dict:
     entry_price = 0.0
     wins = losses = 0
 
-    for _, row in df.iterrows():
-        sig = row["signal"]
-        price = row["close"]
-        delta_pct = row.get("delta_pct", 0)
-        ts = row["timestamp"].strftime("%Y-%m-%d %H:%M")
+    for row in df.itertuples():
+        sig = row.signal
+        price = row.close
+        delta_pct = getattr(row, "delta_pct", 0)
+        ts = row.timestamp.strftime("%Y-%m-%d %H:%M")
 
         if sig == "BUY" and delta_pct > 0.05 and position == 0:
             # Buy: spend 10% of capital
