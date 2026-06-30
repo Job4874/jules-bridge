@@ -278,3 +278,13 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Recycled LocalTunnel after the bridge restart; current public URL is `https://wet-ducks-try.loca.lt`.
 - [ ] Remaining release blocker: local bridge Gemini/OpenRouter credentials still fail (`400` invalid Gemini key, `401` OpenRouter user not found).
 
+## Session 20260630T073000 - Dashboard Cloud Workers Panel
+
+- [x] Launched the requested 10 read-only indexing agents and collected maps for bridge API, Jules orchestration, dashboard UI, cloud worker integration, provider readiness, tests, local skills/extensions, docs/handoffs, install/runtime, and PR readiness.
+- [x] Pulled Jules session `12782098339635048796` without applying blindly; integrated the aligned dashboard cloud-worker panel while preserving current tunnel/provider status logic.
+- [x] Dashboard UI now renders `Cloud Workers` from `/dashboard/status.cloud`, including `1/1 ONLINE`, provider, VM name, VM status, IP, and reachable state for `jules-offload-worker`.
+- [x] Verified UI proof in Browser and saved screenshot evidence under `jules_inbox/jules_dashboard_cloud_panel_dispatch/evidence/dashboard-cloud-workers-20260630T0730Z.png`.
+- [x] Verification: `pnpm run lint`, `pnpm run build`, and `python -m pytest tests/ -q` passed (`410 passed in 15.50s`), and evidence was recorded through `/retrospective/record_evidence` with SHA-256 `51b715cd2515449c8acb4d90af4e35ebde3496f904b73055e91a7acad8422379`.
+- [x] Verified local/public `/dashboard/status` and `/vm/status` still report GCP worker online/reachable through `https://wet-ducks-try.loca.lt`.
+- [ ] Remaining release blocker: local bridge Gemini/OpenRouter credentials still fail (`400` invalid Gemini key, `401` OpenRouter user not found); PR remains draft until fixed or explicitly accepted as non-blocking.
+

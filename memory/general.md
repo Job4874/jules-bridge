@@ -397,3 +397,11 @@ has gone wrong before and what to avoid.
 - Recycled the stale public tunnel after restart. Current fallback public URL: `https://wet-ducks-try.loca.lt`.
 - Remaining provider blockers are now narrowed to local bridge credentials: Gemini invalid API key and OpenRouter 401 `User not found`.
 
+## Session 20260630T073000 - Dashboard Cloud Workers Panel
+
+- Launched 10 read-only indexing agents across bridge API, Jules orchestration, dashboard UI, cloud workers, provider readiness, tests, local skills/extensions, handoff docs, install/runtime, and PR readiness; the reports converged on the same release blocker: local Gemini/OpenRouter credentials still fail while GCP worker readiness is online.
+- Pulled Jules session `12782098339635048796` without `--apply` and integrated the aligned dashboard cloud-worker panel while preserving current `bridge.tunnel_url || bridge.ngrok_url` tunnel detection and provider badges.
+- Dashboard now renders a compact `Cloud Workers` panel from `/dashboard/status.cloud` with online/total count, provider, VM name, status, IP, and reachable state. Default viewport proof shows `GCP`, `ONLINE`, `Reachable`, `jules-offload-worker`, and `34.132.193.73`.
+- Verification: dashboard `pnpm run lint` and `pnpm run build` pass; in-app Browser DOM and screenshot proof pass; local/public `/dashboard/status` report `cloud.online: 1`; `/vm/status` reports worker online; `/health/deep` reports GCP/Azure pass but Gemini 400 invalid key and OpenRouter 401 remain.
+- Full suite evidence was refreshed through `POST /retrospective/record_evidence`: `python -m pytest tests/ -q` passed 410 tests, SHA-256 `51b715cd2515449c8acb4d90af4e35ebde3496f904b73055e91a7acad8422379`.
+
