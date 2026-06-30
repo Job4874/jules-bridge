@@ -406,3 +406,11 @@ has gone wrong before and what to avoid.
 - Runtime gotcha: if Browser shows dashboard offline while `Invoke-RestMethod http://127.0.0.1:5000/dashboard/status` works, restart `bridge.py` so the active Flask process serves the current CORS/default status contract.
 - Verification: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, and `python -m pytest tests/ -q` passed; Browser QA verified live desktop data, mobile no-horizontal-overflow, no console warnings/errors, and model selector interaction.
 
+## Session 20260630T152750 - Dashboard Command Workstation
+
+- Replaced the dashboard card-stack frontend with a command-workstation shell: top command bar, left focus rail, mission topology, telemetry trends, no-slop checklist, fleet queue, worker directory, repo collision matrix, evidence stream, inspector, and comm link.
+- Added `dashboard-ui/src/dashboardModel.js` as the UI derivation boundary. It normalizes `/dashboard/status`, masks endpoints, computes runtime gate tone, builds topology/checklist rows, parses logs, and keeps private repo/env details out of display logic.
+- New dashboard interactions are local UI state only: focus modes (`overview`, `fleet`, `repo`, `workers`, `comms`), selected worker/collision inspector, stream pause/resume snapshot, WARN/ERROR filtering, and model select. No backend route or product data contract changed.
+- Privacy boundary remains canonical: `/dashboard/status` stays compact and unauthenticated; do not show repo sample names/full paths/full remotes/env key lists. Use masked endpoints (`34.132.x.x`) and key counts only.
+- Verification: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, `python -m pytest tests/ -q`, and `git diff --check` passed; Browser QA covered 1280x720 desktop, 390x844 mobile no-horizontal-overflow, no console errors, focus rail, stream pause/filter, worker selection, and model selector.
+

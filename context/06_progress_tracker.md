@@ -286,3 +286,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Browser QA covered desktop live telemetry, mobile portrait stacking/no horizontal overflow, and the model selector interaction; bridge was restarted locally so the browser picked up live `/dashboard/status` data.
 - Evidence: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, and `python -m pytest tests/ -q` passed.
 
+## Session 20260630T152750 - Dashboard Command Workstation
+
+- Rebuilt the dashboard frontend into an operator-grade command surface without changing `/dashboard/status`: left focus rail, mission topology map, telemetry trends, fleet queue, worker directory, repo collision matrix, evidence stream, inspector, and comm link.
+- Added `dashboard-ui/src/dashboardModel.js` so UI-only derivations such as masked endpoints, runtime gate tone, topology nodes, ops checklist rows, and parsed event rows stay out of the React composition layer.
+- Preserved the no-slop privacy boundary: worker IPs are masked, repo names remain hidden, env keys stay count-only, and collision details show impact counts rather than private inventory.
+- Browser QA verified desktop 1280x720 three-column layout, mobile 390x844 no-horizontal-overflow layout, focus rail, stream pause, WARN filter, worker selection, and model selector with no console errors.
+- Evidence: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, `python -m pytest tests/ -q`, and `git diff --check` passed.
+

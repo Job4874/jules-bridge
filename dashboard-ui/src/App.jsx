@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,21 @@ import {
   Filler
 } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
+import {
+  DEFAULT_STATUS,
+  buildEventRows,
+  buildOpsChecklist,
+  buildTopology,
+  clampPercent,
+  collisionKey,
+  formatTimestamp,
+  gateTone,
+  impactedReposLabel,
+  maskEndpoint,
+  normalizeDashboardPayload,
+  toneForStatus,
+  workerKey
+} from './dashboardModel';
 import './index.css';
 
 ChartJS.register(
@@ -29,102 +44,75 @@ ChartJS.register(
 const BRIDGE = import.meta.env.VITE_BRIDGE_URL || 'http://127.0.0.1:5000';
 const TOKEN = import.meta.env.VITE_BRIDGE_TOKEN || '';
 
-const EMPTY_REPO_CONTEXT = {
-  status: 'unknown',
-  summary: { repo_count: 0, collision_count: 0, collision_severity_counts: {} },
-  collisions: [],
-  guardrails: []
+const NAV_ITEMS = [
+  { id: 'overview', label: 'Overview', icon: 'overview' },
+  { id: 'fleet', label: 'Fleet', icon: 'fleet' },
+  { id: 'repo', label: 'Repo', icon: 'repo' },
+  { id: 'workers', label: 'Workers', icon: 'workers' },
+  { id: 'comms', label: 'Comms', icon: 'comms' }
+];
+
+const FILTERS = ['ALL', 'WARN', 'ERROR'];
+
+const ICONS = {
+  overview: (
+    <>
+      <path d="M4 5h16" />
+      <path d="M4 12h10" />
+      <path d="M4 19h16" />
+    </>
+  ),
+  fleet: (
+    <>
+      <path d="M6 7h12v10H6z" />
+      <path d="M9 7V4h6v3" />
+      <path d="M9 17v3" />
+      <path d="M15 17v3" />
+    </>
+  ),
+  repo: (
+    <>
+      <path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z" />
+      <path d="M9 12l2 2 4-5" />
+    </>
+  ),
+  workers: (
+    <>
+      <path d="M5 7h14v10H5z" />
+      <path d="M8 10h3" />
+      <path d="M8 14h8" />
+      <path d="M7 20h10" />
+    </>
+  ),
+  comms: (
+    <>
+      <path d="M5 6h14v10H8l-3 3z" />
+      <path d="M8 10h8" />
+      <path d="M8 13h5" />
+    </>
+  ),
+  pause: (
+    <>
+      <path d="M8 5v14" />
+      <path d="M16 5v14" />
+    </>
+  ),
+  play: <path d="M8 5v14l11-7z" />,
+  send: (
+    <>
+      <path d="M4 12 20 4l-5 16-3-7z" />
+      <path d="m12 13 8-9" />
+    </>
+  ),
+  close: (
+    <>
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </>
+  )
 };
 
-const EMPTY_CLOUD = { total: 0, online: 0, vms: [] };
-
-const clampPercent = value => Math.max(0, Math.min(100, Number(value) || 0));
-
-const toneForStatus = status => {
-  const value = String(status || '').toLowerCase();
-  if (['ready', 'ok', 'online', 'running', 'normal', 'pass'].includes(value)) return 'success';
-  if (['partial', 'stale', 'warning', 'warn', 'provisioning'].includes(value)) return 'warn';
-  if (['error', 'offline', 'failed', 'fail', 'danger'].includes(value)) return 'danger';
-  return 'info';
-};
-
-const maskEndpoint = value => {
-  const text = String(value || '').trim();
-  if (!text || text === 'unknown') return 'not configured';
-  const parts = text.split('.');
-  if (parts.length === 4 && parts.every(part => /^\d+$/.test(part))) {
-    return `${parts[0]}.${parts[1]}.x.x`;
-  }
-  return 'configured';
-};
-
-const impactedReposLabel = collision => {
-  const names = Array.isArray(collision?.repo_names) ? collision.repo_names : [];
-  const count = names.length || Number(collision?.repo_count || collision?.affected_repo_count || 0);
-  return count > 0 ? `${count} repo refs` : 'refs hidden';
-};
-
-function SignalTile({ label, value, detail, tone = 'info' }) {
-  return (
-    <div className={`signal-tile ${tone}`}>
-      <div className="signal-label">{label}</div>
-      <div className="signal-value">{value}</div>
-      <div className="signal-detail">{detail}</div>
-    </div>
-  );
-}
-
-function PhaseBar({ fleet }) {
-  const launched = Number(fleet?.launched || 0);
-  const completed = Number(fleet?.completed || 0);
-  const failed = Number(fleet?.failed || 0);
-  const inProgress = Number(fleet?.in_progress || 0);
-  const pending = Number(fleet?.pending || 0);
-  const total = Math.max(launched, completed + failed + inProgress + pending, 1);
-  const segments = [
-    ['complete', completed],
-    ['active', inProgress],
-    ['failed', failed],
-    ['pending', pending],
-  ];
-
-  return (
-    <div className="phase-wrap" aria-label="Fleet phase distribution">
-      <div className="phase-bar">
-        {segments.map(([name, count]) => (
-          <span
-            key={name}
-            className={`phase-segment ${name}`}
-            style={{ width: `${Math.max((count / total) * 100, count > 0 ? 4 : 0)}%` }}
-            title={`${name}: ${count}`}
-          />
-        ))}
-      </div>
-      <div className="phase-legend">
-        <span>DONE {completed}</span>
-        <span>ACTIVE {inProgress}</span>
-        <span>FAILED {failed}</span>
-        <span>PENDING {pending}</span>
-      </div>
-    </div>
-  );
-}
-
-function WorkerRow({ vm }) {
-  const tone = vm?.reachable ? 'success' : toneForStatus(vm?.status);
-  return (
-    <div className="worker-row">
-      <span className={`worker-led ${tone}`} />
-      <span className="worker-provider">{vm?.provider || 'worker'}</span>
-      <span className="worker-name">{vm?.name || 'unnamed'}</span>
-      <span className="worker-endpoint">{maskEndpoint(vm?.ip)}</span>
-      <span className={`worker-state ${tone}`}>{vm?.status || 'unknown'}</span>
-    </div>
-  );
-}
-
-// Chart common options
-const lineOptions = {
+const trendOptions = {
   responsive: true,
   maintainAspectRatio: false,
   animation: { duration: 0 },
@@ -134,46 +122,604 @@ const lineOptions = {
       min: 0,
       max: 100,
       border: { display: false },
-      grid: { color: 'rgba(255,255,255,0.05)' },
-      ticks: { stepSize: 25, font: { size: 10, family: "'JetBrains Mono', monospace" } }
+      grid: { color: 'rgba(149, 164, 181, 0.1)' },
+      ticks: {
+        stepSize: 25,
+        color: 'rgba(210, 218, 228, 0.45)',
+        font: { size: 10, family: "'JetBrains Mono', monospace" }
+      }
     }
   },
   plugins: { legend: { display: false }, tooltip: { enabled: false } },
-  elements: { point: { radius: 0 }, line: { tension: 0.4, borderWidth: 2 } }
+  elements: { point: { radius: 0 }, line: { tension: 0.36, borderWidth: 2 } }
 };
 
 const ringOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  cutout: '80%',
+  cutout: '76%',
   plugins: { legend: { display: false }, tooltip: { enabled: false } },
-  animation: { animateScale: true }
+  animation: { duration: 300 }
 };
 
+function Icon({ name }) {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
+      {ICONS[name] || ICONS.overview}
+    </svg>
+  );
+}
+
+function StatusPill({ tone = 'info', children }) {
+  return <span className={`status-pill ${tone}`}>{children}</span>;
+}
+
+function IconButton({ icon, label, onClick, disabled = false, pressed = false }) {
+  return (
+    <button
+      className="icon-button"
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      aria-pressed={pressed}
+      title={label}
+    >
+      <Icon name={icon} />
+    </button>
+  );
+}
+
+function Panel({ title, meta, tone = 'info', focus, activeFocus, className = '', actions, children }) {
+  const dimmed = activeFocus !== 'overview' && focus && focus !== activeFocus;
+  return (
+    <section className={`command-panel ${className} ${dimmed ? 'is-dimmed' : ''}`}>
+      <div className="panel-titlebar">
+        <div>
+          <span className={`panel-indicator ${tone}`} />
+          <h2>{title}</h2>
+          {meta && <p>{meta}</p>}
+        </div>
+        {actions && <div className="panel-actions">{actions}</div>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function NavRail({ activeFocus, setActiveFocus }) {
+  return (
+    <nav className="nav-rail" aria-label="Dashboard focus">
+      {NAV_ITEMS.map(item => (
+        <button
+          key={item.id}
+          className={`rail-button ${activeFocus === item.id ? 'active' : ''}`}
+          type="button"
+          onClick={() => setActiveFocus(item.id)}
+          title={item.label}
+        >
+          <Icon name={item.icon} />
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function TopologyMap({ nodes }) {
+  return (
+    <div className="topology-map" aria-label="Bridge execution topology">
+      {nodes.map((node, index) => (
+        <div className="topology-step" key={node.id}>
+          <div className={`topology-node ${node.tone}`}>
+            <div className="node-label">{node.label}</div>
+            <div className="node-detail">{node.detail}</div>
+            <div className="node-metric">{node.metric}</div>
+          </div>
+          {index < nodes.length - 1 && <div className={`topology-link ${node.tone}`} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MissionSummary({ sysStatus, topology }) {
+  const repoSummary = sysStatus.repoContext?.summary || {};
+  const fleet = sysStatus.fleet || {};
+  return (
+    <Panel
+      title="Mission Control"
+      meta={`Last sample ${formatTimestamp(sysStatus.statusTimestamp)}`}
+      tone={sysStatus.online ? 'success' : 'danger'}
+      className="mission-panel"
+    >
+      <div className="mission-body">
+        <div className="mission-copy">
+          <div className="call-sign">JULES NEXUS</div>
+          <h1>{sysStatus.online ? 'Bridge is holding the room.' : 'Bridge status poll is offline.'}</h1>
+          <p>
+            {sysStatus.executionContext} on {sysStatus.hostname}; Quantower is{' '}
+            {sysStatus.quantAllowed ? 'enabled for this node' : 'locked for this node'}.
+          </p>
+          <div className="mission-pills">
+            <StatusPill tone={sysStatus.tunnel ? 'success' : 'warn'}>
+              {sysStatus.tunnel ? 'Tunnel active' : 'Local relay'}
+            </StatusPill>
+            <StatusPill tone={gateTone(sysStatus)}>{sysStatus.quantAllowed ? 'Quant enabled' : 'Quant locked'}</StatusPill>
+            <StatusPill tone={(repoSummary.collision_count || 0) > 0 ? 'warn' : 'success'}>
+              {repoSummary.collision_count || 0} collisions
+            </StatusPill>
+            <StatusPill tone={(fleet.failed || 0) > 0 ? 'danger' : 'info'}>
+              {fleet.pending || 0} pending
+            </StatusPill>
+          </div>
+        </div>
+        <TopologyMap nodes={topology} />
+      </div>
+    </Panel>
+  );
+}
+
+function TrendTile({ label, value, tone, history, color }) {
+  const labels = useMemo(() => history.map((_, index) => index), [history]);
+  const data = useMemo(
+    () => ({
+      labels,
+      datasets: [
+        {
+          data: history,
+          borderColor: color,
+          backgroundColor: `${color}22`,
+          fill: true
+        }
+      ]
+    }),
+    [color, history, labels]
+  );
+
+  return (
+    <div className={`trend-tile ${tone}`}>
+      <div className="trend-head">
+        <span>{label}</span>
+        <strong>{value.toFixed(1)}%</strong>
+      </div>
+      <div className="trend-chart">
+        <Line data={data} options={trendOptions} />
+      </div>
+    </div>
+  );
+}
+
+function Meter({ label, value, tone }) {
+  return (
+    <div className="meter-row">
+      <div className="meter-label">
+        <span>{label}</span>
+        <strong>{value.toFixed(1)}%</strong>
+      </div>
+      <div className="meter-track">
+        <span className={tone} style={{ width: `${clampPercent(value)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function TelemetryPanel({ sysStatus, cpuHistory, memHistory, activeFocus }) {
+  const pressureTone = sysStatus.mem > 85 || sysStatus.cpu > 85 ? 'warn' : toneForStatus(sysStatus.resourceStatus);
+  return (
+    <Panel
+      title="Telemetry"
+      meta={String(sysStatus.resourceStatus).toUpperCase()}
+      tone={pressureTone}
+      focus="fleet"
+      activeFocus={activeFocus}
+      className="telemetry-panel"
+    >
+      <div className="telemetry-grid">
+        <TrendTile label="CPU" value={sysStatus.cpu} tone={sysStatus.cpu > 85 ? 'warn' : 'info'} history={cpuHistory} color="#61a8ff" />
+        <TrendTile label="Memory" value={sysStatus.mem} tone={sysStatus.mem > 85 ? 'warn' : 'success'} history={memHistory} color="#45d483" />
+      </div>
+      <div className="pressure-deck">
+        <Meter label="CPU pressure" value={sysStatus.cpu} tone={sysStatus.cpu > 85 ? 'warn' : 'info'} />
+        <Meter label="Memory pressure" value={sysStatus.mem} tone={sysStatus.mem > 85 ? 'warn' : 'success'} />
+      </div>
+      {sysStatus.pressureReasons.length > 0 && (
+        <div className="reason-list">
+          {sysStatus.pressureReasons.slice(0, 4).map((reason, index) => (
+            <span key={`${reason}-${index}`}>{reason}</span>
+          ))}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function OpsChecklist({ items, activeFocus }) {
+  return (
+    <Panel title="No Slop Checklist" meta="Live gates" tone="info" focus="overview" activeFocus={activeFocus} className="ops-panel">
+      <div className="ops-list">
+        {items.map(item => (
+          <div className="ops-row" key={item.id}>
+            <div className={`ops-light ${item.tone}`} />
+            <div className="ops-main">
+              <div>
+                <strong>{item.label}</strong>
+                <span>{item.state}</span>
+              </div>
+              <p>{item.detail}</p>
+              <div className="ops-progress">
+                <span className={item.tone} style={{ width: `${item.progress}%` }} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function FleetPanel({ fleet, activeFocus }) {
+  const launched = Number(fleet.launched || 0);
+  const completed = Number(fleet.completed || 0);
+  const failed = Number(fleet.failed || 0);
+  const inProgress = Number(fleet.in_progress || 0);
+  const pending = Number(fleet.pending || 0);
+  const rest = Math.max(launched - completed, launched === 0 ? 1 : 0);
+  const data = useMemo(
+    () => ({
+      datasets: [
+        {
+          data: [completed, rest],
+          backgroundColor: ['#45d483', 'rgba(255, 255, 255, 0.06)'],
+          borderWidth: 0
+        }
+      ]
+    }),
+    [completed, rest]
+  );
+
+  return (
+    <Panel
+      title="Fleet Queue"
+      meta={`${launched} launches tracked`}
+      tone={failed > 0 ? 'danger' : pending > 0 || inProgress > 0 ? 'warn' : 'success'}
+      focus="fleet"
+      activeFocus={activeFocus}
+      className="fleet-panel"
+    >
+      <div className="fleet-body">
+        <div className="fleet-ring">
+          <Doughnut data={data} options={ringOptions} />
+          <div>
+            <strong>{completed}</strong>
+            <span>complete</span>
+          </div>
+        </div>
+        <div className="fleet-bars">
+          {[
+            ['Complete', completed, 'success'],
+            ['Active', inProgress, 'info'],
+            ['Pending', pending, 'warn'],
+            ['Failed', failed, 'danger']
+          ].map(([label, count, tone]) => (
+            <div className="fleet-bar-row" key={label}>
+              <span>{label}</span>
+              <div className="fleet-bar">
+                <span className={tone} style={{ width: `${Math.max((Number(count) / Math.max(launched, 1)) * 100, Number(count) > 0 ? 8 : 0)}%` }} />
+              </div>
+              <strong>{count}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function WorkerDirectory({ workers, cloud, selectedWorkerKey, setSelectedWorkerKey, activeFocus }) {
+  return (
+    <Panel
+      title="Worker Directory"
+      meta={`${cloud.online || 0}/${cloud.total || 0} online`}
+      tone={(cloud.total || 0) === 0 ? 'warn' : (cloud.online || 0) > 0 ? 'success' : 'danger'}
+      focus="workers"
+      activeFocus={activeFocus}
+      className="workers-panel"
+    >
+      <div className="worker-table">
+        <div className="worker-head">
+          <span>Node</span>
+          <span>Provider</span>
+          <span>Endpoint</span>
+          <span>Status</span>
+        </div>
+        {workers.length === 0 ? (
+          <div className="empty-state">No cloud workers configured.</div>
+        ) : (
+          workers.map((vm, index) => {
+            const key = workerKey(vm, index);
+            const tone = vm?.reachable ? 'success' : toneForStatus(vm?.status);
+            return (
+              <button
+                className={`worker-entry ${selectedWorkerKey === key ? 'selected' : ''}`}
+                type="button"
+                key={key}
+                onClick={() => setSelectedWorkerKey(key)}
+              >
+                <span className="worker-node">
+                  <i className={`worker-light ${tone}`} />
+                  {vm?.name || 'unnamed'}
+                </span>
+                <span>{vm?.provider || 'worker'}</span>
+                <span>{maskEndpoint(vm?.ip)}</span>
+                <span className={tone}>{vm?.status || 'unknown'}</span>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+function RepoGuard({ repoContext, selectedCollisionKey, setSelectedCollisionKey, activeFocus }) {
+  const summary = repoContext?.summary || {};
+  const collisions = Array.isArray(repoContext?.collisions) ? repoContext.collisions : [];
+  const guardrails = Array.isArray(repoContext?.guardrails) ? repoContext.guardrails : [];
+  const severityCounts = summary.collision_severity_counts || {};
+  const tone = (summary.collision_count || 0) > 0 ? 'warn' : toneForStatus(repoContext?.status);
+  return (
+    <Panel
+      title="Repo Collision Matrix"
+      meta={`${summary.repo_count || 0} repos scanned`}
+      tone={tone}
+      focus="repo"
+      activeFocus={activeFocus}
+      className="repo-panel"
+    >
+      <div className="repo-metrics">
+        <div>
+          <span>Collisions</span>
+          <strong>{summary.collision_count || 0}</strong>
+        </div>
+        <div>
+          <span>Warnings</span>
+          <strong>{severityCounts.warning || 0}</strong>
+        </div>
+        <div>
+          <span>Cache</span>
+          <strong>{repoContext?.cache_age_s ?? 0}s</strong>
+        </div>
+      </div>
+      <div className="guardrail-grid">
+        {guardrails.length === 0 ? (
+          <span>No guardrails reported</span>
+        ) : (
+          guardrails.slice(0, 4).map((rule, index) => <span key={`${rule}-${index}`}>{rule}</span>)
+        )}
+      </div>
+      <div className="collision-table">
+        {collisions.length === 0 ? (
+          <div className="empty-state">No collisions reported.</div>
+        ) : (
+          collisions.slice(0, 8).map((collision, index) => {
+            const key = collisionKey(collision, index);
+            const severity = collision.severity || 'info';
+            return (
+              <button
+                className={`collision-entry ${selectedCollisionKey === key ? 'selected' : ''}`}
+                type="button"
+                key={key}
+                onClick={() => setSelectedCollisionKey(key)}
+              >
+                <span className={`collision-dot ${severity}`} />
+                <span>{collision.type || 'collision'}</span>
+                <strong>{collision.key || 'key hidden'}</strong>
+                <em>{impactedReposLabel(collision)}</em>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+function EventConsole({ rows, filter, setFilter, paused, togglePaused, activeFocus }) {
+  const filteredRows = rows.filter(row => filter === 'ALL' || row.level === filter);
+  return (
+    <Panel
+      title="Evidence Stream"
+      meta={paused ? 'Paused' : 'Live tail'}
+      tone={paused ? 'warn' : 'info'}
+      focus="overview"
+      activeFocus={activeFocus}
+      className="stream-panel"
+      actions={
+        <>
+          <div className="filter-cluster">
+            {FILTERS.map(item => (
+              <button
+                className={filter === item ? 'active' : ''}
+                type="button"
+                key={item}
+                onClick={() => setFilter(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <IconButton icon={paused ? 'play' : 'pause'} label={paused ? 'Resume stream' : 'Pause stream'} onClick={togglePaused} pressed={paused} />
+        </>
+      }
+    >
+      <div className="event-console">
+        {filteredRows.length === 0 ? (
+          <div className="empty-state">Awaiting telemetry.</div>
+        ) : (
+          filteredRows.slice(-60).map(row => (
+            <div className={`event-row ${row.level}`} key={row.id}>
+              <span>{row.timestamp || '--'}</span>
+              <strong>{row.level}</strong>
+              <em>{row.source}</em>
+              <p>{row.message}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+function Inspector({ sysStatus, worker, collision }) {
+  const workerTone = worker?.reachable ? 'success' : toneForStatus(worker?.status);
+  const collisionTone = collision?.severity === 'critical' ? 'danger' : collision?.severity === 'warning' ? 'warn' : 'info';
+  return (
+    <Panel title="Inspector" meta="Selected evidence" tone="info" className="inspector-panel">
+      <div className="inspector-section">
+        <div className="inspector-title">
+          <span className={`panel-indicator ${workerTone}`} />
+          <h3>{worker ? 'Worker' : 'Worker lane'}</h3>
+        </div>
+        {worker ? (
+          <dl className="inspector-list">
+            <div>
+              <dt>Name</dt>
+              <dd>{worker.name || 'unnamed'}</dd>
+            </div>
+            <div>
+              <dt>Provider</dt>
+              <dd>{worker.provider || 'worker'}</dd>
+            </div>
+            <div>
+              <dt>Zone</dt>
+              <dd>{worker.zone || 'unknown'}</dd>
+            </div>
+            <div>
+              <dt>Endpoint</dt>
+              <dd>{maskEndpoint(worker.ip)}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd className={workerTone}>{worker.status || 'unknown'}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="inspector-empty">Select a worker row.</p>
+        )}
+      </div>
+      <div className="inspector-section">
+        <div className="inspector-title">
+          <span className={`panel-indicator ${collisionTone}`} />
+          <h3>{collision ? 'Collision' : 'Repo guard'}</h3>
+        </div>
+        {collision ? (
+          <dl className="inspector-list">
+            <div>
+              <dt>Type</dt>
+              <dd>{collision.type || 'collision'}</dd>
+            </div>
+            <div>
+              <dt>Key</dt>
+              <dd>{collision.key || 'hidden'}</dd>
+            </div>
+            <div>
+              <dt>Severity</dt>
+              <dd className={collisionTone}>{collision.severity || 'info'}</dd>
+            </div>
+            <div>
+              <dt>Impact</dt>
+              <dd>{impactedReposLabel(collision)}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="inspector-empty">No collision selected.</p>
+        )}
+      </div>
+      <div className="inspector-section compact">
+        <div className="runtime-stack">
+          <span>Runtime</span>
+          <strong>{sysStatus.executionContext}</strong>
+          <em>{sysStatus.quantAllowed ? 'Quantower enabled' : 'Quantower locked'}</em>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function CommPanel({
+  chatHistory,
+  chatBoxRef,
+  isThinking,
+  model,
+  setModel,
+  pendingImage,
+  setPendingImage,
+  inputValue,
+  setInputValue,
+  sendChat,
+  onKey
+}) {
+  return (
+    <Panel
+      title="Comm Link"
+      meta="Jules channel"
+      tone="info"
+      focus="comms"
+      activeFocus="comms"
+      className="comm-panel"
+      actions={
+        <select className="model-select" value={model} onChange={event => setModel(event.target.value)} title="Select model">
+          <option value="fast">flash fast</option>
+          <option value="smart">pro smart</option>
+        </select>
+      }
+    >
+      <div className="chat-messages" ref={chatBoxRef}>
+        {chatHistory.map((message, index) => (
+          <div className={`msg ${message.role}`} key={`${message.role}-${index}`}>
+            {message.content}
+            {message.img && <img src={message.img} alt="attached visual" className="img-preview" />}
+            {message.meta && <div className="msg-meta">{message.meta}</div>}
+          </div>
+        ))}
+        {isThinking && (
+          <div className="msg ai thinking">
+            <span />
+            <span />
+            <span />
+          </div>
+        )}
+      </div>
+      <div className="chat-input-area">
+        {pendingImage && (
+          <div className="img-strip">
+            <img src={pendingImage.src} alt="attachment thumbnail" />
+            <span className="img-label">Visual attached</span>
+            <IconButton icon="close" label="Remove attachment" onClick={() => setPendingImage(null)} />
+          </div>
+        )}
+        <div className="chat-row">
+          <textarea
+            className="chat-input"
+            placeholder="Message Jules..."
+            value={inputValue}
+            onChange={event => setInputValue(event.target.value)}
+            onKeyDown={onKey}
+            rows={1}
+            title="Message input"
+          />
+          <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking} />
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 function App() {
-  const [sysStatus, setSysStatus] = useState({
-    uptime: '--',
-    online: false,
-    tunnel: false,
-    hostname: '--',
-    executionContext: '[SCHOOL_COMPUTE]',
-    quantAllowed: false,
-    resourceStatus: 'unknown',
-    pressureReasons: [],
-    cpu: 0,
-    mem: 0,
-    fleet: { launched: 0, completed: 0, pending: 0 },
-    cloud: EMPTY_CLOUD,
-    repoContext: EMPTY_REPO_CONTEXT,
-    secretCount: 0,
-    statusTimestamp: '',
-    cacheAge: 0,
-    logs: []
-  });
-
-  const [cpuHistory, setCpuHistory] = useState(Array(30).fill(0));
-  const [memHistory, setMemHistory] = useState(Array(30).fill(0));
-
+  const [sysStatus, setSysStatus] = useState(DEFAULT_STATUS);
+  const [cpuHistory, setCpuHistory] = useState(Array(36).fill(0));
+  const [memHistory, setMemHistory] = useState(Array(36).fill(0));
   const [chatHistory, setChatHistory] = useState([
     { role: 'sys', content: 'JULES ONLINE. Secure channel established.' }
   ]);
@@ -181,77 +727,40 @@ function App() {
   const [pendingImage, setPendingImage] = useState(null);
   const [model, setModel] = useState('fast');
   const [isThinking, setIsThinking] = useState(false);
-  
+  const [activeFocus, setActiveFocus] = useState('overview');
+  const [selectedWorkerKey, setSelectedWorkerKey] = useState('');
+  const [selectedCollisionKey, setSelectedCollisionKey] = useState('');
+  const [streamPaused, setStreamPaused] = useState(false);
+  const [streamSnapshot, setStreamSnapshot] = useState([]);
+  const [eventFilter, setEventFilter] = useState('ALL');
   const chatBoxRef = useRef(null);
-  const logFeedRef = useRef(null);
 
-  // Polling
   useEffect(() => {
     let mounted = true;
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`${BRIDGE}/dashboard/status`, { cache: 'no-store' });
-        if (!res.ok) throw new Error('Bad response');
-        const d = await res.json();
-        
+        const response = await fetch(`${BRIDGE}/dashboard/status`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        const payload = await response.json();
         if (!mounted) return;
-
-        const cpu = clampPercent(d.resource_pressure?.cpu_percent ?? 0);
-        const mem = clampPercent(d.resource_pressure?.memory_percent ?? 0);
-        const pressure = d.resource_pressure || {};
-
-        setSysStatus({
-          uptime: d.bridge?.uptime_human || '--',
-          online: true,
-          tunnel: !!d.bridge?.ngrok_url,
-          hostname: d.hostname || '--',
-          executionContext: d.execution_context || '[SCHOOL_COMPUTE]',
-          quantAllowed: !!d.quant_allowed,
-          resourceStatus: pressure.status || 'unknown',
-          pressureReasons: Array.isArray(pressure.reasons) ? pressure.reasons : [],
-          cpu,
-          mem,
-          fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },
-          cloud: d.cloud || EMPTY_CLOUD,
-          repoContext: d.repo_context || EMPTY_REPO_CONTEXT,
-          secretCount: Array.isArray(d.env_keys_present) ? d.env_keys_present.length : 0,
-          statusTimestamp: d.timestamp || '',
-          cacheAge: d.cache_age_s ?? 0,
-          logs: d.recent_logs || []
-        });
-
-        setCpuHistory(prev => {
-          const next = [...prev, cpu];
-          next.shift();
-          return next;
-        });
-        setMemHistory(prev => {
-          const next = [...prev, mem];
-          next.shift();
-          return next;
-        });
-
+        const nextStatus = normalizeDashboardPayload(payload);
+        setSysStatus(nextStatus);
+        setCpuHistory(previous => [...previous.slice(1), nextStatus.cpu]);
+        setMemHistory(previous => [...previous.slice(1), nextStatus.mem]);
       } catch {
         if (mounted) {
-          setSysStatus(s => ({ ...s, online: false, uptime: 'OFFLINE' }));
+          setSysStatus(previous => ({ ...previous, online: false, uptime: 'OFFLINE', bridgeStatus: 'offline' }));
         }
       }
     };
 
+    fetchStatus();
     const timer = setInterval(fetchStatus, 2000);
-    fetchStatus(); // initial
     return () => {
       mounted = false;
       clearInterval(timer);
     };
   }, []);
-
-  // Auto-scroll logs and chat
-  useEffect(() => {
-    if (logFeedRef.current) {
-      logFeedRef.current.scrollTop = logFeedRef.current.scrollHeight;
-    }
-  }, [sysStatus.logs]);
 
   useEffect(() => {
     if (chatBoxRef.current) {
@@ -259,18 +768,18 @@ function App() {
     }
   }, [chatHistory, isThinking]);
 
-  // Handle paste
   useEffect(() => {
-    const handlePaste = (e) => {
-      const items = (e.clipboardData || window.clipboardData).items;
+    const handlePaste = event => {
+      const items = (event.clipboardData || window.clipboardData)?.items || [];
       for (const item of items) {
         if (item.type.startsWith('image/')) {
-          e.preventDefault();
+          event.preventDefault();
           const blob = item.getAsFile();
           const reader = new FileReader();
-          reader.onload = (ev) => {
-            const b64 = ev.target.result.split(',')[1];
-            setPendingImage({ base64: b64, src: ev.target.result });
+          reader.onload = loadEvent => {
+            const src = loadEvent.target.result;
+            const base64 = src.split(',')[1];
+            setPendingImage({ base64, src });
           };
           reader.readAsDataURL(blob);
           break;
@@ -281,366 +790,156 @@ function App() {
     return () => document.removeEventListener('paste', handlePaste);
   }, []);
 
-  const sendChat = async () => {
-    const msg = inputValue.trim();
-    if (!msg && !pendingImage) return;
+  const cloud = sysStatus.cloud || DEFAULT_STATUS.cloud;
+  const workers = useMemo(() => (Array.isArray(cloud.vms) ? cloud.vms : []), [cloud]);
+  const repoContext = sysStatus.repoContext || DEFAULT_STATUS.repoContext;
+  const collisions = useMemo(
+    () => (Array.isArray(repoContext.collisions) ? repoContext.collisions : []),
+    [repoContext]
+  );
 
-    const currentImg = pendingImage;
+  useEffect(() => {
+    if (workers.length === 0) {
+      setSelectedWorkerKey('');
+      return;
+    }
+    if (!workers.some((worker, index) => workerKey(worker, index) === selectedWorkerKey)) {
+      setSelectedWorkerKey(workerKey(workers[0], 0));
+    }
+  }, [selectedWorkerKey, workers]);
+
+  useEffect(() => {
+    if (collisions.length === 0) {
+      setSelectedCollisionKey('');
+      return;
+    }
+    if (!collisions.some((collision, index) => collisionKey(collision, index) === selectedCollisionKey)) {
+      setSelectedCollisionKey(collisionKey(collisions[0], 0));
+    }
+  }, [collisions, selectedCollisionKey]);
+
+  const selectedWorker = workers.find((worker, index) => workerKey(worker, index) === selectedWorkerKey);
+  const selectedCollision = collisions.find((collision, index) => collisionKey(collision, index) === selectedCollisionKey);
+  const topology = useMemo(() => buildTopology(sysStatus), [sysStatus]);
+  const opsItems = useMemo(() => buildOpsChecklist(sysStatus), [sysStatus]);
+  const eventRows = useMemo(
+    () => buildEventRows(streamPaused ? streamSnapshot : sysStatus.logs),
+    [streamPaused, streamSnapshot, sysStatus.logs]
+  );
+
+  const togglePaused = () => {
+    if (streamPaused) {
+      setStreamPaused(false);
+      setStreamSnapshot([]);
+      return;
+    }
+    setStreamSnapshot(sysStatus.logs);
+    setStreamPaused(true);
+  };
+
+  const sendChat = async () => {
+    const message = inputValue.trim();
+    if (!message && !pendingImage) return;
+
+    const currentImage = pendingImage;
     setInputValue('');
     setPendingImage(null);
-
-    const newUserMsg = { role: 'user', content: msg || '[screenshot]', img: currentImg?.src };
-    setChatHistory(prev => [...prev, newUserMsg]);
+    setChatHistory(previous => [
+      ...previous,
+      { role: 'user', content: message || '[screenshot]', img: currentImage?.src }
+    ]);
     setIsThinking(true);
 
     try {
-      const payload = { message: msg || 'Analyze this visual data.', model };
-      if (currentImg) payload.image_base64 = currentImg.base64;
-      
-      const res = await fetch(`${BRIDGE}/chat`, {
+      const payload = { message: message || 'Analyze this visual data.', model };
+      if (currentImage) payload.image_base64 = currentImage.base64;
+      const response = await fetch(`${BRIDGE}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
         body: JSON.stringify(payload)
       });
-      const data = await res.json();
-      
+      const data = await response.json();
       const reply = data.response || 'No response.';
-      const meta = data.model_used ? `${data.model_used} · ${data.elapsed_ms}ms` : '';
-      setChatHistory(prev => [...prev, { role: 'ai', content: reply, meta }]);
-    } catch (e) {
-      setChatHistory(prev => [...prev, { role: 'sys', content: 'COMM LINK FAILED: ' + e.message }]);
+      const meta = data.model_used ? `${data.model_used} - ${data.elapsed_ms}ms` : '';
+      setChatHistory(previous => [...previous, { role: 'ai', content: reply, meta }]);
+    } catch (error) {
+      setChatHistory(previous => [...previous, { role: 'sys', content: `COMM LINK FAILED: ${error.message}` }]);
     } finally {
       setIsThinking(false);
     }
   };
 
-  const onKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+  const onKey = event => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
       sendChat();
     }
   };
 
-  const repoContext = sysStatus.repoContext || {};
-  const repoSummary = repoContext.summary || {};
-  const repoCollisions = repoContext.collisions || [];
-  const guardrails = Array.isArray(repoContext.guardrails) ? repoContext.guardrails : [];
-  const severityCounts = repoSummary.collision_severity_counts || {};
-  const cloud = sysStatus.cloud || EMPTY_CLOUD;
-  const workers = Array.isArray(cloud.vms) ? cloud.vms : [];
-  const fleet = sysStatus.fleet || {};
-  const bridgeTone = sysStatus.online ? (sysStatus.tunnel ? 'success' : 'warn') : 'danger';
-  const runtimeTone = sysStatus.quantAllowed ? 'success' : 'danger';
-  const repoTone = (repoSummary.collision_count ?? 0) > 0 ? 'warn' : toneForStatus(repoContext.status);
-  const pressureTone = sysStatus.mem > 85 || sysStatus.cpu > 85 ? 'warn' : toneForStatus(sysStatus.resourceStatus);
-
   return (
-    <div className="dashboard-container">
-      <div className="header">
-        <h1>
-          <div className={`status-dot ${!sysStatus.online ? 'offline' : ''}`} />
-          JULES NEXUS
-        </h1>
-        <div className="header-metrics">
-          <div className={`badge ${sysStatus.online ? '' : 'danger'}`}>
-            SYS_UP: {sysStatus.uptime}
-          </div>
-          <div className={`badge ${sysStatus.tunnel ? 'success' : 'danger'}`}>
-            TUNNEL: {sysStatus.tunnel ? 'ACTIVE' : 'OFFLINE'}
-          </div>
-          <div className={`badge ${sysStatus.quantAllowed ? 'success' : 'danger'}`}>
-            CTX: {sysStatus.executionContext} / QUANT: {sysStatus.quantAllowed ? 'ENABLED' : 'LOCKED'}
+    <div className="dashboard-shell" data-focus={activeFocus}>
+      <header className="command-bar">
+        <div className="brand-lockup">
+          <span className={`live-dot ${sysStatus.online ? 'online' : 'offline'}`} />
+          <div>
+            <strong>Jules Bridge</strong>
+            <span>{sysStatus.localUrl || BRIDGE}</span>
           </div>
         </div>
-      </div>
-
-      <div className="mission-strip">
-        <SignalTile
-          label="Bridge"
-          value={sysStatus.online ? 'LIVE' : 'OFFLINE'}
-          detail={sysStatus.tunnel ? 'tunnel active' : `cache ${sysStatus.cacheAge}s`}
-          tone={bridgeTone}
-        />
-        <SignalTile
-          label="Runtime Gate"
-          value={sysStatus.executionContext}
-          detail={`${sysStatus.quantAllowed ? 'Quantower allowed' : 'Quantower locked'} on ${sysStatus.hostname}; ${sysStatus.secretCount} key refs`}
-          tone={runtimeTone}
-        />
-        <SignalTile
-          label="Fleet Queue"
-          value={`${fleet.completed ?? 0}/${fleet.launched ?? 0}`}
-          detail={`${fleet.pending ?? 0} pending, ${fleet.failed ?? 0} failed`}
-          tone={(fleet.failed ?? 0) > 0 ? 'danger' : (fleet.pending ?? 0) > 0 ? 'warn' : 'success'}
-        />
-        <SignalTile
-          label="Repo Guard"
-          value={`${repoSummary.collision_count ?? 0} collisions`}
-          detail={`${repoSummary.repo_count ?? 0} repos scanned`}
-          tone={repoTone}
-        />
-      </div>
-
-      <div className="main-content">
-        {/* Left Side: Telemetry & Logs */}
-        <div className="left-panel">
-          <div className="metrics-grid">
-            <div className="metric-card">
-              <div className="metric-label">CPU Utilization</div>
-              <div className="metric-value blue">{sysStatus.cpu.toFixed(1)}%</div>
-              <div className="chart-container">
-                <Line
-                  data={{
-                    labels: Array(30).fill(''),
-                    datasets: [{
-                      data: cpuHistory,
-                      borderColor: '#58a6ff',
-                      backgroundColor: 'rgba(88, 166, 255, 0.1)',
-                      fill: true,
-                    }]
-                  }}
-                  options={lineOptions}
-                />
-              </div>
-            </div>
-            
-            <div className="metric-card">
-              <div className="metric-label">Memory Utilization</div>
-              <div className="metric-value green">{sysStatus.mem.toFixed(1)}%</div>
-              <div className="chart-container">
-                <Line
-                  data={{
-                    labels: Array(30).fill(''),
-                    datasets: [{
-                      data: memHistory,
-                      borderColor: '#3fb950',
-                      backgroundColor: 'rgba(63, 185, 80, 0.1)',
-                      fill: true,
-                    }]
-                  }}
-                  options={lineOptions}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="panel" style={{ height: '140px', flex: 'none', marginBottom: '1rem' }}>
-            <div className="panel-header">Fleet Status</div>
-            <div className="panel-content fleet-content">
-              <div className="fleet-rings">
-                <div className="ring-wrap">
-                  <Doughnut
-                    data={{
-                      datasets: [{
-                        data: [sysStatus.fleet.launched, sysStatus.fleet.pending === 0 && sysStatus.fleet.launched === 0 ? 1 : sysStatus.fleet.pending],
-                        backgroundColor: ['#58a6ff', 'rgba(255,255,255,0.05)'],
-                        borderWidth: 0
-                      }]
-                    }}
-                    options={ringOptions}
-                  />
-                  <div className="ring-label">
-                    <div>{sysStatus.fleet.launched}</div>
-                    <span>LAUNCHED</span>
-                  </div>
-                </div>
-              
-                <div className="ring-wrap">
-                  <Doughnut
-                    data={{
-                      datasets: [{
-                        data: [sysStatus.fleet.completed, sysStatus.fleet.launched > sysStatus.fleet.completed ? sysStatus.fleet.launched - sysStatus.fleet.completed : (sysStatus.fleet.completed === 0 ? 1 : 0)],
-                        backgroundColor: ['#3fb950', 'rgba(255,255,255,0.05)'],
-                        borderWidth: 0
-                      }]
-                    }}
-                    options={ringOptions}
-                  />
-                  <div className="ring-label green">
-                    <div>{sysStatus.fleet.completed}</div>
-                    <span>COMPLETED</span>
-                  </div>
-                </div>
-              </div>
-              <PhaseBar fleet={sysStatus.fleet} />
-            </div>
-          </div>
-
-          <div className="panel worker-panel">
-            <div className="panel-header">
-              <span>Cloud Workers</span>
-              <span className={`badge ${cloud.online > 0 ? 'success' : 'danger'}`}>
-                {cloud.online ?? 0}/{cloud.total ?? 0} ONLINE
-              </span>
-            </div>
-            <div className="panel-content worker-list">
-              {workers.length === 0 ? (
-                <div className="worker-empty">No cloud workers configured</div>
-              ) : (
-                workers.slice(0, 4).map((vm, i) => <WorkerRow vm={vm} key={`${vm.provider}-${vm.name}-${i}`} />)
-              )}
-            </div>
-          </div>
-
-          <div className="panel" style={{ height: '230px', flex: 'none', marginBottom: '1rem' }}>
-            <div className="panel-header">
-              <span>Repo Context Guard</span>
-              <span className={`badge ${repoContext.status === 'ready' ? 'success' : repoContext.status === 'error' ? 'danger' : ''}`}>
-                {(repoContext.status || 'unknown').toUpperCase()}
-              </span>
-            </div>
-            <div className="panel-content repo-guard">
-              <div className="repo-stats">
-                <div className="repo-stat">
-                  <span>Repos</span>
-                  <strong>{repoSummary.repo_count ?? 0}</strong>
-                </div>
-                <div className="repo-stat">
-                  <span>Collisions</span>
-                  <strong className={(repoSummary.collision_count ?? 0) > 0 ? 'warn' : ''}>
-                    {repoSummary.collision_count ?? 0}
-                  </strong>
-                </div>
-                <div className="repo-stat">
-                  <span>Warn</span>
-                  <strong className={(severityCounts.warning ?? 0) > 0 ? 'warn' : ''}>
-                    {severityCounts.warning ?? 0}
-                  </strong>
-                </div>
-                <div className="repo-stat">
-                  <span>Cache</span>
-                  <strong>{repoContext.cache_age_s ?? 0}s</strong>
-                </div>
-              </div>
-              <div className="guardrail-strip">
-                {guardrails.slice(0, 2).map((rule, i) => (
-                  <span key={`${rule}-${i}`}>{rule}</span>
-                ))}
-              </div>
-              <div className="collision-list">
-                {repoCollisions.length === 0 ? (
-                  <div className="collision-empty">No collisions reported</div>
-                ) : (
-                  repoCollisions.slice(0, 5).map((collision, i) => (
-                    <div className="collision-row" key={`${collision.type}-${collision.key}-${i}`}>
-                      <span className={`collision-severity ${collision.severity || 'info'}`} />
-                      <span className="collision-main">
-                        <strong>{collision.type}</strong>
-                        <em>{collision.key}</em>
-                      </span>
-                      <span className="collision-repos">{impactedReposLabel(collision)}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="panel" style={{ flex: 1 }}>
-            <div className="panel-header">
-              <span>Terminal Stream</span>
-              <span className={`badge ${pressureTone}`}>{String(sysStatus.resourceStatus).toUpperCase()}</span>
-            </div>
-            <div className="panel-content log-feed" ref={logFeedRef}>
-              {sysStatus.pressureReasons.length > 0 && (
-                <div className="pressure-reasons">
-                  {sysStatus.pressureReasons.slice(0, 3).map((reason, i) => (
-                    <span key={`${reason}-${i}`}>{reason}</span>
-                  ))}
-                </div>
-              )}
-              {sysStatus.logs.length === 0 ? (
-                <div style={{ color: 'var(--text-dim)' }}>Awaiting telemetry...</div>
-              ) : (
-                sysStatus.logs.slice(-50).map((line, i) => {
-                  const match = line.match(/^(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}\]) (.*)/);
-                  let ts = '', msg = line, lvl = 'INFO';
-                  if (match) { ts = match[1]; msg = match[2]; }
-                  if (msg.includes('ERROR') || msg.includes('FAIL')) lvl = 'ERROR';
-                  else if (msg.includes('WARN')) lvl = 'WARN';
-                  
-                  return (
-                    <div className="log-line" key={i}>
-                      <span className="log-ts">{ts}</span>
-                      <span className={`log-lvl ${lvl}`}>[{lvl}]</span>
-                      <span className="log-msg">{msg}</span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
+        <div className="command-status">
+          <StatusPill tone={sysStatus.online ? 'success' : 'danger'}>{sysStatus.online ? 'LIVE' : 'OFFLINE'}</StatusPill>
+          <StatusPill tone={sysStatus.tunnel ? 'success' : 'warn'}>{sysStatus.tunnel ? 'TUNNEL' : 'LOCAL'}</StatusPill>
+          <StatusPill tone={gateTone(sysStatus)}>{sysStatus.executionContext}</StatusPill>
+          <StatusPill tone={sysStatus.quantAllowed ? 'success' : 'warn'}>{sysStatus.quantAllowed ? 'QUANT ON' : 'QUANT LOCKED'}</StatusPill>
         </div>
+      </header>
 
-        {/* Right Side: Chat */}
-        <div className="panel right-panel">
-          <div className="panel-header">
-            <span>Comm Link</span>
-            <select
-              value={model}
-              onChange={e => setModel(e.target.value)}
-              title="Select LLM model"
-              style={{
-                background: 'transparent',
-                color: 'var(--accent-blue)',
-                border: 'none',
-                outline: 'none',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="fast">flash (fast)</option>
-              <option value="smart">pro (smart)</option>
-            </select>
-          </div>
-          <div className="panel-content chat-messages" ref={chatBoxRef}>
-            {chatHistory.map((m, i) => (
-              <div key={i} className={`msg ${m.role}`}>
-                {m.content}
-                {m.img && <img src={m.img} alt="clip" className="img-preview" />}
-                {m.meta && <div className="msg-meta">{m.meta}</div>}
-              </div>
-            ))}
-            {isThinking && (
-              <div className="msg ai" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--text-dim)', animation: 'bounce 0.6s infinite alternate' }}></span>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--text-dim)', animation: 'bounce 0.6s infinite alternate 0.2s' }}></span>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--text-dim)', animation: 'bounce 0.6s infinite alternate 0.4s' }}></span>
-              </div>
-            )}
-          </div>
-          
-          <div className="chat-input-area">
-            {pendingImage && (
-              <div className="img-strip">
-                <img src={pendingImage.src} alt="thumbnail" />
-                <span className="img-label">Visual data attached</span>
-                <button className="btn-clear" onClick={() => setPendingImage(null)} title="Remove attachment">✕</button>
-              </div>
-            )}
-            <div className="chat-row">
-              <textarea
-                className="chat-input"
-                placeholder="Enter command or paste image..."
-                value={inputValue}
-                onChange={e => setInputValue(e.target.value)}
-                onKeyDown={onKey}
-                rows={1}
-                title="Message Input"
-              />
-              <button 
-                className="btn-send"
-                onClick={sendChat}
-                disabled={isThinking}
-                title="Send Message"
-              >
-                ➤
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <NavRail activeFocus={activeFocus} setActiveFocus={setActiveFocus} />
+
+      <main className="operations-grid">
+        <MissionSummary sysStatus={sysStatus} topology={topology} />
+        <TelemetryPanel sysStatus={sysStatus} cpuHistory={cpuHistory} memHistory={memHistory} activeFocus={activeFocus} />
+        <OpsChecklist items={opsItems} activeFocus={activeFocus} />
+        <FleetPanel fleet={sysStatus.fleet || DEFAULT_STATUS.fleet} activeFocus={activeFocus} />
+        <WorkerDirectory
+          workers={workers}
+          cloud={cloud}
+          selectedWorkerKey={selectedWorkerKey}
+          setSelectedWorkerKey={setSelectedWorkerKey}
+          activeFocus={activeFocus}
+        />
+        <RepoGuard
+          repoContext={repoContext}
+          selectedCollisionKey={selectedCollisionKey}
+          setSelectedCollisionKey={setSelectedCollisionKey}
+          activeFocus={activeFocus}
+        />
+        <EventConsole
+          rows={eventRows}
+          filter={eventFilter}
+          setFilter={setEventFilter}
+          paused={streamPaused}
+          togglePaused={togglePaused}
+          activeFocus={activeFocus}
+        />
+      </main>
+
+      <aside className="side-column">
+        <Inspector sysStatus={sysStatus} worker={selectedWorker} collision={selectedCollision} />
+        <CommPanel
+          chatHistory={chatHistory}
+          chatBoxRef={chatBoxRef}
+          isThinking={isThinking}
+          model={model}
+          setModel={setModel}
+          pendingImage={pendingImage}
+          setPendingImage={setPendingImage}
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          sendChat={sendChat}
+          onKey={onKey}
+        />
+      </aside>
     </div>
   );
 }
