@@ -389,3 +389,11 @@ has gone wrong before and what to avoid.
 - Jules duplicate session `11181112389803823618` completed after `4817979060578580922`; its patch was reviewed without `--apply` and left unapplied because it overlapped the pushed fix and dropped useful HTTP status detail.
 - Updated heartbeat automation `jules-bridge-overnight-production-loop` with source/readiness head `090d7bb`, current tunnel, reviewed duplicate session state, and remaining external readiness blockers.
 
+## Session 20260630T010000 - GCP Worker Online Runtime Fix
+
+- Resolved the dashboard GCP worker configuration gap locally by discovering `jules-offload-worker` through gcloud and adding non-secret worker coordinates to ignored `.env`.
+- Restarted the bridge with Google Cloud SDK on PATH; local `/dashboard/status` and public tunnel `/dashboard/status` now report GCP `online: 1`, IP `34.132.193.73`, `reachable: true`, `status: online`.
+- Verified VM relay through local and public `/vm/status`: worker `online: true`, `tasks_running: 0`, and VM-side Gemini/OpenRouter flags true.
+- Recycled the stale public tunnel after restart. Current fallback public URL: `https://wet-ducks-try.loca.lt`.
+- Remaining provider blockers are now narrowed to local bridge credentials: Gemini invalid API key and OpenRouter 401 `User not found`.
+

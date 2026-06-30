@@ -269,3 +269,12 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Updated heartbeat automation with the current tunnel, PR head, reviewed duplicate state, and remaining blockers.
 - [ ] Remaining release blocker: valid Gemini/OpenRouter credentials and configured GCP worker IP/readiness are still not proven.
 
+## Session 20260630T010000 - GCP Worker Online Runtime Fix
+
+- [x] Verified `jules-offload-worker` exists in GCP, is `RUNNING`, and has external IP `34.132.193.73`.
+- [x] Added non-secret GCP worker coordinates to ignored local `.env` and restarted the bridge with Google Cloud SDK on PATH.
+- [x] Verified local and public `/dashboard/status`: GCP worker is `online`, `reachable: true`, and `cloud.online` is `1`.
+- [x] Verified local and public `/vm/status`: relay is `online: true`, `tasks_running: 0`, VM-side provider flags true.
+- [x] Recycled LocalTunnel after the bridge restart; current public URL is `https://wet-ducks-try.loca.lt`.
+- [ ] Remaining release blocker: local bridge Gemini/OpenRouter credentials still fail (`400` invalid Gemini key, `401` OpenRouter user not found).
+
