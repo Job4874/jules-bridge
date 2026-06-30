@@ -1931,19 +1931,22 @@ def _resolve_cli_command(command: str) -> str:
 
 def _candidate_jules_commands(command: str) -> list[dict]:
     candidates = []
+    seen = set()
     raw = (command or "").strip() or "jules"
     resolved = shutil.which(raw) or raw
-    _append_candidate(candidates, "requested", raw, resolved)
+    _append_candidate(candidates, seen, "requested", raw, resolved)
     appdata = os.environ.get("APPDATA", "")
     if appdata:
         _append_candidate(
             candidates,
+            seen,
             "npm_bin_exe",
             str(Path(appdata) / "npm" / "bin" / "jules.exe"),
             str(Path(appdata) / "npm" / "bin" / "jules.exe"),
         )
         _append_candidate(
             candidates,
+            seen,
             "npm_cmd",
             str(Path(appdata) / "npm" / "jules.cmd"),
             str(Path(appdata) / "npm" / "jules.cmd"),
@@ -1952,6 +1955,7 @@ def _candidate_jules_commands(command: str) -> list[dict]:
     if temp_dir:
         _append_candidate(
             candidates,
+            seen,
             "temp_exe",
             str(Path(temp_dir) / "jules_tmp" / "jules.exe"),
             str(Path(temp_dir) / "jules_tmp" / "jules.exe"),
@@ -1959,10 +1963,11 @@ def _candidate_jules_commands(command: str) -> list[dict]:
     return candidates
 
 
-def _append_candidate(candidates: list[dict], label: str, requested: str, resolved: str) -> None:
+def _append_candidate(candidates: list[dict], seen: set, label: str, requested: str, resolved: str) -> None:
     key = str(resolved).lower()
-    if any(item.get("resolved", "").lower() == key for item in candidates):
+    if key in seen:
         return
+    seen.add(key)
     candidates.append({
         "label": label,
         "requested": requested,
