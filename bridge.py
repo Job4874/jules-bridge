@@ -221,6 +221,33 @@ def bool_field(data, key, default=MISSING):
     return value
 
 
+def query_int_field(key, default, min_value=None, max_value=None):
+    value = request.args.get(key)
+    if value is None:
+        return default
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be an integer") from None
+    if min_value is not None and parsed < min_value:
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be >= {min_value}")
+    if max_value is not None and parsed > max_value:
+        raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be <= {max_value}")
+    return parsed
+
+
+def query_bool_field(key, default):
+    value = request.args.get(key)
+    if value is None:
+        return default
+    lowered = value.strip().lower()
+    if lowered in ("1", "true", "yes", "on"):
+        return True
+    if lowered in ("0", "false", "no", "off"):
+        return False
+    raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a boolean")
+
+
 def string_list_field(data, key, default=None, control_safe=False):
     if key not in data or data.get(key) is None:
         return list(default or [])
@@ -443,6 +470,7 @@ TENTACLES = [
     {"name": "akc_build",        "route": "POST /akc/context",              "reach": "Build source-backed AKC checkpoint from explicit transcript/context files"},  # pylint: disable=line-too-long
     {"name": "akc_readiness",    "route": "GET /akc/readiness",             "reach": "Verify AKC checkpoint readiness before session start"},  # pylint: disable=line-too-long
     {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},  # pylint: disable=line-too-long
+    {"name": "repo_context_guard", "route": "GET /repo/context-guard",       "reach": "Protected Git repo inventory with port/node/dependency collision guardrails"},  # pylint: disable=line-too-long
     # Dashboard + Chat routes
     {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
     {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},  # pylint: disable=line-too-long
@@ -1848,6 +1876,24 @@ def akc_subagents_post():
     )
     status = 400 if result.get("error") else 200
     return jsonify(dict(result)), status
+
+
+# ---------------------------------------------------------------------------
+# Repository context guard
+# ---------------------------------------------------------------------------
+
+@app.route("/repo/context-guard", methods=["GET"])
+@route_errors
+def repo_context_guard():
+    """GET /repo/context-guard - Git repo inventory and collision guardrails."""
+    result = modules.build_repo_context_guard(
+        roots=request.args.getlist("root") or None,
+        max_depth=query_int_field("max_depth", 4, min_value=0, max_value=12),
+        max_repos=query_int_field("max_repos", 100, min_value=1, max_value=500),
+        include_repos=query_bool_field("include_repos", True),
+        use_cache=query_bool_field("use_cache", True),
+    )
+    return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
 
 
 # ---------------------------------------------------------------------------

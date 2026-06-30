@@ -2075,6 +2075,24 @@ def _candidate_jules_commands(command: str) -> list[dict]:
     raw = (command or "").strip() or "jules"
     resolved = shutil.which(raw) or raw
     _append_candidate(candidates, seen, "requested", raw, resolved)
+    explicit = os.environ.get("JULES_CLI_PATH", "").strip()
+    if explicit:
+        _append_candidate(candidates, seen, "env_cli", explicit, explicit)
+    for npm_prefix in _npm_prefix_candidates():
+        _append_candidate(
+            candidates,
+            seen,
+            "npm_bin_exe",
+            str(npm_prefix / "bin" / "jules.exe"),
+            str(npm_prefix / "bin" / "jules.exe"),
+        )
+        _append_candidate(
+            candidates,
+            seen,
+            "npm_prefix_cmd",
+            str(npm_prefix / "jules.cmd"),
+            str(npm_prefix / "jules.cmd"),
+        )
     appdata = os.environ.get("APPDATA", "")
     if appdata:
         _append_candidate(
@@ -2103,6 +2121,25 @@ def _candidate_jules_commands(command: str) -> list[dict]:
     return candidates
 
 
+def _npm_prefix_candidates() -> list[Path]:
+    candidates = []
+    seen = set()
+    for raw in (
+        os.environ.get("npm_config_prefix", ""),
+        str(Path.home() / ".npm-packages"),
+        str(Path(os.environ.get("USERPROFILE", "")) / ".npm-packages") if os.environ.get("USERPROFILE") else "",
+    ):
+        if not raw:
+            continue
+        path = Path(raw)
+        key = str(path).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        candidates.append(path)
+    return candidates
+
+
 def _append_candidate(candidates: list[dict], seen: set, label: str, requested: str, resolved: str) -> None:
     key = str(resolved).lower()
     if key in seen:
@@ -2117,7 +2154,7 @@ def _append_candidate(candidates: list[dict], seen: set, label: str, requested: 
 
 
 def _preferred_jules_command(candidates: list[dict], fallback: str) -> str:
-    for label in ("npm_bin_exe", "temp_exe", "requested", "npm_cmd"):
+    for label in ("env_cli", "npm_bin_exe", "temp_exe", "requested", "npm_cmd", "npm_prefix_cmd"):
         for candidate in candidates:
             if candidate.get("label") == label and candidate.get("exists"):
                 return str(candidate.get("resolved"))

@@ -253,3 +253,13 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Live smoke on `http://127.0.0.1:5000`: `/health` OK, `/health/deep` OK with `keyless_mode=False`, `/jules/preflight` ready with `rest_api=True`, `/jules/api/sources` OK with target source present, `/jules/api/sessions/list` OK with 5 sessions returned. No new remote Jules session was created during smoke.
 - Evidence hash recorded through `/retrospective/record_evidence`: `aec621dd9213862d8b20486cad0a6d68e88d7c494ac6c57788262927eb03f5e6`.
 
+## Session 20260630T194436 - Jules CLI NPM Prefix Fix
+
+- Fixed CLI resolution drift for Windows/npm installs where `jules.cmd` can point at a missing temp binary while `C:\Users\abdul\.npm-packages\bin\jules.exe` works.
+- `modules/jules_orchestrator.py` now prefers `JULES_CLI_PATH`, direct npm-prefix `bin\jules.exe`, and the user `.npm-packages` direct binary before falling back to shims.
+- Added `Open-JulesCLI.cmd` to launch Jules from the `jules-bridge` repo root instead of inheriting `C:\WINDOWS\system32`.
+- Updated `scripts/setup-jules.ps1` verification to use direct `jules.exe` when present.
+- Repaired adjacent chat-service no-key behavior discovered by full-suite verification.
+- Sensitive key material was not saved; pasted API/token material should be rotated outside the repo.
+- Verification: direct `jules.exe version` OK, preflight remote status OK, `Open-JulesCLI.cmd version` OK, PowerShell parser OK, and `python -m pytest tests/ -v` passed 416 tests.
+

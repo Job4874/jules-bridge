@@ -16,6 +16,7 @@ def disable_session_cache(monkeypatch):
     monkeypatch.setenv("JULES_SESSION_CACHE_TTL_S", "0")
 
 from modules.jules_orchestrator import (
+    _resolve_cli_command,
     _run_cli_command,
     build_cot_ledger,
     build_dispatch,
@@ -532,6 +533,22 @@ def test_list_remote_sessions_dry_run_does_not_call_cli():
 
     mock_run.assert_not_called()
     assert result["dry_run"] is True
+
+
+def test_resolve_cli_prefers_npm_prefix_direct_exe_over_broken_shim(tmp_path, monkeypatch):
+    npm_prefix = tmp_path / "npm-prefix"
+    npm_bin = npm_prefix / "bin"
+    npm_bin.mkdir(parents=True)
+    direct_exe = npm_bin / "jules.exe"
+    shim = npm_prefix / "jules.cmd"
+    direct_exe.write_text("", encoding="utf-8")
+    shim.write_text("@echo off\nexit /b 1\n", encoding="utf-8")
+    monkeypatch.setenv("npm_config_prefix", str(npm_prefix))
+
+    with patch("modules.jules_orchestrator.shutil.which", return_value=str(shim)):
+        resolved = _resolve_cli_command("jules")
+
+    assert resolved == str(direct_exe)
 
 
 @patch.dict(os.environ, {"JULES_USE_REST_API": "1", "JULES_API_KEY": "secret"}, clear=False)

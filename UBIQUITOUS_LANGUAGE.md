@@ -121,6 +121,19 @@
 
 ---
 
+## Bounded Context: Repo Context Guard
+
+| Term | Definition | Module | Synonyms to Avoid |
+| ------ | ----------- | -------- | ------------------- |
+| **Repo context guard** | Bounded Git repo inventory and collision detector used before orchestration work crosses project boundaries | `modules/repo_context_guard.py` | "repo scanner", "project list" |
+| **Repo provenance label** | Stable repo identity composed from name plus path-derived `path_ref`, branch, and redacted remote URL | `modules/repo_context_guard.py` | "folder name", "project name" |
+| **Collision** | A shared remote, repo name, package name, port, node ref, workspace dependency, or local dependency crossing repo roots | `modules/repo_context_guard.py` | "warning", "duplicate" |
+| **Port collision** | Two or more repos claiming the same detected service port | `modules/repo_context_guard.py` | "server conflict" |
+| **Node ref collision** | Two or more repos pointing at the same non-secret host, IP, VM, worker, or server env reference | `modules/repo_context_guard.py` | "machine conflict" |
+| **Local dependency coupling** | A `file:`, `link:`, or workspace dependency that binds one repo to another local repo | `modules/repo_context_guard.py` | "shared package" |
+
+---
+
 ## Anti-Patterns (Terms to Never Use)
 
 | Wrong Term | Correct Term | Why |

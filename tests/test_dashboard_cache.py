@@ -9,7 +9,8 @@ def test_dashboard_cache_logic(monkeypatch):
          patch('modules.dashboard_module.detect_resource_pressure', return_value={}), \
          patch('modules.dashboard_module._fleet_status', return_value={}), \
          patch('modules.dashboard_module._vm_info', return_value={'vms': [], 'total': 0, 'online': 0}), \
-         patch('modules.dashboard_module._tail_log', return_value=[]):
+         patch('modules.dashboard_module._tail_log', return_value=[]), \
+         patch('modules.dashboard_module.build_repo_context_guard', return_value={'status': 'ready', 'summary': {}, 'collisions': [], 'guardrails': []}):
 
         monkeypatch.setenv('DASHBOARD_CACHE_TTL_S', '2')
 

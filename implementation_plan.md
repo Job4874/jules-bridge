@@ -114,3 +114,37 @@ Jules CLI when REST API credentials are configured.
 - `JULES_API_BASE_URL`: Optional override, default
   `https://jules.googleapis.com/v1alpha`.
 - `JULES_STARTING_BRANCH`: Optional default branch for created sessions.
+
+# Repo Context Guard Dashboard Slice Plan
+
+## Goal
+
+Make the first production-grade dashboard upgrade source-of-truth aware: the
+bridge must know which Git repos are present, what provenance labels identify
+them, and where ports, server nodes, or local dependencies collide before Jules
+or Codex agents are dispatched.
+
+## Scope
+
+1. Add `modules/repo_context_guard.py` as a deep module with one public
+   function: `build_repo_context_guard(...)`.
+2. Add protected `GET /repo/context-guard` for full repo inventory and collision
+   inspection.
+3. Add compact `repo_context` status into `GET /dashboard/status` so the
+   dashboard can show counts and top collisions without polling a full scan.
+4. Add a dashboard panel for repo count, collision count, warning count, cache
+   age, and top collision rows.
+5. Record gotchas for secret handling, port extraction, scan caching, and
+   no-slop collision review.
+
+## Guardrails
+
+- Public module functions never raise.
+- Env secret values are never returned; only key names/readiness can surface.
+- Full repo details require the protected route; the dashboard status endpoint
+  remains compact.
+- Repo scans are bounded by `max_depth`, `max_repos`, and
+  `REPO_CONTEXT_GUARD_CACHE_TTL_S`.
+- `port_collision`, `node_ref_collision`, and
+  `local_dependency_cross_project` are the warnings to inspect before sharing
+  servers, nodes, or dependencies across projects.

@@ -19,7 +19,10 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 │   ├── reasoning_module.py ← HRM-inspired H/L/ACT hierarchical reasoning
 │   ├── retrospective_module.py ← Log analysis, memory writes, test evidence
 │   ├── jules_orchestrator.py ← Jules task packets, launch state, remote session checks
-│   └── akc_module.py       ← Agent Knowledge Context checkpoints from source files
+│   ├── akc_module.py       ← Agent Knowledge Context checkpoints from source files
+│   ├── context_orchestrator.py ← Source capsule and no-slop subagent packet planning
+│   ├── repo_context_guard.py ← Git repo inventory plus port/node/dependency collision guardrails
+│   └── dashboard_module.py ← Compact live status aggregator for the browser dashboard
 ├── memory/                 ← Per-domain markdown memory files
 │   ├── general.md          ← General harness learnings
 │   ├── oracle.md           ← Oracle V5 / Quantower specific
@@ -61,6 +64,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/reasoning/` | reasoning_module | H/L/ACT reasoning (Gemini or stub) |
 | `/retrospective/` | retrospective_module | Log analysis + memory + pruning |
 | `/akc/` | akc_module | Agent Knowledge Context source inventory, checkpoint loading, and readiness gating |
+| `/repo/` | repo_context_guard | Protected Git repo inventory, provenance labels, and collision guardrails |
 | `/notify/` | notify_email | Email notifications |
 | `/chat` | chat_service | Multi-provider chat and provider diagnostics |
 
@@ -75,6 +79,7 @@ Every module has a **simple typed interface** hiding complex implementation:
 - `analyze_session()` → one call reads logs, detects patterns, writes memory (hides regex, file I/O, pattern matching)
 - `build_akc_context(source_paths)` → one call reads sources, masks paths, hashes files, extracts operating rules, and writes a checkpoint
 - `check_akc_readiness()` → one call verifies the checkpoint exists, is `ready`, and contains required operating rules before session start
+- `build_repo_context_guard()` → one call scans bounded roots for Git repos, ports, node refs, and local dependency coupling without returning secret values
 - `boot_secondary_vm(script_name)` → one call validates allowlisted VM boot scripts and defaults to dry-run
 - `chat(message)` → one call handles provider payloads, Gemini/OpenRouter fallback, timing, and secret-redacted errors
 
@@ -113,6 +118,26 @@ Every module has a **simple typed interface** hiding complex implementation:
   `jules new`.
 - Keep this distinct from `/jules/dispatch`: AKC subagents handle source
   context, Jules dispatch handles executable Jules task cards.
+
+### Repository Context Guard
+
+- `modules/repo_context_guard.py` scans bounded roots for Git repositories and
+  emits repo provenance labels, remote URLs with credentials redacted, branch,
+  package metadata, env key names, ports, node refs, and local dependency refs.
+- `GET /repo/context-guard` is protected and returns the full inventory when
+  authenticated. Query parameters include `root`, `max_depth`, `max_repos`,
+  `include_repos`, and `use_cache`.
+- `GET /dashboard/status` includes only a compact `repo_context` snapshot:
+  status, summary counts, top collisions, guardrails, and cache age. It omits
+  repo sample names and full inventory details because dashboard status is not
+  bearer-authenticated.
+- Collision types include `remote_duplicate`, `repo_name_duplicate`,
+  `package_name_duplicate`, `port_collision`, `node_ref_collision`,
+  `workspace_dependency`, `local_dependency_cross_project`, and
+  `dependency_version_drift`.
+- This guard is advisory context memory for orchestration. It prevents sloppy
+  project mixing by making collisions visible before dispatching agents or
+  reusing ports/nodes/dependencies.
 
 ### Jules Dispatch
 

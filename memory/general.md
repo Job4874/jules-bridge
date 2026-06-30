@@ -373,3 +373,13 @@ has gone wrong before and what to avoid.
 - Tests must isolate local `.env` REST mode. `tests/conftest.py::isolate_jules_rest_env` clears Jules REST env vars by default so unit tests keep deterministic CLI assumptions unless a test explicitly patches REST env.
 - Verification: `python -m pytest tests/ -q` passed 415 tests; live bridge smoke showed `/health`, `/health/deep`, `/jules/preflight`, `/jules/api/sources`, and `/jules/api/sessions/list` OK. Evidence hash `aec621dd9213862d8b20486cad0a6d68e88d7c494ac6c57788262927eb03f5e6`.
 
+## Session 20260630T194436 - Jules CLI NPM Prefix Fix (416 tests passing)
+
+- Resolved Jules CLI launch/path drift where a fresh Windows PowerShell opened the Jules UI from `C:\WINDOWS\system32` and grouped sessions under `unknown/unknown`.
+- Root cause: npm global prefix is `C:\Users\abdul\.npm-packages`; direct `C:\Users\abdul\.npm-packages\bin\jules.exe` works, while generated `jules.cmd` can fail by spawning a missing temp `jules.exe`.
+- `modules.jules_orchestrator._resolve_cli_command("jules")` now discovers `JULES_CLI_PATH`, `npm_config_prefix`, and the user `.npm-packages` prefix, then prefers direct `jules.exe` over npm shims.
+- `scripts/setup-jules.ps1` verifies through direct `jules.exe` when present, and `Open-JulesCLI.cmd` starts Jules from the repo root while bypassing the broken shim.
+- Chat provider health now treats missing `GEMINI_API_KEY` and `OPENROUTER_API_KEY` as `no_key` instead of healthy bypass mode; `chat(...)` returns the stable offline response when no provider key is configured.
+- Sensitive key material was not stored in repo memory. Any API key or token fragment pasted in chat should be rotated outside the repo.
+- Verification: direct `jules.exe version` returned v0.1.42; `jules_preflight(check_remote=True)` returned `ready=true` with remote status `ok`; `cmd /c Open-JulesCLI.cmd version` worked; PowerShell parser check passed; `python -m pytest tests/ -q` and `python -m pytest tests/ -v` both passed 416 tests.
+

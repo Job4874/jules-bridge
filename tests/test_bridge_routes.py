@@ -1015,6 +1015,42 @@ class TestAppLauncherRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()["error"], "Invalid input")
 
 
+class TestRepoContextGuardRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.build_repo_context_guard")
+    def test_repo_context_guard_delegates_to_module(self, mock_guard):
+        mock_guard.return_value = {
+            "status": "ready",
+            "summary": {"repo_count": 1, "collision_count": 0},
+            "repos": [{"name": "jules-bridge"}],
+            "collisions": [],
+            "guardrails": [],
+        }
+
+        response = self.client.get(
+            "/repo/context-guard?root=C:/repos&max_depth=2&max_repos=25&include_repos=false&use_cache=false"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "ready")
+        mock_guard.assert_called_once_with(
+            roots=["C:/repos"],
+            max_depth=2,
+            max_repos=25,
+            include_repos=False,
+            use_cache=False,
+        )
+
+    def test_repo_context_guard_rejects_bad_query(self):
+        response = self.client.get("/repo/context-guard?max_depth=deep")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+
 class TestVMRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
