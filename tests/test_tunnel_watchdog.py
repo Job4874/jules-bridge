@@ -60,14 +60,15 @@ def test_reconnect_failure_escalation(mock_subrun, mock_ngrok, mock_urlopen, wat
     mock_urlopen.side_effect = OSError("Connection refused")
     mock_ngrok.connect.side_effect = Exception("ngrok error")
 
-    # Trigger 3 reconnect failures by checking 5 times.
+    # Trigger 4 reconnect failures by checking 6 times.
     # 1st, 2nd, 3rd check -> ping fails -> consecutive=3 -> reconnect fails (reconnect_fails=1)
     # 4th check -> ping fails -> consecutive=4 -> reconnect fails (reconnect_fails=2)
     # 5th check -> ping fails -> consecutive=5 -> reconnect fails (reconnect_fails=3, escalated!)
-    for _ in range(5):
+    # 6th check -> ping fails -> consecutive=6 -> reconnect fails (reconnect_fails=4, should NOT escalate again)
+    for _ in range(6):
         watchdog_fixture.check_tunnel()
 
-    assert watchdog_fixture.reconnect_failures == 3
+    assert watchdog_fixture.reconnect_failures == 4
 
     blocker_file = tmp_path / "TUNNEL_BLOCKER.md"
     assert blocker_file.exists()

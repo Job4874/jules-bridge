@@ -169,7 +169,7 @@ class TunnelWatchdog:
                 self.reconnect_failures += 1
                 log(f"Watchdog reconnect failed: {e}")
 
-            if self.reconnect_failures >= 3:
+            if self.reconnect_failures == 3:
                 self.escalate_offline()
 
     def escalate_offline(self):
