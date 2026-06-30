@@ -3,23 +3,20 @@
 - instance_index: 4
 - status: unknown
 - task_type: antigravity
-- source: C:\Users\abdul\.jules\jules_inbox\antigravity_offload_queue.txt
+- source: C:\Users\abdul\jules-bridge\jules_inbox\antigravity_offload_queue.txt
 - fingerprint: 59ae6d4b9eb4
 - repo_path: C:\aotp\projects\OracleV5
 
 ## Objective
-
 Execute this Antigravity Codex handover prompt: CODEX DECOUPLE QUANTOWER AND BUILD API FOUNDATION
 
 ## Task Details
-
 - File: C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS\CODEX_DECOUPLE_QUANTOWER_AND_BUILD_API_FOUNDATION.md
 - Issue: Execute Antigravity Codex handover prompt end-to-end
 - Language: markdown
 - Rationale: Offload large Codex handover work to Jules remote workers.
 
 ## Operating Rules
-
 - Work on one card only; do not opportunistically refactor unrelated code.
 - Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.
 - Preserve existing behavior unless the card explicitly asks for behavior change.
@@ -29,9 +26,7 @@ Execute this Antigravity Codex handover prompt: CODEX DECOUPLE QUANTOWER AND BUI
 - If blocked, write the blocker, attempted evidence, and the exact next question.
 
 ## Completion report
-
 Write a short report with:
-
 - what changed
 - verification performed
 - files touched
@@ -39,7 +34,6 @@ Write a short report with:
 - next action or blocker
 
 ## Raw Card Excerpt
-
 ```text
 # Codex Directive — Disconnect Quantower and Establish the TIBIN API Boundary
 
@@ -210,5 +204,4 @@ QUANTOWER DECOUPLING AND API FOUNDATION REPORT
 
 Stop after this phase.
 ```
-
 ```

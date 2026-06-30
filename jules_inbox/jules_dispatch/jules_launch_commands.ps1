@@ -4,7 +4,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-002-6b1194-codex-master-handover-prompt.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-004-1e0abd-codex-phase1-stabilization-prompt.md' | jules new; Pop-Location
-Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md' | jules new; Pop-Location
+Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\jules-bridge\jules_inbox\jules_dispatch\JT-002-6b1194-codex-master-handover-prompt.md' | jules new; Pop-Location
+Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\jules-bridge\jules_inbox\jules_dispatch\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md' | jules new; Pop-Location
+Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\jules-bridge\jules_inbox\jules_dispatch\JT-004-1e0abd-codex-phase1-stabilization-prompt.md' | jules new; Pop-Location
+Push-Location 'C:\aotp\projects\OracleV5'; Get-Content -Raw -LiteralPath 'C:\Users\abdul\jules-bridge\jules_inbox\jules_dispatch\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md' | jules new; Pop-Location
