@@ -168,3 +168,82 @@ class TestCodexHandoverIndex(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+class TestOracleBuildDeploy(unittest.TestCase):
+    def setUp(self):
+        from modules import oracle_session
+        self.os_mod = oracle_session
+
+    @patch("modules.oracle_session.subprocess.run")
+    @patch("modules.oracle_session._run_ps")
+    @patch("modules.oracle_session.oracle_status")
+    @patch("modules.oracle_session._parse_verify")
+    def test_oracle_build_deploy_success(self, mock_parse_verify, mock_oracle_status, mock_run_ps, mock_subprocess_run):
+        # Setup mocks
+        class MockProcess:
+            returncode = 0
+            stdout = "Build succeeded\n1 Warning(s)\n0 Error(s)"
+            stderr = ""
+        mock_subprocess_run.return_value = MockProcess()
+
+        # _run_ps is called twice: once for deploy, once for verify
+        mock_run_ps.side_effect = [
+            {"code": 0, "stdout": "Deployed", "stderr": ""}, # Deploy
+            {"code": 0, "stdout": "Verified", "stderr": ""}  # Verify
+        ]
+
+        mock_parse_verify.return_value = [{"check": "summary", "ok": True}]
+        mock_oracle_status.return_value = {"blockers": [], "gates": {}, "next_actions": []}
+
+        # Execute
+        result = self.os_mod.oracle_build_deploy()
+
+        # Assert build
+        self.assertEqual(result["build"]["code"], 0)
+        self.assertIn("Build succeeded", result["build"]["stdout_tail"][0])
+        self.assertEqual(result["build"]["stderr_tail"], [])
+
+        # Assert deploy
+        self.assertEqual(result["deploy"]["code"], 0)
+        self.assertEqual(result["deploy"]["stdout"], "Deployed")
+
+        # Assert verify
+        self.assertEqual(result["verify"]["code"], 0)
+        self.assertEqual(result["verify"]["checks"][0]["check"], "summary")
+        self.assertTrue(result["verify"]["checks"][0]["ok"])
+
+        # Assert status
+        self.assertEqual(result["status"]["blockers"], [])
+
+        # Verify calls
+        mock_subprocess_run.assert_called_once()
+        self.assertEqual(mock_run_ps.call_count, 2)
+        mock_parse_verify.assert_called_once_with("Verified")
+        mock_oracle_status.assert_called_once()
+
+
+    @patch("modules.oracle_session.subprocess.run")
+    @patch("modules.oracle_session._run_ps")
+    @patch("modules.oracle_session.oracle_status")
+    @patch("modules.oracle_session._parse_verify")
+    def test_oracle_build_deploy_build_failure(self, mock_parse_verify, mock_oracle_status, mock_run_ps, mock_subprocess_run):
+         # Setup mocks for a build failure
+        class MockProcess:
+            returncode = 1
+            stdout = "Build FAILED."
+            stderr = "Error: Some build error"
+        mock_subprocess_run.return_value = MockProcess()
+
+        mock_run_ps.side_effect = [
+            {"code": 0, "stdout": "Deployed", "stderr": ""},
+            {"code": 0, "stdout": "Verified", "stderr": ""}
+        ]
+
+        mock_parse_verify.return_value = [{"check": "summary", "ok": True}]
+        mock_oracle_status.return_value = {"blockers": [], "gates": {}, "next_actions": []}
+
+        # Execute
+        result = self.os_mod.oracle_build_deploy()
+
+        # Assert build failure is propagated
+        self.assertEqual(result["build"]["code"], 1)
+        self.assertEqual(result["build"]["stderr_tail"][0], "Error: Some build error")
