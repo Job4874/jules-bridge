@@ -241,6 +241,12 @@ def path_field(data, key="path", default=MISSING):
     return string_field(data, key, default=default, control_safe=True)
 
 
+@app.before_request
+def _circuit_breaker_check():
+    from modules.circuit_breaker import circuit_breaker_hook
+    return circuit_breaker_hook()
+
+
 def existing_path(path, kind="file"):
     if not os.path.exists(path):
         raise BridgeHTTPError(404, "Resource not found", path=path)
@@ -655,6 +661,7 @@ def jules_sessions():
         jules_command=string_field(data, "jules_command", default="jules"),
         timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=300),
         dry_run=bool_field(data, "dry_run", default=True),
+        bypass_cache=bool_field(data, "bypass_cache", default=False),
     )
     return jsonify(dict(result))
 
@@ -976,13 +983,26 @@ def run_shell():
     cwd = path_field(data, "cwd", default=os.getcwd())
     timeout = int_field(data, "timeout", default=30, min_value=1)
     stdin = string_field(data, "stdin", default=None, allow_empty=True)
+    bypass_cache = bool_field(data, "bypass_cache", default=False)
 
     if cwd:
         existing_path(cwd, kind="directory")
 
-    LOGGER.info("[JULES SHELL] shell=%s cwd=%s command=%s", shell_name, cwd, command)
-    result = modules.execute(command, shell=shell_name, cwd=cwd, timeout=timeout, stdin=stdin)
-    return jsonify(dict(result))
+    LOGGER.info("[JULES SHELL] shell=%s cwd=%s command=%s bypass_cache=%s", shell_name, cwd, command, bypass_cache)
+    try:
+        result = modules.execute(command, shell=shell_name, cwd=cwd, timeout=timeout, stdin=stdin, bypass_cache=bypass_cache)
+        return jsonify(dict(result))
+    except subprocess.TimeoutExpired as exc:
+        LOGGER.warning("[JULES SHELL] command timed out: %s", command)
+        return jsonify({
+            "error": "command timed out",
+            "exit_code": 1,
+            "code": 1,
+            "stdout": (exc.stdout.decode("utf-8", "replace") if isinstance(exc.stdout, bytes) else str(exc.stdout or "")),
+            "stderr": (exc.stderr.decode("utf-8", "replace") if isinstance(exc.stderr, bytes) else str(exc.stderr or "")),
+            "shell": shell_name,
+            "timed_out": True
+        }), 504
 
 
 # — Filesystem routes —

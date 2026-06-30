@@ -1,6 +1,6 @@
 # Ticket 008 — Shell & Jules Route Performance Hardening
 
-Status: OPEN
+Status: DONE
 
 ## Priority: HIGH
 

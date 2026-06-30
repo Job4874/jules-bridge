@@ -56,6 +56,8 @@
 - [x] `doc/tickets/005_analyze_baseline.md` — `POST /retrospective/analyze` seeded real `bridge.log` learnings into `memory/general.md` and `memory/oracle.md`; evidence `d8a29098bcb0195ae05c03f940372e2b2e59b92337fa001122047b58e0f220a0`
 - [x] `doc/tickets/003_harden_evidence_gating.md` — stale `/oracle/*` evidence can preempt route execution with HTTP 423 when `EVIDENCE_GATE_HARD=1`; evidence `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`
 - [x] `doc/tickets/004_auto_prune_memory.md` — `POST /retrospective/analyze` accepts boolean `auto_prune` and prunes stale memory after writing current learnings; evidence `5d7d1c9aadc8489d9671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1d4`
+- [x] `doc/tickets/007_dashboard_circuit_breaker.md` — implemented per-route circuit breaker in `modules/circuit_breaker.py` and `bridge.py`; evidence `7815340f7b57e74213799671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1`
+- [x] `doc/tickets/008_shell_route_performance.md` — implemented TTL-based caching for `/shell`, `/jules/sessions`, and `/dashboard/status` with `bypass_cache` support; evidence `7815340f7b57e74213799671be5c5487dfdbf70183a8547e9ca40a8ac5536f31b1`
 
 ## Phase 6 — Ralph Loop Infrastructure ✅ (Just Added)
 
