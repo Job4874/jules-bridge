@@ -16,6 +16,7 @@ import os
 import re
 import subprocess
 import sys
+from typing import Any
 from collections import deque
 from datetime import datetime, timezone
 from functools import wraps
@@ -68,9 +69,16 @@ LOGGER = logging.getLogger("jules_bridge")
 # ---------------------------------------------------------------------------
 
 app = Flask(__name__)
-CORS(app)
+ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5000,http://127.0.0.1:5000"
+).split(",")
 
-BRIDGE_TOKEN = "JULES-SECURE-999"
+CORS(app, origins=ALLOWED_ORIGINS)
+
+BRIDGE_TOKEN = os.environ.get("BRIDGE_TOKEN")
+if not BRIDGE_TOKEN:
+    raise ValueError("BRIDGE_TOKEN environment variable is missing")
 
 
 @app.before_request
@@ -1773,7 +1781,7 @@ def chat_test():
 
 @app.route("/chat", methods=["POST"])
 @route_errors
-def chat():
+def chat() -> Any:
     """POST /chat — send a message (+ optional screenshot) to Jules.
 
     Body (JSON):
@@ -1784,6 +1792,7 @@ def chat():
         history (list, optional): prior turns [{"role": "user"|"assistant", "content": "..."}]
     """
     data = json_payload()
+    LOGGER.debug("[CHAT] Processing payload with keys: %s", list(data.keys()))
     message = string_field(data, "message", allow_empty=False)
     model_alias = string_field(data, "model", default="fast", allow_empty=False)
     system_prompt = string_field(data, "system", default="", allow_empty=True)
@@ -1810,6 +1819,6 @@ if __name__ == "__main__":
     LOGGER.info("JULES GOD-MODE BRIDGE ACTIVATED")
     LOGGER.info("Listening on 0.0.0.0:5000")
     LOGGER.info("Log path: %s", LOG_PATH)
-    LOGGER.info("Token auth: ENABLED (Bearer JULES-SECURE-999)")
+    LOGGER.info("Token auth: ENABLED")
     LOGGER.info("========================================")
     app.run(port=5000, host="0.0.0.0")

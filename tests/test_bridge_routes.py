@@ -1,3 +1,5 @@
+import os
+os.environ["BRIDGE_TOKEN"] = "JULES-SECURE-999"
 """Integration tests for bridge.py HTTP routes.
 
 These test the HTTP surface — validate → call module → JSON response.
