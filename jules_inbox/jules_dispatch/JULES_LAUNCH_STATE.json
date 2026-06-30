@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-30T18:34:38.395805+00:00",
+  "generated_at_utc": "2026-06-30T18:44:00.302905+00:00",
   "dry_run": false,
   "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
   "selected_count": 4,
@@ -7,6 +7,7 @@
   "timeout_count": 0,
   "jules_command": "jules",
   "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "rest_api": true,
   "repo_path": "C:\\aotp\\projects\\OracleV5",
   "results": [
     {
@@ -19,11 +20,11 @@
       "repo_path": "C:\\aotp\\projects\\OracleV5",
       "status": "launched",
       "exit_code": 0,
-      "stdout": "11847292096100569266  Planning  0s ago  JT-002-6b1194-codex-master-handover-prompt",
+      "stdout": "1350802469136779091  Planning  0s ago  JT-002-6b1194-codex-master-handover-prompt",
       "stderr": "",
       "timed_out": false,
       "session_ids": [
-        "11847292096100569266"
+        "1350802469136779091"
       ],
       "transport": "rest"
     },
@@ -37,11 +38,11 @@
       "repo_path": "C:\\aotp\\projects\\OracleV5",
       "status": "launched",
       "exit_code": 0,
-      "stdout": "4422295034306055481  Planning  0s ago  JT-003-aab6ea-codex-phase0-repository-archaeology-prompt",
+      "stdout": "12191767466353160942  Planning  0s ago  JT-003-aab6ea-codex-phase0-repository-archaeology-prompt",
       "stderr": "",
       "timed_out": false,
       "session_ids": [
-        "4422295034306055481"
+        "12191767466353160942"
       ],
       "transport": "rest"
     },
@@ -73,11 +74,11 @@
       "repo_path": "C:\\aotp\\projects\\OracleV5",
       "status": "launched",
       "exit_code": 0,
-      "stdout": "9846266639795693525  Planning  0s ago  JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation",
+      "stdout": "17070279950870586732  Planning  0s ago  JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation",
       "stderr": "",
       "timed_out": false,
       "session_ids": [
-        "9846266639795693525"
+        "17070279950870586732"
       ],
       "transport": "rest"
     }

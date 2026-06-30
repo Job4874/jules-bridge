@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-30T18:33:48.542376+00:00",
+  "generated_at_utc": "2026-06-30T18:44:00.318257+00:00",
   "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
   "launch_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
   "report_dir": "",
@@ -17,7 +17,7 @@
       "packet_id": "JT-002-6b1194",
       "launch_status": "launched",
       "session_ids": [
-        "15416495847535199574"
+        "1350802469136779091"
       ],
       "timed_out": false,
       "exit_code": 0,
@@ -29,7 +29,7 @@
       "packet_id": "JT-003-aab6ea",
       "launch_status": "launched",
       "session_ids": [
-        "9799640680793839774"
+        "12191767466353160942"
       ],
       "timed_out": false,
       "exit_code": 0,
@@ -41,7 +41,7 @@
       "packet_id": "JT-004-1e0abd",
       "launch_status": "launched",
       "session_ids": [
-        "929051437881417972"
+        "3137837830710772283"
       ],
       "timed_out": false,
       "exit_code": 0,
@@ -53,7 +53,7 @@
       "packet_id": "JT-001-59ae6d",
       "launch_status": "launched",
       "session_ids": [
-        "9846266639795693525"
+        "17070279950870586732"
       ],
       "timed_out": false,
       "exit_code": 0,

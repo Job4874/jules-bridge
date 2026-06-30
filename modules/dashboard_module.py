@@ -22,13 +22,12 @@ from modules.vm_manager import detect_resource_pressure
 
 _ROOT = Path(__file__).parent.parent
 _LOG_PATH = _ROOT / "bridge.log"
-_LAUNCH_STATE = _ROOT / "JULES_LAUNCH_STATE.json"
-_COT_LEDGER = _ROOT / "JULES_COT_LEDGER.json"
-_WATCH_STATE = _ROOT / "JULES_WATCH_STATE.json"
+_LAUNCH_STATE = _ROOT / "jules_inbox" / "jules_dispatch" / "JULES_LAUNCH_STATE.json"
+_COT_LEDGER = _ROOT / "jules_inbox" / "jules_dispatch" / "JULES_COT_LEDGER.json"
+_WATCH_STATE = _ROOT / "jules_inbox" / "jules_dispatch" / "JULES_WATCH_STATE.json"
 _ENV_PATH = _ROOT / ".env"
 
 _LOG_TAIL_LINES = 40
-
 
 # ---------------------------------------------------------------------------
 # Helpers

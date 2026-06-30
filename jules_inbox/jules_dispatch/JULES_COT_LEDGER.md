@@ -1,6 +1,6 @@
 # Jules COT Ledger
 
-- generated_at_utc: 2026-06-30T18:33:48.542376+00:00
+- generated_at_utc: 2026-06-30T18:44:00.318257+00:00
 - packet_dir: C:\Users\abdul\jules-bridge\jules_inbox\jules_dispatch
 - launch_state_path: C:\Users\abdul\jules-bridge\jules_inbox\jules_dispatch\JULES_LAUNCH_STATE.json
 - selected_count: 4
@@ -11,9 +11,9 @@
 
 | packet_id | launch_status | session_ids | cot_status | reports |
 |---|---|---|---|---|
-| JT-002-6b1194 | launched | 15416495847535199574 | launched_pending_cot |  |
-| JT-003-aab6ea | launched | 9799640680793839774 | launched_pending_cot |  |
-| JT-004-1e0abd | launched | 929051437881417972 | launched_pending_cot |  |
-| JT-001-59ae6d | launched | 9846266639795693525 | launched_pending_cot |  |
+| JT-002-6b1194 | launched | 1350802469136779091 | launched_pending_cot |  |
+| JT-003-aab6ea | launched | 12191767466353160942 | launched_pending_cot |  |
+| JT-004-1e0abd | launched | 3137837830710772283 | launched_pending_cot |  |
+| JT-001-59ae6d | launched | 17070279950870586732 | launched_pending_cot |  |
 
 COT means completion-of-task evidence summaries, not private chain-of-thought.
