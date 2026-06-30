@@ -74,6 +74,21 @@ def _tail_log(n: int = _LOG_TAIL_LINES) -> list[str]:
         return []
 
 
+def _read_text_with_encoding_fallback(path: Path) -> str:
+    """Read log text written by either Python or PowerShell redirection."""
+    for encoding in ("utf-8", "utf-8-sig", "utf-16"):
+        try:
+            return path.read_text(encoding=encoding)
+        except UnicodeError:
+            continue
+        except OSError:
+            return ""
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
+
+
 def _read_json(path: Path) -> dict | None:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -188,7 +203,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         fleet = _fleet_status()
         cloud = _vm_info(env)
         logs = _tail_log()
-        providers = test_chat_providers(env=env).get("providers", {})
+        providers = test_chat_providers(env=env, probe_vm_chat=False).get("providers", {})
 
         ngrok_url = ""
         tunnel_url = ""
@@ -209,7 +224,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         # 2. Try to discover fallback tunnel from the LocalTunnel process log.
         if not tunnel_url and _LT_LOG_PATH.exists():
             try:
-                lt_content = _LT_LOG_PATH.read_text(encoding="utf-8").strip()
+                lt_content = _read_text_with_encoding_fallback(_LT_LOG_PATH).strip()
                 for line in reversed(lt_content.splitlines()):
                     if "loca.lt" in line:
                         match = re.search(r"https://[a-z0-9\-]+\.loca\.lt", line)

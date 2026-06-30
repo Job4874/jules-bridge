@@ -29,6 +29,36 @@ ChartJS.register(
 const BRIDGE = import.meta.env.VITE_BRIDGE_URL || 'http://127.0.0.1:5000';
 const TOKEN = import.meta.env.VITE_BRIDGE_TOKEN || '';
 
+const DEFAULT_PROVIDERS = {
+  gemini: { status: 'no_key' },
+  openrouter: { status: 'no_key' },
+  vm_worker: { status: 'offline' },
+};
+
+const providerStatus = (providers, key) => providers?.[key]?.status || DEFAULT_PROVIDERS[key]?.status || 'unknown';
+
+const badgeClassFor = (status) => {
+  if (status === 'ok') return 'success';
+  if (status === 'error' || status === 'exception' || status === 'offline') return 'danger';
+  return '';
+};
+
+const labelForStatus = (status) => {
+  if (status === 'ok') return 'OK';
+  if (status === 'no_key') return 'NO_KEY';
+  return String(status || 'unknown').toUpperCase();
+};
+
+const chatRouteLabel = (providers) => {
+  const gemini = providerStatus(providers, 'gemini');
+  const openrouter = providerStatus(providers, 'openrouter');
+  const vmWorker = providerStatus(providers, 'vm_worker');
+  if (gemini === 'ok') return 'ROUTE: GEMINI';
+  if (openrouter === 'ok') return 'ROUTE: OPENROUTER';
+  if (vmWorker === 'ok') return 'ROUTE: VM FALLBACK';
+  return 'ROUTE: OFFLINE';
+};
+
 // Chart common options
 const lineOptions = {
   responsive: true,
@@ -66,7 +96,7 @@ function App() {
     mem: 0,
     fleet: { launched: 0, completed: 0, pending: 0 },
     cloud: { total: 0, online: 0, vms: [] },
-    providers: { gemini: { status: 'no_key' }, openrouter: { status: 'no_key' } },
+    providers: DEFAULT_PROVIDERS,
     logs: []
   });
 
@@ -112,7 +142,7 @@ function App() {
           mem,
           fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },
           cloud,
-          providers: d.providers || { gemini: { status: 'no_key' }, openrouter: { status: 'no_key' } },
+          providers: { ...DEFAULT_PROVIDERS, ...(d.providers || {}) },
           logs: d.recent_logs || []
         });
 
@@ -217,6 +247,11 @@ function App() {
     }
   };
 
+  const geminiStatus = providerStatus(sysStatus.providers, 'gemini');
+  const openrouterStatus = providerStatus(sysStatus.providers, 'openrouter');
+  const vmWorkerStatus = providerStatus(sysStatus.providers, 'vm_worker');
+  const routeLabel = chatRouteLabel(sysStatus.providers);
+
   return (
     <div className="dashboard-container">
       <div className="header">
@@ -231,11 +266,14 @@ function App() {
           <div className={`badge ${sysStatus.tunnel ? 'success' : 'danger'}`}>
             TUNNEL: {sysStatus.tunnel ? 'ACTIVE' : 'OFFLINE'}
           </div>
-          <div className={`badge ${sysStatus.providers.gemini.status === 'ok' ? 'success' : (sysStatus.providers.gemini.status === 'no_key' ? '' : 'danger')}`}>
-            GEMINI: {sysStatus.providers.gemini.status.toUpperCase()}
+          <div className={`badge ${badgeClassFor(geminiStatus)}`}>
+            GEMINI: {labelForStatus(geminiStatus)}
           </div>
-          <div className={`badge ${sysStatus.providers.openrouter.status === 'ok' ? 'success' : (sysStatus.providers.openrouter.status === 'no_key' ? '' : 'danger')}`}>
-            OPENROUTER: {sysStatus.providers.openrouter.status.toUpperCase()}
+          <div className={`badge ${badgeClassFor(openrouterStatus)}`}>
+            OPENROUTER: {labelForStatus(openrouterStatus)}
+          </div>
+          <div className={`badge ${badgeClassFor(vmWorkerStatus)}`}>
+            VM CHAT: {labelForStatus(vmWorkerStatus)}
           </div>
         </div>
       </div>
@@ -403,23 +441,20 @@ function App() {
         <div className="panel right-panel">
           <div className="panel-header">
             <span>Comm Link</span>
-            <select
-              value={model}
-              onChange={e => setModel(e.target.value)}
-              title="Select LLM model"
-              style={{
-                background: 'transparent',
-                color: 'var(--accent-blue)',
-                border: 'none',
-                outline: 'none',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.75rem',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="fast">flash (fast)</option>
-              <option value="smart">pro (smart)</option>
-            </select>
+            <div className="comm-link-controls">
+              <span className={`route-chip ${routeLabel.includes('OFFLINE') ? 'danger' : 'success'}`}>
+                {routeLabel}
+              </span>
+              <select
+                value={model}
+                onChange={e => setModel(e.target.value)}
+                title="Select LLM model"
+                className="model-select"
+              >
+                <option value="fast">flash (fast)</option>
+                <option value="smart">pro (smart)</option>
+              </select>
+            </div>
           </div>
           <div className="panel-content chat-messages" ref={chatBoxRef}>
             {chatHistory.map((m, i) => (

@@ -21,6 +21,13 @@ _OPENROUTER_FAST = "google/gemma-3-27b-it:free"
 _OPENROUTER_SMART = "deepseek/deepseek-r1:free"
 _OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 _VM_CHAT_MODEL = "vm/jules-worker"
+_VM_FAILURE_MARKERS = (
+    "No LLM available",
+    "GEMINI_API_KEY is rate-limited",
+    "OpenRouter free models failed",
+)
+_VM_CHAT_FAILURE_TTL_S = 300
+_LAST_VM_CHAT_FAILURE: dict[str, Any] = {}
 
 
 class ChatHealthResult(dict):
@@ -148,6 +155,30 @@ def _extract_openrouter_text(payload: Any) -> str:
     return str(payload["choices"][0]["message"]["content"])
 
 
+def _vm_response_is_failure(text: str) -> bool:
+    return any(marker in text for marker in _VM_FAILURE_MARKERS)
+
+
+def _remember_vm_chat_failure(error: str) -> None:
+    _LAST_VM_CHAT_FAILURE.clear()
+    _LAST_VM_CHAT_FAILURE.update({"error": error, "ts": time.time()})
+
+
+def _clear_vm_chat_failure() -> None:
+    _LAST_VM_CHAT_FAILURE.clear()
+
+
+def _latest_local_vm_chat_failure() -> str | None:
+    if not _LAST_VM_CHAT_FAILURE:
+        return None
+    ts = float(_LAST_VM_CHAT_FAILURE.get("ts") or 0.0)
+    if time.time() - ts > _VM_CHAT_FAILURE_TTL_S:
+        _LAST_VM_CHAT_FAILURE.clear()
+        return None
+    error = str(_LAST_VM_CHAT_FAILURE.get("error") or "").strip()
+    return error or None
+
+
 def _default_vm_functions() -> tuple[Any, Any]:
     from modules import vm_relay  # pylint: disable=import-outside-toplevel
 
@@ -165,19 +196,90 @@ def _should_use_vm(
     return requests_client is None or vm_send_task is not None or vm_get_status is not None
 
 
-def _vm_worker_status(vm_get_status: Any | None = None) -> dict[str, Any]:
+def _latest_vm_chat_result(status: Mapping[str, Any]) -> tuple[str, str] | None:
+    recent = status.get("recent", [])
+    if not isinstance(recent, Sequence) or isinstance(recent, (str, bytes)):
+        return None
+    for entry in reversed(recent):
+        if not isinstance(entry, Mapping):
+            continue
+        task_text = str(entry.get("task") or "")
+        if "chat-fallback-" not in task_text:
+            continue
+        result = str(entry.get("result") or "").strip()
+        if not result:
+            continue
+        return task_text, result
+    return None
+
+
+def _vm_worker_status(
+    vm_get_status: Any | None = None,
+    vm_send_task: Any | None = None,
+    sleep_func: Any = time.sleep,
+    probe_chat: bool = True,
+    task_attempts: int = 2,
+    poll_attempts: int = 3,
+    poll_interval_s: float = 1.5,
+) -> dict[str, Any]:
     _, status_fn = _default_vm_functions() if vm_get_status is None else (None, vm_get_status)
     status = status_fn()
     if not isinstance(status, Mapping):
         return {"status": "error", "detail": "VM status returned a non-object response"}
-    if status.get("online"):
+    if not status.get("online"):
+        return {"status": "offline", "detail": "VM worker offline"}
+
+    if probe_chat:
+        response, error = _vm_chat_fallback(
+            message="Health probe: reply exactly OK.",
+            system_prompt="You are a health probe. Reply exactly OK.",
+            vm_send_task=vm_send_task,
+            vm_get_status=status_fn,
+            sleep_func=sleep_func,
+            task_attempts=task_attempts,
+            poll_attempts=poll_attempts,
+            poll_interval_s=poll_interval_s,
+        )
+        if response:
+            return {
+                "status": "ok",
+                "model": _VM_CHAT_MODEL,
+                "detail": "VM chat probe succeeded",
+                "tasks_completed": status.get("tasks_completed"),
+            }
         return {
-            "status": "ok",
+            "status": "error",
             "model": _VM_CHAT_MODEL,
-            "detail": "VM worker online; chat fallback available",
+            "detail": error or "VM chat probe failed",
             "tasks_completed": status.get("tasks_completed"),
         }
-    return {"status": "offline", "detail": "VM worker offline"}
+
+    local_failure = _latest_local_vm_chat_failure()
+    if local_failure:
+        return {
+            "status": "error",
+            "model": _VM_CHAT_MODEL,
+            "detail": f"VM worker online but latest local chat fallback failed: {local_failure}",
+            "tasks_completed": status.get("tasks_completed"),
+        }
+
+    latest_chat = _latest_vm_chat_result(status)
+    if latest_chat is not None:
+        _, result = latest_chat
+        if _vm_response_is_failure(result):
+            return {
+                "status": "error",
+                "model": _VM_CHAT_MODEL,
+                "detail": "VM worker online but latest chat fallback reported provider quota/key failure",
+                "tasks_completed": status.get("tasks_completed"),
+            }
+
+    return {
+        "status": "ok",
+        "model": _VM_CHAT_MODEL,
+        "detail": "VM worker online; latest chat fallback is not failing",
+        "tasks_completed": status.get("tasks_completed"),
+    }
 
 
 def _vm_chat_fallback(
@@ -186,6 +288,7 @@ def _vm_chat_fallback(
     vm_send_task: Any | None = None,
     vm_get_status: Any | None = None,
     sleep_func: Any = time.sleep,
+    task_attempts: int = 2,
     poll_attempts: int = 6,
     poll_interval_s: float = 2.0,
 ) -> tuple[str | None, str | None]:
@@ -201,38 +304,65 @@ def _vm_chat_fallback(
 
     status = status_fn()
     if not isinstance(status, Mapping) or not status.get("online"):
-        return None, "VM fallback unavailable: worker offline"
+        error = "VM fallback unavailable: worker offline"
+        _remember_vm_chat_failure(error)
+        return None, error
 
-    marker = f"chat-fallback-{uuid.uuid4().hex[:12]}"
-    queued = send_fn(f"[{marker}] {message}", task_type="chat", context=system_prompt)
-    if isinstance(queued, Mapping) and queued.get("ok") is False:
-        return None, f"VM fallback enqueue failed: {str(queued.get('error', 'unknown'))[:120]}"
-
+    last_error = "VM fallback did not return a response"
+    task_attempt_count = max(1, int(task_attempts or 1))
     attempts = max(1, int(poll_attempts or 1))
-    for index in range(attempts):
-        poll_status = status_fn()
-        recent = poll_status.get("recent", []) if isinstance(poll_status, Mapping) else []
-        if isinstance(recent, Sequence) and not isinstance(recent, (str, bytes)):
-            for entry in reversed(recent):
-                if not isinstance(entry, Mapping):
-                    continue
-                if marker in str(entry.get("task", "")) and entry.get("status") == "done":
+
+    for task_attempt_index in range(task_attempt_count):
+        marker = f"chat-fallback-{uuid.uuid4().hex[:12]}"
+        queued = send_fn(f"[{marker}] {message}", task_type="chat", context=system_prompt)
+        if isinstance(queued, Mapping) and queued.get("ok") is False:
+            last_error = f"VM fallback enqueue failed: {str(queued.get('error', 'unknown'))[:120]}"
+            continue
+
+        found_terminal_result = False
+        for index in range(attempts):
+            poll_status = status_fn()
+            recent = poll_status.get("recent", []) if isinstance(poll_status, Mapping) else []
+            if isinstance(recent, Sequence) and not isinstance(recent, (str, bytes)):
+                for entry in reversed(recent):
+                    if not isinstance(entry, Mapping):
+                        continue
+                    if marker not in str(entry.get("task", "")) or entry.get("status") != "done":
+                        continue
+                    found_terminal_result = True
                     result = str(entry.get("result") or "").strip()
                     if result:
+                        if _vm_response_is_failure(result):
+                            last_error = "VM fallback provider unavailable: worker reported no LLM available"
+                            break
+                        _clear_vm_chat_failure()
                         return result, None
-                    return None, "VM fallback completed without a response"
-        if index < attempts - 1:
+                    last_error = "VM fallback completed without a response"
+                    break
+            if found_terminal_result:
+                break
+            if index < attempts - 1:
+                sleep_func(max(0.0, float(poll_interval_s or 0.0)))
+
+        if not found_terminal_result:
+            last_error = "VM fallback timed out waiting for a completed chat task"
+        if task_attempt_index < task_attempt_count - 1:
             sleep_func(max(0.0, float(poll_interval_s or 0.0)))
 
-    return None, "VM fallback timed out waiting for a completed chat task"
+    _remember_vm_chat_failure(last_error)
+    return None, last_error
 
 
 def test_chat_providers(
     env: Mapping[str, str] | None = None,
     requests_client: Any | None = None,
     clock: Any = time.monotonic,
+    vm_send_task: Any | None = None,
     vm_get_status: Any | None = None,
     enable_vm_fallback: bool = True,
+    probe_vm_chat: bool = True,
+    sleep_func: Any = time.sleep,
+    vm_task_attempts: int = 2,
 ) -> ChatHealthResult:
     """Probe configured chat providers with minimal requests."""
     env_map = os.environ if env is None else env
@@ -304,10 +434,16 @@ def test_chat_providers(
     else:
         results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY(S) not set"}
 
-    if _should_use_vm(enable_vm_fallback, requests_client, None, vm_get_status):
+    if _should_use_vm(enable_vm_fallback, requests_client, vm_send_task, vm_get_status):
         start = clock()
         try:
-            vm_result = _vm_worker_status(vm_get_status=vm_get_status)
+            vm_result = _vm_worker_status(
+                vm_get_status=vm_get_status,
+                vm_send_task=vm_send_task,
+                sleep_func=sleep_func,
+                probe_chat=probe_vm_chat,
+                task_attempts=vm_task_attempts,
+            )
             vm_result["ms"] = _elapsed_ms(start, clock)
             results["vm_worker"] = vm_result
         except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -335,6 +471,7 @@ def chat(
     vm_send_task: Any | None = None,
     vm_get_status: Any | None = None,
     sleep_func: Any = time.sleep,
+    vm_task_attempts: int = 2,
     vm_poll_attempts: int = 6,
     vm_poll_interval_s: float = 2.0,
     enable_vm_fallback: bool = True,
@@ -403,6 +540,7 @@ def chat(
                 vm_send_task=vm_send_task,
                 vm_get_status=vm_get_status,
                 sleep_func=sleep_func,
+                task_attempts=vm_task_attempts,
                 poll_attempts=vm_poll_attempts,
                 poll_interval_s=vm_poll_interval_s,
             )

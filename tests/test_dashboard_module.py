@@ -250,6 +250,22 @@ def test_get_dashboard_status_localtunnel_log_file():
         assert result["bridge"]["tunnel_url"] == "https://eighty-ads-wish.loca.lt"
 
 
+def test_get_dashboard_status_localtunnel_utf16_log_file(tmp_path):
+    tunnel_log = tmp_path / "LOCAL_TUNNEL_CURRENT.log"
+    tunnel_log.write_text("your url is: https://calm-harbor-test.loca.lt", encoding="utf-16")
+
+    with patch('modules.dashboard_module._env_vars', return_value={}), \
+         patch('modules.dashboard_module.detect_resource_pressure', return_value={"status": "normal"}), \
+         patch('modules.dashboard_module._fleet_status', return_value={"launched": 0}), \
+         patch('modules.dashboard_module._vm_info', return_value={"vms": [], "total": 0, "online": 0}), \
+         patch('modules.dashboard_module._tail_log', return_value=[]), \
+         patch('modules.dashboard_module._LT_LOG_PATH', tunnel_log):
+
+        result = get_dashboard_status()
+        assert result["ok"] is True
+        assert result["bridge"]["tunnel_url"] == "https://calm-harbor-test.loca.lt"
+
+
 def test_get_dashboard_status_env_fallback():
     with patch('modules.dashboard_module._env_vars', return_value={"FALLBACK_TUNNEL_URL": "https://env-fallback.loca.lt"}), \
          patch('modules.dashboard_module.detect_resource_pressure', return_value={"status": "normal"}), \
