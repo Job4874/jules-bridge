@@ -1,0 +1,66 @@
+{
+  "timestamp_local": "2026-06-30T10:51:00-06:00",
+  "branch": "codex/jules-production-finish",
+  "head_before_evidence_commit": "184f6bfeff514df2d6f582c2637209abacc5d48b",
+  "purpose": "Secret-free verification that the repo-owned Jules cockpit quick boot and Desktop shortcut install path work on the local system.",
+  "source_files_verified": [
+    "Install-Desktop-QuickBoot.ps1",
+    "Quick-Boot-Jules-Cockpit.ps1",
+    "Quick-Boot-Jules-Cockpit.cmd",
+    "Launch-Dashboard.ps1",
+    "Open-Dashboard.cmd",
+    "docs/quick-boot.md"
+  ],
+  "powershell_parse_check": {
+    "Install-Desktop-QuickBoot.ps1": 0,
+    "Quick-Boot-Jules-Cockpit.ps1": 0,
+    "Launch-Dashboard.ps1": 0
+  },
+  "quick_boot_checks": [
+    {
+      "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\Quick-Boot-Jules-Cockpit.ps1 -SkipVMBoot -NoBrowser",
+      "result": "passed",
+      "observed": [
+        "VM worker check skipped",
+        "bridge already online at http://127.0.0.1:5000",
+        "dashboard already online at http://127.0.0.1:5173/",
+        "browser launch skipped",
+        "Quick boot complete."
+      ]
+    },
+    {
+      "command": "cmd.exe /c Quick-Boot-Jules-Cockpit.cmd -SkipVMBoot -NoBrowser",
+      "result": "passed",
+      "observed": [
+        "bridge already online at http://127.0.0.1:5000",
+        "dashboard already online at http://127.0.0.1:5173/",
+        "Quick boot complete."
+      ]
+    },
+    {
+      "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\Launch-Dashboard.ps1 -SkipVMBoot -NoBrowser",
+      "result": "passed",
+      "observed": [
+        "bridge already online at http://127.0.0.1:5000",
+        "dashboard already online at http://127.0.0.1:5173/",
+        "Quick boot complete."
+      ]
+    }
+  ],
+  "desktop_shortcut_install": {
+    "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\Install-Desktop-QuickBoot.ps1",
+    "result": "passed",
+    "shortcut_exists": true,
+    "shortcut_path": "%USERPROFILE%\\OneDrive\\Desktop\\Jules Bridge Quick Boot.lnk",
+    "target_path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "arguments": "-NoProfile -ExecutionPolicy Bypass -NoExit -File \"%USERPROFILE%\\jules-bridge\\Quick-Boot-Jules-Cockpit.ps1\"",
+    "working_directory": "%USERPROFILE%\\jules-bridge",
+    "description": "Boot Jules Bridge, ngrok, VM worker check, and the cockpit dashboard"
+  },
+  "runtime_state_at_validation": {
+    "bridge_ping": "online",
+    "dashboard_url": "http://127.0.0.1:5173/",
+    "provider_readiness": "degraded: Gemini/OpenRouter still fail provider checks; VM fallback can answer intermittently",
+    "jules_session_7152730290236054698": "In Progress"
+  }
+}
