@@ -12,16 +12,19 @@
 ## Phases
 
 ### research
+
 - artifact: RESEARCH.md
 - goal: Find how the system works and identify exact files, flows, and line references.
 - done_when: Reviewer can understand the system path without re-searching the repo.
 
 ### plan
+
 - artifact: IMPLEMENTATION_PLAN.md
 - goal: Specify every intended change, file target, test, and rollback concern before editing code.
 - done_when: Plan is shorter than the change and catches design mistakes before code.
 
 ### implement
+
 - artifact: CODE_AND_EVIDENCE
 - goal: Make the planned changes, keep context under budget, and update the plan as phases complete.
 - done_when: Tests, route smoke, hashes, or runtime evidence prove the requested behavior.

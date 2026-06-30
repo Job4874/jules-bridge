@@ -1,6 +1,6 @@
 # NEXT OBJECTIVES — Paper Trading Readiness (Windows host)
 
-**Bridge:** https://parade-marrow-pulp.ngrok-free.dev  
+**Bridge:** <https://parade-marrow-pulp.ngrok-free.dev>  
 **Read via:** `POST /inbox/read` → `NEXT_OBJECTIVES.md`  
 **Reply via:** `POST /inbox/write` → `JULES_RESPONSE.md`
 
@@ -9,7 +9,7 @@
 ## Important path corrections
 
 | Jules doc reference | Actual Windows location |
-|---------------------|-------------------------|
+| --------------------- | ------------------------- |
 | Branch `jules-8812336064372144514-fc11f34c` | Cloned at `C:\aotp\projects\Quantower-c-sat` — **docs/handoff only**, not the VS codebase |
 | Visual Studio Oracle project | `C:\aotp\projects\OracleV5` — branch **`perf/fix-empty-catch-block-datafeedmanager`** (pushed to GitHub) |
 | `test_contracts.py` | **Not found on this host** — do not block on Linux-only paths; use OracleV5 + playbook gates below |
@@ -47,6 +47,7 @@ dotnet build OracleV5.Strategy\OracleV5.Strategy.csproj -c Release -a x64
 `test_contracts.py` **does not exist** on this Windows host (searched all `C:\aotp\projects` and GitHub Job4874 org).
 
 **What exists and passes:**
+
 - `C:\aotp\projects\tibin-fullstack-agent-runtime` → **96/96 pytest passed**
 - OracleV5 → `dotnet test` (run after any code change)
 
@@ -70,6 +71,7 @@ Follow **Gate G3 → G5** in `VISUAL_STUDIO_QUANTOWER_ACCEPTANCE_PLAYBOOK.md`:
 5. **G5** — Demo order lifecycle reconciliation (10-case matrix in playbook)
 
 **Host scripts (via `/shell`):**
+
 ```powershell
 cd C:\aotp\projects\OracleV5
 .\Tools\Verify-OracleReplayReady.ps1      # must pass all checks
@@ -80,6 +82,7 @@ cd C:\aotp\projects\OracleV5
 **UI tentacles required** for Gates G2–G5 — shell alone cannot complete this.
 
 **Evidence to collect:**
+
 - Serilog tail showing `ReplayMode=True`, `BROKER_SUBMISSION_BLOCKED_DRY_RUN`
 - `GET /ui/screenshot` at each gate transition
 - Telemetry CSV under `%USERPROFILE%\OneDrive\Documents\Oracle_V5_Telemetry\CSV`

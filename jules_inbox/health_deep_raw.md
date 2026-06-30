@@ -1,4 +1,5 @@
 First, ensure `psutil` is installed on the VM:
+
 ```bash
 pip install psutil
 ```

@@ -8,9 +8,11 @@ description: >
 # Recover Skill
 
 ## Purpose
+
 Halt agent spiraling and context pollution by diagnosing failures and returning to a clean, known-good baseline.
 
 ## Instructions
+
 1. **Identify the Failure Mode**:
    - **Doom Loop**: The agent is making the same edit or running the same command repeatedly.
    - **Polluted Context**: The chat history is bloated with failed attempts and the model is guessing.

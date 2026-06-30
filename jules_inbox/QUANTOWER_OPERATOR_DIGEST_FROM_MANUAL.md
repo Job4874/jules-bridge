@@ -9,7 +9,7 @@
 ## A. Mode map (operator ground truth — overrides guessing)
 
 | UI / action | Mode | Your job |
-|-------------|------|----------|
+| ------------- | ------ | ---------- |
 | **Strategy Manager (StM)** | **Live / paper / demo runtime** | Run strategy instance, real connections, logs, telemetry, DOM/L2 live |
 | **Backtest & Optimize panel** | **Historical simulation** | Tick/OHLC backtest, optimization — **not** live proof |
 | **Market Replay chart** | **Replay runtime** | Same strategy code path as live feed; not the optimizer UI |
@@ -25,7 +25,7 @@
 The manual describes default install under `%LocalAppData%\Quantower`. **This operator uses:**
 
 | Manual says | This host uses |
-|-------------|----------------|
+| ------------- | ---------------- |
 | `%LocalAppData%\Quantower\Algo` | `C:\Quantower\Settings\Scripts\Strategies\` (deploy target) |
 | Generic Settings | `C:\Quantower\Settings\settings.xml` |
 | Platform binaries | `C:\Quantower\TradingPlatform\v1.146.13\` |
@@ -114,7 +114,7 @@ Label results: `BAR_MODEL_ONLY` / `TICK_MODEL` / `NOT_LIVE_CERTIFIED`.
 Know what each requires:
 
 | Feature | Needs |
-|---------|--------|
+| --------- | -------- |
 | DOM / multi-level book | Level 2 / MBO subscription, fresh timestamps |
 | Footprint / clusters | Volume analysis finished — not loading as zero |
 | CVD / delta | Aggressor-classified tape |

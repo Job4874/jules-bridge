@@ -82,7 +82,7 @@ Run the full checklist when **any** of these occur:
 ## Profile-Specific Notes
 
 | Profile | Extra step |
-|---|---|
+| --- | --- |
 | **Verdent / Oracle V5 operator** | Read `CLAIM_AUDIT.md` before stating penalty weights, Kelly, GodScore, or execution timeouts |
 | **Jules remote worker** | Read `jules_inbox/JULES_COT_LEDGER.md` before launching duplicate packets |
 | **Cursor / local dev** | Read `context/05_gotchas.md` before editing `bridge.py` header (lines 1–230) |

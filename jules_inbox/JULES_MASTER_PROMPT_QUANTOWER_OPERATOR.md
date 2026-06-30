@@ -24,7 +24,7 @@ You learn fast only when you **verify**, not when you click faster.
 ## 1. What Quantower modes MEAN (do not confuse)
 
 | Operator action | Meaning | What you must NOT do |
-|-----------------|---------|----------------------|
+| ----------------- | --------- | ---------------------- |
 | **Reload / restart Quantower** | **Logs out.** Connections drop. Workspace state resets. | Do not restart casually. Do not use `Restart-QuantowerLoadOracle.ps1` unless operator or playbook explicitly requires it. Prefer restart **strategy instance** over restart **platform**. |
 | **Open Strategy Manager (StM)** | Operator intends **live / paper / demo runtime testing** — real connections, real or replay feed, strategy instance, logs, telemetry. | Do not open StM for "exploration." Do not add duplicate Oracle instances. Do not click Run without configured Symbol + Account. |
 | **Open Backtest & Optimize** | Operator intends **historical backtest** — bar model, optimization, different UI path, different evidence. | Do not use backtest UI when task says live/replay/demo. Do not claim DOM/tape results from bar backtest. Label bar-only results `BAR_MODEL_ONLY`. |
@@ -45,7 +45,7 @@ Authorization: Bearer JULES-SECURE-999
 ```
 
 | Tentacle | Use |
-|----------|-----|
+| ---------- | ----- |
 | `GET /ping` | Bridge alive |
 | `GET /tentacles` | Capability manifest |
 | `POST /inbox/read` | Read `OPERATOR_RESPONSE.md`, `NEXT_OBJECTIVES.md`, this file |
@@ -69,7 +69,7 @@ POST /inbox/read  {"file":"JULES_MASTER_PROMPT_QUANTOWER_OPERATOR.md"}
 ## 3. Canonical paths (no drift)
 
 | What | Path |
-|------|------|
+| ------ | ------ |
 | Oracle V5 source + build | `C:\aotp\projects\OracleV5` |
 | Branch | `perf/fix-empty-catch-block-datafeedmanager` |
 | Quantower | `C:\Quantower\TradingPlatform\v1.146.13\` |
@@ -142,7 +142,7 @@ Only if verify passes (or operator instructs): minimal UI to **Run** strategy an
 ## 6. Verification gates (no false "done")
 
 | Gate | Pass means |
-|------|------------|
+| ------ | ------------ |
 | G1 Build | `dotnet build` 0 errors; DLL hash matches deployed |
 | G2 Discovery | Oracle V5 visible in Strategy Manager exactly once |
 | G3 Dry run | Logs show decision traces; `BROKER_SUBMISSION_BLOCKED_DRY_RUN` or equivalent; live trading false |

@@ -7,7 +7,7 @@
 - selected_count: 4
 
 | id | status | type | file | issue | packet |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | JT-002-6b1194 | needs_review | antigravity | C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS\CODEX_MASTER_HANDOVER_PROMPT.md | Execute Antigravity Codex handover prompt end-to-end | C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-002-6b1194-codex-master-handover-prompt.md |
 | JT-003-aab6ea | needs_review | antigravity | C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS\CODEX_PHASE0_REPOSITORY_ARCHAEOLOGY_PROMPT.md | Execute Antigravity Codex handover prompt end-to-end | C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md |
 | JT-004-1e0abd | needs_review | antigravity | C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover\TIBIN_CODEX_MASTER_HANDOVER_V2\04_CODEX_PROMPTS\CODEX_PHASE1_STABILIZATION_PROMPT.md | Execute Antigravity Codex handover prompt end-to-end | C:\Users\abdul\.jules\jules_inbox\jules_dispatch\JT-004-1e0abd-codex-phase1-stabilization-prompt.md |

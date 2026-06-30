@@ -33,12 +33,13 @@ Follow this exact loop protocol for Jules Bridge:
 
 Before touching any code, load session context:
 
-```
+```text
 GET /retrospective/memory?domain=general   → read what went wrong before
 GET /oracle/status                          → understand current system state
 ```
 
 Read these context files in order:
+
 1. `context/01_project_overview.md`
 2. `context/02_architecture.md`
 3. `context/05_gotchas.md`
@@ -47,12 +48,14 @@ Read these context files in order:
 ### Step 2 — Pick the Next Ticket
 
 Read ALL tickets in `doc/tickets/`. For each ticket, check:
+
 - **Status**: skip any ticket with `Status: DONE`
 - **Priority**: HIGH > MEDIUM > LOW
 - **Dependencies**: if a ticket says "Depends on: Ticket NNN", skip it unless that ticket is DONE
 
 Pick the single highest-priority, unblocked TODO ticket. State your choice clearly:
-```
+
+```text
 → Picking: Ticket NNN — [title]
 → Reason: [why this one next]
 ```
@@ -79,7 +82,8 @@ python -m pytest tests/ -v
 ### Step 5 — Record Evidence
 
 After tests pass:
-```
+
+```text
 POST /retrospective/record_evidence
 Body: {"output": "<full pytest stdout here>"}
 ```
@@ -98,7 +102,8 @@ Use conventional commits: `feat`, `fix`, `refactor`, `docs`, `test`.
 ### Step 7 — Mark Ticket DONE
 
 Update the ticket file:
-```
+
+```text
 **Status**: DONE
 **Completed**: <YYYY-MM-DDTHH:MM:SSZ>
 **Evidence SHA-256**: <hash from step 5>
@@ -132,7 +137,7 @@ Stop and write to the inbox (`POST /inbox/write`) if:
 These are non-negotiable in every loop iteration:
 
 | Standard | Requirement |
-|---|---|
+| --- | --- |
 | TDD | Test written BEFORE implementation |
 | No business logic in bridge.py | Route handlers: validate → call module → return JSON ONLY |
 | Public functions never raise | Return typed dicts with `error` key on failure |

@@ -1,9 +1,13 @@
+# pylint: disable=wrong-import-order
+
 """check_openrouter_free.py — find all currently-free models on OpenRouter."""
-import requests, json, os
+import os
+
+import requests
 from pathlib import Path
 
 env_file = Path(os.path.expanduser("~/.jules_worker.env"))
-for line in env_file.read_text().splitlines():
+for line in env_file.read_text(encoding='utf-8').splitlines():
     if "=" in line and not line.startswith("#"):
         k, _, v = line.partition("=")
         os.environ[k.strip()] = v.strip()

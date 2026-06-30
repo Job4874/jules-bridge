@@ -9,9 +9,11 @@ description: >
 # Architect Skill
 
 ## Purpose
+
 Prevent implementation drift, architectural misalignment, and wasted tokens by establishing a clear, agreed-upon technical plan before writing any code.
 
 ## Instructions
+
 1. **Gather Context**:
    - Read all context files in the `context/` directory (`01_project_overview.md`, `02_architecture.md`, `03_code_standards.md`, etc.).
    - Inspect the codebase for relevant existing files or patterns.

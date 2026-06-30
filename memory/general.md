@@ -23,6 +23,7 @@ has gone wrong before and what to avoid.
 ## Session 20260626T021500 — Phase 5: LLM Integration + Self-Improvement
 
 ### Resolved: GET /health 404 storm
+
 - `bridge.log` had 58 consecutive `GET /health → 404` in a tight loop (19:54 timestamp)
 - Root cause: route never existed; caller (ngrok/monitoring) assumed standard health endpoint
 - Fix: added `GET /health` returning `{status, bridge, uptime_s}` using `_BRIDGE_START_UTC` constant
@@ -30,6 +31,7 @@ has gone wrong before and what to avoid.
 - Also added `/health` to TENTACLES manifest so clients can discover it
 
 ### Resolved: LLM stubs in reasoning_module
+
 - `_h_module_call()` and `_l_module_call()` were pure deterministic stubs
 - Now dispatched via `_MODEL_ALIASES` dict: `"stub"` → None (stub), `"fast"` → gemini-2.0-flash, `"smart"` → gemini-2.5-pro
 - Gemini call in `_gemini_chat()`: lazy-imports `google.generativeai`, reads `GEMINI_API_KEY` from env
@@ -37,12 +39,14 @@ has gone wrong before and what to avoid.
 - Tests still use `model="stub"` (default) — zero network calls, all 133 pass unchanged
 
 ### Added: Evidence gating (soft)
+
 - `/oracle/*` routes now attach `X-Evidence-Age-Warning: stale:{N}s` if `test_evidence.json` is >1h old
 - Implemented as second `@app.after_request` hook: `_evidence_age_check()`
 - NOT a hard block (no 423) — warning header only; harden later when test-first is established
 - Best-effort: if evidence file missing or malformed, request passes through with no header
 
 ### Added: POST /retrospective/prune_memory
+
 - Pruning strategy: age-based (sections with `## Session 20YYMMDDTHHMMSS` stamps older than N days are removed)
 - Sections with no parseable timestamp are KEPT (conservative default — don't lose things we can't date)
 - `## How to use` and `## Initial Notes` headings are always preserved
@@ -50,11 +54,13 @@ has gone wrong before and what to avoid.
 - Default: `max_age_days=30`; callable with `{"max_age_days": 7}` for aggressive pruning
 
 ### Added: Full TENTACLES manifest
+
 - Reasoning routes (`/reasoning/solve`, `/reasoning/plan`, `/reasoning/execute_step`) were missing
 - Retrospective routes (`/retrospective/analyze`, `/retrospective/record_evidence`, `/retrospective/memory`, `/retrospective/prune_memory`) were missing
 - Now all routes discoverable via `GET /tentacles`
 
 ### Pattern: adding a new route (checklist)
+
 1. Add handler in `bridge.py` with `@route_errors`
 2. Add to `TENTACLES` list in `bridge.py`
 3. Add to route table in `context/02_architecture.md`
@@ -315,3 +321,47 @@ has gone wrong before and what to avoid.
 - `/notify/email` now accepts `attachments: list[str]` for screenshot/report evidence. The route validates each path with `existing_path(..., kind="file")` before SMTP so missing screenshots fail fast with 404 instead of being silently skipped.
 - `notify_email.send_email(subject, body, mail_to=None, attachments=None)` keeps the old plain-text path when no attachments are present and switches to multipart only when files are supplied.
 - Added module and route coverage in `tests/test_notify_email_enhanced.py` and `tests/test_bridge_routes.py::TestBridgeTokenAuth`; full evidence recorded: 284 tests passed, SHA-256 `281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4`.
+
+## Session 20260629T092400 - Lint Cleanup Pass (303 tests passing)
+
+### Python Module Fixes
+
+- `modules/dashboard_module.py`: Moved `import time` and `import re` to top-level; removed `import re` from inside loop body.
+- `modules/reasoning_module.py`: Added `import subprocess` + `from datetime import datetime, timezone` to top-level; removed both from inline locations; renamed `_ROOT_DIR` → `_root_dir`; renamed `_l_stub` args `step`→`_step`, `model`→`_model`; renamed `_extract_answer` arg `plan`→`_plan`; added `check=False` to `subprocess.run`; changed f-string logging to lazy `%s` format; stripped trailing whitespace.
+- `modules/oracle_session.py`: Added `check=False` to all 3 `subprocess.run` calls.
+- `modules/ui_automation.py`: Renamed `image_path`→`_image_path` (unused, reserved for future OCR integration).
+
+### Test Fix
+
+- `tests/test_hre_depth.py`: Updated `rm._ROOT_DIR` → `rm._root_dir` to match renamed module attribute. Final count: **303/303 passing**.
+
+### Markdown Fixes
+
+- `context/05_gotchas.md`: Fixed `## modules/**init**.py` heading (MD050); collapsed extra blank lines.
+- `context/07_library_docs.md`: Added `text` language spec to unnamed code fence; simplified table separators.
+- `jules_inbox/JULES_MISSION_001.md`: Converted from plain text to proper Markdown (H1 first, H2 sections, code fences with `text` lang).
+- `jules_inbox/JULES_MISSION_001_RESPONSE.md`: Fixed multiple H1 mid-doc → H2.
+- `jules_inbox/MONDAY_MISSION_20260629.md`, `OPERATOR_PROXY_CORRECTION.md`: Added `text` lang to code fences.
+- `memory/reasoning.md`: Added `# Reasoning Memory` H1 as first line.
+
+### Patterns
+
+- **Private path constants**: use `_root_dir` (snake_case), not `_ROOT_DIR` — pylint sees module-level `_NAME` as variable.
+- **Unused stub params**: prefix with `_` to suppress warning without removing the interface contract.
+- **subprocess.run**: always explicit `check=False` or `check=True`.
+- **Broad except in route handlers**: `except Exception as exc:  # noqa: BLE001` is correct suppression.
+- **Lazy module imports in bridge.py routes**: `from modules.xxx import yyy` inside handlers is intentional; do NOT hoist to top.
+
+## Session 20260629T111500 — Gotchas Recovery & Test Fix (307 tests passing)
+
+- **Test Fix**: Resolved a test collection failure where `tests/test_oracle_session.py` was missing `from unittest.mock import patch`, resulting in `NameError` on patch decorators.
+- **Gotchas Recovery**: Fixed `context/05_gotchas.md` which had been corrupted with Chinese character unicode sequences (e.g., `\u80e2\ue7a3\u8a95...`) due to a double UTF-16LE -> UTF-8 encoding bug in previous agent sessions. Created `scratch/double_recover.py` to reverse this corruption by encoding UTF-8 characters back to UTF-16LE bytes twice, and restored the original clean English gotchas file.
+- **Verification**: Verified the entire test suite is completely green (307/307 passed). Started the bridge server via `python bridge.py` on port 5000 and confirmed both `/health` and `/akc/readiness` respond successfully.
+
+## Session 20260629T122530 — Chat Service Deep Module Cleanup (315 tests passing)
+
+- Extracted Gemini/OpenRouter chat provider routing from `bridge.py` into `modules/chat_service.py`; `/chat` and `/chat/test` are now thin validate -> module -> JSON wrappers.
+- New canonical chat terms: `ChatResult`, `ChatHealthResult`, and `Chat provider routing`. Keep provider payload construction, fallback, timing, and secret redaction inside `chat_service`.
+- Added module-boundary tests in `tests/test_chat_service.py` and route-thinness tests in `tests/test_bridge_routes.py`.
+- Verification: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py`; focused pytest passed 74 tests; full `python -m pytest tests/ -q` passed 315 tests. Evidence hash `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`.
+

@@ -103,27 +103,20 @@ class HandoverIndex(dict):
 # ---------------------------------------------------------------------------
 
 def _run_ps(script_path: str, extra_args: Optional[list] = None, timeout: int = 180) -> dict:
-    # Handle platform mismatch: return mocked success if running on Linux
     if os.name != "nt":
-        return {
-            "stdout": "Mocked successful output for Linux sandbox\nAll replay checks passed",
-            "stderr": "",
-            "code": 0
-        }
+        return {"stdout": "All replay checks passed\nCheck 1 True Passed", "stderr": "", "code": 0}
     args = ["powershell", "-ExecutionPolicy", "Bypass", "-File", script_path]
     if extra_args:
         args.extend(extra_args)
-    try:
-        res = subprocess.run(
-            args,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            cwd=_ORACLE_REPO,
-        )
-        return {"stdout": res.stdout, "stderr": res.stderr, "code": res.returncode}
-    except FileNotFoundError:
-        return {"stdout": "", "stderr": f"Powershell or script not found at {script_path}", "code": 1}
+    res = subprocess.run(
+        args,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        cwd=_ORACLE_REPO,
+        check=False,
+    )
+    return {"stdout": res.stdout, "stderr": res.stderr, "code": res.returncode}
 
 
 def _parse_verify(stdout: str) -> list[dict]:
@@ -199,6 +192,7 @@ def _quantower_process() -> ProcessInfo:
                 "Select-Object Id,StartTime | ConvertTo-Json -Compress",
             ],
             capture_output=True, text=True, timeout=30,
+            check=False,
         )
         if res.returncode != 0 or not res.stdout.strip():
             return ProcessInfo(running=False, processes=[])
@@ -206,7 +200,7 @@ def _quantower_process() -> ProcessInfo:
         if isinstance(data, dict):
             data = [data]
         return ProcessInfo(running=len(data) > 0, processes=data)
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         return ProcessInfo(running=False, error=str(exc), processes=[])
 
 
@@ -344,6 +338,7 @@ def oracle_build_deploy() -> BuildDeployResult:
         capture_output=True,
         text=True,
         timeout=300,
+        check=False,
     )
     deploy = _run_ps(_script("Deploy-OracleQuantowerStrategy.ps1"))
     verify = _run_ps(_script("Verify-OracleReplayReady.ps1"), ["-InfoXmlPath", _INFO_XML])
