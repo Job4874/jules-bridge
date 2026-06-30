@@ -1,0 +1,75 @@
+{
+  "timestamp_local": "2026-06-30T11:03:00-06:00",
+  "branch": "codex/jules-production-finish",
+  "head_before_evidence_commit": "c9564e3c5745de49567b5c1e18d46ecfbb62d0cd",
+  "purpose": "Secret-free PR mergeability and provider-state recheck while Jules JT-004 remains in progress.",
+  "git_state": {
+    "local_head": "c9564e3c5745de49567b5c1e18d46ecfbb62d0cd",
+    "origin_branch_head": "c9564e3c5745de49567b5c1e18d46ecfbb62d0cd",
+    "worktree": "clean"
+  },
+  "pr64": {
+    "state": "open",
+    "draft": true,
+    "head": "c9564e3c5745de49567b5c1e18d46ecfbb62d0cd",
+    "base": "master",
+    "github_mergeable": null,
+    "github_mergeable_state": "unknown",
+    "local_merge_check": {
+      "method": "temporary detached worktree at origin/master, git merge --no-commit --no-ff c9564e3c5745de49567b5c1e18d46ecfbb62d0cd, then abort/remove",
+      "result": "passed",
+      "merge_exit_code": 0,
+      "summary": "Automatic merge went well; stopped before committing as requested."
+    }
+  },
+  "runtime_recheck": {
+    "bridge_ping": "online",
+    "local_dashboard_ui": {
+      "status": 200,
+      "assets": [
+        "/assets/index-CPnQGhe0.js",
+        "/assets/index-BP5lS6yt.css"
+      ]
+    },
+    "public_ping": "online",
+    "public_dashboard_status": {
+      "status": "passed",
+      "cloud_online": 1,
+      "gemini": "error",
+      "openrouter": "error"
+    },
+    "dashboard_status_bypass_cache": {
+      "healthy": true,
+      "cloud_online": 1,
+      "gemini": "error",
+      "openrouter": "error"
+    },
+    "health_deep": {
+      "gemini": "fail",
+      "openrouter": "fail"
+    },
+    "chat_test": {
+      "healthy": true,
+      "error_count": 1
+    },
+    "direct_chat": {
+      "model_used": "none",
+      "response_prefix": "I'm offline right now - no API keys resp",
+      "error_count": 5
+    }
+  },
+  "jules_sessions": {
+    "primary": "7152730290236054698",
+    "primary_status": "In Progress",
+    "secondary": "14369052129679399317",
+    "pull_applied": false,
+    "pull_reason": "Primary Jules session was not Completed in the fresh /jules/sessions poll."
+  },
+  "production_readiness": {
+    "merge_conflict_blocker": false,
+    "provider_readiness": "degraded",
+    "ready_to_mark_clean": false,
+    "pr64_should_remain_draft": true,
+    "remaining_blocker": "Live provider execution is still not stable: direct /chat can fall back to model_used=none while Gemini/OpenRouter remain invalid/fail and VM fallback capacity is intermittent."
+  }
+}
