@@ -503,3 +503,9 @@ has gone wrong before and what to avoid.
 - Created and launched current-head Jules packet `jules_inbox/jules_provider_runtime_recovery_dispatch/JT-004-current-provider-runtime-recovery.md` for head `64d5357498b83658ca3217355175be0ac7825b97`; new session id is `7152730290236054698`.
 - `jules_inbox/jules_provider_runtime_recovery_dispatch/JULES_LAUNCH_STATE.json` was cleaned so structured `session_ids` only contain `7152730290236054698`; stale ids inside packet warning text must not be treated as pull targets.
 - Latest fresh session poll showed both `7152730290236054698` and older `14369052129679399317` in `Planning`; pull only `7152730290236054698` after a fresh list reports `Completed`.
+
+## Session 20260630T093456 - JT-004 In Progress Poll
+
+- JT-004 session `7152730290236054698` moved to `In Progress` on fresh `/jules/sessions` polls; older JT-003 `14369052129679399317` remained `Planning`.
+- No pull was performed because JT-004 is not `Completed`; keep `7152730290236054698` as the only pull target.
+- Runtime remained booted, but provider truth stayed degraded/intermittent: local Gemini/OpenRouter invalid-key, direct `/chat` can return `OK.` via VM, while VM health probes can still fail after recent `No LLM available`.

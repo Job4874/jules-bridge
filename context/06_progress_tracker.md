@@ -403,3 +403,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Fresh `/jules/sessions` poll reported both `7152730290236054698` and older `14369052129679399317` as `Planning`; nothing was pulled.
 - [ ] Next pull target is `7152730290236054698` only after a fresh session list reports `Completed`.
 
+## Session 20260630T093456 - JT-004 In Progress Poll
+
+- [x] Verified branch/PR stayed clean and aligned at `7ee9ded074a0809cf573f812d4b79789a48d461a`; PR #64 remains open draft.
+- [x] Verified bridge PID `7364`, dashboard preview PID `39320`, local/public route health, and provider status.
+- [x] Latest provider truth remains degraded/intermittent: local Gemini/OpenRouter invalid-key, direct `/chat` returned `OK.` through `vm/jules-worker`, but `/chat/test`, `/dashboard/status`, and `/health/deep` can still show VM provider failure after recent `No LLM available` results.
+- [x] Fresh `/jules/sessions` polls showed primary JT-004 session `7152730290236054698` moved to `In Progress`; older JT-003 session `14369052129679399317` remained `Planning`.
+- [ ] No pull was performed; pull only `7152730290236054698` after a fresh session list reports `Completed`.
+

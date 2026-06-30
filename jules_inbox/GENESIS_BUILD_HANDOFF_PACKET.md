@@ -289,6 +289,17 @@ direct executable path:
   `Completed`. Do not pull JT-003 unless explicitly redirected by current
   evidence.
 
+2026-06-30 09:34 America/Denver JT-004 movement check:
+
+- Fresh `/jules/sessions` polls reported primary session
+  `7152730290236054698` moved from `Planning` to `In Progress`.
+- Older `14369052129679399317` remained `Planning`.
+- No pull was performed because JT-004 is not `Completed`.
+- Live runtime remained booted, but provider state remained degraded: local
+  Gemini/OpenRouter invalid-key; VM fallback can return `OK` for direct chat
+  while `/chat/test`, `/dashboard/status`, or `/health/deep` may still report
+  VM provider failure from recent `No LLM available` results.
+
 ## Dirty-State Discipline
 
 Preserved pre-existing dirty runtime state:
@@ -315,7 +326,7 @@ Do not mark PR #64 production-ready unless one of these happens:
 3. the operator explicitly accepts current provider failures as non-blocking.
 
 Poll Jules session `7152730290236054698` with `bypass_cache=true`. It was
-`Planning` on the latest live poll at 2026-06-30 09:23 America/Denver; do not
+`In Progress` on the latest live poll at 2026-06-30 09:34 America/Denver; do not
 pull until it reports `Completed`. Inspect output before applying, and reject
 any stale broad diff or provider-error greenwashing.
 
