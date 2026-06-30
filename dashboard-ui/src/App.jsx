@@ -670,7 +670,7 @@ function App() {
     inFlightRef.current = true;
     const started = performance.now();
 
-    setConnection((previous) => ({ ...previous, loading: true }));
+    setConnection((previous) => ({ ...previous, loading: bypassCache ? true : previous.loading }));
     try {
       const suffix = bypassCache ? '?bypass_cache=true' : '';
       const response = await fetch(`${BRIDGE}/dashboard/status${suffix}`, {
@@ -712,7 +712,7 @@ function App() {
   useEffect(() => {
     fetchStatus(false);
     if (connection.paused) return undefined;
-    const timer = window.setInterval(() => fetchStatus(false), 7000);
+    const timer = window.setInterval(() => fetchStatus(false), 10000);
     return () => {
       window.clearInterval(timer);
       controllerRef.current?.abort();
