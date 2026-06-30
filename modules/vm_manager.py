@@ -294,3 +294,23 @@ def boot_secondary_vm(
             dry_run=dry_run,
             error=str(exc),
         )
+
+def check_and_scale_compute(dry_run: bool = True, allow_vm_boot: bool = False) -> str:
+    """Check resource pressure and scale compute by booting a secondary VM if needed.
+
+    Args:
+        dry_run: Whether to perform a dry run of the VM boot.
+        allow_vm_boot: Whether to allow actual VM booting.
+
+    Returns:
+        A string indicating the action taken.
+    """
+    pressure = detect_resource_pressure()
+    if pressure.get("maxed_out"):
+        boot_result = boot_secondary_vm(
+            "Start-SecondaryVM.ps1",
+            allow_vm_boot=allow_vm_boot,
+            dry_run=dry_run,
+        )
+        return f"EXECUTED: az vm start --name OracleV5 (status: {boot_result.get('status')})"
+    return f"Memory at {pressure.get('memory_percent')}%, no action needed."

@@ -365,3 +365,28 @@ class TestScriptResolution:
         # To get 100% on line 81, we mock _as_percent to return None.
         with patch("modules.vm_manager._as_percent", return_value=None):
             assert _threshold_value({"cpu": 75}, "cpu", 90.0) == 90.0
+
+class TestCheckAndScaleCompute:
+    @patch("modules.vm_manager.detect_resource_pressure")
+    @patch("modules.vm_manager.boot_secondary_vm")
+    def test_check_and_scale_compute_maxed_out(self, mock_boot, mock_detect):
+        from modules.vm_manager import check_and_scale_compute  # pylint: disable=import-outside-toplevel
+        mock_detect.return_value = {"maxed_out": True, "memory_percent": 95.0, "status": "maxed_out"}
+        mock_boot.return_value = {"status": "started"}
+
+        result = check_and_scale_compute(dry_run=False, allow_vm_boot=True)
+
+        assert "EXECUTED: az vm start --name OracleV5" in result
+        assert "(status: started)" in result
+        mock_boot.assert_called_once_with("Start-SecondaryVM.ps1", allow_vm_boot=True, dry_run=False)
+
+    @patch("modules.vm_manager.detect_resource_pressure")
+    @patch("modules.vm_manager.boot_secondary_vm")
+    def test_check_and_scale_compute_no_action(self, mock_boot, mock_detect):
+        from modules.vm_manager import check_and_scale_compute  # pylint: disable=import-outside-toplevel
+        mock_detect.return_value = {"maxed_out": False, "memory_percent": 50.0, "status": "ok"}
+
+        result = check_and_scale_compute()
+
+        assert "Memory at 50.0%, no action needed." in result
+        mock_boot.assert_not_called()
