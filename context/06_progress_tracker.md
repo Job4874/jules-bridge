@@ -386,3 +386,12 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Live runtime still agrees: `/dashboard/status`, `/health/deep`, GET `/chat/test`, direct `/chat`, `/vm/status`, and public tunnel checks pass, while local Gemini/OpenRouter report `invalid_key` and VM recent history includes both `OK` and provider-capacity `No LLM available`.
 - [ ] Jules session `14369052129679399317` stayed `Planning`; no pull was safe. PR #64 remains draft until provider credentials/quota/capacity are production-clean or accepted as non-blocking.
 
+## Session 20260630T091752 - Degraded Provider Runtime Recheck
+
+- [x] Saved current degraded provider evidence at `jules_inbox/jules_provider_external_blocker_dispatch/provider-runtime-degraded-20260630T091752.json`.
+- [x] Verified branch/PR stayed clean and aligned at `f59783e2dd0675f81532f802beff57fea55798b7`; PR #64 remains open draft.
+- [x] Verified bridge PID `7364`, dashboard preview PID `39320`, local dashboard, public tunnel `/ping`, `/health`, and `/dashboard/status` still respond.
+- [x] Current provider execution is not production-clean: GET `/chat/test` returned `healthy: false`, direct `/chat` returned `model_used=none`, local Gemini/OpenRouter stayed `invalid_key`, and latest VM recent tasks all reported `No LLM available`.
+- [x] Secret-safe inventory of common local env files found no valid-shaped Gemini/OpenRouter replacement credential to install locally; no raw values were printed or saved.
+- [ ] Jules session `14369052129679399317` stayed `Planning`; no pull was safe. Production readiness still requires fixed credentials/quota/capacity or explicit acceptance of provider failure as non-blocking.
+

@@ -490,3 +490,10 @@ has gone wrong before and what to avoid.
 - Local `.env` has Gemini/OpenRouter entries present, but local `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, and `OPENROUTER_API_KEYS` do not match expected provider token shapes, explaining local `invalid_key` responses.
 - VM worker has remote `OPENROUTER_API_KEY` present and OpenRouter-shaped, remote `GEMINI_API_KEY` present but not Gemini-shaped, and no remote plural `OPENROUTER_API_KEYS`; VM chat can still succeed via OpenRouter but recent history includes quota/capacity `No LLM available`.
 - Current blocker is credential quality and VM provider quota/capacity, not missing bridge/dashboard install or dead runtime wiring. Keep PR #64 draft until fixed or explicitly accepted.
+
+## Session 20260630T091752 - Degraded Provider Runtime Recheck
+
+- Current degraded-runtime evidence is saved at `jules_inbox/jules_provider_external_blocker_dispatch/provider-runtime-degraded-20260630T091752.json`.
+- Bridge/dashboard/tunnel boot remains good, but provider execution is currently down: GET `/chat/test` was `healthy: false`, direct `/chat` returned `model_used=none`, local Gemini/OpenRouter stayed `invalid_key`, and latest VM recent tasks all reported `No LLM available`.
+- Secret-safe inventory of common local env files found no valid-shaped Gemini/OpenRouter replacement credential; do not claim production-clean until a credential/quota/capacity change is verified or provider failure is explicitly accepted as non-blocking.
+- Jules session `14369052129679399317` stayed `Planning`; no pull was safe.

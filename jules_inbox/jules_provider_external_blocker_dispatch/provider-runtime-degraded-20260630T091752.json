@@ -1,0 +1,52 @@
+{
+  "timestamp_local": "2026-06-30T09:17:52-06:00",
+  "branch": "codex/jules-production-finish",
+  "head": "f59783e2dd0675f81532f802beff57fea55798b7",
+  "scope": "Live provider-runtime recheck after provider shape audit.",
+  "secret_policy": "No raw credential values captured.",
+  "git_and_pr": {
+    "worktree_clean": true,
+    "origin_aligned": true,
+    "pr_64_state": "open draft",
+    "pr_64_head": "f59783e2dd0675f81532f802beff57fea55798b7"
+  },
+  "processes": {
+    "bridge": {
+      "pid": 7364,
+      "port": 5000,
+      "status": "running"
+    },
+    "dashboard_preview": {
+      "pid": 39320,
+      "port": 5173,
+      "status": "running"
+    }
+  },
+  "live_route_summary": {
+    "local_ping": "ok",
+    "dashboard_http": "ok",
+    "dashboard_status_bypass": {
+      "ok": true,
+      "tunnel": "https://shaggy-kiwis-shout.loca.lt",
+      "cloud": "1/1",
+      "providers": "gemini:error:invalid_key; openrouter:error:invalid_key; vm_worker:ok"
+    },
+    "health_deep": "status ok; azure pass; gcp pass; gemini fail invalid_key; openrouter fail invalid_key; vm_worker pass",
+    "chat_test": "healthy false; gemini invalid_key; openrouter invalid_key; vm_worker error",
+    "direct_chat": "model_used none; offline response; local Gemini/OpenRouter invalid_key; VM fallback provider unavailable/no LLM available",
+    "vm_status": "online; latest recent VM tasks all reported No LLM available",
+    "public_tunnel": "public /ping, /health, and /dashboard/status responded"
+  },
+  "local_credential_inventory": {
+    "checked_common_env_files": true,
+    "valid_shaped_gemini_found": false,
+    "valid_shaped_openrouter_found": false,
+    "notes": "Inventory reported only paths, variable names, lengths, item counts, and expected-shape booleans. It did not print or save raw values."
+  },
+  "jules_session": {
+    "session_id": "14369052129679399317",
+    "latest_status": "Planning",
+    "pull_performed": false
+  },
+  "conclusion": "Runtime boot is intact, but current provider execution is not production-clean: local Gemini/OpenRouter are invalid, VM fallback is currently exhausted, and no valid-shaped replacement credential was found in common local env files."
+}

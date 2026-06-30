@@ -254,6 +254,23 @@ direct executable path:
   production-clean blocker is credential quality and VM provider quota/capacity,
   not a missing server or dead worker process.
 
+2026-06-30 09:17 America/Denver degraded provider runtime recheck:
+
+- Evidence:
+  `jules_inbox/jules_provider_external_blocker_dispatch/provider-runtime-degraded-20260630T091752.json`
+- Branch/PR remained clean and aligned at
+  `f59783e2dd0675f81532f802beff57fea55798b7`; PR #64 remained open draft.
+- Bridge PID `7364`, dashboard preview PID `39320`, local dashboard, public
+  tunnel `/ping`, `/health`, and `/dashboard/status` remained live.
+- Provider execution degraded from intermittent VM success to current failure:
+  GET `/chat/test` returned `healthy: false`, direct `/chat` returned
+  `model_used=none`, and latest VM recent tasks all reported
+  `No LLM available`.
+- A secret-safe inventory of common local env files found no valid-shaped
+  Gemini/OpenRouter replacement credential; only metadata was inspected and no
+  raw values were printed or saved.
+- Jules session `14369052129679399317` remained `Planning`; no pull was safe.
+
 ## Dirty-State Discipline
 
 Preserved pre-existing dirty runtime state:
