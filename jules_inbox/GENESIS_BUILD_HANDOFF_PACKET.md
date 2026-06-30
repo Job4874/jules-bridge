@@ -179,14 +179,14 @@ Only pull `10937231877503281057` after a fresh session list reports it as
 - Fresh packet:
   `jules_inbox/jules_post_retry_readiness_dispatch/JT-003-post-retry-production-readiness-audit.md`
 - Fresh session: `14369052129679399317`
-- current observed status: `Awaiting Plan Approval`
+- current observed status: `In Progress`
 - launch state:
   `jules_inbox/jules_post_retry_readiness_dispatch/JULES_LAUNCH_STATE.json`
 - The launch-state `session_ids` arrays were corrected to track only
   `14369052129679399317`; stale ids mentioned inside packet warning text must
   not be treated as tracked sessions.
-- Jules CLI exposes no approve/auto-approve flag for this gate. In-app Browser
-  reached the Jules shell but was not signed in for session approval.
+- The session briefly reported `Awaiting Plan Approval`; a later fresh poll
+  moved it to `In Progress` without any local pull or Chrome approval.
 
 Only pull `14369052129679399317` after a fresh session list reports it as
 `Completed`.
@@ -220,9 +220,9 @@ Do not mark PR #64 production-ready unless one of these happens:
 3. the operator explicitly accepts current provider failures as non-blocking.
 
 Poll Jules session `14369052129679399317` with `bypass_cache=true`. It is
-currently `Awaiting Plan Approval`; do not pull until it reports `Completed`.
-Inspect output before applying, and reject any stale broad diff or
-provider-error greenwashing.
+currently `In Progress`; do not pull until it reports `Completed`. Inspect
+output before applying, and reject any stale broad diff or provider-error
+greenwashing.
 
 Until then, the server/dashboard/install/build side is booted and verified,
 but provider readiness remains the release blocker.
