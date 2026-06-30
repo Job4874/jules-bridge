@@ -9,7 +9,7 @@ $Project   = "tibin-terminal-2026"
 $Zone      = "us-central1-a"
 $VmName    = "jules-offload-worker"
 $MachineType = "e2-standard-4"
-$logDir = Join-Path $env:USERPROFILE ".jules\jules_inbox\gcp_boot"
+$logDir = Join-Path $PSScriptRoot "..\jules_inbox\gcp_boot"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $log = Join-Path $logDir ("gcp_{0:yyyyMMdd-HHmmss}.log" -f (Get-Date))
 

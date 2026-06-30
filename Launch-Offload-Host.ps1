@@ -41,7 +41,7 @@ try {
     $pressure = Invoke-RestMethod -Uri "$BridgeUrl/vm/resource_pressure" -Method POST -Headers $headers -Body "{}" -TimeoutSec 15
     Log ("VM pressure status={0} mem={1}" -f $pressure.status, $pressure.memory_percent)
     if ($pressure.status -eq "maxed_out") {
-        Log "Host maxed out — booting secondary VM via bridge"
+        Log "Host maxed out - booting secondary VM via bridge"
         $bootBody = @{ script_name = "Start-SecondaryVM.ps1"; dry_run = $false; allow_vm_boot = $true } | ConvertTo-Json
         try {
             $boot = Invoke-RestMethod -Uri "$BridgeUrl/vm/boot_secondary" -Method POST -Headers $headers -Body $bootBody -TimeoutSec 60
@@ -54,12 +54,12 @@ try {
     Log ("VM pressure skipped: {0}" -f $_.Exception.Message)
 }
 
-# Google Cloud compute worker (tibin-terminal-2026) — detached host script, not Cursor
+# Google Cloud compute worker (tibin-terminal-2026) - detached host script, not Cursor
 $gcpBoot = Join-Path $PSScriptRoot "vm_scripts\Boot-GCP-Worker.ps1"
 if (Test-Path $gcpBoot) {
     Log "Spawning GCP worker boot in background host process"
     Start-Process -FilePath "powershell.exe" -ArgumentList @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $gcpBoot
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$gcpBoot`""
     ) -WindowStyle Minimized | Out-Null
 }
 
