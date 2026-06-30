@@ -1,0 +1,57 @@
+{
+  "timestamp_local": "2026-06-30T10:59:00-06:00",
+  "branch": "codex/jules-production-finish",
+  "head_before_evidence_commit": "1c66eb9fcf254bc5559cd1a57f7c9d4ba77e7f6e",
+  "purpose": "Clarify the public LocalTunnel route contract after repeated checks showed public /dashboard returning 401.",
+  "route_contract_from_current_code": {
+    "bridge_public_exempt_routes": [
+      "/health",
+      "/ping",
+      "/dashboard/status",
+      "/vm/status",
+      "/chat",
+      "/chat/test"
+    ],
+    "dashboard_ui_route": "http://127.0.0.1:5173/",
+    "public_bridge_route": "https://shaggy-kiwis-shout.loca.lt",
+    "note": "The bridge does not serve the React dashboard UI at /dashboard. Public /dashboard without auth returns 401 because it is not exempt; with auth it returns 404 because no such bridge route exists."
+  },
+  "live_public_checks": {
+    "public_dashboard_status": {
+      "route": "GET https://shaggy-kiwis-shout.loca.lt/dashboard/status",
+      "result": "passed",
+      "cloud_online": 1,
+      "gemini": "error",
+      "openrouter": "error"
+    },
+    "public_dashboard_status_fresh": {
+      "route": "GET https://shaggy-kiwis-shout.loca.lt/dashboard/status?bypass_cache=true",
+      "result": "passed",
+      "cloud_online": 1,
+      "gemini": "error",
+      "openrouter": "error"
+    },
+    "public_dashboard_no_auth": {
+      "route": "GET https://shaggy-kiwis-shout.loca.lt/dashboard",
+      "result": "expected_auth_boundary",
+      "status": 401
+    },
+    "public_dashboard_with_auth": {
+      "route": "GET https://shaggy-kiwis-shout.loca.lt/dashboard",
+      "result": "expected_no_bridge_route",
+      "status": 404
+    }
+  },
+  "production_readiness": {
+    "public_tunnel_api_contract": "verified",
+    "provider_readiness": "still_degraded",
+    "ready_to_mark_clean": false,
+    "pr64_should_remain_draft": true
+  },
+  "jules_sessions": {
+    "primary": "7152730290236054698",
+    "primary_status": "In Progress",
+    "pull_applied": false,
+    "pull_reason": "Primary Jules session was not Completed in the fresh /jules/sessions poll."
+  }
+}
