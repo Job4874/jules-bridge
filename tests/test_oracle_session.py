@@ -1,13 +1,15 @@
+# pylint: disable=import-outside-toplevel
+
 """Unit tests for modules/oracle_session.py.
 
 All subprocess and filesystem calls are mocked — no Oracle or Quantower needed.
 """
 
 import os
-import subprocess
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
 
 
 class TestOracleStatus(unittest.TestCase):
@@ -113,14 +115,55 @@ class TestCodexHandoverIndex(unittest.TestCase):
 
     def test_existing_folder_returns_file_list(self):
         with tempfile.TemporaryDirectory() as d:
-            open(os.path.join(d, "a.md"), "w").close()
-            open(os.path.join(d, "b.md"), "w").close()
+            open(os.path.join(d, "a.md"), "w", encoding="utf-8").close()
+            open(os.path.join(d, "b.md"), "w", encoding="utf-8").close()
             with patch.object(self.os_mod, "_CODEX_HANDOVER_ROOT", d):
                 result = self.os_mod.codex_handover_index()
         self.assertTrue(result["exists"])
         self.assertEqual(result["file_count"], 2)
         paths = [f["relative_path"] for f in result["files"]]
         self.assertIn("a.md", paths)
+
+    def test_nested_directories_and_size(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "sub1", "sub2"))
+
+            # File 1: in root
+            p1 = os.path.join(d, "file1.txt")
+            with open(p1, "w", encoding="utf-8") as f:
+                f.write("hello")  # 5 bytes
+
+            # File 2: in sub1/sub2
+            p2 = os.path.join(d, "sub1", "sub2", "file2.txt")
+            with open(p2, "w", encoding="utf-8") as f:
+                f.write("world!")  # 6 bytes
+
+            with patch.object(self.os_mod, "_CODEX_HANDOVER_ROOT", d):
+                result = self.os_mod.codex_handover_index()
+
+        self.assertTrue(result["exists"])
+        self.assertEqual(result["file_count"], 2)
+
+        # files should be sorted by relative_path
+        files = result["files"]
+        self.assertEqual(files[0]["relative_path"], "file1.txt")
+        self.assertEqual(files[0]["size"], 5)
+        self.assertEqual(files[1]["relative_path"], "sub1/sub2/file2.txt")
+        self.assertEqual(files[1]["size"], 6)
+
+    def test_max_200_files_truncation(self):
+        with tempfile.TemporaryDirectory() as d:
+            for i in range(205):
+                p = os.path.join(d, f"file{i:03d}.txt")
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write("x")
+
+            with patch.object(self.os_mod, "_CODEX_HANDOVER_ROOT", d):
+                result = self.os_mod.codex_handover_index()
+
+        self.assertTrue(result["exists"])
+        self.assertEqual(result["file_count"], 205)
+        self.assertEqual(len(result["files"]), 200)
 
 
 if __name__ == "__main__":

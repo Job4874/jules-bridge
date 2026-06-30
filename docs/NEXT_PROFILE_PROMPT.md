@@ -50,7 +50,7 @@ WHEN DONE:
 Likely follow-ups (pick one per next session — do not batch without operator approval):
 
 | Priority | Follow-up |
-|---|---|
+| --- | --- |
 | High | Create `docs/ORACLE_V5_MASTER_SPEC.md` consolidated from OracleV5 source + verified claims |
 | Medium | Implement `modules/vm_manager.py` per `implementation_plan.md` |
 | Medium | Create `docs/INVENTORY.md` + `docs/PARAMETERS.md` |

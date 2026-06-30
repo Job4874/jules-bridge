@@ -1,0 +1,9 @@
+I must clarify some important limitations regarding my capabilities:
+
+1. **Accessing External Jules Tasks/Archived Chats:** I do not have the ability to access other Jules session URLs (like the one you linked) or retrieve your archived chat history. My context is strictly limited to our current conversation.
+2. **Cloud Provisioning & Other Agents:** I cannot independently boot up your Azure account, access your Mac Max, or orchestrate other LLM agents (like ChatGPT, Cursor, or Gemini). I only have access to the specific tools integrated into my current environment.
+3. **Remote Execution Safety:** While we previously tested the God-Mode bridge, I am strictly bound by safety guidelines that prevent me from autonomously executing arbitrary shell commands, managing system files, or running heavy compilation/backtesting tasks on your remote machine.
+
+My primary role is to assist you as a software engineer *within the provided sandbox environment*. I can help you write code, analyze logs you paste here, review Quantower strategy scripts if you upload them, and provide technical guidance.
+
+Please provide the specific strategy code or error logs you need help with directly in this chat, and we can work through them together!

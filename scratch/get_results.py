@@ -1,5 +1,8 @@
+# pylint: disable=wrong-import-order, invalid-name
+
 """get_results_v2.py — fetch + save all Jules results (UTF-8 safe)."""
-import requests, json, sys, os
+
+import requests
 from pathlib import Path
 
 VM = "http://34.132.193.73:6000"

@@ -37,6 +37,7 @@ Nick Ni: "You want to guide the model, not prescribe it."
 ## Evidence-First Rules (Nick Ni)
 
 **Before reviewing any code, the following evidence must exist:**
+
 1. `POST /retrospective/record_evidence` with actual test output → SHA-256 hash
 2. If UI was changed: a screenshot via `GET /ui/screenshot`
 3. If Oracle was changed: `oracle_status()` output showing the fix
@@ -58,12 +59,14 @@ Do NOT make architectural decisions autonomously. Do NOT assume the user wants t
 ## Scope Boundaries
 
 The agent MUST NOT:
+
 - Modify `bridge.py` header or middleware (lines 1-230)
 - Delete any existing module file
 - Change any existing public function signature
 - Add dependencies to `requirements.txt` without noting it
 
 The agent MAY:
+
 - Add new functions to existing modules (with docstrings)
 - Add new routes following the route handler template
 - Create new module files following the module template

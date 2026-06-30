@@ -28,6 +28,26 @@ Classify the blocker before asking for help:
 
 ## Mandatory Self-Unblocking Loop
 
+### Step 0: Connectivity Gate (MUST run before any work or HRE passes)
+
+1. `GET https://parade-marrow-pulp.ngrok-free.dev/ping` — if ERR_NGROK_3200 or timeout, tunnel is DEAD.
+2. `GET /tentacles` with `Authorization: Bearer JULES-SECURE-999` — if 401 or fail, auth or bridge is broken.
+3. `GET /health` — if fail, bridge process is down.
+
+If ALL three pass: proceed to work.
+If tunnel is dead: use **Offline Escalation** (see below). Do NOT attempt bridge-dependent work.
+If local bridge is up but tunnel is dead: write `[TUNNEL_DEAD]` git commit and stop.
+
+### Step 0b: Offline Escalation (when tunnel is confirmed dead)
+
+1. Write blocker to `jules_inbox/JULES_RESPONSE.md` with: what you tried, what failed, what you need.
+2. `git add jules_inbox/JULES_RESPONSE.md`
+3. `git commit -m "[TUNNEL_DEAD] <one-line blocker>"`
+4. `git push origin master`
+5. STOP working on bridge-dependent tasks. Work only on local-only tasks (tests, code review, documentation).
+
+### HRE Passes (after connectivity is confirmed)
+
 Before escalating, do up to three bounded passes:
 
 1. Re-read the current task and name the single blocker in one sentence.

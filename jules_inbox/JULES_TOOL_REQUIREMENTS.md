@@ -7,7 +7,7 @@ Bridge: `https://parade-marrow-pulp.ngrok-free.dev`
 ## Required Tool Mix
 
 | Local capability | Jules bridge route | Use |
-|------------------|--------------------|-----|
+| ------------------ | -------------------- | ----- |
 | Authenticated discovery | `GET /`, `GET /info` | Confirm a bearer-authenticated bridge URL opens to route metadata instead of 404 |
 | Health check | `GET /ping` | Confirm the bridge is online |
 | Route manifest | `GET /tentacles` | Discover available tools |

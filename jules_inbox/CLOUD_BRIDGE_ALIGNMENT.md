@@ -22,7 +22,7 @@ Do **not** probe `127.0.0.1`, `192.168.x.x`, or internal cloud IPs for the bridg
 ## Tentacles to use
 
 | Route | Purpose |
-|-------|---------|
+| ------- | --------- |
 | `GET /health` | Liveness check |
 | `GET /tentacles` | Full route manifest |
 | `POST /fs/read` | Read operator files on Local Node |
