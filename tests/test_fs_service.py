@@ -1,3 +1,5 @@
+# pylint: disable=import-outside-toplevel
+
 """Unit tests for modules/fs_service.py.
 
 Tests at the module interface level — no Flask or HTTP involved.
@@ -54,7 +56,7 @@ class TestFsWrite(unittest.TestCase):
             path = os.path.join(d, "out.txt")
             result = self.fs.write(path, "test content")
             self.assertEqual(result["status"], "success")
-            with open(path, "r") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 self.assertEqual(f.read(), "test content")
 
     def test_write_empty_content(self):
@@ -141,7 +143,7 @@ class TestFsListDir(unittest.TestCase):
 
     def test_list_dir_returns_entries(self):
         with tempfile.TemporaryDirectory() as d:
-            open(os.path.join(d, "file.txt"), "w").close()
+            open(os.path.join(d, "file.txt"), "w", encoding="utf-8").close()
             os.makedirs(os.path.join(d, "subdir"))
             entries = self.fs.list_dir(d)
             names = [e["name"] for e in entries]
@@ -150,7 +152,7 @@ class TestFsListDir(unittest.TestCase):
 
     def test_list_dir_dirs_sorted_first(self):
         with tempfile.TemporaryDirectory() as d:
-            open(os.path.join(d, "z_file.txt"), "w").close()
+            open(os.path.join(d, "z_file.txt"), "w", encoding="utf-8").close()
             os.makedirs(os.path.join(d, "a_dir"))
             entries = self.fs.list_dir(d)
             self.assertTrue(entries[0]["is_dir"])

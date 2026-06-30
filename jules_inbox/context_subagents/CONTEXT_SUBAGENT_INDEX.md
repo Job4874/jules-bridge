@@ -7,7 +7,7 @@
 - omitted_middle_chars: 26850
 
 | id | role | chars | within_budget | packet |
-|---|---|---:|---:|---|
+| --- | --- | ---: | ---: | --- |
 | CA-context_cartographer | context_cartographer | 5567 | True | C:\Users\abdul\.jules\jules_inbox\context_subagents\CA-context_cartographer.md |
 | CA-memory_curator | memory_curator | 5572 | True | C:\Users\abdul\.jules\jules_inbox\context_subagents\CA-memory_curator.md |
 | CA-implementation_planner | implementation_planner | 5544 | True | C:\Users\abdul\.jules\jules_inbox\context_subagents\CA-implementation_planner.md |

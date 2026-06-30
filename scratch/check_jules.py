@@ -1,4 +1,7 @@
-import requests, json
+"""check_jules.py — check status of the Jules VM worker agent."""
+import json
+
+import requests
 VM = "http://34.132.193.73:6000"
 r = requests.get(f"{VM}/status", timeout=10, proxies={"http":None,"https":None})
 s = r.json()

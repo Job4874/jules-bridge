@@ -26,7 +26,7 @@ Quantower provides native, low-latency support for:
 To run real-time volume calculations, maintain complex multi-monitor layouts, and compute microsecond-level Depth of Market (DOM) heatmaps, the system must meet rigorous hardware specifications. Quantower relies heavily on hardware acceleration to render visual elements without blocking the main trading threads.
 
 | Hardware Component | Minimum Requirement | Recommended Specification (Institutional / High-Frequency) |
-|---|---|---|
+| --- | --- | --- |
 | Operating System | Windows 10 (64-bit) | Windows 11 or Windows Server 2022 (64-bit) |
 | Processor (CPU) | Intel Core i5 / AMD Ryzen 5 (4 Cores) | Intel Core i9 / AMD Ryzen 9 (16+ Cores, high single-core frequency) |
 | System Memory (RAM) | 8 GB DDR4 | 32 GB or 64 GB DDR5 (For high-frequency tick history caching) |
@@ -117,7 +117,7 @@ CQG is a premier financial technology provider delivering low-latency connection
 
 #### Resolving Common CQG Errors
 
-- **Error: "Invalid Username or Password":** Ensure you are using your CQG credentials, not your broker's client portal login. CQG logins are usually specifically prefixed (e.g., AMP_ or OP_).
+- **Error: "Invalid Username or Password":** Ensure you are using your CQG credentials, not your broker's client portal login. CQG logins are usually specifically prefixed (e.g., AMP_or OP_).
 - **Error: "Connection limit reached":** CQG limits active sessions per user. If you are logged into another platform (like TradingView or Multicharts) with the same credentials, CQG will block Quantower from authenticating. You must disconnect the other sessions first.
 
 ### Connection to Rithmic
