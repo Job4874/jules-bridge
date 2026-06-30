@@ -145,67 +145,37 @@ def build_context_subagents(
     generated_at = datetime.now(timezone.utc).isoformat()
     try:
         source_rows = _load_sources(content=content, source_paths=source_paths)
+
+        early_exit = _check_early_exit(source_rows, generated_at)
+        if early_exit:
+            return early_exit
+
         readable_rows = [row for row in source_rows if row.get("readable")]
         missing_count = sum(1 for row in source_rows if not row.get("readable"))
-        if not source_rows:
-            return ContextSubagentPlan(
-                error="content or source_paths is required",
-                generated_at_utc=generated_at,
-                status="blocked",
-                source_count=len(source_rows),
-                readable_count=0,
-                missing_count=missing_count,
-                sources=_public_sources(source_rows),
-                capsules=[],
-                subagents=[],
-                packet_files=[],
-                plan_markdown="",
-            )
-        if not readable_rows:
-            return ContextSubagentPlan(
-                error="no readable source content",
-                generated_at_utc=generated_at,
-                status="blocked",
-                source_count=len(source_rows),
-                readable_count=0,
-                missing_count=missing_count,
-                sources=_public_sources(source_rows),
-                capsules=[],
-                subagents=[],
-                packet_files=[],
-                plan_markdown="",
-            )
 
         head = max(_MIN_EXCERPT_CHARS, int(head_chars or _DEFAULT_HEAD_CHARS))
         tail = max(_MIN_EXCERPT_CHARS, int(tail_chars or _DEFAULT_TAIL_CHARS))
         packet_budget = max(1000, int(max_packet_chars or _DEFAULT_PACKET_CHARS))
-        selected_roles = _select_roles(roles)
-        capsules = [
-            _capsule_for_source(row, head_chars=head, tail_chars=tail)
-            for row in readable_rows
-        ]
-        metrics = _context_metrics(capsules)
-        context_budget = _context_budget(
+
+        (
+            capsules,
             metrics,
+            context_budget,
+            memory_store,
+            eval_plan,
+            workflow,
+            subagents,
+        ) = _build_core_components(
+            readable_rows=readable_rows,
+            roles=roles,
+            task=task,
+            head=head,
+            tail=tail,
+            packet_budget=packet_budget,
             context_window_chars=context_window_chars,
             max_context_utilization=max_context_utilization,
         )
-        memory_store = _context_memory_store(capsules)
-        eval_plan = _long_session_eval_plan(metrics=metrics, context_budget=context_budget)
-        workflow = _no_slop_workflow(task=task, context_budget=context_budget)
-        subagents = [
-            _subagent_for_role(
-                role=role,
-                task=task,
-                capsules=capsules,
-                metrics=metrics,
-                workflow=workflow,
-                memory_store=memory_store,
-                eval_plan=eval_plan,
-                max_packet_chars=packet_budget,
-            )
-            for role in selected_roles
-        ]
+
         status = "partial" if missing_count else "ready"
         output = Path(output_dir) if output_dir else _DEFAULT_OUTPUT_DIR
         packet_files: list[str] = []
@@ -281,6 +251,82 @@ def build_context_subagents(
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
+
+def _check_early_exit(
+    source_rows: list[dict], generated_at: str
+) -> ContextSubagentPlan | None:
+    readable_rows = [row for row in source_rows if row.get("readable")]
+    missing_count = sum(1 for row in source_rows if not row.get("readable"))
+
+    if not source_rows:
+        return ContextSubagentPlan(
+            error="content or source_paths is required",
+            generated_at_utc=generated_at,
+            status="blocked",
+            source_count=len(source_rows),
+            readable_count=0,
+            missing_count=missing_count,
+            sources=_public_sources(source_rows),
+            capsules=[],
+            subagents=[],
+            packet_files=[],
+            plan_markdown="",
+        )
+    if not readable_rows:
+        return ContextSubagentPlan(
+            error="no readable source content",
+            generated_at_utc=generated_at,
+            status="blocked",
+            source_count=len(source_rows),
+            readable_count=0,
+            missing_count=missing_count,
+            sources=_public_sources(source_rows),
+            capsules=[],
+            subagents=[],
+            packet_files=[],
+            plan_markdown="",
+        )
+    return None
+
+def _build_core_components(
+    readable_rows: list[dict],
+    roles: Iterable[str] | None,
+    task: str,
+    head: int,
+    tail: int,
+    packet_budget: int,
+    context_window_chars: int,
+    max_context_utilization: float,
+) -> tuple[list[ContextCapsule], dict, dict, dict, dict, dict, list[ContextSubagent]]:
+    selected_roles = _select_roles(roles)
+    capsules = [
+        _capsule_for_source(row, head_chars=head, tail_chars=tail)
+        for row in readable_rows
+    ]
+    metrics = _context_metrics(capsules)
+    context_budget = _context_budget(
+        metrics,
+        context_window_chars=context_window_chars,
+        max_context_utilization=max_context_utilization,
+    )
+    memory_store = _context_memory_store(capsules)
+    eval_plan = _long_session_eval_plan(metrics=metrics, context_budget=context_budget)
+    workflow = _no_slop_workflow(task=task, context_budget=context_budget)
+    subagents = [
+        _subagent_for_role(
+            role=role,
+            task=task,
+            capsules=capsules,
+            metrics=metrics,
+            workflow=workflow,
+            memory_store=memory_store,
+            eval_plan=eval_plan,
+            max_packet_chars=packet_budget,
+        )
+        for role in selected_roles
+    ]
+    return capsules, metrics, context_budget, memory_store, eval_plan, workflow, subagents
+
 
 def _load_sources(content: str, source_paths: Iterable[str] | None) -> list[dict]:
     rows: list[dict] = []
