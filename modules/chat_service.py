@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import time
+import uuid
 from typing import Any, Mapping, Sequence
 
 _GEMINI_FAST = "gemini-2.0-flash"
@@ -55,10 +56,20 @@ def _env_value(env: Mapping[str, str], key: str) -> str:
 
 def _sanitize_detail(detail: Any, env: Mapping[str, str]) -> str:
     text = str(detail)
-    for key_name in ("GEMINI_API_KEY", "OPENROUTER_API_KEY"):
+    keys_to_redact = ["GEMINI_API_KEY", "OPENROUTER_API_KEY"]
+    for key_name in keys_to_redact:
         secret = _env_value(env, key_name)
         if secret:
             text = text.replace(secret, "[redacted]")
+
+    # Also redact from plural keys
+    plural_keys = _env_value(env, "OPENROUTER_API_KEYS")
+    if plural_keys:
+        for secret in plural_keys.split(","):
+            secret = secret.strip()
+            if secret:
+                text = text.replace(secret, "[redacted]")
+
     return text[:300]
 
 
@@ -129,6 +140,20 @@ def _extract_openrouter_text(payload: Any) -> str:
     return str(payload["choices"][0]["message"]["content"])
 
 
+def _get_openrouter_keys(env: Mapping[str, str]) -> list[str]:
+    keys = []
+    main_key = _env_value(env, "OPENROUTER_API_KEY")
+    if main_key:
+        keys.append(main_key)
+    plural_keys = _env_value(env, "OPENROUTER_API_KEYS")
+    if plural_keys:
+        for k in plural_keys.split(","):
+            k = k.strip()
+            if k and k not in keys:
+                keys.append(k)
+    return keys
+
+
 def test_chat_providers(
     env: Mapping[str, str] | None = None,
     requests_client: Any | None = None,
@@ -170,36 +195,61 @@ def test_chat_providers(
     else:
         results["gemini"] = {"status": "no_key", "detail": "GEMINI_API_KEY not set"}
 
-    openrouter_key = _env_value(env_map, "OPENROUTER_API_KEY")
-    if openrouter_key:
+    or_keys = _get_openrouter_keys(env_map)
+    if or_keys:
+        start = clock()
+        # Try keys in order for health check too, or just report first successful?
+        # Requirement: "Try candidates in order, redact every candidate in error details"
+        or_ok = False
+        last_error: dict[str, Any] = {}
+        for key in or_keys:
+            try:
+                if client is None:
+                    raise RuntimeError("requests package unavailable")
+                response = client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    json={"model": _OPENROUTER_FAST, "messages": [{"role": "user", "content": "Say OK"}]},
+                    headers={"Authorization": f"Bearer {key}"},
+                    timeout=20,
+                )
+                elapsed = _elapsed_ms(start, clock)
+                if response.status_code == 200:
+                    results["openrouter"] = {"status": "ok", "model": _OPENROUTER_FAST, "ms": elapsed}
+                    or_ok = True
+                    break
+                else:
+                    last_error = {
+                        "status": "error",
+                        "code": response.status_code,
+                        "detail": _sanitize_detail(response.text, env_map),
+                        "ms": elapsed,
+                    }
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                last_error = {
+                    "status": "exception",
+                    "detail": _sanitize_detail(exc, env_map),
+                    "ms": _elapsed_ms(start, clock),
+                }
+
+        if not or_ok:
+            results["openrouter"] = last_error
+    else:
+        results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY(S) not set"}
+
+    # VM Fallback health
+    is_vm_test = getattr(requests_client, "_is_vm_test", False)
+    # In production, we don't pass anything, and client is the requests module.
+    if is_vm_test or (requests_client is None and client is not None and str(type(client)) == "<class 'module'>"):
         start = clock()
         try:
-            if client is None:
-                raise RuntimeError("requests package unavailable")
-            response = client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                json={"model": _OPENROUTER_FAST, "messages": [{"role": "user", "content": "Say OK"}]},
-                headers={"Authorization": f"Bearer {openrouter_key}"},
-                timeout=20,
-            )
-            elapsed = _elapsed_ms(start, clock)
-            if response.status_code == 200:
-                results["openrouter"] = {"status": "ok", "model": _OPENROUTER_FAST, "ms": elapsed}
+            from modules import vm_relay  # pylint: disable=import-outside-toplevel
+            vm_status = vm_relay.get_vm_status()
+            if vm_status.get("online"):
+                results["vm"] = {"status": "ok", "model": "jules-worker", "ms": _elapsed_ms(start, clock)}
             else:
-                results["openrouter"] = {
-                    "status": "error",
-                    "code": response.status_code,
-                    "detail": _sanitize_detail(response.text, env_map),
-                    "ms": elapsed,
-                }
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            results["openrouter"] = {
-                "status": "exception",
-                "detail": _sanitize_detail(exc, env_map),
-                "ms": _elapsed_ms(start, clock),
-            }
-    else:
-        results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY not set"}
+                results["vm"] = {"status": "offline"}
+        except Exception:  # pylint: disable=broad-exception-caught
+            results["vm"] = {"status": "error"}
 
     return ChatHealthResult(
         healthy=any(row.get("status") == "ok" for row in results.values()),
@@ -250,27 +300,57 @@ def chat(
         errors.append(f"Gemini exception: {_sanitize_detail(exc, env_map)}")
 
     if not response_text:
-        try:
-            openrouter_key = _env_value(env_map, "OPENROUTER_API_KEY")
-            if openrouter_key:
+        or_keys = _get_openrouter_keys(env_map)
+        for key in or_keys:
+            try:
                 if client is None:
                     raise RuntimeError("requests package unavailable")
                 model = _openrouter_model(model_alias)
                 response = client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
                     json={"model": model, "messages": _openrouter_messages(message, image_base64, history, system)},
-                    headers={"Authorization": f"Bearer {openrouter_key}"},
+                    headers={"Authorization": f"Bearer {key}"},
                     timeout=45,
                 )
                 if response.status_code == 200:
                     response_text = _extract_openrouter_text(response.json())
                     model_used = f"openrouter/{model}"
+                    break
                 else:
                     errors.append(
                         f"OpenRouter {response.status_code}: {_sanitize_detail(response.text, env_map)[:200]}"
                     )
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            errors.append(f"OpenRouter exception: {_sanitize_detail(exc, env_map)}")
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                errors.append(f"OpenRouter exception: {_sanitize_detail(exc, env_map)}")
+
+    if not response_text:
+        # VM Chat Fallback
+        is_vm_test = getattr(requests_client, "_is_vm_test", False)
+        if is_vm_test or (requests_client is None and client is not None and str(type(client)) == "<class 'module'>"):
+            try:
+                from modules import vm_relay  # pylint: disable=import-outside-toplevel
+                vm_status = vm_relay.get_vm_status()
+                if vm_status.get("online"):
+                    marker = f"chat-fallback-{uuid.uuid4().hex[:8]}"
+                    task_payload = f"[{marker}] {message}"
+                    vm_relay.send_task_to_vm(task_payload, task_type="chat", context=system)
+
+                    # Brief polling
+                    for _ in range(5):
+                        time.sleep(2)
+                        status = vm_relay.get_vm_status()
+                        recent = status.get("recent", [])
+                        for task_entry in reversed(recent):
+                            # The VM agent logs task text in 'task' field.
+                            # Our marker is in the task text.
+                            if marker in task_entry.get("task", "") and task_entry.get("status") == "done":
+                                response_text = task_entry.get("result")
+                                model_used = "vm/jules-worker"
+                                break
+                        if response_text:
+                            break
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                errors.append(f"VM fallback exception: {str(exc)[:100]}")
 
     elapsed_ms = _elapsed_ms(start, clock)
     if response_text:
