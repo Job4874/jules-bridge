@@ -243,8 +243,14 @@ def path_field(data, key="path", default=MISSING):
 
 @app.before_request
 def _circuit_breaker_check():
-    from modules.circuit_breaker import circuit_breaker_hook
-    return circuit_breaker_hook()
+    from modules.circuit_breaker import check_circuit_breaker
+    is_open, retry_after = check_circuit_breaker(request.path)
+    if is_open:
+        return jsonify({
+            "error": "circuit_open",
+            "route": request.path,
+            "retry_after_s": retry_after
+        }), 429
 
 
 def existing_path(path, kind="file"):
@@ -329,19 +335,6 @@ def _evidence_hard_gate():
     }), 423
 
 
-@app.before_request
-def _circuit_breaker_check():
-    # pylint: disable=import-outside-toplevel
-    from modules.circuit_breaker import check_circuit_breaker
-
-    is_open, retry_after = check_circuit_breaker(request.path)
-    if is_open:
-        LOGGER.warning("Circuit breaker OPEN for %s", request.path)
-        return jsonify({
-            "error": "circuit_open",
-            "route": request.path,
-            "retry_after_s": retry_after
-        }), 429
 
 @app.after_request
 def _finalize_request(response):
@@ -438,6 +431,7 @@ TENTACLES = [
     {"name": "akc_subagents",    "route": "POST /akc/subagents",            "reach": "Build budgeted context capsules and sub-agent packets without launching workers"},  # pylint: disable=line-too-long
     # Dashboard + Chat routes
     {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
+    {"name": "health_deep",      "route": "GET /health/deep",                "reach": "Full system health check"},
     {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},  # pylint: disable=line-too-long
     {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},  # pylint: disable=line-too-long
 ]
@@ -1745,6 +1739,15 @@ def dashboard_status():
     from modules.dashboard_module import get_dashboard_status  # pylint: disable=import-outside-toplevel
     result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
     return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/health/deep", methods=["GET"])
+@route_errors
+def health_deep():
+    """GET /health/deep — Full system readiness health check."""
+    from modules.health_service import get_deep_health  # pylint: disable=import-outside-toplevel
+    result = get_deep_health()
+    return jsonify(result), 200
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 """Tests for chat provider routing."""
 
 import unittest
+from unittest.mock import patch
 
 from modules import chat_service
 
@@ -31,26 +32,64 @@ def clock_from(values):
 
 
 class TestChatProviderHealth(unittest.TestCase):
-    def test_no_keys_reports_provider_gaps_without_requests(self):
+    def setUp(self):
+        chat_service._last_vm_success = 0.0
+
+    @patch("modules.vm_relay.get_vm_status")
+    def test_no_keys_reports_provider_gaps_without_requests(self, mock_vm_status):
+        mock_vm_status.return_value = {"online": False}
         result = chat_service.test_chat_providers(env={}, requests_client=FakeRequests([]))
 
         self.assertFalse(result["healthy"])
         self.assertEqual(result["providers"]["gemini"]["status"], "no_key")
         self.assertEqual(result["providers"]["openrouter"]["status"], "no_key")
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "offline")
 
-    def test_gemini_health_success_redacts_from_result_shape(self):
+    @patch("modules.vm_relay.get_vm_status")
+    def test_gemini_health_success_redacts_from_result_shape(self, mock_vm_status, mock_requests=None):
+        mock_vm_status.return_value = {"online": False}
         client = FakeRequests([FakeResponse(200)])
 
         result = chat_service.test_chat_providers(
             env={"GEMINI_API_KEY": "secret-key"},
             requests_client=client,
-            clock=clock_from([1.0, 1.025]),
+            clock=clock_from([1.0, 1.025, 1.030]),
         )
 
         self.assertTrue(result["healthy"])
         self.assertEqual(result["providers"]["gemini"]["status"], "ok")
         self.assertEqual(result["providers"]["gemini"]["ms"], 24)
         self.assertNotIn("secret-key", str(result))
+
+    @patch("modules.vm_relay.get_vm_status")
+    def test_vm_health_reports_recent_success_on_flaky_probe(self, mock_vm_status):
+        # Reset global success evidence for testing
+        chat_service._last_vm_success = 0.0
+
+        # 1. Failed probe, no success evidence
+        mock_vm_status.return_value = {"online": True, "gemini": False, "openrouter": False}
+        result = chat_service.test_chat_providers(env={}, clock=clock_from([1000.0]))
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "fail")
+
+        # 2. Record a success
+        chat_service._last_vm_success = 1000.0
+
+        # 3. Flaky probe with recent success evidence should report 'ok'
+        result = chat_service.test_chat_providers(env={}, clock=clock_from([1010.0]))
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "ok")
+        self.assertIn("recent success", result["providers"]["vm_worker"]["detail"])
+
+    @patch("modules.vm_relay.get_vm_status")
+    def test_vm_health_reports_fail_after_ttl_expires(self, mock_vm_status):
+        # 1. Success evidence at T=1000
+        chat_service._last_vm_success = 1000.0
+
+        # 2. Probe fails at T=1000 + TTL + 1
+        mock_vm_status.return_value = {"online": True, "gemini": False, "openrouter": False}
+        clock_val = 1000.0 + chat_service._VM_SUCCESS_TTL + 1.0
+        result = chat_service.test_chat_providers(env={}, clock=clock_from([clock_val]))
+
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "fail")
 
 
 class TestChatCompletion(unittest.TestCase):

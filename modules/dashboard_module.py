@@ -20,6 +20,7 @@ from typing import Any
 from functools import lru_cache
 
 from modules.vm_manager import detect_resource_pressure
+from modules.chat_service import test_chat_providers
 
 _ROOT = Path(__file__).parent.parent
 _LOG_PATH = _ROOT / "bridge.log"
@@ -186,6 +187,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         fleet = _fleet_status()
         cloud = _vm_info(env)
         logs = _tail_log()
+        ai_health = test_chat_providers()
 
         ngrok_url = ""
         # Try to extract ngrok URL from recent logs
@@ -216,6 +218,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
             },
             "cloud": cloud,
             "jules_fleet": fleet,
+            "providers": ai_health.get("providers", {}),
             "recent_logs": logs,
             "env_keys_present": [
                 k for k in ["GEMINI_API_KEY", "GCE_WORKER_IP", "OPENROUTER_API_KEY", "GMAIL_USER"]

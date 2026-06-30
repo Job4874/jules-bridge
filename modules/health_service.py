@@ -15,41 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict
 
 from modules.vm_manager import detect_resource_pressure
-
-def _check_gemini() -> Dict[str, Any]:
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        return {"status": "keyless", "detail": "GEMINI_API_KEY unset; using stub mode"}
-
-    t0 = time.monotonic()
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-        r = requests.get(url, timeout=10)
-        elapsed = int((time.monotonic() - t0) * 1000)
-        if r.status_code == 200:
-            return {"status": "pass", "ms": elapsed, "detail": "API key valid"}
-        return {"status": "fail", "code": r.status_code, "ms": elapsed, "detail": r.text[:200]}
-    except Exception as exc:
-        elapsed = int((time.monotonic() - t0) * 1000)
-        return {"status": "error", "ms": elapsed, "detail": str(exc)}
-
-def _check_openrouter() -> Dict[str, Any]:
-    or_key = os.environ.get("OPENROUTER_API_KEY", "")
-    if not or_key:
-        return {"status": "keyless", "detail": "OPENROUTER_API_KEY unset; using stub mode"}
-
-    t0 = time.monotonic()
-    try:
-        url = "https://openrouter.ai/api/v1/models"
-        headers = {"Authorization": f"Bearer {or_key}"}
-        r = requests.get(url, headers=headers, timeout=10)
-        elapsed = int((time.monotonic() - t0) * 1000)
-        if r.status_code == 200:
-            return {"status": "pass", "ms": elapsed, "detail": "API key valid"}
-        return {"status": "fail", "code": r.status_code, "ms": elapsed, "detail": r.text[:200]}
-    except Exception as exc:
-        elapsed = int((time.monotonic() - t0) * 1000)
-        return {"status": "error", "ms": elapsed, "detail": str(exc)}
+from modules.chat_service import test_chat_providers
 
 def _check_gcp() -> Dict[str, Any]:
     from modules.reasoning_module import _gcloud_access_token
@@ -89,15 +55,16 @@ def get_disk_usage() -> Dict[str, Any]:
 
 def get_deep_health() -> Dict[str, Any]:
     """Execute all health checks in parallel and return aggregated status."""
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        f_gemini = executor.submit(_check_gemini)
-        f_openrouter = executor.submit(_check_openrouter)
+    chat_health = test_chat_providers()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
         f_gcp = executor.submit(_check_gcp)
         f_azure = executor.submit(_check_azure)
 
         results = {
-            "gemini": f_gemini.result(),
-            "openrouter": f_openrouter.result(),
+            "gemini": chat_health["providers"].get("gemini", {"status": "unknown"}),
+            "openrouter": chat_health["providers"].get("openrouter", {"status": "unknown"}),
+            "vm_worker": chat_health["providers"].get("vm_worker", {"status": "unknown"}),
             "gcp": f_gcp.result(),
             "azure": f_azure.result(),
         }
