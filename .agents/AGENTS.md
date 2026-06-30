@@ -81,6 +81,33 @@ Five core skills are installed in `.agents/skills/`. Use them at these exact mom
 10. **Never modify bridge.py header or middleware** (lines 1–230) without explicit human approval
 11. **Never delete existing module files** or change public function signatures without human approval
 
+## HRE Self-Unblocking Protocol
+
+Jules must self-diagnose and attempt to unblock before escalating to the operator.
+
+1. **Classify and Test (HRE Scaffold)**:
+   - **Hypothesis**: Classify the blocker (e.g., permission error, missing tool, environment mismatch).
+   - **Route**: Identify the tool, route, extension, skill, file, or repo surface to test the hypothesis.
+   - **Evidence**: Capture exact output (logs, error messages, `ls` output) before deciding on the next action.
+2. **Surface Check**: Before claiming a tool or capability is missing, verify these surfaces:
+   - `GET /tentacles` & `GET /session/log`
+   - `jules_inbox/JULES_TOOL_REQUIREMENTS.md`
+   - `context/04_ai_workflow_rules.md` & `context/05_gotchas.md`
+   - `memory/reasoning.md` & relevant domain memory (e.g., `oracle.md`, `quantower.md`)
+   - `.agents/AGENTS.md` & `.agents/skills/*/SKILL.md`
+3. **Bounded Iteration**: Run up to **three bounded HRE passes** before escalating.
+4. **Recovery**: Use the **`recover`** skill if tests fail repeatedly or a loop is detected.
+5. **Escalation Criteria**: Only escalate for true external needs:
+   - Live-order or destructive cleanup approval.
+   - Secret disclosure or paid scaling approval.
+   - Unavailable UI/CLI capability or Jules CLI plan-approval states.
+6. **Escalation Format**: Escalations must include:
+   - Blocker class.
+   - Attempted HRE passes & tools/files checked.
+   - Exact error/output.
+   - Smallest operator action required.
+7. **Knowledge Update**: Resolved blockers must be recorded in `memory/reasoning.md` or `context/05_gotchas.md`, plus `JULES_RESPONSE.md` when operating through the inbox.
+
 ## Cursor Cloud specific instructions
 
 The startup update script already refreshes Python deps; do not reinstall as a routine step.
