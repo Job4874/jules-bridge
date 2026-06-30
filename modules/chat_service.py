@@ -134,13 +134,16 @@ def test_chat_providers(
     requests_client: Any | None = None,
     clock: Any = time.monotonic,
 ) -> ChatHealthResult:
-    """Probe configured chat providers with minimal requests."""
+    """Probe configured chat providers with minimal requests in parallel."""
+    from concurrent.futures import ThreadPoolExecutor
+
     env_map = os.environ if env is None else env
     client = _requests_client(requests_client)
-    results: dict[str, dict[str, Any]] = {}
 
-    gemini_key = _env_value(env_map, "GEMINI_API_KEY")
-    if gemini_key:
+    def _probe_gemini():
+        gemini_key = _env_value(env_map, "GEMINI_API_KEY")
+        if not gemini_key:
+            return {"status": "no_key", "detail": "GEMINI_API_KEY not set"}
         start = clock()
         try:
             if client is None:
@@ -153,25 +156,32 @@ def test_chat_providers(
             response = client.post(url, json=payload, timeout=15)
             elapsed = _elapsed_ms(start, clock)
             if response.status_code == 200:
-                results["gemini"] = {"status": "ok", "model": _GEMINI_FAST, "ms": elapsed}
-            else:
-                results["gemini"] = {
+                body = response.json() if response.text else {}
+                if "candidates" in body:
+                    return {"status": "ok", "model": _GEMINI_FAST, "ms": elapsed}
+                return {
                     "status": "error",
-                    "code": response.status_code,
-                    "detail": _sanitize_detail(response.text, env_map),
+                    "code": 200,
+                    "detail": f"Unexpected response shape: {str(body)[:100]}",
                     "ms": elapsed,
                 }
+            return {
+                "status": "error",
+                "code": response.status_code,
+                "detail": _sanitize_detail(response.text, env_map),
+                "ms": elapsed,
+            }
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            results["gemini"] = {
+            return {
                 "status": "exception",
                 "detail": _sanitize_detail(exc, env_map),
                 "ms": _elapsed_ms(start, clock),
             }
-    else:
-        results["gemini"] = {"status": "no_key", "detail": "GEMINI_API_KEY not set"}
 
-    openrouter_key = _env_value(env_map, "OPENROUTER_API_KEY")
-    if openrouter_key:
+    def _probe_openrouter():
+        openrouter_key = _env_value(env_map, "OPENROUTER_API_KEY")
+        if not openrouter_key:
+            return {"status": "no_key", "detail": "OPENROUTER_API_KEY not set"}
         start = clock()
         try:
             if client is None:
@@ -184,22 +194,35 @@ def test_chat_providers(
             )
             elapsed = _elapsed_ms(start, clock)
             if response.status_code == 200:
-                results["openrouter"] = {"status": "ok", "model": _OPENROUTER_FAST, "ms": elapsed}
-            else:
-                results["openrouter"] = {
+                body = response.json() if response.text else {}
+                if "choices" in body:
+                    return {"status": "ok", "model": _OPENROUTER_FAST, "ms": elapsed}
+                return {
                     "status": "error",
-                    "code": response.status_code,
-                    "detail": _sanitize_detail(response.text, env_map),
+                    "code": 200,
+                    "detail": f"Unexpected response shape: {str(body)[:100]}",
                     "ms": elapsed,
                 }
+            return {
+                "status": "error",
+                "code": response.status_code,
+                "detail": _sanitize_detail(response.text, env_map),
+                "ms": elapsed,
+            }
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            results["openrouter"] = {
+            return {
                 "status": "exception",
                 "detail": _sanitize_detail(exc, env_map),
                 "ms": _elapsed_ms(start, clock),
             }
-    else:
-        results["openrouter"] = {"status": "no_key", "detail": "OPENROUTER_API_KEY not set"}
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        f_gemini = executor.submit(_probe_gemini)
+        f_openrouter = executor.submit(_probe_openrouter)
+        results = {
+            "gemini": f_gemini.result(),
+            "openrouter": f_openrouter.result(),
+        }
 
     return ChatHealthResult(
         healthy=any(row.get("status") == "ok" for row in results.values()),

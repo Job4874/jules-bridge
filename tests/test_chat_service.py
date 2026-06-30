@@ -8,8 +8,8 @@ from modules import chat_service
 class FakeResponse:
     def __init__(self, status_code, payload=None, text=""):
         self.status_code = status_code
-        self._payload = payload or {}
-        self.text = text
+        self._payload = payload
+        self.text = text if text else (str(payload) if payload else "")
 
     def json(self):
         return self._payload
@@ -39,7 +39,7 @@ class TestChatProviderHealth(unittest.TestCase):
         self.assertEqual(result["providers"]["openrouter"]["status"], "no_key")
 
     def test_gemini_health_success_redacts_from_result_shape(self):
-        client = FakeRequests([FakeResponse(200)])
+        client = FakeRequests([FakeResponse(200, payload={"candidates": []})])
 
         result = chat_service.test_chat_providers(
             env={"GEMINI_API_KEY": "secret-key"},
@@ -51,6 +51,31 @@ class TestChatProviderHealth(unittest.TestCase):
         self.assertEqual(result["providers"]["gemini"]["status"], "ok")
         self.assertEqual(result["providers"]["gemini"]["ms"], 24)
         self.assertNotIn("secret-key", str(result))
+
+    def test_gemini_health_fail_on_invalid_shape(self):
+        client = FakeRequests([FakeResponse(200, payload={"error": "bad"})])
+
+        result = chat_service.test_chat_providers(
+            env={"GEMINI_API_KEY": "secret-key"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.025]),
+        )
+
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["providers"]["gemini"]["status"], "error")
+        self.assertEqual(result["providers"]["gemini"]["code"], 200)
+
+    def test_openrouter_health_success(self):
+        client = FakeRequests([FakeResponse(200, payload={"choices": []})])
+
+        result = chat_service.test_chat_providers(
+            env={"OPENROUTER_API_KEY": "or-key"},
+            requests_client=client,
+            clock=clock_from([1.0, 1.025]),
+        )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["openrouter"]["status"], "ok")
 
 
 class TestChatCompletion(unittest.TestCase):
