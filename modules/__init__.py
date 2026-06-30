@@ -125,6 +125,10 @@ from .context_orchestrator import (
     ContextSubagentPlan,
     build_context_subagents,
 )
+from .repo_context_guard import (
+    RepoContextGuardResult,
+    build_repo_context_guard,
+)
 from .app_launcher import LaunchResult, launch_browser_to_url
 from .chat_service import ChatHealthResult, ChatResult, test_chat_providers, chat
 
@@ -248,6 +252,9 @@ __all__ = [
     "ContextSubagent",
     "ContextSubagentPlan",
     "build_context_subagents",
+    # repo_context_guard
+    "RepoContextGuardResult",
+    "build_repo_context_guard",
     # app_launcher
     "LaunchResult",
     "launch_browser_to_url",

@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from modules.repo_context_guard import build_repo_context_guard
 from modules.vm_manager import detect_resource_pressure
 
 _ROOT = Path(__file__).parent.parent
@@ -183,6 +184,9 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         fleet = _fleet_status()
         cloud = _vm_info(env)
         logs = _tail_log()
+        repo_context = build_repo_context_guard(include_repos=False)
+        repo_summary = dict(repo_context.get("summary", {}))
+        repo_summary.pop("sample_repos", None)
 
         ngrok_url = ""
         # Try to extract ngrok URL from recent logs
@@ -213,6 +217,13 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
             },
             "cloud": cloud,
             "jules_fleet": fleet,
+            "repo_context": {
+                "status": repo_context.get("status", "unknown"),
+                "summary": repo_summary,
+                "collisions": repo_context.get("collisions", [])[:12],
+                "guardrails": repo_context.get("guardrails", []),
+                "cache_age_s": repo_context.get("cache_age_s", 0),
+            },
             "recent_logs": logs,
             "env_keys_present": [
                 k for k in ["GEMINI_API_KEY", "GCE_WORKER_IP", "OPENROUTER_API_KEY", "GMAIL_USER"]

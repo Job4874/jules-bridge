@@ -30,7 +30,8 @@ def test_get_dashboard_status_happy_path():
          patch('modules.dashboard_module.detect_resource_pressure') as mock_pressure, \
          patch('modules.dashboard_module._fleet_status') as mock_fleet, \
          patch('modules.dashboard_module._vm_info') as mock_vm, \
-         patch('modules.dashboard_module._tail_log') as mock_tail:
+         patch('modules.dashboard_module._tail_log') as mock_tail, \
+         patch('modules.dashboard_module.build_repo_context_guard') as mock_repo_guard:
 
         mock_env_vars.return_value = {
             "GEMINI_API_KEY": "yes",
@@ -61,6 +62,13 @@ def test_get_dashboard_status_happy_path():
             "Log line 1",
             "Starting ngrok at https://random-ngrok-url.ngrok.io/"
         ]
+        mock_repo_guard.return_value = {
+            "status": "ready",
+            "summary": {"repo_count": 2, "collision_count": 1, "sample_repos": ["private-repo"]},
+            "collisions": [{"type": "port_collision", "key": "5000"}],
+            "guardrails": ["label by repo"],
+            "cache_age_s": 0,
+        }
 
         # Call get_dashboard_status
         start_utc = datetime.now(timezone.utc)
@@ -82,6 +90,9 @@ def test_get_dashboard_status_happy_path():
 
         assert result["cloud"]["total"] == 1
         assert result["jules_fleet"]["launched"] == 1
+        assert result["repo_context"]["summary"]["repo_count"] == 2
+        assert "sample_repos" not in result["repo_context"]["summary"]
+        assert result["repo_context"]["collisions"][0]["type"] == "port_collision"
 
         assert result["recent_logs"] == ["Log line 1", "Starting ngrok at https://random-ngrok-url.ngrok.io/"]
         assert "GEMINI_API_KEY" in result["env_keys_present"]

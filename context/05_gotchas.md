@@ -206,6 +206,28 @@
 
 
 
+## repo_context_guard
+
+
+
+- **`build_repo_context_guard(...)`** — public function never raises; it returns `status`, `summary`, optional `repos`, `collisions`, `guardrails`, and `error`.
+
+- **`GET /repo/context-guard`** — protected full inventory route. Query params are `root`, `max_depth`, `max_repos`, `include_repos`, and `use_cache`.
+
+- **Dashboard behavior** — `/dashboard/status` includes only compact `repo_context` summary/top collisions because that route is used for polling.
+
+- **Dashboard privacy** — `/dashboard/status` is unauthenticated; never include repo sample names, full paths, full remote URLs, or env key lists there. Keep full inventory on protected `/repo/context-guard`.
+
+- **Cache TTL** — repo scanning is cached separately with `REPO_CONTEXT_GUARD_CACHE_TTL_S` (default 120s). Do not run a full filesystem scan every dashboard poll.
+
+- **Secrets** — env key names can be returned for readiness, but values for keys matching KEY/TOKEN/SECRET/PASSWORD/PASS/CREDENTIAL/AUTH must never be returned.
+
+- **Ports** — bare numeric env values count as ports only when the env key contains `PORT`; otherwise boolean flags such as `FEATURE=1` become false positives.
+
+- **Collisions** — `port_collision`, `node_ref_collision`, and `local_dependency_cross_project` are the no-slop warnings to review before launching agents or reusing servers.
+
+
+
 ## inbox_service
 
 
@@ -248,7 +270,7 @@
 
 - **`POST /jules/cycle`** is the operator-safe orchestration route; it composes dispatch/launch/pull/COT and keeps live launch disabled if remote listing is not `ok`
 
-- **Windows Jules CLI** should prefer `C:\Users\abdul\AppData\Roaming\npm\bin\jules.exe` for bare `jules`; the npm `jules.cmd` shim can hang while the direct binary returns version and remote sessions cleanly
+- **Windows Jules CLI** should prefer `JULES_CLI_PATH`, direct npm-prefix `bin\jules.exe`, or `C:\Users\abdul\.npm-packages\bin\jules.exe` for bare `jules`; the npm `jules.cmd` shim can hang while the direct binary returns version and remote sessions cleanly
 
 - **Launch packet encoding** must stay UTF-8; Windows `charmap` encoding failed on packet emoji and left `jules.exe new` waiting for input
 
@@ -350,7 +372,7 @@
 
 
 
-- The npm `jules.cmd` shim can hang on Windows stdin piping; always prefer `C:\Users\abdul\AppData\Roaming\npm\bin\jules.exe` directly.
+- The npm `jules.cmd` shim can hang on Windows stdin piping; always prefer a direct `jules.exe`, especially `C:\Users\abdul\.npm-packages\bin\jules.exe` on this machine.
 
 - `jules.exe` temp binary at `%TEMP%\jules_tmp\jules.exe` is extracted at first run and can be cleaned by Windows Disk Cleanup or temp sweeps; fix with `npm install -g @google/jules`.
 

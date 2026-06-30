@@ -141,7 +141,7 @@ def test_chat_providers(
 
     gemini_key = _env_value(env_map, "GEMINI_API_KEY")
     if not gemini_key:
-        results["gemini"] = {"status": "ok", "model": _GEMINI_FAST, "ms": 0}
+        results["gemini"] = {"status": "no_key", "model": _GEMINI_FAST, "ms": 0}
     else:
         start = clock()
         try:
@@ -172,7 +172,7 @@ def test_chat_providers(
 
     openrouter_key = _env_value(env_map, "OPENROUTER_API_KEY")
     if not openrouter_key:
-        results["openrouter"] = {"status": "ok", "model": _OPENROUTER_FAST, "ms": 0}
+        results["openrouter"] = {"status": "no_key", "model": _OPENROUTER_FAST, "ms": 0}
     else:
         start = clock()
         try:
@@ -228,10 +228,7 @@ def chat(
 
     try:
         gemini_key = _env_value(env_map, "GEMINI_API_KEY")
-        if not gemini_key:
-            response_text = "BYPASS_MODE_NO_GEMINI_KEY"
-            model_used = _gemini_model(model_alias)
-        else:
+        if gemini_key:
             if client is None:
                 raise RuntimeError("requests package unavailable")
             model = _gemini_model(model_alias)

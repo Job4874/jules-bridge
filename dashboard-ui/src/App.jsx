@@ -64,6 +64,11 @@ function App() {
     cpu: 0,
     mem: 0,
     fleet: { launched: 0, completed: 0, pending: 0 },
+    repoContext: {
+      status: 'unknown',
+      summary: { repo_count: 0, collision_count: 0, collision_severity_counts: {} },
+      collisions: []
+    },
     logs: []
   });
 
@@ -102,6 +107,11 @@ function App() {
           cpu,
           mem,
           fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },
+          repoContext: d.repo_context || {
+            status: 'unknown',
+            summary: { repo_count: 0, collision_count: 0, collision_severity_counts: {} },
+            collisions: []
+          },
           logs: d.recent_logs || []
         });
 
@@ -116,7 +126,7 @@ function App() {
           return next;
         });
 
-      } catch (err) {
+      } catch {
         if (mounted) {
           setSysStatus(s => ({ ...s, online: false, uptime: 'OFFLINE' }));
         }
@@ -205,6 +215,11 @@ function App() {
       sendChat();
     }
   };
+
+  const repoContext = sysStatus.repoContext || {};
+  const repoSummary = repoContext.summary || {};
+  const repoCollisions = repoContext.collisions || [];
+  const severityCounts = repoSummary.collision_severity_counts || {};
 
   return (
     <div className="dashboard-container">
@@ -301,6 +316,55 @@ function App() {
                   <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 'bold', color: 'var(--accent-green)' }}>{sysStatus.fleet.completed}</div>
                   <div style={{ fontSize: '9px', color: 'var(--text-dim)' }}>COMPLETED</div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="panel" style={{ height: '190px', flex: 'none', marginBottom: '1rem' }}>
+            <div className="panel-header">
+              <span>Repo Context Guard</span>
+              <span className={`badge ${repoContext.status === 'ready' ? 'success' : repoContext.status === 'error' ? 'danger' : ''}`}>
+                {(repoContext.status || 'unknown').toUpperCase()}
+              </span>
+            </div>
+            <div className="panel-content repo-guard">
+              <div className="repo-stats">
+                <div className="repo-stat">
+                  <span>Repos</span>
+                  <strong>{repoSummary.repo_count ?? 0}</strong>
+                </div>
+                <div className="repo-stat">
+                  <span>Collisions</span>
+                  <strong className={(repoSummary.collision_count ?? 0) > 0 ? 'warn' : ''}>
+                    {repoSummary.collision_count ?? 0}
+                  </strong>
+                </div>
+                <div className="repo-stat">
+                  <span>Warn</span>
+                  <strong className={(severityCounts.warning ?? 0) > 0 ? 'warn' : ''}>
+                    {severityCounts.warning ?? 0}
+                  </strong>
+                </div>
+                <div className="repo-stat">
+                  <span>Cache</span>
+                  <strong>{repoContext.cache_age_s ?? 0}s</strong>
+                </div>
+              </div>
+              <div className="collision-list">
+                {repoCollisions.length === 0 ? (
+                  <div className="collision-empty">No collisions reported</div>
+                ) : (
+                  repoCollisions.slice(0, 5).map((collision, i) => (
+                    <div className="collision-row" key={`${collision.type}-${collision.key}-${i}`}>
+                      <span className={`collision-severity ${collision.severity || 'info'}`} />
+                      <span className="collision-main">
+                        <strong>{collision.type}</strong>
+                        <em>{collision.key}</em>
+                      </span>
+                      <span className="collision-repos">{(collision.repo_names || []).join(', ')}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

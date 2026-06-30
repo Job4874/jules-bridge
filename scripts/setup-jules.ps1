@@ -225,6 +225,12 @@ function Install-JulesCli {
         throw "npm install -g @google/jules failed with exit code $exitCode"
     }
 
+    $directExe = Join-Path $NpmBin "jules.exe"
+    if (Test-Path $directExe) {
+        Write-Ok "Jules CLI direct executable available: $directExe"
+        return
+    }
+
     $julesCmd = Get-Command jules -ErrorAction SilentlyContinue
     if (-not $julesCmd) {
         $fallbacks = @(
@@ -284,12 +290,14 @@ function Test-JulesAuthenticated {
 
 function Verify-JulesCli {
     Write-Step "Verifying Jules CLI"
-    if (-not (Test-CommandExists "jules")) {
-        Write-Warn "The 'jules' command is not on PATH yet. Open a new terminal and run: jules version"
+    $directExe = Join-Path $NpmBin "jules.exe"
+    $julesInvoker = if (Test-Path $directExe) { $directExe } elseif (Test-CommandExists "jules") { "jules" } else { "" }
+    if (-not $julesInvoker) {
+        Write-Warn "The Jules command is not on PATH yet and $directExe was not found. Open a new terminal and run: jules version"
         return
     }
 
-    & jules version
+    & $julesInvoker version
     if ($LASTEXITCODE -ne 0) {
         Write-Warn "jules version failed. Auth may be incomplete."
         return
@@ -297,7 +305,7 @@ function Verify-JulesCli {
     Write-Ok "jules version succeeded"
 
     Write-Info "Listing remote sessions (jules remote list --session)..."
-    & jules remote list --session
+    & $julesInvoker remote list --session
     if ($LASTEXITCODE -ne 0) {
         Write-Warn "jules remote list --session failed. Login may be required or network blocked."
     } else {
