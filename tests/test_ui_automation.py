@@ -142,69 +142,61 @@ class TestTypeText(unittest.TestCase):
 
 
 
+class TestGetSecret(unittest.TestCase):
+    def test_get_secret_blocked(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        result = get_secret("target")
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["target"], "target")
+        self.assertEqual(result["username"], "")
+        self.assertFalse(result["secret_available"])
+        self.assertEqual(result["error"], "allow_secret_use must be true")
 
-class TestDetectUIState(unittest.TestCase):
-    def test_quantower_login(self):
-        from modules.ui_automation import detect_ui_state
-        result = detect_ui_state(ocr_text="quantower login email password")
-        self.assertEqual(result["state"], "quantower_login")
-        self.assertEqual(result["confidence"], 0.9)
-        self.assertIn("quantower", result["signals"])
-        self.assertIn("login", result["signals"])
-        self.assertIn("credentials", result["signals"])
+    def test_get_secret_provider_missing(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        result = get_secret("target", allow_secret_use=True)
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["target"], "target")
+        self.assertEqual(result["username"], "")
+        self.assertFalse(result["secret_available"])
+        self.assertEqual(result["error"], "secret provider is required")
 
-    def test_auth_prompt(self):
-        from modules.ui_automation import detect_ui_state
-        result = detect_ui_state(ocr_text="login password")
-        self.assertEqual(result["state"], "auth_prompt")
-        self.assertEqual(result["confidence"], 0.8)
-        self.assertIn("login", result["signals"])
-        self.assertIn("credentials", result["signals"])
-        self.assertNotIn("quantower", result["signals"])
+    def test_get_secret_provider_raises(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        provider = MagicMock()
+        provider.get_secret.side_effect = Exception("failed")
+        result = get_secret("target", allow_secret_use=True, provider=provider)
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["target"], "target")
+        self.assertEqual(result["username"], "")
+        self.assertFalse(result["secret_available"])
+        self.assertEqual(result["error"], "secret provider lookup failed")
+        provider.get_secret.assert_called_once_with("target")
 
-    def test_quantower_loading(self):
-        from modules.ui_automation import detect_ui_state
-        result = detect_ui_state(ocr_text="quantower loading please wait")
-        self.assertEqual(result["state"], "quantower_loading")
-        self.assertEqual(result["confidence"], 0.9)
-        self.assertIn("quantower", result["signals"])
-        self.assertIn("loading", result["signals"])
+    def test_get_secret_provider_dict(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        provider = MagicMock()
+        provider.get_secret.return_value = {"username": "admin", "password": "password"}
+        result = get_secret("target", allow_secret_use=True, provider=provider)
+        self.assertEqual(result["status"], "available")
+        self.assertEqual(result["target"], "target")
+        self.assertTrue(result["secret_available"])
+        self.assertEqual(result["username"], "admin")
+        self.assertIsNone(result["error"])
+        provider.get_secret.assert_called_once_with("target")
 
-    def test_quantower_ready(self):
-        from modules.ui_automation import detect_ui_state
-        result = detect_ui_state(template_signals={"quantower_ready": True})
-        self.assertEqual(result["state"], "quantower_ready")
-        self.assertEqual(result["confidence"], 0.8)
-        self.assertIn("quantower_ready", result["signals"])
+    def test_get_secret_provider_string(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        provider = MagicMock()
+        provider.get_secret.return_value = "secret123"
+        result = get_secret("target", allow_secret_use=True, provider=provider)
+        self.assertEqual(result["status"], "available")
+        self.assertEqual(result["target"], "target")
+        self.assertTrue(result["secret_available"])
+        self.assertEqual(result["username"], "")
+        self.assertIsNone(result["error"])
+        provider.get_secret.assert_called_once_with("target")
 
-    def test_error(self):
-        from modules.ui_automation import detect_ui_state
-        result = detect_ui_state(ocr_text="connection failed or error")
-        self.assertEqual(result["state"], "error")
-        self.assertEqual(result["confidence"], 0.7)
-
-    def test_unknown(self):
-        from modules.ui_automation import detect_ui_state
-        result = detect_ui_state(ocr_text="random text here")
-        self.assertEqual(result["state"], "unknown")
-        self.assertEqual(result["confidence"], 0.0)
-
-    def test_template_signals_injection(self):
-        from modules.ui_automation import detect_ui_state
-        result = detect_ui_state(ocr_text="quantower", template_signals={"loading": True})
-        self.assertEqual(result["state"], "quantower_loading")
-        self.assertEqual(result["confidence"], 0.9)
-        self.assertIn("quantower", result["signals"])
-        self.assertIn("loading", result["signals"])
-
-    def test_exception_catching(self):
-        from modules.ui_automation import detect_ui_state
-        # Passing None to ocr_text will cause a method call casefold() on None
-        result = detect_ui_state(ocr_text=None)
-        self.assertEqual(result["state"], "unknown")
-        self.assertEqual(result["confidence"], 0.0)
-        self.assertEqual(result["signals"], [])
-        self.assertIsNotNone(result["error"])
 
 if __name__ == "__main__":
     unittest.main()

@@ -10,6 +10,7 @@ Calls back to local bridge with results.
 """
 import json
 import os
+import shlex
 import subprocess
 import threading
 from datetime import datetime, timezone
@@ -138,7 +139,7 @@ def task():
 def execute_task(task: str, task_type: str, context: str) -> str:
     """Route task to appropriate executor."""
     if task_type == "shell":
-        proc = subprocess.run(task, shell=True, capture_output=True, text=True, timeout=60)
+        proc = subprocess.run(shlex.split(task), shell=False, capture_output=True, text=True, timeout=60)
         return (proc.stdout + proc.stderr).strip()
     else:
         return call_llm(task, context)
