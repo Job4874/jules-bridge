@@ -405,3 +405,11 @@ has gone wrong before and what to avoid.
 - Verification: dashboard `pnpm run lint` and `pnpm run build` pass; in-app Browser DOM and screenshot proof pass; local/public `/dashboard/status` report `cloud.online: 1`; `/vm/status` reports worker online; `/health/deep` reports GCP/Azure pass but Gemini 400 invalid key and OpenRouter 401 remain.
 - Full suite evidence was refreshed through `POST /retrospective/record_evidence`: `python -m pytest tests/ -q` passed 410 tests, SHA-256 `51b715cd2515449c8acb4d90af4e35ebde3496f904b73055e91a7acad8422379`.
 
+## Session 20260630T091700 - VM Chat Readiness Consistency
+
+- Jules session `2648582880137579851` stayed planning/no-diff, so Codex applied the narrow emergency fix for VM readiness consistency.
+- `modules.chat_service` now keeps a bounded `_LAST_VM_CHAT_SUCCESS` marker. Recent real VM chat success can override a flaky follow-up health-probe timeout/provider-unavailable result, while expired success or no-success failure still reports VM failure.
+- Dashboard lightweight checks still do not enqueue VM work; they report `VM worker online; VM chat recently succeeded` when fresh local success exists.
+- Verification: focused chat/deep-health tests passed 27 tests; dashboard/route slice passed 89 tests; full `python -m pytest tests/ -v` passed 427 tests.
+- Runtime proof after clean bridge restart: `/chat` returned `model_used=vm/jules-worker`, `/chat/test` healthy with `vm_worker: ok`, `/health/deep` mapped VM to `pass`, dashboard rendered `TUNNEL: ACTIVE` and `VM CHAT: OK`, and LocalTunnel `https://neat-oranges-wink.loca.lt/ping` returned `Jules Bridge Online`.
+

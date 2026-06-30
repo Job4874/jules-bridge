@@ -288,3 +288,12 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Verified local/public `/dashboard/status` and `/vm/status` still report GCP worker online/reachable through `https://wet-ducks-try.loca.lt`.
 - [ ] Remaining release blocker: local bridge Gemini/OpenRouter credentials still fail (`400` invalid Gemini key, `401` OpenRouter user not found); PR remains draft until fixed or explicitly accepted as non-blocking.
 
+## Session 20260630T091700 - VM Chat Readiness Consistency
+
+- [x] Polled Jules session `2648582880137579851` and attempted live pull; no remote VM diff was available, so Codex applied the narrow emergency fix.
+- [x] Added bounded VM chat success evidence in `modules/chat_service.py` so recent real `/chat` success prevents false VM readiness failures from a flaky follow-up probe.
+- [x] Added tests for recent success override, genuine no-success failure, TTL expiry, and dashboard lightweight readiness behavior.
+- [x] Verified focused tests (`27 passed`), route/dashboard slice (`89 passed`), and full suite (`427 passed in 16.08s`).
+- [x] Restarted to a single clean bridge process, recycled LocalTunnel, and verified `/chat`, `/chat/test`, `/health/deep`, `/dashboard/status`, public `/ping`, Browser dashboard proof, and passive Computer helper reachability.
+- [ ] Remaining release blocker: local Gemini/OpenRouter credentials still fail (`400` invalid Gemini key, `401` OpenRouter user not found); PR remains draft until fixed or explicitly accepted as non-blocking.
+

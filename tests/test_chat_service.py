@@ -34,9 +34,11 @@ def clock_from(values):
 class TestChatProviderHealth(unittest.TestCase):
     def setUp(self):
         chat_service._LAST_VM_CHAT_FAILURE.clear()
+        chat_service._LAST_VM_CHAT_SUCCESS.clear()
 
     def tearDown(self):
         chat_service._LAST_VM_CHAT_FAILURE.clear()
+        chat_service._LAST_VM_CHAT_SUCCESS.clear()
 
     def test_no_keys_reports_provider_gaps_without_requests(self):
         result = chat_service.test_chat_providers(env={}, requests_client=FakeRequests([]))
@@ -63,9 +65,11 @@ class TestChatProviderHealth(unittest.TestCase):
 class TestChatCompletion(unittest.TestCase):
     def setUp(self):
         chat_service._LAST_VM_CHAT_FAILURE.clear()
+        chat_service._LAST_VM_CHAT_SUCCESS.clear()
 
     def tearDown(self):
         chat_service._LAST_VM_CHAT_FAILURE.clear()
+        chat_service._LAST_VM_CHAT_SUCCESS.clear()
 
     def test_chat_uses_gemini_when_available(self):
         client = FakeRequests(
@@ -409,6 +413,72 @@ class TestChatCompletion(unittest.TestCase):
         self.assertFalse(result["healthy"])
         self.assertEqual(result["providers"]["vm_worker"]["status"], "error")
         self.assertIn("latest local chat fallback failed", result["providers"]["vm_worker"]["detail"])
+
+    def test_provider_health_uses_recent_vm_chat_success_when_probe_times_out(self):
+        chat_service._remember_vm_chat_success()
+
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.025]),
+            vm_send_task=lambda *args, **kwargs: {"ok": True, "status": "queued"},
+            vm_get_status=lambda: {"online": True, "tasks_completed": 5, "recent": []},
+            sleep_func=lambda _: None,
+            vm_task_attempts=1,
+        )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "ok")
+        self.assertIn("recently succeeded", result["providers"]["vm_worker"]["detail"])
+
+    def test_provider_health_probe_failure_without_success_still_errors(self):
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.025]),
+            vm_send_task=lambda *args, **kwargs: {"ok": True, "status": "queued"},
+            vm_get_status=lambda: {"online": True, "tasks_completed": 5, "recent": []},
+            sleep_func=lambda _: None,
+            vm_task_attempts=1,
+        )
+
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "error")
+        self.assertIn("timed out", result["providers"]["vm_worker"]["detail"])
+
+    def test_provider_health_expired_vm_chat_success_does_not_mask_failure(self):
+        chat_service._LAST_VM_CHAT_SUCCESS.update(
+            {"ts": chat_service.time.time() - chat_service._VM_CHAT_SUCCESS_TTL_S - 1}
+        )
+
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.025]),
+            vm_send_task=lambda *args, **kwargs: {"ok": True, "status": "queued"},
+            vm_get_status=lambda: {"online": True, "tasks_completed": 5, "recent": []},
+            sleep_func=lambda _: None,
+            vm_task_attempts=1,
+        )
+
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "error")
+
+    def test_provider_health_dashboard_prefers_recent_success_over_local_failure(self):
+        chat_service._remember_vm_chat_success()
+        chat_service._remember_vm_chat_failure("VM fallback timed out waiting for a completed chat task")
+
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.025]),
+            vm_get_status=lambda: {"online": True, "tasks_completed": 6},
+            probe_vm_chat=False,
+        )
+
+        self.assertTrue(result["healthy"])
+        self.assertEqual(result["providers"]["vm_worker"]["status"], "ok")
+        self.assertIn("recently succeeded", result["providers"]["vm_worker"]["detail"])
 
     def test_provider_health_vm_chat_probe_success(self):
         statuses = iter(

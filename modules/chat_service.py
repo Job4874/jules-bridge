@@ -27,7 +27,9 @@ _VM_FAILURE_MARKERS = (
     "OpenRouter free models failed",
 )
 _VM_CHAT_FAILURE_TTL_S = 300
+_VM_CHAT_SUCCESS_TTL_S = 300
 _LAST_VM_CHAT_FAILURE: dict[str, Any] = {}
+_LAST_VM_CHAT_SUCCESS: dict[str, Any] = {}
 
 
 class ChatHealthResult(dict):
@@ -164,6 +166,11 @@ def _remember_vm_chat_failure(error: str) -> None:
     _LAST_VM_CHAT_FAILURE.update({"error": error, "ts": time.time()})
 
 
+def _remember_vm_chat_success() -> None:
+    _LAST_VM_CHAT_SUCCESS.clear()
+    _LAST_VM_CHAT_SUCCESS.update({"ts": time.time()})
+
+
 def _clear_vm_chat_failure() -> None:
     _LAST_VM_CHAT_FAILURE.clear()
 
@@ -177,6 +184,16 @@ def _latest_local_vm_chat_failure() -> str | None:
         return None
     error = str(_LAST_VM_CHAT_FAILURE.get("error") or "").strip()
     return error or None
+
+
+def _latest_local_vm_chat_success() -> bool:
+    if not _LAST_VM_CHAT_SUCCESS:
+        return False
+    ts = float(_LAST_VM_CHAT_SUCCESS.get("ts") or 0.0)
+    if time.time() - ts > _VM_CHAT_SUCCESS_TTL_S:
+        _LAST_VM_CHAT_SUCCESS.clear()
+        return False
+    return True
 
 
 def _default_vm_functions() -> tuple[Any, Any]:
@@ -229,6 +246,7 @@ def _vm_worker_status(
     if not status.get("online"):
         return {"status": "offline", "detail": "VM worker offline"}
 
+    local_success = _latest_local_vm_chat_success()
     if probe_chat:
         response, error = _vm_chat_fallback(
             message="Health probe: reply exactly OK.",
@@ -247,10 +265,25 @@ def _vm_worker_status(
                 "detail": "VM chat probe succeeded",
                 "tasks_completed": status.get("tasks_completed"),
             }
+        if local_success:
+            return {
+                "status": "ok",
+                "model": _VM_CHAT_MODEL,
+                "detail": f"VM chat recently succeeded; latest probe failed: {error or 'VM chat probe failed'}",
+                "tasks_completed": status.get("tasks_completed"),
+            }
         return {
             "status": "error",
             "model": _VM_CHAT_MODEL,
             "detail": error or "VM chat probe failed",
+            "tasks_completed": status.get("tasks_completed"),
+        }
+
+    if local_success:
+        return {
+            "status": "ok",
+            "model": _VM_CHAT_MODEL,
+            "detail": "VM worker online; VM chat recently succeeded",
             "tasks_completed": status.get("tasks_completed"),
         }
 
@@ -335,6 +368,7 @@ def _vm_chat_fallback(
                         if _vm_response_is_failure(result):
                             last_error = "VM fallback provider unavailable: worker reported no LLM available"
                             break
+                        _remember_vm_chat_success()
                         _clear_vm_chat_failure()
                         return result, None
                     last_error = "VM fallback completed without a response"
