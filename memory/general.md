@@ -470,3 +470,10 @@ has gone wrong before and what to avoid.
 - Verification before push: dashboard lint passed via bundled Node + `node_modules/oxlint/bin/oxlint`; dashboard production build passed via bundled Node + `node_modules/vite/bin/vite.js build`.
 - Local shell gotcha: `npm` was not on PATH in PowerShell, but bundled Node at `C:\Users\abdul\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe` worked with package entrypoints.
 - Remote proof: `git ls-remote origin refs/heads/codex/jules-production-finish` matched local `HEAD` at `c8b1ff6f51f1c899f2fbad7c382c0131085878be`; `gh auth status` was not authenticated, so no new PR operation was attempted.
+
+## Session 20260630T084950 - Live Handoff Recheck
+
+- Latest saved branch proof: local `HEAD`, origin `codex/jules-production-finish`, and PR #64 head point to `515293251947606b7aab7e5060e45d8b6b864172` (`Record cloud handoff state`); PR #64 remains open draft.
+- Runtime proof: bridge PID `7364` serves port 5000, dashboard preview PID `39320` serves port 5173, local `/ping`, `/dashboard/status`, `/dashboard/status?bypass_cache=true`, protected `/health/deep`, direct `/chat`, `/vm/status`, and LocalTunnel `https://shaggy-kiwis-shout.loca.lt` `/ping`, `/health`, `/dashboard/status` were verified.
+- Current provider truth: local Gemini/OpenRouter are still `invalid_key`; GET `/chat/test` was healthy through VM worker and direct `/chat` returned `OK.` via `model_used=vm/jules-worker`, but VM recent tasks still include `No LLM available`, so provider readiness is degraded rather than production-clean.
+- Jules continuation truth: only poll/pull fresh session `14369052129679399317`; latest `POST /jules/sessions` live poll showed it `Planning`, so no pull was safe.

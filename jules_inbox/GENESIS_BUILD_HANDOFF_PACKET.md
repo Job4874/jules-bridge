@@ -179,7 +179,8 @@ Only pull `10937231877503281057` after a fresh session list reports it as
 - Fresh packet:
   `jules_inbox/jules_post_retry_readiness_dispatch/JT-003-post-retry-production-readiness-audit.md`
 - Fresh session: `14369052129679399317`
-- current observed status: `In Progress`
+- current observed status: `Planning` on the latest live poll at
+  2026-06-30 08:48 America/Denver
 - launch state:
   `jules_inbox/jules_post_retry_readiness_dispatch/JULES_LAUNCH_STATE.json`
 - The launch-state `session_ids` arrays were corrected to track only
@@ -187,6 +188,9 @@ Only pull `10937231877503281057` after a fresh session list reports it as
   not be treated as tracked sessions.
 - The session briefly reported `Awaiting Plan Approval`; a later fresh poll
   moved it to `In Progress` without any local pull or Chrome approval.
+- A later live poll using `POST /jules/sessions` with `dry_run=false`,
+  `bypass_cache=true`, and `timeout_s=90` reported the same session as
+  `Planning` with fresh last-active time; it was not pulled.
 
 Only pull `14369052129679399317` after a fresh session list reports it as
 `Completed`.
@@ -194,6 +198,26 @@ Only pull `14369052129679399317` after a fresh session list reports it as
 If `jules remote list --session` fails due CLI self-update or DNS, use the
 direct executable path:
 `C:\Users\abdul\AppData\Local\Temp\jules_tmp\jules.exe`.
+
+2026-06-30 08:49 America/Denver live continuation check:
+
+- Local `HEAD` and `origin/codex/jules-production-finish` both point to
+  `515293251947606b7aab7e5060e45d8b6b864172`
+  (`Record cloud handoff state`); PR #64 is open draft at
+  `https://github.com/Job4874/jules-bridge/pull/64`.
+- Local worktree was clean before this documentation refresh.
+- Bridge is running from source on port 5000 with PID `7364`; dashboard preview
+  remains live on port 5173 with Node PID `39320`.
+- Verified local `/ping`, `/dashboard/status`, `/dashboard/status?bypass_cache=true`,
+  protected `/health/deep`, direct `/chat`, and `/vm/status`.
+- Verified public LocalTunnel `https://shaggy-kiwis-shout.loca.lt` still serves
+  `/ping`, `/health`, and `/dashboard/status`.
+- Current provider truth: local Gemini and local OpenRouter still classify as
+  invalid-key; GET `/chat/test` was healthy through the VM worker, and direct
+  `/chat` returned `OK.` through `model_used=vm/jules-worker`.
+- VM worker is online with recent mixed provider-capacity results, including
+  both `OK` and `No LLM available`; keep treating provider readiness as degraded
+  until credentials/quota/capacity are clean or explicitly accepted.
 
 ## Dirty-State Discipline
 
@@ -219,10 +243,10 @@ Do not mark PR #64 production-ready unless one of these happens:
 2. VM provider quota/capacity recovers and `/chat/test` reports VM OK;
 3. the operator explicitly accepts current provider failures as non-blocking.
 
-Poll Jules session `14369052129679399317` with `bypass_cache=true`. It is
-currently `In Progress`; do not pull until it reports `Completed`. Inspect
-output before applying, and reject any stale broad diff or provider-error
-greenwashing.
+Poll Jules session `14369052129679399317` with `bypass_cache=true`. It was
+`Planning` on the latest live poll at 2026-06-30 08:48 America/Denver; do not
+pull until it reports `Completed`. Inspect output before applying, and reject
+any stale broad diff or provider-error greenwashing.
 
 Until then, the server/dashboard/install/build side is booted and verified,
 but provider readiness remains the release blocker.

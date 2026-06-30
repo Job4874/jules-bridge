@@ -362,3 +362,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Verified local `HEAD` and remote branch ref both point to `c8b1ff6f51f1c899f2fbad7c382c0131085878be`; local worktree was clean after the push.
 - [ ] PR/cloud UI update was not attempted because `gh auth status` reported no authenticated GitHub hosts.
 
+## Session 20260630T084950 - Live Handoff Recheck
+
+- [x] Verified local `HEAD` and `origin/codex/jules-production-finish` both point to `515293251947606b7aab7e5060e45d8b6b864172` (`Record cloud handoff state`), and PR #64 is still open draft.
+- [x] Verified bridge PID `7364` on port 5000, dashboard preview PID `39320` on port 5173, local `/ping`, `/dashboard/status`, `/dashboard/status?bypass_cache=true`, protected `/health/deep`, direct `/chat`, `/vm/status`, and public LocalTunnel `/ping`, `/health`, and `/dashboard/status`.
+- [x] Current runtime truth: GET `/chat/test` was healthy through VM worker and direct `/chat` returned `OK.` via `model_used=vm/jules-worker`, but local Gemini/OpenRouter still classify as invalid-key and VM recent history still includes provider-capacity `No LLM available` results.
+- [x] Polled Jules session `14369052129679399317` through `POST /jules/sessions` with `dry_run=false`, `bypass_cache=true`, and `timeout_s=90`; latest live status was `Planning`, so nothing was pulled.
+- [ ] Remaining release blockers are unchanged: provider readiness is degraded until credentials/quota/capacity are clean or accepted as non-blocking, and Jules current-head audit session `14369052129679399317` has not completed.
+
