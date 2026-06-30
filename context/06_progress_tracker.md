@@ -325,3 +325,22 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Restarted bridge to PID `37788`, recycled LocalTunnel to `https://shaggy-kiwis-shout.loca.lt`, verified public `/ping`, `/health`, and `/dashboard/status`, and captured native Chrome dashboard proof at `jules_inbox/jules_dashboard_cloud_panel_dispatch/evidence/dashboard-passive-vm-health-20260630T0435Z.png` with `VM CHAT: OK` and cloud workers `1/1 ONLINE`.
 - [ ] Remaining release blocker: local Gemini/OpenRouter credentials still fail as `invalid_key`; PR #64 stays draft until fixed or explicitly accepted as non-blocking.
 
+## Session 20260630T073700 - VM Chat Freshness And Blocker Triage
+
+- [x] Added timestamp-aware VM chat freshness handling so a newer successful VM chat result clears stale local VM fallback failure state, while older successes do not mask newer failures.
+- [x] Extended active VM chat health polling to tolerate slow worker completions instead of falsely timing out at the old short window.
+- [x] Added focused regression tests for newer-success clearing, older-success rejection, and slow active probe completion.
+- [x] Verification: `tests/test_chat_service.py` passed (`32 passed`), full suite passed (`437 passed in 19.26s`), and `git diff --check` passed with only normal CRLF warnings.
+- [x] Restarted bridge to PID `29640`; local `/dashboard/status` reported passive `vm_worker: ok`, and LocalTunnel `/ping` returned HTTP 200.
+- [x] Re-checked non-secret gcloud fallback: gcloud token is active for GCP health, but the existing Gemini REST helper returns `403 Forbidden`, so it does not clear chat readiness.
+- [ ] Remaining release blockers: local Gemini `400 invalid_key`, local OpenRouter `401 invalid_key`, fresh active VM chat failures with `No LLM available`, and required ngrok route still offline because ngrok has no configured authtoken (`ERR_NGROK_4018` locally, `ERR_NGROK_3200` publicly). PR #64 stays draft.
+
+## Session 20260630T075700 - Direct VM Chat Retry Hardening
+
+- [x] Increased direct `/chat` VM fallback attempts from `2` to `4` so user-facing chat can ride through transient VM provider misses.
+- [x] Kept provider-health `/chat/test` on its lighter active probe behavior; this patch only hardens direct chat.
+- [x] Added regression coverage for two transient VM `No LLM available` results followed by a successful VM response.
+- [x] Verification: `tests/test_chat_service.py` passed (`33 passed`), full suite passed (`438 passed in 19.65s`), and `git diff --check` passed with only normal CRLF warnings.
+- [x] Restarted bridge to PID `7648`; direct `/chat` returned `model_used=vm/jules-worker` with `OK`, `/chat/test` returned `healthy=true`, and `/vm/status` showed the retry sequence.
+- [ ] Remaining release blockers: local Gemini/OpenRouter credentials are still invalid, the required ngrok route remains offline/unauthenticated, and the provider-audit Jules session still needs external Jules-side feedback or completion of the replacement session. PR #64 stays draft.
+

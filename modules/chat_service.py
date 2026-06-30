@@ -584,7 +584,7 @@ def chat(
     vm_send_task: Any | None = None,
     vm_get_status: Any | None = None,
     sleep_func: Any = time.sleep,
-    vm_task_attempts: int = 2,
+    vm_task_attempts: int = 4,
     vm_poll_attempts: int = 6,
     vm_poll_interval_s: float = 2.0,
     enable_vm_fallback: bool = True,

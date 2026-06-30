@@ -319,6 +319,49 @@ class TestChatCompletion(unittest.TestCase):
         self.assertEqual(result["model_used"], "none")
         self.assertIn("VM fallback provider unavailable", result["errors"][-1])
 
+    def test_chat_vm_fallback_retries_transient_worker_provider_failure(self):
+        sent_tasks = []
+
+        def send_task(task, task_type="build", context=""):
+            sent_tasks.append({"task": task, "task_type": task_type, "context": context})
+            return {"ok": True, "status": "queued"}
+
+        def get_status():
+            if not sent_tasks:
+                return {"online": True}
+            current_task = sent_tasks[-1]["task"]
+            result = (
+                "OK from vm"
+                if len(sent_tasks) == 3
+                else "No LLM available - GEMINI_API_KEY is rate-limited and all OpenRouter free models failed."
+            )
+            return {
+                "online": True,
+                "recent": [
+                    {
+                        "task": current_task,
+                        "status": "done",
+                        "result": result,
+                    }
+                ],
+            }
+
+        result = chat_service.chat(
+            "hello",
+            env={},
+            requests_client=FakeRequests([]),
+            clock=clock_from([1.0, 1.1]),
+            vm_send_task=send_task,
+            vm_get_status=get_status,
+            sleep_func=lambda _: None,
+            vm_poll_attempts=1,
+        )
+
+        self.assertEqual(result["model_used"], "vm/jules-worker")
+        self.assertEqual(result["response"], "OK from vm")
+        self.assertEqual(len(sent_tasks), 3)
+        self.assertEqual(sent_tasks[-1]["task_type"], "chat")
+
     def test_chat_invalid_keys_reports_error(self):
         client = FakeRequests(
             [

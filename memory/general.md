@@ -438,3 +438,20 @@ has gone wrong before and what to avoid.
 - Runtime proof: local `/health/deep` reports VM `pass` without forcing a VM LLM probe, `/chat/test` reports `vm_worker: ok`, dashboard reports `VM worker online; VM chat recently succeeded`, and LocalTunnel was recycled to `https://shaggy-kiwis-shout.loca.lt`. Public `/ping`, `/health`, and `/dashboard/status` passed. Native Chrome proof saved `jules_inbox/jules_dashboard_cloud_panel_dispatch/evidence/dashboard-passive-vm-health-20260630T0435Z.png` and rendered `TUNNEL: ACTIVE`, `GEMINI: ERROR`, `OPENROUTER: ERROR`, `VM CHAT: OK`, and cloud workers `1/1 ONLINE`.
 - Remaining release blocker: local Gemini/OpenRouter credentials still fail as `invalid_key`; PR #64 remains draft unless that external credential blocker is fixed or explicitly accepted.
 
+## Session 20260630T073700 - VM Chat Freshness And Blocker Triage
+
+- `modules.chat_service._vm_worker_status()` now parses VM task completion timestamps and lets a newer successful VM chat result clear a stale local VM fallback failure; older successes no longer mask newer local failures.
+- Active VM chat health probes now wait longer (`6` polls at `2s`) so slow-but-successful worker completions are not mislabeled as timeouts.
+- Verification: focused `tests/test_chat_service.py` passed `32 passed`; full `python -m pytest tests/ -q` passed `437 passed`; `git diff --check` passed with only normal CRLF warnings. Bridge restarted to PID `29640`.
+- Runtime truth after restart: local `/dashboard/status` reported `vm_worker: ok` from a newer VM success, and LocalTunnel `/ping` returned 200. Active `/chat/test` and direct `/chat` still failed after fresh VM `No LLM available` results, while Gemini stayed `400 invalid_key` and OpenRouter stayed `401 invalid_key`.
+- `gcloud auth` was active for GCP health, but the existing Gemini REST helper returned `403 Forbidden`, so gcloud is not a current chat-provider escape hatch.
+- Ngrok remained externally blocked: reserved `https://parade-marrow-pulp.ngrok-free.dev/ping` returned `ERR_NGROK_3200`, and local ngrok startup failed with `ERR_NGROK_4018` because `C:\Users\abdul\AppData\Local\ngrok\ngrok.yml` has no authtoken and no NGROK auth env vars are present.
+
+## Session 20260630T075700 - Direct VM Chat Retry Hardening
+
+- Direct `modules.chat_service.chat()` now gives VM fallback `4` bounded attempts, while `/chat/test` keeps the lighter provider-health attempt count. This targets the live pattern where VM tasks alternate between `No LLM available` and `OK`.
+- Added `test_chat_vm_fallback_retries_transient_worker_provider_failure` to prove direct chat retries transient VM provider misses and returns the later VM response without hiding final failures.
+- Verification: focused `tests/test_chat_service.py` passed `33 passed`; full `python -m pytest tests/ -q` passed `438 passed`; `git diff --check` had only normal CRLF warnings. Bridge restarted to PID `7648`.
+- Runtime proof: direct `/chat` returned `model_used=vm/jules-worker` and `OK` after a fresh provider miss, `/chat/test` stayed `healthy=true`, and `/vm/status` showed both the miss and later `OK`.
+- Remaining blockers: local Gemini/OpenRouter credentials still fail as invalid-key, ngrok is unauthenticated/offline, and Jules provider audit session `14998673751325827002` remains `Awaiting User` while replacement `10937231877503281057` is not completed.
+
