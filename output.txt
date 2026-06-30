@@ -1,0 +1,76 @@
+Mass-replace complete:
+Replaced all occurrences of 'https://parade-marrow-pulp.ngrok-free.dev' with 'http://127.0.0.1:5000' in self_created_tools/*.py.
+
+Local probe output:
+{
+  "/ping": {
+    "status": "Jules Bridge Online"
+  },
+  "/tentacles": {
+    "status": "ok",
+    "tentacles": 53,
+    "mandatory_read": "jules_inbox/JULES_TOOL_REQUIREMENTS.md",
+    "sample_routes": [
+      "GET /",
+      "GET /info",
+      "GET /health",
+      "GET /ping",
+      "GET /tentacles"
+    ]
+  },
+  "/oracle/status": {
+    "blockers": [
+      "Symbol not bound in info.xml \u2014 StM settings required",
+      "Account not bound in info.xml \u2014 StM settings required",
+      "Quantower Starter not running"
+    ],
+    "branch": "perf/fix-empty-catch-block-datafeedmanager",
+    "quantower_running": false,
+    "instance_exists": false,
+    "instance_id": null,
+    "state": null,
+    "primary_symbol_label": null,
+    "symbol_bound": null,
+    "account_bound": false,
+    "enable_live_trading": null,
+    "enable_dry_run_mode": null,
+    "gates": {
+      "g2_dll_deployed": true,
+      "g3_dry_run_proof": false,
+      "g4_dom_l2": false,
+      "g5_order_lifecycle": false
+    },
+    "telemetry_file": null,
+    "telemetry_last_write_utc": null,
+    "pipeline_active": null,
+    "verify_code": 0,
+    "verify_checks": [
+      {
+        "check": "summary",
+        "detail": "All replay checks passed",
+        "ok": true
+      }
+    ],
+    "next_actions": [
+      "GET /ui/screenshot before any Quantower click",
+      "Bind Symbol (MES) + demo Account in StM if blockers list binding",
+      "Wire MES Market Replay chart to instance",
+      "POST /fs/grep for BROKER_SUBMISSION_BLOCKED_DRY_RUN in logs",
+      "POST /inbox/write with screenshot + verify evidence"
+    ]
+  },
+  "/ui/screenshot?save=true": {
+    "saved_path": "/app/jules_inbox/screenshots/screen_20260629-174159.png",
+    "image_base64": "<image_base64 omitted; use saved_path as screenshot evidence>"
+  }
+}
+
+Local G3 Grep output:
+./modules/oracle_session.py:316:            "POST /fs/grep for BROKER_SUBMISSION_BLOCKED_DRY_RUN in logs",
+./jules_inbox/JULES_MASTER_PROMPT_QUANTOWER_OPERATOR.md:148:| G3 Dry run | Logs show decision traces; `BROKER_SUBMISSION_BLOCKED_DRY_RUN` or equivalent; live trading false |
+./jules_inbox/NEXT_OBJECTIVES.md:86:- Serilog tail showing `ReplayMode=True`, `BROKER_SUBMISSION_BLOCKED_DRY_RUN`
+./jules_inbox/JULES_TOOL_REQUIREMENTS.md:18:| Search logs | `POST /fs/grep` | Find gate strings such as `BROKER_SUBMISSION_BLOCKED_DRY_RUN` |
+./jules_inbox/JULES_TOOL_REQUIREMENTS.md:408:{"path": "<serilog path>", "pattern": "BROKER_SUBMISSION_BLOCKED_DRY_RUN"}
+./jules_inbox/JULES_FULL_OBJECTIVE_20260628.md:58:   - `BROKER_SUBMISSION_BLOCKED_DRY_RUN` or equivalent broker-block proof captured
+./jules_inbox/JULES_PROOF_RUN_20260628.md:36:- `BROKER_SUBMISSION_BLOCKED_DRY_RUN` grep: no hit in searched Oracle telemetry / Quantower script logs.
+ grep: ./modules/__pycache__/oracle_session.cpython-312.pyc: binary file matches

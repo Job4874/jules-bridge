@@ -232,3 +232,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - **Verification**: Ran full unit test suite (307/307 passed). Started bridge.py on localhost port 5000 and confirmed live `/health` and `/akc/readiness` respond successfully.
 - Evidence: `python -m pytest tests/ -q` passed all 307 tests, SHA-256 `d897f1f0a8d3e098a5d3fefef9775d577985e939d8a503cbb9ef5a1c21c9e1d4` recorded.
 
+## Session 20260629T122530 — Chat Service Deep Module Cleanup
+
+- **Bridge Thinning**: Extracted `/chat` and `/chat/test` provider routing from `bridge.py` into `modules/chat_service.py`. The bridge routes now validate fields, call `modules.test_chat_providers()` or `modules.chat(...)`, and return `dict(result)`.
+- **Deep Module Boundary**: Added `ChatHealthResult`, `ChatResult`, Gemini-first/OpenRouter-fallback handling, provider payload construction, model selection, timing, and secret-redacted error chains inside `chat_service`.
+- **Documentation/Imprint**: Updated `context/02_architecture.md`, `context/05_gotchas.md`, and `UBIQUITOUS_LANGUAGE.md` with the new chat-service boundary. External walkthrough markdownlint diagnostics were fixed at `C:\Users\abdul\.gemini\antigravity-ide\brain\364f444e-3fef-4431-847b-e3adeb9c786a\walkthrough.md`.
+- **Verification**: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py` passed; `python -m pytest tests/test_chat_service.py tests/test_bridge_routes.py -q` passed 74 tests; `python -m pytest tests/ -q` passed 315 tests; `npx --yes markdownlint-cli ...\walkthrough.md` passed with no output; `git diff --check` reported only expected CRLF warnings.
+- Evidence: recorded `python -m pytest tests/ -q` as 315 tests passed, SHA-256 `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`. Local bridge was not listening on `127.0.0.1:5000`, so evidence was recorded through `modules.record_test_evidence(...)` rather than the HTTP route.
+

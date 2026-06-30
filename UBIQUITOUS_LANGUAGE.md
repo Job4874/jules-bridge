@@ -32,6 +32,9 @@
 | **ScreenshotResult** | Typed dict from `ui_automation.screenshot()` — has `image_base64`, optionally `saved_path` | `modules/ui_automation.py` | "screenshot", "image result" |
 | **InboxMessage** | Typed dict from `inbox_service.inbox_read()` — has `file`, `content` on success; `error`, `inbox_files` on 404 | `modules/inbox_service.py` | "message", "inbox content" |
 | **OracleStatus** | Full health snapshot of Oracle V5 + Quantower | `modules/oracle_session.py` | "oracle health", "status" |
+| **ChatResult** | Typed dict from `chat_service.chat()` with provider response text, model choice, elapsed time, and redacted errors | `modules/chat_service.py` | "chat response", "LLM result" |
+| **ChatHealthResult** | Provider diagnostic snapshot from `chat_service.test_chat_providers()` | `modules/chat_service.py` | "provider status", "LLM health" |
+| **Chat provider routing** | Gemini-first and OpenRouter-fallback selection hidden behind `chat_service` | `modules/chat_service.py` | "chat logic in bridge.py", "provider helper" |
 
 ---
 
