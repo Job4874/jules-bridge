@@ -378,3 +378,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Re-polled Jules session `14369052129679399317`; latest live status stayed `Planning`, so no remote output was pulled.
 - [ ] Remaining release blockers are unchanged: local Gemini/OpenRouter invalid-key and intermittent VM provider quota/capacity limits keep PR #64 draft.
 
+## Session 20260630T091217 - Provider Shape Audit
+
+- [x] Recorded secret-safe provider shape evidence at `jules_inbox/jules_provider_external_blocker_dispatch/provider-shape-audit-20260630T091217.json`.
+- [x] Local `.env` provider variables are present, but `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, and `OPENROUTER_API_KEYS` fail expected provider token shape checks; no raw values were printed or saved.
+- [x] VM worker environment shape shows `OPENROUTER_API_KEY` present and OpenRouter-shaped, `GEMINI_API_KEY` present but not Gemini-shaped, and plural `OPENROUTER_API_KEYS` absent.
+- [x] Live runtime still agrees: `/dashboard/status`, `/health/deep`, GET `/chat/test`, direct `/chat`, `/vm/status`, and public tunnel checks pass, while local Gemini/OpenRouter report `invalid_key` and VM recent history includes both `OK` and provider-capacity `No LLM available`.
+- [ ] Jules session `14369052129679399317` stayed `Planning`; no pull was safe. PR #64 remains draft until provider credentials/quota/capacity are production-clean or accepted as non-blocking.
+

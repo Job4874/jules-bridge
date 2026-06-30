@@ -1,0 +1,106 @@
+{
+  "timestamp_local": "2026-06-30T09:12:17-06:00",
+  "branch": "codex/jules-production-finish",
+  "head": "d2afcc566cb188a3b28684da5704666013937302",
+  "scope": "Non-secret provider readiness shape audit for production-finish blocker.",
+  "secret_policy": "No raw credential values captured. Only presence, lengths, item counts, expected-shape booleans, and provider readiness states are recorded.",
+  "local_env_shape": {
+    "BRIDGE_TOKEN": {
+      "present": true,
+      "length": 16,
+      "item_count": 1,
+      "expected_shape": true,
+      "shape_hint": "present/non-empty check only"
+    },
+    "GCE_WORKER_IP": {
+      "present": true,
+      "length": 13,
+      "item_count": 1,
+      "expected_shape": true,
+      "shape_hint": "present/non-empty check only"
+    },
+    "GCE_WORKER_NAME": {
+      "present": true,
+      "length": 20,
+      "item_count": 1,
+      "expected_shape": true,
+      "shape_hint": "present/non-empty check only"
+    },
+    "GCE_WORKER_PROJECT": {
+      "present": true,
+      "length": 19,
+      "item_count": 1,
+      "expected_shape": true,
+      "shape_hint": "present/non-empty check only"
+    },
+    "GCE_WORKER_ZONE": {
+      "present": true,
+      "length": 13,
+      "item_count": 1,
+      "expected_shape": true,
+      "shape_hint": "present/non-empty check only"
+    },
+    "GEMINI_API_KEY": {
+      "present": true,
+      "length": 23,
+      "item_count": 1,
+      "expected_shape": false,
+      "shape_hint": "expects AIza..."
+    },
+    "OPENROUTER_API_KEY": {
+      "present": true,
+      "length": 17,
+      "item_count": 1,
+      "expected_shape": false,
+      "shape_hint": "expects sk-or-v1-..."
+    },
+    "OPENROUTER_API_KEYS": {
+      "present": true,
+      "length": 33,
+      "item_count": 2,
+      "expected_shape": false,
+      "shape_hint": "expects comma separated sk-or-v1-..."
+    }
+  },
+  "vm_worker_env_shape": {
+    "GEMINI_API_KEY": {
+      "present": true,
+      "length": 53,
+      "item_count": 1,
+      "expected_shape": false
+    },
+    "OPENROUTER_API_KEY": {
+      "present": true,
+      "length": 73,
+      "item_count": 1,
+      "expected_shape": true
+    },
+    "OPENROUTER_API_KEYS": {
+      "present": false,
+      "length": 0,
+      "item_count": 0,
+      "expected_shape": false
+    }
+  },
+  "live_runtime_summary": {
+    "local_ping": "ok",
+    "dashboard_http": "ok",
+    "dashboard_status": {
+      "ok": true,
+      "tunnel": "https://shaggy-kiwis-shout.loca.lt",
+      "cloud": "1/1",
+      "providers": "gemini:error:invalid_key; openrouter:error:invalid_key; vm_worker:ok"
+    },
+    "health_deep": "status ok; azure pass; gcp pass; gemini fail invalid_key; openrouter fail invalid_key; vm_worker pass",
+    "chat_test": "healthy true through vm_worker; local Gemini/OpenRouter invalid_key",
+    "direct_chat": "returned OK via model_used=vm/jules-worker",
+    "vm_status": "online; recent VM task history includes both OK and No LLM available"
+  },
+  "jules_session": {
+    "session_id": "14369052129679399317",
+    "latest_status": "Planning",
+    "pull_performed": false,
+    "reason": "Pull is allowed only after a fresh session list reports Completed."
+  },
+  "conclusion": "Bridge, dashboard, tunnel, cloud worker, and VM relay are booted. The remaining production-clean blocker is provider credential quality and/or VM provider quota/capacity, not missing installation or dead runtime wiring."
+}

@@ -236,6 +236,24 @@ direct executable path:
 - The same live pass confirmed Jules session `14369052129679399317` remained
   `Planning`; no pull was safe.
 
+2026-06-30 09:12 America/Denver provider shape audit:
+
+- Evidence:
+  `jules_inbox/jules_provider_external_blocker_dispatch/provider-shape-audit-20260630T091217.json`
+- Local `.env` provider entries are present, but secret-safe shape checks show
+  local `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, and `OPENROUTER_API_KEYS` do not
+  match expected provider token patterns.
+- VM worker environment shape: remote `OPENROUTER_API_KEY` is present and
+  OpenRouter-shaped; remote `GEMINI_API_KEY` is present but not Gemini-shaped;
+  remote `OPENROUTER_API_KEYS` plural is absent.
+- Live provider routes still agree with the shape audit: local Gemini/OpenRouter
+  report `invalid_key`; VM worker is online and direct `/chat` returned `OK`
+  via `model_used=vm/jules-worker`, but recent VM history still includes
+  provider-capacity `No LLM available`.
+- Conclusion: bridge/dashboard/install/boot wiring is up; the remaining
+  production-clean blocker is credential quality and VM provider quota/capacity,
+  not a missing server or dead worker process.
+
 ## Dirty-State Discipline
 
 Preserved pre-existing dirty runtime state:

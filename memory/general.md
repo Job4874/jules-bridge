@@ -483,3 +483,10 @@ has gone wrong before and what to avoid.
 - Fresh Playwright QA against `http://127.0.0.1:5173/` saved `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-live-recheck-20260630T085659.json` plus desktop/mobile screenshots. Result was `ok: true`, no console/page errors, no horizontal overflow, and visible command-center/provider/VM/cloud/refresh text.
 - Runtime stayed live in the same continuation: local/public dashboard routes responded, `/health/deep` was `status: ok`, GET `/chat/test` was healthy through VM worker, direct `/chat` returned `OK` via `vm/jules-worker`, and `/vm/status` was online with recent mixed `No LLM available` then `OK` results.
 - Jules session `14369052129679399317` remained `Planning`; do not pull until a fresh live list reports `Completed`.
+
+## Session 20260630T091217 - Provider Shape Audit
+
+- Secret-safe provider-shape evidence is saved at `jules_inbox/jules_provider_external_blocker_dispatch/provider-shape-audit-20260630T091217.json`; it records presence/length/item-count/shape only.
+- Local `.env` has Gemini/OpenRouter entries present, but local `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, and `OPENROUTER_API_KEYS` do not match expected provider token shapes, explaining local `invalid_key` responses.
+- VM worker has remote `OPENROUTER_API_KEY` present and OpenRouter-shaped, remote `GEMINI_API_KEY` present but not Gemini-shaped, and no remote plural `OPENROUTER_API_KEYS`; VM chat can still succeed via OpenRouter but recent history includes quota/capacity `No LLM available`.
+- Current blocker is credential quality and VM provider quota/capacity, not missing bridge/dashboard install or dead runtime wiring. Keep PR #64 draft until fixed or explicitly accepted.
