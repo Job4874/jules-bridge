@@ -241,12 +241,6 @@ def path_field(data, key="path", default=MISSING):
     return string_field(data, key, default=default, control_safe=True)
 
 
-@app.before_request
-def _circuit_breaker_check():
-    from modules.circuit_breaker import circuit_breaker_hook
-    return circuit_breaker_hook()
-
-
 def existing_path(path, kind="file"):
     if not os.path.exists(path):
         raise BridgeHTTPError(404, "Resource not found", path=path)
@@ -301,16 +295,20 @@ def _stale_evidence_state():
         if isinstance(ev, list):
             ev = ev[-1] if ev else {}
         if not isinstance(ev, dict):
-            return None
+            return {"age_s": 0, "threshold_s": threshold_s, "reason": "malformed"}
         ts = ev.get("timestamp_utc", "")
         if not ts:
-            return None
+            return {"age_s": 0, "threshold_s": threshold_s, "reason": "malformed"}
         age_s = round((datetime.now(timezone.utc) - datetime.fromisoformat(ts)).total_seconds())
+        if age_s < 0:
+            return {"age_s": age_s, "threshold_s": threshold_s, "reason": "clock_skew"}
         if age_s <= threshold_s:
             return None
-        return {"age_s": age_s, "threshold_s": threshold_s}
-    except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return None  # evidence file missing or malformed — proceed without warning
+        return {"age_s": age_s, "threshold_s": threshold_s, "reason": "stale"}
+    except OSError:
+        return None  # evidence file missing - proceed without warning
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return {"age_s": 0, "threshold_s": threshold_s, "reason": "malformed"}
 
 
 @app.before_request
@@ -326,6 +324,7 @@ def _evidence_hard_gate():
         "error": "evidence_stale",
         "age_s": stale["age_s"],
         "threshold_s": stale["threshold_s"],
+        "reason": stale.get("reason", "stale"),
     }), 423
 
 
@@ -386,6 +385,7 @@ TENTACLES = [
     {"name": "root",         "route": "GET /",                  "reach": "Authenticated bridge discovery and next-step pointers"},  # pylint: disable=line-too-long
     {"name": "info",         "route": "GET /info",              "reach": "Authenticated bridge metadata without the full manifest"},  # pylint: disable=line-too-long
     {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},  # pylint: disable=line-too-long
+    {"name": "health_deep",  "route": "GET /health/deep",       "reach": "Authenticated provider connectivity and host resource health"},  # pylint: disable=line-too-long
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
     {"name": "session_log",  "route": "GET /session/log",        "reach": "Audit which tools Jules used recently"},
@@ -413,6 +413,13 @@ TENTACLES = [
     {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},  # pylint: disable=line-too-long
     {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},  # pylint: disable=line-too-long
     {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},  # pylint: disable=line-too-long
+    {"name": "jules_api_sources", "route": "POST /jules/api/sources",       "reach": "List Jules REST API sources connected to this account"},  # pylint: disable=line-too-long
+    {"name": "jules_api_sessions_list", "route": "POST /jules/api/sessions/list", "reach": "List Jules REST API sessions"},  # pylint: disable=line-too-long
+    {"name": "jules_api_sessions_create", "route": "POST /jules/api/sessions", "reach": "Create a Jules REST API session from a prompt and source"},  # pylint: disable=line-too-long
+    {"name": "jules_api_sessions_get", "route": "POST /jules/api/sessions/get", "reach": "Fetch one Jules REST API session snapshot"},  # pylint: disable=line-too-long
+    {"name": "jules_api_activities", "route": "POST /jules/api/sessions/activities", "reach": "List activities for one Jules REST API session"},  # pylint: disable=line-too-long
+    {"name": "jules_api_send_message", "route": "POST /jules/api/sessions/send-message", "reach": "Send a message to an existing Jules REST API session"},  # pylint: disable=line-too-long
+    {"name": "jules_api_approve_plan", "route": "POST /jules/api/sessions/approve-plan", "reach": "Approve the latest plan for a Jules REST API session"},  # pylint: disable=line-too-long
     {"name": "jules_pull",      "route": "POST /jules/pull",               "reach": "Pull one remote Jules session with timeout protection"},  # pylint: disable=line-too-long
     {"name": "jules_cot",       "route": "POST /jules/cot",                "reach": "Build a completion-of-task ledger from Jules launch and pull artifacts"},  # pylint: disable=line-too-long
     {"name": "jules_cycle",     "route": "POST /jules/cycle",              "reach": "Run one dry-run-first Jules dispatch/launch/pull/COT communication cycle"},  # pylint: disable=line-too-long
@@ -499,6 +506,14 @@ def health():
         "bridge": "Jules Bridge",
         "uptime_s": uptime_s,
     })
+
+
+@app.route("/health/deep", methods=["GET"])
+@route_errors
+def health_deep():
+    """GET /health/deep - Authenticated provider and host readiness check."""
+    from modules.health_service import get_deep_health  # pylint: disable=import-outside-toplevel
+    return jsonify(get_deep_health()), 200
 
 
 @app.route("/ping", methods=["GET"])
@@ -664,6 +679,107 @@ def jules_sessions():
         bypass_cache=bool_field(data, "bypass_cache", default=False),
     )
     return jsonify(dict(result))
+
+
+@app.route("/jules/api/sources", methods=["POST"])
+@route_errors
+def jules_api_sources():
+    """POST /jules/api/sources - List connected Jules REST API sources."""
+    data = json_payload()
+    result = modules.jules_api_list_sources(
+        page_size=int_field(data, "page_size", default=0, min_value=0, max_value=100),
+        page_token=string_field(data, "page_token", default="", allow_empty=True),
+        timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=300),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/api/sessions/list", methods=["POST"])
+@route_errors
+def jules_api_sessions_list():
+    """POST /jules/api/sessions/list - List Jules REST API sessions."""
+    data = json_payload()
+    result = modules.jules_api_list_sessions(
+        page_size=int_field(data, "page_size", default=5, min_value=1, max_value=100),
+        page_token=string_field(data, "page_token", default="", allow_empty=True),
+        timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=300),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/api/sessions", methods=["POST"])
+@route_errors
+def jules_api_sessions_create():
+    """POST /jules/api/sessions - Create a Jules REST API session."""
+    data = json_payload()
+    result = modules.jules_api_create_session(
+        prompt=string_field(data, "prompt"),
+        title=string_field(data, "title", default="", allow_empty=True),
+        source=string_field(data, "source", default="", allow_empty=True, control_safe=True),
+        starting_branch=string_field(data, "starting_branch", default="", allow_empty=True, control_safe=True),
+        automation_mode=string_field(data, "automation_mode", default="", allow_empty=True),
+        require_plan_approval=bool_field(data, "require_plan_approval", default=False),
+        timeout_s=int_field(data, "timeout_s", default=60, min_value=1, max_value=600),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/api/sessions/get", methods=["POST"])
+@route_errors
+def jules_api_sessions_get():
+    """POST /jules/api/sessions/get - Fetch one Jules REST API session."""
+    data = json_payload()
+    result = modules.jules_api_get_session(
+        session_id=string_field(data, "session_id"),
+        timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=300),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/api/sessions/activities", methods=["POST"])
+@route_errors
+def jules_api_sessions_activities():
+    """POST /jules/api/sessions/activities - List session activities."""
+    data = json_payload()
+    result = modules.jules_api_list_activities(
+        session_id=string_field(data, "session_id"),
+        page_size=int_field(data, "page_size", default=30, min_value=1, max_value=100),
+        page_token=string_field(data, "page_token", default="", allow_empty=True),
+        timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=300),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/api/sessions/send-message", methods=["POST"])
+@route_errors
+def jules_api_sessions_send_message():
+    """POST /jules/api/sessions/send-message - Send a Jules session message."""
+    data = json_payload()
+    result = modules.jules_api_send_message(
+        session_id=string_field(data, "session_id"),
+        prompt=string_field(data, "prompt"),
+        timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=300),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/jules/api/sessions/approve-plan", methods=["POST"])
+@route_errors
+def jules_api_sessions_approve_plan():
+    """POST /jules/api/sessions/approve-plan - Approve a Jules plan."""
+    data = json_payload()
+    result = modules.jules_api_approve_plan(
+        session_id=string_field(data, "session_id"),
+        timeout_s=int_field(data, "timeout_s", default=30, min_value=1, max_value=300),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
 
 
 @app.route("/jules/preflight", methods=["POST"])

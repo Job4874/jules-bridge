@@ -182,6 +182,119 @@ class TestJulesDispatchRoute(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIs(mock_sessions.call_args.kwargs["dry_run"], True)
 
+    @patch("modules.jules_api_list_sources")
+    def test_jules_api_sources_delegates_to_module(self, mock_sources):
+        mock_sources.return_value = {
+            "status": "ok",
+            "sources": [{"name": "sources/github/Job4874/jules-bridge"}],
+            "source_names": ["sources/github/Job4874/jules-bridge"],
+        }
+
+        response = self.client.post("/jules/api/sources", json={"page_size": 10})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["source_names"], ["sources/github/Job4874/jules-bridge"])
+        self.assertEqual(mock_sources.call_args.kwargs["page_size"], 10)
+
+    @patch("modules.jules_api_list_sessions")
+    def test_jules_api_sessions_list_delegates_to_module(self, mock_sessions):
+        mock_sessions.return_value = {
+            "status": "ok",
+            "session_ids": ["123456"],
+            "sessions": [{"id": "123456"}],
+        }
+
+        response = self.client.post("/jules/api/sessions/list", json={})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["session_ids"], ["123456"])
+        self.assertEqual(mock_sessions.call_args.kwargs["page_size"], 5)
+
+    @patch("modules.jules_api_create_session")
+    def test_jules_api_sessions_create_delegates_to_module(self, mock_create):
+        mock_create.return_value = {
+            "status": "ok",
+            "session_ids": ["314159"],
+            "session": {"id": "314159"},
+        }
+
+        response = self.client.post(
+            "/jules/api/sessions",
+            json={
+                "prompt": "Fix provider blockers",
+                "title": "Local bridge fix",
+                "source": "sources/github/Job4874/jules-bridge",
+                "starting_branch": "master",
+                "require_plan_approval": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["session_ids"], ["314159"])
+        self.assertEqual(mock_create.call_args.kwargs["prompt"], "Fix provider blockers")
+        self.assertEqual(mock_create.call_args.kwargs["source"], "sources/github/Job4874/jules-bridge")
+        self.assertEqual(mock_create.call_args.kwargs["starting_branch"], "master")
+        self.assertIs(mock_create.call_args.kwargs["require_plan_approval"], True)
+
+    def test_jules_api_sessions_create_requires_prompt(self):
+        response = self.client.post("/jules/api/sessions", json={})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    @patch("modules.jules_api_get_session")
+    def test_jules_api_sessions_get_delegates_to_module(self, mock_get):
+        mock_get.return_value = {
+            "status": "ok",
+            "session_ids": ["123456"],
+            "session": {"id": "123456"},
+        }
+
+        response = self.client.post("/jules/api/sessions/get", json={"session_id": "123456"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_get.call_args.kwargs["session_id"], "123456")
+
+    @patch("modules.jules_api_list_activities")
+    def test_jules_api_activities_delegates_to_module(self, mock_activities):
+        mock_activities.return_value = {
+            "status": "ok",
+            "activities": [{"name": "activity/1"}],
+        }
+
+        response = self.client.post(
+            "/jules/api/sessions/activities",
+            json={"session_id": "123456", "page_size": 20},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_activities.call_args.kwargs["session_id"], "123456")
+        self.assertEqual(mock_activities.call_args.kwargs["page_size"], 20)
+
+    @patch("modules.jules_api_send_message")
+    def test_jules_api_send_message_delegates_to_module(self, mock_send):
+        mock_send.return_value = {"status": "ok"}
+
+        response = self.client.post(
+            "/jules/api/sessions/send-message",
+            json={"session_id": "123456", "prompt": "continue"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_send.call_args.kwargs["prompt"], "continue")
+
+    @patch("modules.jules_api_approve_plan")
+    def test_jules_api_approve_plan_delegates_to_module(self, mock_approve):
+        mock_approve.return_value = {"status": "ok"}
+
+        response = self.client.post(
+            "/jules/api/sessions/approve-plan",
+            json={"session_id": "123456"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_approve.call_args.kwargs["session_id"], "123456")
+
     @patch("modules.jules_preflight")
     def test_jules_preflight_defaults_to_remote_check(self, mock_preflight):
         mock_preflight.return_value = {

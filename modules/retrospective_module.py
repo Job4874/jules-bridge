@@ -850,7 +850,7 @@ def prune_memory(
             try:
                 ts = datetime.strptime(m.group(1), "%Y%m%dT%H%M%S")
                 now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
-                if ts < cutoff or ts > now_utc:
+                if ts < cutoff:
                     pruned_in_file += 1
                 else:
                     kept.append(section)

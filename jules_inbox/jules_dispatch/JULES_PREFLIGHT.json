@@ -1,136 +1,59 @@
 {
-  "generated_at_utc": "2026-06-29T17:44:29.494963+00:00",
+  "generated_at_utc": "2026-06-30T17:56:07.883252+00:00",
   "ready": true,
   "likely_blocker": "",
   "jules_command": "jules",
-  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-  "preferred_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-  "candidate_commands": [
-    {
-      "label": "requested",
-      "requested": "jules",
-      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\jules.CMD",
-      "exists": true
-    },
-    {
-      "label": "npm_bin_exe",
-      "requested": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-      "exists": true
-    },
-    {
-      "label": "temp_exe",
-      "requested": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
-      "resolved": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
-      "exists": true
-    }
-  ],
+  "resolved_jules_command": "JULES_REST_API",
+  "preferred_jules_command": "JULES_REST_API",
+  "candidate_commands": [],
   "version": {
-    "exit_code": 0,
-    "stdout": "Version: v0.1.42\nCommit: 4bd6b25084aa1af52d6d3979cda31f3a3d99fc04\nDate: 2025-12-16T20:26:09Z\nOAuth Client ID: 716860248198-t1s5lv1n1msgfoe3dt7vekro8b1fpd9g.apps.googleusercontent.com\n",
-    "stderr": "",
-    "timed_out": false
+    "status": "skipped",
+    "note": "JULES_USE_REST_API=1; CLI version probe skipped."
   },
   "remote": {
-    "dry_run": false,
-    "command": [
-      "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-      "remote",
-      "list",
-      "--session"
-    ],
+    "generated_at_utc": "2026-06-30T17:56:07.883252+00:00",
     "status": "ok",
-    "exit_code": 0,
-    "stdout": "           ID                                    Description                                    Repo                Last active                Status         \n 3626241059257911134     Look at the code review panel for box_check.png in your scr\u2026  Job4874/jules-bridge    45s ago                 Planning       \n 2666288347649059327     This is a textbook example of severe AI context bleed. Jule\u2026  Job4874/jules-bridge    49s ago                 Planning       \n 14436202093576207280    omating Jules Bridge Operations goal 11:26 AM safe_bridge_p\u2026  Job4874/jules-bridge    30s ago                 Planning       \n 14102122701905538069    If Jules is instantly crashing every time you tell him to r\u2026  Job4874/jules-bridge    49s ago                 Planning       \n 14949867874149855998    Good call. When an agent's context window gets so bloated w\u2026  Job4874/jules-bridge    15s ago                 In Progress    \n 14301370124170489357    You nailed the diagnosis. I see exactly where Jules went of\u2026  Job4874/jules-bridge    36m51s ago                             \n 6455150726590184916     RELAUNCH #4 - PLAN APPROVED. DIRECTIVE: no-plan-wait. The i\u2026  Job4874/jules-bridge    11h17m40s ago           Completed      \n 12805600008301705935    RELAUNCH #3 - YOUR PLAN WAS REVIEWED AND APPROVED BY OPERAT\u2026  Job4874/jules-bridge    34m47s ago              Completed      \n 16343119096041361031    RELAUNCH - SESSION 11749474028606581362 STALLED AFTER 20MIN\u2026  Job4874/jules-bridge    38m4s ago                              \n 11749474028606581362    MONDAY MISSION WITH KNOWLEDGE TRANSFER - BRIDGE IS LIVEBrid\u2026  Job4874/jules-bridge    13h0m10s ago                           \n 6811468253530467500     FULL OBJECTIVE - LIVE BRIDGE RESTORED - WORK HARD NO SLOPOp\u2026  Job4874/jules-bridge    5m23s ago               Awaiting Plan A\n 452508407200689714      COORDINATOR DIRECTIVE - UPDATE, SAVE, NO SLOPOperator says:\u2026  Job4874/jules-bridge    1 day ago               Completed      \n 2061592372747715678     HARDEN JULES SELF-UNBLOCKING: HRE REASONING, TOOLS, EXTENSI\u2026  Job4874/jules-bridge    1 day ago               Completed      \n 7648950010325460980     COORDINATOR ADDENDUM FOR ACTIVE JULES BRIDGE WORKOperator s\u2026  Job4874/jules-bridge    30m16s ago              Completed      \n 5848008381865409658     COORDINATOR ADDENDUM FOR ACTIVE SESSION 1054490850877586099\u2026  Job4874/jules-bridge    38m50s ago              Completed      \n 10544908508775860998    REMOTE JULES COORDINATOR TASK - RALPH LOOP / HRM / NO-SLOP \u2026  Job4874/jules-bridge    1 day ago               Completed      \n 3521421705474746991     COORDINATOR UPDATE FOR JULES - optimization, self-learning,\u2026  Job4874/jules-bridge    38s ago                 Awaiting Plan A\n 4817810605610475220     URGENT operator correction: Box Boodle AI was misunderstood\u2026  Job4874/jules-bridge    16m46s ago              Awaiting Plan A\n 10023960007052631741    URGENT one-line operator target update.Operator just provid\u2026  Job4874/jules-bridge    2 days ago              Completed      \n 14875438369256430901    Coordinator follow-up from Codex for Jules.Status/praise:- \u2026  Job4874/jules-bridge    2 days ago              Completed      \n 17207996117468041357    Coordinator escalation for Jules Bridge project email repor\u2026  Job4874/jules-bridge    2 days ago              Completed      \n 6306089484532646462     Coordinator correction/reminder for Jules Bridge project em\u2026  Job4874/jules-bridge    2 days ago              Completed      \n 10665213790862846680    Coordinator immediate update request for Jules Bridge remot\u2026  Job4874/jules-bridge    2 days ago              Completed      \n 16957330040932209250    Coordinator follow-up for Jules Bridge remote work.This ext\u2026  Job4874/jules-bridge    2 days ago              Completed      \n 1133907166586345516     Coordinator follow-up for Jules Bridge remote work.This fol\u2026  Job4874/jules-bridge    2 days ago                             \n 7839585721590534771     Coordinator follow-up for Jules Bridge remote work.This is \u2026  Job4874/jules-bridge    2 days ago              Awaiting User F\n 15142413581860598069    You are the remote Jules worker for repo Job4874/jules-brid\u2026  Job4874/jules-bridge    2 days ago              Completed      \n 3128018457996589851     # Jules Worker Packet JT-001-59ae6d- instance_index: 4- sta\u2026  Job4874/OracleV5        2 days ago              Completed      \n 5740649256591165337     # Jules Worker Packet JT-004-1e0abd- instance_index: 3- sta\u2026  Job4874/OracleV5        2 days ago                             \n 224256420467650186      # Jules Worker Packet JT-003-aab6ea- instance_index: 2- sta\u2026  Job4874/OracleV5        2 days ago              Completed      \n 18196467418341089057    # Jules Worker Packet JT-002-6b1194- instance_index: 1- sta\u2026  Job4874/OracleV5        2 days ago              Completed      \n 490373989700579863      Open the codebase for editing and running tests.              Job4874/jules-bridge    2 days ago              Awaiting Plan A\n 2850298912153410087     # Jules Worker Packet \u2014 OP-001-email-operator## TaskThe ope\u2026  Job4874/OracleV5        2 days ago              Awaiting Plan A\n 17555018009989686186    /tdd /hrm /no slop /goal /ralph loop / review codebase        Job4874/jules-bridge    3 days ago              Completed      \n 10747689874915790980    # Jules Worker Packet JT-035-7bc0c2- instance_index: 29- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 5408819866706457101     # Jules Worker Packet JT-035-7bc0c2- instance_index: 29- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 12093693687894509543    # Jules Worker Packet JT-032-430a34- instance_index: 26- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 13944901608959609572    # Jules Worker Packet JT-035-7bc0c2- instance_index: 29- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 16528644010708698533    # Jules Worker Packet JT-032-430a34- instance_index: 26- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 1454905039274392805     # Jules Worker Packet JT-035-7bc0c2- instance_index: 29- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 9126716179690030352     # Jules Worker Packet JT-025-9e80e5- instance_index: 2- sta\u2026  Job4874/OracleV5        3 days ago              Completed      \n 7537886744130045704     # Jules Worker Packet JT-016-025faa- instance_index: 16- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 946220871660003947      # Jules Worker Packet JT-030-857e5b- instance_index: 24- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 14207271060727745800    # Jules Worker Packet JT-035-7bc0c2- instance_index: 29- st\u2026  Job4874/OracleV5        3 days ago                             \n 12306542764491801820    # Jules Worker Packet JT-034-385f27- instance_index: 28- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 9665335808675428437     # Jules Worker Packet JT-033-64bc77- instance_index: 27- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 13848305970829493335    # Jules Worker Packet JT-032-430a34- instance_index: 26- st\u2026  Job4874/OracleV5        3 days ago              Failed         \n 11362832537920300514    # Jules Worker Packet JT-031-219d0c- instance_index: 25- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n 7522224730435223464     # Jules Worker Packet JT-030-857e5b- instance_index: 24- st\u2026  Job4874/OracleV5        3 days ago              Failed         \n 3488814641650708117     # Jules Worker Packet JT-028-114b6e- instance_index: 23- st\u2026  Job4874/OracleV5        3 days ago              Completed      \n                                                                                                                                                      \n",
-    "stderr": "",
-    "timed_out": false,
-    "session_ids": [
-      "3626241059257911134",
-      "2666288347649059327",
-      "14436202093576207280",
-      "14102122701905538069",
-      "14949867874149855998",
-      "14301370124170489357",
-      "6455150726590184916",
-      "12805600008301705935",
-      "16343119096041361031",
-      "11749474028606581362",
-      "6811468253530467500",
-      "452508407200689714",
-      "2061592372747715678",
-      "7648950010325460980",
-      "5848008381865409658",
-      "1054490850877586099",
-      "10544908508775860998",
-      "3521421705474746991",
-      "4817810605610475220",
-      "10023960007052631741",
-      "14875438369256430901",
-      "17207996117468041357",
-      "6306089484532646462",
-      "10665213790862846680",
-      "16957330040932209250",
-      "1133907166586345516",
-      "7839585721590534771",
-      "15142413581860598069",
-      "3128018457996589851",
-      "5740649256591165337",
-      "224256420467650186",
-      "18196467418341089057",
-      "490373989700579863",
-      "2850298912153410087",
-      "17555018009989686186",
-      "10747689874915790980",
-      "5408819866706457101",
-      "12093693687894509543",
-      "13944901608959609572",
-      "16528644010708698533",
-      "1454905039274392805",
-      "9126716179690030352",
-      "7537886744130045704",
-      "946220871660003947",
-      "14207271060727745800",
-      "12306542764491801820",
-      "9665335808675428437",
-      "13848305970829493335",
-      "11362832537920300514",
-      "7522224730435223464",
-      "3488814641650708117"
-    ],
-    "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-    "cache_hit": false
+    "ready": true,
+    "likely_blocker": "",
+    "api_key_present": true,
+    "source": "sources/github/Job4874/jules-bridge",
+    "base_url": "https://jules.googleapis.com/v1alpha",
+    "sources": {
+      "generated_at_utc": "2026-06-30T17:56:09.199487+00:00",
+      "operation": "sources.list",
+      "status": "ok",
+      "http_status": 200,
+      "api_key_present": true,
+      "error": "",
+      "likely_blocker": "",
+      "source_count": 15,
+      "source_names": [
+        "sources/github/Job4874/All-project-files-End-folders-Plus-Project-context",
+        "sources/github/Job4874/FinancialAnalyst_Swing",
+        "sources/github/Job4874/OracleV5",
+        "sources/github/Job4874/Quantower-c-sat",
+        "sources/github/Job4874/Research-gathering",
+        "sources/github/Job4874/TIBIN_Rebuild",
+        "sources/github/Job4874/academic-command-center",
+        "sources/github/Job4874/all-of-the-projects",
+        "sources/github/Job4874/financial-swing-analyst-data-engine",
+        "sources/github/Job4874/futures-macro-terminal",
+        "sources/github/Job4874/jules-bridge",
+        "sources/github/Job4874/order-flow-trader",
+        "sources/github/Job4874/tibin-fullstack-agent-runtime",
+        "sources/github/Job4874/tibin-portable-workspace",
+        "sources/github/Job4874/tibin-workspace"
+      ],
+      "next_page_token": ""
+    }
   },
   "auth_indicators": {
-    "known_auth_paths": [
-      {
-        "path": "C:\\Users\\abdul\\AppData\\Roaming\\jules",
-        "exists": false,
-        "item_count": 0
-      },
-      {
-        "path": "C:\\Users\\abdul\\AppData\\Local\\jules",
-        "exists": false,
-        "item_count": 0
-      },
-      {
-        "path": "C:\\Users\\abdul\\.config\\jules",
-        "exists": false,
-        "item_count": 0
-      },
-      {
-        "path": "C:\\Users\\abdul\\.jules_auth",
-        "exists": false,
-        "item_count": 0
-      }
-    ],
-    "any_known_auth_path_exists": false
+    "api_key_present": true,
+    "source": "sources/github/Job4874/jules-bridge",
+    "base_url": "https://jules.googleapis.com/v1alpha"
   },
-  "login_command": [
-    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-    "login",
-    "--no-launch-browser"
-  ],
-  "state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_PREFLIGHT.json",
-  "note": "Preflight is diagnostic only; it does not run `jules login`, `jules new`, or `jules remote pull`."
+  "login_command": [],
+  "rest_api": true,
+  "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_PREFLIGHT.json",
+  "note": "REST preflight is diagnostic only; it lists configured sources and does not create sessions."
 }

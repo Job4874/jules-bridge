@@ -242,3 +242,14 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - **Verification**: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py` passed; `python -m pytest tests/test_chat_service.py tests/test_bridge_routes.py -q` passed 74 tests; `python -m pytest tests/ -q` passed 315 tests; `npx --yes markdownlint-cli ...\walkthrough.md` passed with no output; `git diff --check` reported only expected CRLF warnings.
 - Evidence: recorded `python -m pytest tests/ -q` as 315 tests passed, SHA-256 `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`. Local bridge was not listening on `127.0.0.1:5000`, so evidence was recorded through `modules.record_test_evidence(...)` rather than the HTTP route.
 
+## Session 20260630T180700 - Jules REST API Local Bridge
+
+- Added `modules/jules_api.py` with a stdlib Jules REST client using `X-Goog-Api-Key`, secret-redacted errors, source/session list, create, get, activities, send-message, and approve-plan operations.
+- Added authenticated `/jules/api/*` bridge routes and REST-backed integration paths in `modules/jules_orchestrator.py` for preflight, session listing, live launch, and pull when `JULES_USE_REST_API=1`.
+- Configured ignored local `.env` from the pasted attachment without printing the key. Current REST mode uses `JULES_SOURCE=sources/github/Job4874/jules-bridge`, `JULES_API_BASE_URL=https://jules.googleapis.com/v1alpha`, and `JULES_STARTING_BRANCH=master`.
+- Bounded REST preflight state so `jules_inbox/jules_dispatch/JULES_PREFLIGHT.json` stores source names/counts instead of full Google source metadata and branch lists.
+- Repaired adjacent full-suite regressions discovered during verification: `/health/deep` route exposure, dashboard `.env` cache bleed, duplicate legacy UI helper overrides, future-dated retrospective pruning, and local REST env isolation for tests.
+- Verification: `python -m py_compile bridge.py modules\jules_api.py modules\jules_orchestrator.py modules\__init__.py modules\dashboard_module.py modules\ui_automation.py modules\retrospective_module.py modules\health_service.py` passed; `python -m pytest tests/ -q` passed 415 tests.
+- Live smoke on `http://127.0.0.1:5000`: `/health` OK, `/health/deep` OK with `keyless_mode=False`, `/jules/preflight` ready with `rest_api=True`, `/jules/api/sources` OK with target source present, `/jules/api/sessions/list` OK with 5 sessions returned. No new remote Jules session was created during smoke.
+- Evidence hash recorded through `/retrospective/record_evidence`: `aec621dd9213862d8b20486cad0a6d68e88d7c494ac6c57788262927eb03f5e6`.
+

@@ -60,3 +60,24 @@ def check_circuit_breaker(route: str) -> Tuple[bool, int]:
     _call_log[route].append(now)
 
     return False, 0
+
+
+def circuit_breaker_hook():
+    """Flask before_request hook. Returns a 429 response when the circuit is open."""
+    from flask import jsonify, request  # pylint: disable=import-outside-toplevel
+
+    route = request.path
+    is_open, retry_after = check_circuit_breaker(route)
+    if not is_open:
+        return None
+
+    response = jsonify(
+        {
+            "error": "circuit_open",
+            "route": route,
+            "retry_after_s": retry_after,
+        }
+    )
+    response.status_code = 429
+    response.headers["Retry-After"] = str(retry_after)
+    return response

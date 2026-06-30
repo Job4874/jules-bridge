@@ -56,6 +56,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/vm/` | vm_manager | Resource pressure checks and allowlisted secondary-VM boot dry-runs |
 | `/inbox/` | inbox_service | Message passing |
 | `/jules/` | jules_orchestrator | Jules task dispatch, worker packets, launch state, and remote session checks |
+| `/jules/api/` | jules_api | Jules REST API source/session/message helpers behind the local bridge |
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |
 | `/reasoning/` | reasoning_module | H/L/ACT reasoning (Gemini or stub) |
 | `/retrospective/` | retrospective_module | Log analysis + memory + pruning |
@@ -117,6 +118,11 @@ Every module has a **simple typed interface** hiding complex implementation:
 
 - `modules/jules_orchestrator.py` parses pasted Jules task dumps, classifies task
   cards by status/type, and builds worker packets plus explicit launch commands.
+- `modules/jules_api.py` wraps the Jules REST API. It reads `JULES_API_KEY`
+  from the environment, sends it only as `X-Goog-Api-Key`, redacts it from
+  errors, and exposes protected local helper routes under `/jules/api/*`.
+- Existing CLI-backed Jules routes prefer REST only when `JULES_USE_REST_API=1`
+  and `JULES_API_KEY` is set. Otherwise they keep the current Jules CLI path.
 - `POST /jules/dispatch` is dry-run by default. It can write packet files under
   `jules_inbox/jules_dispatch/`, but it never starts remote Jules sessions.
 - `POST /jules/launch` is also dry-run by default. With `dry_run=false`, it

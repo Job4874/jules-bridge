@@ -6,6 +6,7 @@ dry-run-first VM boot execution behind small typed contracts.
 Public interface:
     detect_resource_pressure(...) -> ResourcePressureResult
     boot_secondary_vm(...) -> VMBootResult
+    check_and_scale_compute(...) -> str
 """
 
 from __future__ import annotations
@@ -294,3 +295,32 @@ def boot_secondary_vm(
             dry_run=dry_run,
             error=str(exc),
         )
+
+
+def check_and_scale_compute(
+    dry_run: bool = True,
+    allow_vm_boot: bool = False,
+    script_name: str = "Start-SecondaryVM.ps1",
+) -> str:
+    """Compatibility wrapper for the daemon loop.
+
+    Checks local resource pressure and starts the configured secondary VM boot
+    script only when pressure crosses thresholds and live execution is allowed.
+    """
+    pressure = detect_resource_pressure()
+    memory = pressure.get("memory_percent")
+    if pressure.get("status") != "maxed_out":
+        if memory is None:
+            return f"No scaling action needed: {pressure.get('error') or 'resource pressure unknown'}"
+        return f"Memory at {float(memory):.1f}%, no action needed."
+
+    boot = boot_secondary_vm(
+        script_name=script_name,
+        allow_vm_boot=allow_vm_boot,
+        dry_run=dry_run,
+    )
+    if boot.get("status") == "started":
+        return f"EXECUTED: {boot.get('selected_script')}"
+    if boot.get("status") == "dry_run":
+        return f"DRY_RUN: {boot.get('selected_script')}"
+    return f"BLOCKED: {boot.get('error') or boot.get('status')}"

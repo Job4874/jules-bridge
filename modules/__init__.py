@@ -34,6 +34,7 @@ from .vm_manager import (
     VMBootResult,
     detect_resource_pressure,
     boot_secondary_vm,
+    check_and_scale_compute,
 )
 from .windows_secret_provider import (
     WindowsSecretProvider,
@@ -62,6 +63,19 @@ from .jules_orchestrator import (
     run_jules_watch,
     run_jules_fleet,
     run_jules_fleet_watch,
+)
+from .jules_api import (
+    JulesApiResult,
+    is_rest_api_enabled,
+    is_rest_api_requested,
+    jules_api_preflight as rest_api_preflight,
+    list_sources as jules_api_list_sources,
+    list_sessions as jules_api_list_sessions,
+    create_session as jules_api_create_session,
+    get_session as jules_api_get_session,
+    list_activities as jules_api_list_activities,
+    send_message as jules_api_send_message,
+    approve_plan as jules_api_approve_plan,
 )
 from .oracle_session import (
     OracleStatus,
@@ -148,6 +162,7 @@ __all__ = [
     "VMBootResult",
     "detect_resource_pressure",
     "boot_secondary_vm",
+    "check_and_scale_compute",
     # windows_secret_provider
     "WindowsSecretProvider",
     "build_windows_secret_provider",
@@ -178,6 +193,18 @@ __all__ = [
     "run_jules_watch",
     "run_jules_fleet",
     "run_jules_fleet_watch",
+    # jules_api
+    "JulesApiResult",
+    "is_rest_api_enabled",
+    "is_rest_api_requested",
+    "rest_api_preflight",
+    "jules_api_list_sources",
+    "jules_api_list_sessions",
+    "jules_api_create_session",
+    "jules_api_get_session",
+    "jules_api_list_activities",
+    "jules_api_send_message",
+    "jules_api_approve_plan",
     # oracle_session
     "OracleStatus",
     "BuildDeployResult",

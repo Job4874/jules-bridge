@@ -534,6 +534,89 @@ def test_list_remote_sessions_dry_run_does_not_call_cli():
     assert result["dry_run"] is True
 
 
+@patch.dict(os.environ, {"JULES_USE_REST_API": "1", "JULES_API_KEY": "secret"}, clear=False)
+@patch("modules.jules_orchestrator.jules_api.list_sessions")
+@patch("modules.jules_orchestrator._run_cli_command")
+def test_list_remote_sessions_uses_rest_api_when_enabled(mock_run, mock_list):
+    mock_list.return_value = {
+        "status": "ok",
+        "session_ids": ["123456"],
+        "stdout": " 123456 # Local bridge fix In Progress\n",
+    }
+
+    result = list_remote_sessions(dry_run=False, bypass_cache=True)
+
+    mock_run.assert_not_called()
+    mock_list.assert_called_once()
+    assert result["status"] == "ok"
+    assert result["rest_api"] is True
+    assert result["session_ids"] == ["123456"]
+    assert result["resolved_jules_command"] == "JULES_REST_API"
+
+
+@patch.dict(
+    os.environ,
+    {
+        "JULES_USE_REST_API": "1",
+        "JULES_API_KEY": "secret",
+        "JULES_SOURCE": "sources/github/Job4874/jules-bridge",
+    },
+    clear=False,
+)
+@patch("modules.jules_orchestrator.jules_api.create_session")
+@patch("modules.jules_orchestrator._run_cli_command")
+def test_launch_packets_uses_rest_api_when_enabled(mock_run, mock_create):
+    mock_create.return_value = {
+        "status": "ok",
+        "session_ids": ["314159"],
+        "session": {"id": "314159"},
+    }
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        packet = os.path.join(tmp_dir, "JT-001-rest.md")
+        with open(packet, "w", encoding="utf-8") as handle:
+            handle.write("# Packet\nDo useful work.")
+
+        result = launch_packets(
+            packet_files=[packet],
+            repo_path=tmp_dir,
+            dry_run=False,
+        )
+
+    mock_run.assert_not_called()
+    assert result["rest_api"] is True
+    assert result["launched_count"] == 1
+    assert result["results"][0]["status"] == "launched"
+    assert result["results"][0]["session_ids"] == ["314159"]
+    assert mock_create.call_args.kwargs["prompt"].startswith("# Packet")
+    assert mock_create.call_args.kwargs["title"] == "JT-001-rest"
+
+
+@patch.dict(os.environ, {"JULES_USE_REST_API": "1", "JULES_API_KEY": "secret"}, clear=False)
+@patch("modules.jules_orchestrator.jules_api.get_session")
+@patch("modules.jules_orchestrator._run_cli_command")
+def test_pull_remote_session_uses_rest_api_when_enabled(mock_run, mock_get):
+    mock_get.return_value = {
+        "status": "ok",
+        "session_ids": ["123456"],
+        "completed": True,
+        "stdout": '{"outputs":[{"pullRequest":{}}]}',
+    }
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        result = pull_remote_session(
+            "123456",
+            output_dir=tmp_dir,
+            dry_run=False,
+        )
+
+    mock_run.assert_not_called()
+    assert result["rest_api"] is True
+    assert result["status"] == "pulled"
+    assert result["exit_code"] == 0
+    assert "Completion report" in result["note"]
+
+
 @patch("modules.jules_orchestrator._auth_indicators")
 @patch("modules.jules_orchestrator._candidate_jules_commands")
 @patch("modules.jules_orchestrator.shutil.which", return_value=r"C:\tools\jules.cmd")

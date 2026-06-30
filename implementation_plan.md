@@ -79,3 +79,38 @@ Public functions to add:
 ## Status
 
 - 2026-06-26: Steps 3-6 completed for `vm_manager`. Added module-boundary tests, `modules/vm_manager.py`, exports, and thin `/vm/resource_pressure` plus `/vm/boot_secondary` routes. Full suite passed 274 tests with 1 existing warning; evidence hash `9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a`.
+
+# Jules REST API Local Bridge Plan
+
+## Goal
+
+Run Jules control through the local bridge without depending on the Windows
+Jules CLI when REST API credentials are configured.
+
+## Scope
+
+1. Add a deep `modules/jules_api.py` module for the Jules REST API.
+2. Add direct local routes:
+   - `POST /jules/api/sources`
+   - `POST /jules/api/sessions/list`
+   - `POST /jules/api/sessions`
+   - `POST /jules/api/sessions/get`
+   - `POST /jules/api/sessions/activities`
+   - `POST /jules/api/sessions/send-message`
+   - `POST /jules/api/sessions/approve-plan`
+3. Keep existing `/jules/preflight`, `/jules/sessions`, `/jules/launch`, and
+   `/jules/pull` behavior unchanged unless `JULES_USE_REST_API=1` is set.
+4. Use only `.env`/environment variables for credentials; never hardcode or
+   return API keys in route payloads.
+5. Preserve safe defaults: dry-run stays dry-run, live REST session creation
+   still requires the caller to send `dry_run=false` through existing launch
+   routes or explicitly call the direct create-session route.
+
+## Env Contract
+
+- `JULES_API_KEY`: API key sent as `X-Goog-Api-Key`.
+- `JULES_SOURCE`: Default source name such as `sources/github/owner/repo`.
+- `JULES_USE_REST_API=1`: Prefer REST over the CLI in existing Jules routes.
+- `JULES_API_BASE_URL`: Optional override, default
+  `https://jules.googleapis.com/v1alpha`.
+- `JULES_STARTING_BRANCH`: Optional default branch for created sessions.

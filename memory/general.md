@@ -365,3 +365,11 @@ has gone wrong before and what to avoid.
 - Added module-boundary tests in `tests/test_chat_service.py` and route-thinness tests in `tests/test_bridge_routes.py`.
 - Verification: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py`; focused pytest passed 74 tests; full `python -m pytest tests/ -q` passed 315 tests. Evidence hash `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`.
 
+## Session 20260630T180700 - Jules REST API Local Bridge (415 tests passing)
+
+- Added canonical Jules REST client boundary in `modules/jules_api.py`. It sends API keys only through `X-Goog-Api-Key`, redacts secret-bearing errors, and exposes source/session/create/get/activities/send-message/approve-plan helpers through `modules.__init__` aliases.
+- Added authenticated bridge routes under `/jules/api/*`. Existing `/jules/preflight`, live `/jules/sessions`, live `/jules/launch`, and live `/jules/pull` prefer REST only when `JULES_USE_REST_API=1` and `JULES_API_KEY` are present; otherwise CLI behavior remains intact.
+- Keep REST preflight durable state bounded: `JULES_PREFLIGHT.json` should store source names/counts, not full source payloads or branch lists. Use direct `/jules/api/sources` when the full Google payload is needed interactively.
+- Tests must isolate local `.env` REST mode. `tests/conftest.py::isolate_jules_rest_env` clears Jules REST env vars by default so unit tests keep deterministic CLI assumptions unless a test explicitly patches REST env.
+- Verification: `python -m pytest tests/ -q` passed 415 tests; live bridge smoke showed `/health`, `/health/deep`, `/jules/preflight`, `/jules/api/sources`, and `/jules/api/sessions/list` OK. Evidence hash `aec621dd9213862d8b20486cad0a6d68e88d7c494ac6c57788262927eb03f5e6`.
+

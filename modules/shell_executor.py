@@ -158,6 +158,7 @@ def execute(
     cwd: Optional[str] = None,
     timeout: int = 30,
     stdin: Optional[str] = None,
+    bypass_cache: bool = False,
 ) -> ShellResult:
     """Execute a command in the specified shell.
 
@@ -167,6 +168,7 @@ def execute(
         cwd: Working directory. Defaults to current directory.
         timeout: Seconds before raising subprocess.TimeoutExpired.
         stdin: Optional text to pipe to stdin.
+        bypass_cache: If true, skip shell result cache read/write.
 
     Returns:
         ShellResult with exit_code, stdout, stderr, shell.
@@ -184,7 +186,7 @@ def execute(
     cache_key = hashlib.sha256(f"{command}{effective_cwd}{shell}".encode()).hexdigest()
 
     now = time.time()
-    if cache_key in _shell_result_cache and cache_ttl > 0:
+    if not bypass_cache and cache_key in _shell_result_cache and cache_ttl > 0:
         ts, cached_res = _shell_result_cache[cache_key]
         if now - ts < cache_ttl:
             return cached_res
@@ -215,7 +217,8 @@ def execute(
         )
 
         # Update cache
-        _shell_result_cache[cache_key] = (now, result)
+        if not bypass_cache:
+            _shell_result_cache[cache_key] = (now, result)
         return result
 
     except subprocess.TimeoutExpired:

@@ -95,5 +95,12 @@
     "passed": true,
     "test_count": 315,
     "raw_output_tail": "python -m pytest tests/ -q\n315 passed in 13.10s"
+  },
+  {
+    "output_hash": "aec621dd9213862d8b20486cad0a6d68e88d7c494ac6c57788262927eb03f5e6",
+    "timestamp_utc": "2026-06-30T17:56:57.716418+00:00",
+    "passed": true,
+    "test_count": 415,
+    "raw_output_tail": "python -m py_compile bridge.py modules\\jules_api.py modules\\jules_orchestrator.py modules\\__init__.py modules\\dashboard_module.py modules\\ui_automation.py modules\\retrospective_module.py modules\\health_service.py -> passed\npython -m pytest tests/ -q -> 415 passed in 16.21s\nlive smoke http://127.0.0.1:5000 -> /health ok; /health/deep ok keyless_mode=False; /jules/preflight ready rest_api=True; /jules/api/sources ok target_source_present=True sources_total_returned=15; /jules/api/sessions/list ok sessions_count=5"
   }
 ]

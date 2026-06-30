@@ -224,6 +224,12 @@
 
 - **`POST /jules/dispatch`** only prepares worker packets and launch commands; it must not start remote Jules sessions by itself
 
+- **Jules REST API mode** activates only when `JULES_USE_REST_API=1` and `JULES_API_KEY` are set. In that mode `/jules/preflight`, live `/jules/sessions`, live `/jules/launch`, and live `/jules/pull` use `modules/jules_api.py`; otherwise they keep the Jules CLI path.
+
+- **`JULES_API_KEY` is secret material**. It must live only in `.env` or the process environment, must be sent only as `X-Goog-Api-Key`, and must never be returned in bridge payloads, logs, tests, memory, or docs.
+
+- **REST session creation still needs `JULES_SOURCE`** such as `sources/github/owner/repo`. If it is missing, direct `POST /jules/api/sessions` and REST-backed launches fail before making an upstream call.
+
 - **Packet output** defaults to `jules_inbox/jules_dispatch/`; review `jules_launch_commands.ps1` before running because it calls `jules new`
 
 - **`POST /jules/launch`** defaults to `dry_run=true`; only `dry_run=false` attempts live `jules new` calls and writes `JULES_LAUNCH_STATE.json`
