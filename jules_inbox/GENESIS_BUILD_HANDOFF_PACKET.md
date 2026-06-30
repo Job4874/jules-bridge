@@ -173,6 +173,22 @@ Only pull `10937231877503281057` after a fresh session list reports it as
 - Local Gemini/OpenRouter credentials still classify as invalid-key, and Jules
   replacement session `10937231877503281057` has not completed.
 
+2026-06-30 08:10 America/Denver current-head audit refresh:
+
+- `10937231877503281057` stayed a stale blank-status row and was not pulled.
+- Fresh packet:
+  `jules_inbox/jules_post_retry_readiness_dispatch/JT-003-post-retry-production-readiness-audit.md`
+- Fresh session: `14369052129679399317`
+- current observed status: `Planning`
+- launch state:
+  `jules_inbox/jules_post_retry_readiness_dispatch/JULES_LAUNCH_STATE.json`
+- The launch-state `session_ids` arrays were corrected to track only
+  `14369052129679399317`; stale ids mentioned inside packet warning text must
+  not be treated as tracked sessions.
+
+Only pull `14369052129679399317` after a fresh session list reports it as
+`Completed`.
+
 If `jules remote list --session` fails due CLI self-update or DNS, use the
 direct executable path:
 `C:\Users\abdul\AppData\Local\Temp\jules_tmp\jules.exe`.
@@ -190,6 +206,7 @@ New intentional untracked artifacts from this pass:
 - `jules_inbox/genesis_indexing_agents/`
 - `jules_inbox/jules_production_blocker_followup_dispatch/`
 - `jules_inbox/jules_production_readiness_refresh_dispatch/`
+- `jules_inbox/jules_post_retry_readiness_dispatch/`
 - this handoff packet
 
 ## Next Operator-Safe Action
@@ -199,6 +216,10 @@ Do not mark PR #64 production-ready unless one of these happens:
 1. valid local Gemini/OpenRouter credentials are installed and verified;
 2. VM provider quota/capacity recovers and `/chat/test` reports VM OK;
 3. the operator explicitly accepts current provider failures as non-blocking.
+
+Poll Jules session `14369052129679399317` with `bypass_cache=true`. Pull only
+that session after it reports `Completed`, inspect output before applying, and
+reject any stale broad diff or provider-error greenwashing.
 
 Until then, the server/dashboard/install/build side is booted and verified,
 but provider readiness remains the release blocker.

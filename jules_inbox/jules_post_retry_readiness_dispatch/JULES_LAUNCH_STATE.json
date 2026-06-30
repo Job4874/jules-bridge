@@ -1,0 +1,54 @@
+{
+  "generated_at_utc": "2026-06-30T14:09:45.799219+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_post_retry_readiness_dispatch",
+  "selected_count": 1,
+  "launched_count": 1,
+  "timeout_count": 0,
+  "jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_post_retry_readiness_dispatch\\JT-003-post-retry-production-readiness-audit.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 14369052129679399317\nTask: # Jules Worker Packet JT-003-post-retry-production-readiness-audit\n\n- instance_index: 1\n- status: pending\n- task_type: production_readiness\n- source: codex-post-retry-current-head-audit\n- repo_path: C:\\Users\\abdul\\jules-bridge\n- branch: codex/jules-production-finish\n- head: 45ff2f56e6c2d49f3e1e63eb470d6d9940427f60\n- generated_at_local: 2026-06-30T08:07:00-06:00\n\n## Noninteractive Operating Rule\n\nDo not stop for plan approval. Do not ask the operator to approve a plan. Inspect\ncurrent head and live evidence. Implement only if you find a real source bug\nthat can be fixed without new secrets. If the remaining blocker is external\nprovider credentials/quota/capacity, write a clear report and leave code\nunchanged.\n\n## Why This Packet Exists\n\nPrior current-head refresh session `10937231877503281057` is a stale blank-status\nrow and was launched against an older head. Do not pull it unless a fresh remote\nlist later reports that exact session as `Completed`.\n\nThis JT-003 packet is the current audit target after Codex integrated and pushed\ndirect VM retry hardening.\n\n## Current Live Evidence\n\n- PR #64 is open draft at head `45ff2f56e6c2d49f3e1e63eb470d6d9940427f60`.\n- Local bridge is live: `http://127.0.0.1:5000`.\n- Dashboard preview is live: `http://127.0.0.1:5173`.\n- Public LocalTunnel is live:\n  `https://shaggy-kiwis-shout.loca.lt`.\n- Public `/ping`, `/health`, and `/dashboard/status` return HTTP 200.\n- GCP cloud worker is online/reachable and dashboard reports `cloud.online=1`.\n- Direct `/chat` VM fallback attempts were increased from `2` to `4` in\n  `modules/chat_service.py`.\n- Regression coverage exists in `tests/test_chat_service.py` for two transient\n  VM `No LLM available` results followed by a successful VM response.\n- Focused test passed: `tests/test_chat_service.py` -> `33 passed`.\n- Full suite passed: `python -m pytest tests/ -q` -> `438 passed`.\n- Bridge restarted from source and is live on PID `41428`.\n- Post-retry direct `/chat` stability sample returned\n  `model_used=vm/jules-worker` with `OK` on 5/5 attempts.\n\n## Current Provider Truth\n\n- Local Gemini still reports invalid-key.\n- Local OpenRouter still reports invalid-key.\n- VM fallback is currently good enough for the 5/5 direct chat sample, but VM\n  side provider quota/free-model capacity has previously flipped to\n  `No LLM available`.\n- `/chat/test` can be `healthy=true` through VM fallback while local providers\n  remain red. Do not greenwash Gemini/OpenRouter.\n- PR #64 should remain draft unless local credential failures are fixed or\n  explicitly accepted as non-blocking.\n\n## Scope\n\nAudit current head for any remaining production-readiness bug that is fixable\nwithout secrets. Candidate checks:\n\n1. Confirm direct `/chat` retry behavior is bounded, tested, and does not hide\n   final VM provider failure.\n2. Confirm `/dashboard/status`, `/chat/test`, `/health/deep`, and direct\n   `/chat` semantics remain honest when Gemini/OpenRouter are invalid but VM\n   fallback succeeds.\n3. Confirm the dashboard should still show Gemini/OpenRouter red and VM fallback\n   status honestly.\n4. Confirm there is no current-head code fix for the local invalid credentials\n   or upstream VM provider quota.\n\n## Hard Constraints\n\n- Do not edit `.env`, print secrets, commit/upload credentials, or expose token\n  values.\n- Do not replay stale sessions `2693363866417321141`, `3580112715401585773`,\n  `14998673751325827002`, `4009579503888711152`, or `10937231877503281057`\n  unless a fresh list shows that exact session is `Completed` and Codex is\n  explicitly pulling only that session.\n- Do not remove bridge circuit-breaker wiring.\n- Do not add backup or shadow source files.\n- Do not hide provider failures or mark them green without live proof.\n- Keep any patch minimal and current-head only.\n\n## Verification If You Patch\n\n- Run focused tests for changed modules.\n- Run full `python -m pytest tests/ -q`.\n- Verify local `/dashboard/status`, `/health/deep`, `/chat/test`, `/chat`, and\n  public `/dashboard/status`.\n\n## Completion Report Required\n\nReturn a concise report with:\n\n- current-head files inspected\n- whether code changed\n- files touched\n- verification performed\n- provider blocker status\n- whether PR #64 should remain draft\n- next smallest action\n\nURL: https://jules.google.com/session/14369052129679399317\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "14369052129679399317"
+      ]
+    }
+  ],
+  "attempt_results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_post_retry_readiness_dispatch\\JT-003-post-retry-production-readiness-audit.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 14369052129679399317\nTask: # Jules Worker Packet JT-003-post-retry-production-readiness-audit\n\n- instance_index: 1\n- status: pending\n- task_type: production_readiness\n- source: codex-post-retry-current-head-audit\n- repo_path: C:\\Users\\abdul\\jules-bridge\n- branch: codex/jules-production-finish\n- head: 45ff2f56e6c2d49f3e1e63eb470d6d9940427f60\n- generated_at_local: 2026-06-30T08:07:00-06:00\n\n## Noninteractive Operating Rule\n\nDo not stop for plan approval. Do not ask the operator to approve a plan. Inspect\ncurrent head and live evidence. Implement only if you find a real source bug\nthat can be fixed without new secrets. If the remaining blocker is external\nprovider credentials/quota/capacity, write a clear report and leave code\nunchanged.\n\n## Why This Packet Exists\n\nPrior current-head refresh session `10937231877503281057` is a stale blank-status\nrow and was launched against an older head. Do not pull it unless a fresh remote\nlist later reports that exact session as `Completed`.\n\nThis JT-003 packet is the current audit target after Codex integrated and pushed\ndirect VM retry hardening.\n\n## Current Live Evidence\n\n- PR #64 is open draft at head `45ff2f56e6c2d49f3e1e63eb470d6d9940427f60`.\n- Local bridge is live: `http://127.0.0.1:5000`.\n- Dashboard preview is live: `http://127.0.0.1:5173`.\n- Public LocalTunnel is live:\n  `https://shaggy-kiwis-shout.loca.lt`.\n- Public `/ping`, `/health`, and `/dashboard/status` return HTTP 200.\n- GCP cloud worker is online/reachable and dashboard reports `cloud.online=1`.\n- Direct `/chat` VM fallback attempts were increased from `2` to `4` in\n  `modules/chat_service.py`.\n- Regression coverage exists in `tests/test_chat_service.py` for two transient\n  VM `No LLM available` results followed by a successful VM response.\n- Focused test passed: `tests/test_chat_service.py` -> `33 passed`.\n- Full suite passed: `python -m pytest tests/ -q` -> `438 passed`.\n- Bridge restarted from source and is live on PID `41428`.\n- Post-retry direct `/chat` stability sample returned\n  `model_used=vm/jules-worker` with `OK` on 5/5 attempts.\n\n## Current Provider Truth\n\n- Local Gemini still reports invalid-key.\n- Local OpenRouter still reports invalid-key.\n- VM fallback is currently good enough for the 5/5 direct chat sample, but VM\n  side provider quota/free-model capacity has previously flipped to\n  `No LLM available`.\n- `/chat/test` can be `healthy=true` through VM fallback while local providers\n  remain red. Do not greenwash Gemini/OpenRouter.\n- PR #64 should remain draft unless local credential failures are fixed or\n  explicitly accepted as non-blocking.\n\n## Scope\n\nAudit current head for any remaining production-readiness bug that is fixable\nwithout secrets. Candidate checks:\n\n1. Confirm direct `/chat` retry behavior is bounded, tested, and does not hide\n   final VM provider failure.\n2. Confirm `/dashboard/status`, `/chat/test`, `/health/deep`, and direct\n   `/chat` semantics remain honest when Gemini/OpenRouter are invalid but VM\n   fallback succeeds.\n3. Confirm the dashboard should still show Gemini/OpenRouter red and VM fallback\n   status honestly.\n4. Confirm there is no current-head code fix for the local invalid credentials\n   or upstream VM provider quota.\n\n## Hard Constraints\n\n- Do not edit `.env`, print secrets, commit/upload credentials, or expose token\n  values.\n- Do not replay stale sessions `2693363866417321141`, `3580112715401585773`,\n  `14998673751325827002`, `4009579503888711152`, or `10937231877503281057`\n  unless a fresh list shows that exact session is `Completed` and Codex is\n  explicitly pulling only that session.\n- Do not remove bridge circuit-breaker wiring.\n- Do not add backup or shadow source files.\n- Do not hide provider failures or mark them green without live proof.\n- Keep any patch minimal and current-head only.\n\n## Verification If You Patch\n\n- Run focused tests for changed modules.\n- Run full `python -m pytest tests/ -q`.\n- Verify local `/dashboard/status`, `/health/deep`, `/chat/test`, `/chat`, and\n  public `/dashboard/status`.\n\n## Completion Report Required\n\nReturn a concise report with:\n\n- current-head files inspected\n- whether code changed\n- files touched\n- verification performed\n- provider blocker status\n- whether PR #64 should remain draft\n- next smallest action\n\nURL: https://jules.google.com/session/14369052129679399317\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "14369052129679399317"
+      ]
+    }
+  ],
+  "state_path": "",
+  "attempted_count": 1,
+  "skipped_launched_count": 0,
+  "force_packet_count": 1,
+  "preserve_existing_session_ids": true,
+  "note": "Live launch attempted through the Jules CLI.",
+  "tracked_count": 1
+}
