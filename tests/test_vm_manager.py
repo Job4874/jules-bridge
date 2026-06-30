@@ -46,6 +46,45 @@ class TestResourcePressure:
         assert result["maxed_out"] is False
         assert "0 and 100" in result["error"]
 
+    @patch("modules.vm_manager._read_host_metrics")
+    def test_detect_resource_pressure_reads_host_metrics_when_omitted(self, mock_read_host_metrics):
+        mock_read_host_metrics.return_value = (55.0, 75.0, None)
+        from modules.vm_manager import detect_resource_pressure  # pylint: disable=import-outside-toplevel
+
+        result = detect_resource_pressure(thresholds={"cpu_percent": 80, "memory_percent": 90})
+
+        assert result["status"] == "ok"
+        assert result["cpu_percent"] == 55.0
+        assert result["memory_percent"] == 75.0
+        assert result["maxed_out"] is False
+        assert result["error"] is None
+
+    @patch("modules.vm_manager._read_host_metrics")
+    def test_detect_resource_pressure_handles_host_metric_error(self, mock_read_host_metrics):
+        mock_read_host_metrics.return_value = (None, None, "host metric reader failed")
+        from modules.vm_manager import detect_resource_pressure  # pylint: disable=import-outside-toplevel
+
+        result = detect_resource_pressure()
+
+        assert result["status"] == "error"
+        assert result["cpu_percent"] is None
+        assert result["memory_percent"] is None
+        assert result["maxed_out"] is False
+        assert result["error"] == "host metric reader failed"
+
+    @patch("modules.vm_manager._read_host_metrics")
+    def test_detect_resource_pressure_catches_unexpected_exceptions(self, mock_read_host_metrics):
+        mock_read_host_metrics.side_effect = Exception("unexpected error")
+        from modules.vm_manager import detect_resource_pressure  # pylint: disable=import-outside-toplevel
+
+        result = detect_resource_pressure()
+
+        assert result["status"] == "error"
+        assert result["cpu_percent"] is None
+        assert result["memory_percent"] is None
+        assert result["maxed_out"] is False
+        assert result["error"] == "unexpected error"
+
 
 class TestBootSecondaryVM:
     def test_boot_secondary_vm_defaults_to_dry_run_for_allowlisted_script(
