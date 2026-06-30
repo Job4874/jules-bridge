@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-06-29T19:25:24.050582+00:00",
+  "generated_at_utc": "2026-06-30T06:24:02.317443+00:00",
   "status": "pending",
   "dry_run": true,
-  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
   "repo_path": "",
   "max_instances": 12,
   "max_concurrent": 6,
@@ -13,7 +13,7 @@
   "blockers": [],
   "dispatch": {
     "source": "existing_packets",
-    "generated_at_utc": "2026-06-29T19:25:24.050582+00:00",
+    "generated_at_utc": "2026-06-30T06:24:02.317443+00:00",
     "task_count": 0,
     "selected_count": 4,
     "status_counts": {},
@@ -25,14 +25,14 @@
     ],
     "max_instances": 12,
     "write_packets": false,
-    "output_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+    "output_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
     "repo_path": "",
     "selected_tasks": [],
     "packet_files": [
-      "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
-      "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
-      "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
-      "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md"
+      "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+      "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+      "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+      "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md"
     ],
     "launch_commands": [],
     "note": "No task dump supplied; using existing packet files."
@@ -40,7 +40,7 @@
   "sessions": {
     "dry_run": true,
     "command": [
-      "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+      "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
       "remote",
       "list",
       "--session"
@@ -52,7 +52,7 @@
     "timed_out": false,
     "session_ids": [],
     "jules_command": "jules",
-    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe"
+    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe"
   },
   "remote_statuses": [],
   "remote_status_counts": {},
@@ -102,20 +102,20 @@
   "requested_launch_limit": 2,
   "launch_dry_run": true,
   "launch_result": {
-    "generated_at_utc": "2026-06-29T19:25:25.114138+00:00",
+    "generated_at_utc": "2026-06-30T06:24:03.439682+00:00",
     "dry_run": true,
-    "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+    "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
     "selected_count": 4,
     "launched_count": 0,
     "timeout_count": 0,
     "jules_command": "jules",
-    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
     "repo_path": "",
     "results": [
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
         "command": [
-          "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+          "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
           "new"
         ],
         "repo_path": "",
@@ -127,9 +127,9 @@
         "session_ids": []
       },
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
         "command": [
-          "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+          "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
           "new"
         ],
         "repo_path": "",
@@ -141,13 +141,10 @@
         "session_ids": []
       },
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
-        "command": [
-          "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-          "new"
-        ],
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+        "command": [],
         "repo_path": "",
-        "status": "dry_run",
+        "status": "not_launched",
         "exit_code": null,
         "stdout": "",
         "stderr": "",
@@ -155,13 +152,10 @@
         "session_ids": []
       },
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
-        "command": [
-          "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-          "new"
-        ],
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+        "command": [],
         "repo_path": "",
-        "status": "dry_run",
+        "status": "not_launched",
         "exit_code": null,
         "stdout": "",
         "stderr": "",
@@ -171,9 +165,9 @@
     ],
     "attempt_results": [
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
         "command": [
-          "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+          "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
           "new"
         ],
         "repo_path": "",
@@ -185,9 +179,9 @@
         "session_ids": []
       },
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
         "command": [
-          "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+          "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
           "new"
         ],
         "repo_path": "",
@@ -199,7 +193,7 @@
         "session_ids": []
       }
     ],
-    "state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
+    "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
     "attempted_count": 2,
     "skipped_launched_count": 0,
     "force_packet_count": 0,
@@ -209,9 +203,9 @@
   },
   "pull_results": [],
   "cot": {
-    "generated_at_utc": "2026-06-29T19:25:25.119165+00:00",
-    "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
-    "launch_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
+    "generated_at_utc": "2026-06-30T06:24:03.443280+00:00",
+    "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
+    "launch_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
     "report_dir": "",
     "selected_count": 4,
     "completed_count": 0,
@@ -223,7 +217,17 @@
     },
     "rows": [
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+        "packet_id": "JT-001-59ae6d",
+        "launch_status": "dry_run",
+        "session_ids": [],
+        "timed_out": false,
+        "exit_code": null,
+        "cot_status": "not_launched",
+        "report_files": []
+      },
+      {
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
         "packet_id": "JT-002-6b1194",
         "launch_status": "dry_run",
         "session_ids": [],
@@ -233,9 +237,9 @@
         "report_files": []
       },
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
         "packet_id": "JT-003-aab6ea",
-        "launch_status": "dry_run",
+        "launch_status": "not_launched",
         "session_ids": [],
         "timed_out": false,
         "exit_code": null,
@@ -243,19 +247,9 @@
         "report_files": []
       },
       {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+        "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
         "packet_id": "JT-004-1e0abd",
-        "launch_status": "dry_run",
-        "session_ids": [],
-        "timed_out": false,
-        "exit_code": null,
-        "cot_status": "not_launched",
-        "report_files": []
-      },
-      {
-        "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
-        "packet_id": "JT-001-59ae6d",
-        "launch_status": "dry_run",
+        "launch_status": "not_launched",
         "session_ids": [],
         "timed_out": false,
         "exit_code": null,
@@ -263,10 +257,10 @@
         "report_files": []
       }
     ],
-    "ledger_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.md",
-    "ledger_json_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.json",
+    "ledger_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.md",
+    "ledger_json_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.json",
     "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
   },
-  "fleet_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_FLEET_STATE.json",
+  "fleet_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_FLEET_STATE.json",
   "note": "Fleet cycle scales only within max_concurrent and only launches packets not already marked launched in JULES_LAUNCH_STATE.json."
 }

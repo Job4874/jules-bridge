@@ -1,0 +1,54 @@
+{
+  "generated_at_utc": "2026-06-30T09:38:01.621604+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
+  "selected_count": 1,
+  "launched_count": 1,
+  "timeout_count": 0,
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "results": [
+    {
+      "packet": "jules_inbox\\jules_provider_credential_hardening_dispatch\\JT-001-provider-credential-hardening.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 2693363866417321141\nTask: # Jules Worker Packet JT-001-provider-credential-hardening\n\n- instance_index: 1\n- status: pending\n- task_type: code_health\n- source: codex-live-audit\n- fingerprint: provider-credential-hardening\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nHarden provider readiness and OpenRouter fallback behavior without touching or exposing secrets.\n\n## Current Live Evidence\n- Branch/PR: `codex/jules-production-finish`, PR #64, current head `087c5daa45b926dc4f9f9d44cc1b3818f47a0be8`.\n- Local bridge and dashboard are running; public tunnel `https://neat-oranges-wink.loca.lt/ping` returns `Jules Bridge Online`.\n- `/chat`, `/chat/test`, `/health/deep`, and `/dashboard/status` currently prove VM fallback readiness.\n- Local installed Gemini candidate returns `400 invalid key`.\n- Local installed OpenRouter candidates return `401 user not found`.\n- VM inherited Gemini key is present but returns `429 quota`.\n- VM inherited OpenRouter key is present; the configured `google/gemma-3-27b-it:free` model is unavailable, and sampled free models currently return `429`.\n- Secret Manager is unavailable/disabled for project `tibin-terminal-2026`.\n- Redacted env-file search found no alternate plausible local keys.\n\n## Task Details\nFiles likely involved:\n- `modules/chat_service.py`\n- `tests/test_chat_service.py`\n- optionally dashboard/health tests only if needed\n\nImplementation goals:\n1. Preserve the existing bounded VM chat success/failure readiness behavior. Do not regress commit `087c5da`.\n2. Classify provider failures more explicitly where possible:\n   - invalid key / unauthorized\n   - quota or rate limit\n   - model unavailable\n   - transient exception\n3. For OpenRouter chat and health probes, avoid relying on exactly one hard-coded free model when OpenRouter reports a model is unavailable. Add a small ordered fallback list or discovery-backed helper if it can be done safely and testably.\n4. Keep behavior secret-safe: never print, commit, upload, or paste raw keys.\n5. Do not claim Gemini/OpenRouter are fixed unless live provider checks prove it. It is acceptable for the final report to say credentials/quota remain external blockers.\n\n## Verification Requirements\n- Run focused tests for chat provider routing.\n- Run the broader relevant suite if practical.\n- Include exact commands and summaries in the completion report.\n- Leave a pullable diff for Codex review; do not commit.\n\n## Completion Report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether any provider blockers remain\n- whether a PR/commit was created\n\nURL: https://jules.google.com/session/2693363866417321141\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "2693363866417321141"
+      ]
+    }
+  ],
+  "attempt_results": [
+    {
+      "packet": "jules_inbox\\jules_provider_credential_hardening_dispatch\\JT-001-provider-credential-hardening.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 2693363866417321141\nTask: # Jules Worker Packet JT-001-provider-credential-hardening\n\n- instance_index: 1\n- status: pending\n- task_type: code_health\n- source: codex-live-audit\n- fingerprint: provider-credential-hardening\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nHarden provider readiness and OpenRouter fallback behavior without touching or exposing secrets.\n\n## Current Live Evidence\n- Branch/PR: `codex/jules-production-finish`, PR #64, current head `087c5daa45b926dc4f9f9d44cc1b3818f47a0be8`.\n- Local bridge and dashboard are running; public tunnel `https://neat-oranges-wink.loca.lt/ping` returns `Jules Bridge Online`.\n- `/chat`, `/chat/test`, `/health/deep`, and `/dashboard/status` currently prove VM fallback readiness.\n- Local installed Gemini candidate returns `400 invalid key`.\n- Local installed OpenRouter candidates return `401 user not found`.\n- VM inherited Gemini key is present but returns `429 quota`.\n- VM inherited OpenRouter key is present; the configured `google/gemma-3-27b-it:free` model is unavailable, and sampled free models currently return `429`.\n- Secret Manager is unavailable/disabled for project `tibin-terminal-2026`.\n- Redacted env-file search found no alternate plausible local keys.\n\n## Task Details\nFiles likely involved:\n- `modules/chat_service.py`\n- `tests/test_chat_service.py`\n- optionally dashboard/health tests only if needed\n\nImplementation goals:\n1. Preserve the existing bounded VM chat success/failure readiness behavior. Do not regress commit `087c5da`.\n2. Classify provider failures more explicitly where possible:\n   - invalid key / unauthorized\n   - quota or rate limit\n   - model unavailable\n   - transient exception\n3. For OpenRouter chat and health probes, avoid relying on exactly one hard-coded free model when OpenRouter reports a model is unavailable. Add a small ordered fallback list or discovery-backed helper if it can be done safely and testably.\n4. Keep behavior secret-safe: never print, commit, upload, or paste raw keys.\n5. Do not claim Gemini/OpenRouter are fixed unless live provider checks prove it. It is acceptable for the final report to say credentials/quota remain external blockers.\n\n## Verification Requirements\n- Run focused tests for chat provider routing.\n- Run the broader relevant suite if practical.\n- Include exact commands and summaries in the completion report.\n- Leave a pullable diff for Codex review; do not commit.\n\n## Completion Report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether any provider blockers remain\n- whether a PR/commit was created\n\nURL: https://jules.google.com/session/2693363866417321141\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "2693363866417321141"
+      ]
+    }
+  ],
+  "state_path": "",
+  "attempted_count": 1,
+  "skipped_launched_count": 0,
+  "force_packet_count": 1,
+  "preserve_existing_session_ids": true,
+  "note": "Live launch attempted through the Jules CLI.",
+  "tracked_count": 1
+}

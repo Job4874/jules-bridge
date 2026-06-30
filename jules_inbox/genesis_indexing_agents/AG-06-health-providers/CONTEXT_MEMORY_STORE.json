@@ -1,0 +1,73 @@
+{
+  "strategy": "head_tail_active_context_middle_memory_refs",
+  "stores_raw_text": false,
+  "entry_count": 5,
+  "entries": [
+    {
+      "id": "CM-001",
+      "name": "chat_service.py",
+      "path_ref": "path-ref:90fa313dd881",
+      "source_sha256": "26a3be9e19fd962e77f7c6d42be731fa5f204e2c1fdfac907398571f81809fe2",
+      "active_head_chars": 1188,
+      "active_tail_chars": 1189,
+      "omitted_middle_chars": 23150,
+      "omitted_middle_sha256": "ef3c5ffb7bcfd9d1cc5ef97346ae5a9ad84f6492cc7d5aa61d72049219d43f51",
+      "stored_text": false,
+      "retrieval_key": "path-ref:90fa313dd881:ef3c5ffb7bcf",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-002",
+      "name": "health_service.py",
+      "path_ref": "path-ref:bac7bc7a4a04",
+      "source_sha256": "5141dbcb9fc821883b9ab554c1bba63fcb2d6fd167c5c36bfded817044f696f9",
+      "active_head_chars": 1191,
+      "active_tail_chars": 1180,
+      "omitted_middle_chars": 1957,
+      "omitted_middle_sha256": "232031e6c6fa441734a9aa5c357829ca690b195d1170b4d692e8aa6b76a3e264",
+      "stored_text": false,
+      "retrieval_key": "path-ref:bac7bc7a4a04:232031e6c6fa",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-003",
+      "name": "test_chat_service.py",
+      "path_ref": "path-ref:c785b0d0ba64",
+      "source_sha256": "583d744963956333c74d8c8bb3e6bc2089565d51a70ca8cf9474064bb6a06e53",
+      "active_head_chars": 1170,
+      "active_tail_chars": 1200,
+      "omitted_middle_chars": 21979,
+      "omitted_middle_sha256": "6f22143e2cd3d15f407415971bfe2f927945fd1161690e076d6f9dd8fb24fc9d",
+      "stored_text": false,
+      "retrieval_key": "path-ref:c785b0d0ba64:6f22143e2cd3",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-004",
+      "name": "test_health_deep.py",
+      "path_ref": "path-ref:b6f438403620",
+      "source_sha256": "0407d1215a56da0f34ee28f04551baf0172f31789d0781008a4e9a41c356747c",
+      "active_head_chars": 1185,
+      "active_tail_chars": 1197,
+      "omitted_middle_chars": 1807,
+      "omitted_middle_sha256": "2e0463942992d822b03188a14252ea450539a10c366901e0d5c8b8c45a5d7537",
+      "stored_text": false,
+      "retrieval_key": "path-ref:b6f438403620:2e0463942992",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-005",
+      "name": "test_dashboard_module.py",
+      "path_ref": "path-ref:575c45fcfcb1",
+      "source_sha256": "a4a51c9ac0791fcb18606fbd8ed7c97c2289259e8b9d6bfb2712edfcd9345726",
+      "active_head_chars": 1168,
+      "active_tail_chars": 1200,
+      "omitted_middle_chars": 8987,
+      "omitted_middle_sha256": "762b87d9e3c208047d618e02fc565b2eeb4b11b8f112dcedf5dc1da929876741",
+      "stored_text": false,
+      "retrieval_key": "path-ref:575c45fcfcb1:762b87d9e3c2",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    }
+  ],
+  "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+}

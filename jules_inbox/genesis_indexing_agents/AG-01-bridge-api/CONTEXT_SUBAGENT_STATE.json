@@ -1,0 +1,145 @@
+{
+  "generated_at_utc": "2026-06-30T12:27:45.447485+00:00",
+  "task": "Genesis codebase index subagent 01: Bridge API and tentacle route map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+  "context_metrics": {
+    "source_count": 5,
+    "total_source_chars": 127023,
+    "active_prompt_chars": 9743,
+    "omitted_middle_chars": 117031,
+    "compression_ratio": 0.0767,
+    "signal_counts": {
+      "smart_truncation": 4,
+      "subagents": 3,
+      "evidence": 3,
+      "hrm": 3,
+      "long_session_evals": 2,
+      "memory_store": 1
+    }
+  },
+  "context_budget": {
+    "context_window_chars": 170000,
+    "target_utilization_ratio": 0.4,
+    "target_active_chars": 68000,
+    "active_prompt_chars": 9743,
+    "utilization_ratio": 0.0573,
+    "over_budget": false,
+    "recommendation": "within_budget: keep research, plan, and implementation phases explicit"
+  },
+  "context_memory_store": {
+    "strategy": "head_tail_active_context_middle_memory_refs",
+    "stores_raw_text": false,
+    "entry_count": 5,
+    "entries": [
+      {
+        "id": "CM-001",
+        "name": "bridge.py",
+        "path_ref": "path-ref:f14cb63d89be",
+        "source_sha256": "7104251c2cecccb3489509cf9bb9594c7417bf0a1c7f7a08c404b74f911702ba",
+        "active_head_chars": 1160,
+        "active_tail_chars": 1170,
+        "omitted_middle_chars": 81077,
+        "omitted_middle_sha256": "e01a04ec2b926c4df785f6db26f040cc4b7404cf05f5d62599c22dabb24707e5",
+        "stored_text": false,
+        "retrieval_key": "path-ref:f14cb63d89be:e01a04ec2b92",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-002",
+        "name": "http_utils.py",
+        "path_ref": "path-ref:ae8739281a5f",
+        "source_sha256": "52b6aba7d1e84c85057506f7f476c5c093bfeeed2276199d53c2d27c57e0ff61",
+        "active_head_chars": 1154,
+        "active_tail_chars": 1172,
+        "omitted_middle_chars": 5937,
+        "omitted_middle_sha256": "59165f373eb38eb80cf63014b34d8e64902a9258373e3e4f58c1a821175514b0",
+        "stored_text": false,
+        "retrieval_key": "path-ref:ae8739281a5f:59165f373eb3",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-003",
+        "name": "router.py",
+        "path_ref": "path-ref:2cf5a00e44e4",
+        "source_sha256": "2978e22f8da7f8fbdee2bd6cb3fe089e940d757c744b108269ad553674fea73a",
+        "active_head_chars": 380,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:2cf5a00e44e4",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-004",
+        "name": "02_architecture.md",
+        "path_ref": "path-ref:f83a0dbc7fa0",
+        "source_sha256": "2257e98b11b16dcb6feaec1cf142b05133266632ceb57e754ced4cd864d9b94c",
+        "active_head_chars": 1179,
+        "active_tail_chars": 1183,
+        "omitted_middle_chars": 12479,
+        "omitted_middle_sha256": "9239aa8a591e2bd32c82f320366f020e2c8013423589f854febc191d96346ec4",
+        "stored_text": false,
+        "retrieval_key": "path-ref:f83a0dbc7fa0:9239aa8a591e",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-005",
+        "name": "05_gotchas.md",
+        "path_ref": "path-ref:e290e27a0f0a",
+        "source_sha256": "699789996c128bbfa1ab1ef36ddd4b5bec91858e5ea987e0be8ccffc1e52d6d4",
+        "active_head_chars": 1173,
+        "active_tail_chars": 1172,
+        "omitted_middle_chars": 17538,
+        "omitted_middle_sha256": "2980c5ecf96b1e64e2b9307e9eecd2138f47399abf03a50cf6c3b441828612b1",
+        "stored_text": false,
+        "retrieval_key": "path-ref:e290e27a0f0a:2980c5ecf96b",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      }
+    ],
+    "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+  },
+  "long_session_eval_plan": {
+    "name": "ten_turn_preload_probe_turn_11",
+    "signal": "long_session_evals",
+    "preload_turns": 10,
+    "probe_turn": 11,
+    "purpose": "Expose late context failures by preloading 10 turns and checking whether probe turn 11 still uses the retained context correctly.",
+    "active_prompt_chars": 9743,
+    "context_over_budget": false,
+    "release_gate": "For long-running workflows, run or document this eval before marking context handling complete."
+  },
+  "no_slop_workflow": {
+    "mode": "spec_first",
+    "task": "Genesis codebase index subagent 01: Bridge API and tentacle route map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+    "target_context_utilization_ratio": 0.4,
+    "compaction_required": false,
+    "phases": [
+      {
+        "id": "research",
+        "goal": "Find how the system works and identify exact files, flows, and line references.",
+        "artifact": "RESEARCH.md",
+        "done_when": "Reviewer can understand the system path without re-searching the repo."
+      },
+      {
+        "id": "plan",
+        "goal": "Specify every intended change, file target, test, and rollback concern before editing code.",
+        "artifact": "IMPLEMENTATION_PLAN.md",
+        "done_when": "Plan is shorter than the change and catches design mistakes before code."
+      },
+      {
+        "id": "implement",
+        "goal": "Make the planned changes, keep context under budget, and update the plan as phases complete.",
+        "artifact": "CODE_AND_EVIDENCE",
+        "done_when": "Tests, route smoke, hashes, or runtime evidence prove the requested behavior."
+      }
+    ],
+    "review_gates": [
+      "review_research_before_plan",
+      "review_plan_before_code",
+      "record_evidence_before_done"
+    ]
+  },
+  "packet_files": [
+    "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-01-bridge-api\\CA-context_cartographer.md"
+  ]
+}

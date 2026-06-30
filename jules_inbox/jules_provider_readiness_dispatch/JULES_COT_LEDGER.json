@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-06-30T06:05:39.796537+00:00",
+  "packet_dir": "jules_inbox\\jules_provider_readiness_dispatch",
+  "launch_state_path": "jules_inbox\\jules_provider_readiness_dispatch\\JULES_LAUNCH_STATE.json",
+  "report_dir": "",
+  "selected_count": 1,
+  "completed_count": 0,
+  "blocked_count": 0,
+  "pending_count": 1,
+  "all_complete": false,
+  "status_counts": {
+    "launched_pending_cot": 1
+  },
+  "rows": [
+    {
+      "packet": "jules_inbox\\jules_provider_readiness_dispatch\\JT-001-09a40f-code-health-for-modules-health-service-py-modules-chat-servi.md",
+      "packet_id": "JT-001-09a40f",
+      "launch_status": "launched",
+      "session_ids": [
+        "4817979060578580922"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "launched_pending_cot",
+      "report_files": []
+    }
+  ],
+  "ledger_path": "jules_inbox\\jules_provider_readiness_dispatch\\JULES_COT_LEDGER.md",
+  "ledger_json_path": "jules_inbox\\jules_provider_readiness_dispatch\\JULES_COT_LEDGER.json",
+  "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+}

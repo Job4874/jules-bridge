@@ -1,0 +1,58 @@
+{
+  "generated_at_utc": "2026-06-30T10:40:00.284415+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
+  "selected_count": 1,
+  "launched_count": 1,
+  "timeout_count": 0,
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_provider_external_blocker_dispatch\\JT-001-provider-external-readiness-audit.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 14998673751325827002\nTask: # Jules Worker Packet JT-001-provider-external-readiness-audit\n\n- instance_index: 1\n- status: pending\n- task_type: code_health\n- source: codex-live-audit\n- fingerprint: provider-external-readiness-audit-fa8e533\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\n\nFind a real, secret-safe self-unblocking path for the remaining provider readiness blocker, or prove that the blocker is external and should stay as a release/draft condition.\n\n## Current Live Evidence\n\n- Branch/PR: `codex/jules-production-finish`, PR #64 draft, latest pushed head `fa8e533` (`fix: stabilize vm health polling`).\n- Local bridge: `http://127.0.0.1:5000`, public LocalTunnel: `https://shaggy-kiwis-shout.loca.lt`.\n- `/ping`, `/health`, `/dashboard/status` pass locally and publicly.\n- `/dashboard/status`: `VM CHAT: OK`, cloud workers `1/1 ONLINE`, Gemini `ERROR`, OpenRouter `ERROR`.\n- `/health/deep` now uses passive VM readiness and preserves provider `error_type`.\n- `/chat/test`: Gemini returns `400 invalid_key`, OpenRouter returns `401 invalid_key`, VM worker returns `ok`.\n- VM worker is online as OS Login user `atibin7_gmail_com`; source bootstrap now targets that user and preserves plural `OPENROUTER_API_KEYS`.\n- Do not trust stale prior patches from sessions `2693363866417321141` or `3580112715401585773`; both were broad stale diffs that removed circuit-breaker wiring.\n\n## Task Details\n\nFiles likely involved only if you find a real code/config fix:\n\n- `modules/chat_service.py`\n- `modules/vm_relay.py`\n- `modules/health_service.py`\n- `modules/dashboard_module.py`\n- tests under `tests/`\n- docs/handoff files only if reporting evidence\n\nRequired investigation:\n\n1. Inspect current source at head `fa8e533`.\n2. Search for any non-secret installed credential source, env alias, config mismatch, or provider routing bug that could explain Gemini/OpenRouter `invalid_key`.\n3. Do not print, commit, upload, or paste raw secrets. Secret names, paths, presence, length, provider code, and redacted error class are allowed.\n4. If a real fix exists without new credentials, implement the smallest current-head patch and tests.\n5. If no real fix exists, do not make cosmetic changes. Write a concise completion report proving why the remaining blocker is external.\n\n## Hard Constraints\n\n- Do not edit `.env` or commit secrets.\n- Do not mark Gemini/OpenRouter fixed unless live checks prove it.\n- Do not remove `bridge.py` circuit-breaker wiring.\n- Do not add backup files.\n- Do not replay broad stale hunks.\n- Do not change dashboard semantics to hide provider failures.\n\n## Verification Requirements\n\nIf code changes:\n\n- Run the narrow relevant tests first.\n- Run full `python -m pytest tests/ -q`.\n- Include live route evidence for `/chat/test`, `/health/deep`, `/dashboard/status`, and public tunnel if practical.\n\nIf no code changes:\n\n- Include exact inspected files/surfaces.\n- Include exact current blocker classes.\n- State whether PR #64 should remain draft.\n\n## Completion Report\n\nWrite a short report with:\n\n- what changed, if anything\n- verification performed\n- files touched\n- whether provider blockers remain\n- whether a PR/commit was created\n- next action or blocker\n\nURL: https://jules.google.com/session/14998673751325827002\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "14998673751325827002",
+        "2693363866417321141",
+        "3580112715401585773"
+      ]
+    }
+  ],
+  "attempt_results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_provider_external_blocker_dispatch\\JT-001-provider-external-readiness-audit.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 14998673751325827002\nTask: # Jules Worker Packet JT-001-provider-external-readiness-audit\n\n- instance_index: 1\n- status: pending\n- task_type: code_health\n- source: codex-live-audit\n- fingerprint: provider-external-readiness-audit-fa8e533\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\n\nFind a real, secret-safe self-unblocking path for the remaining provider readiness blocker, or prove that the blocker is external and should stay as a release/draft condition.\n\n## Current Live Evidence\n\n- Branch/PR: `codex/jules-production-finish`, PR #64 draft, latest pushed head `fa8e533` (`fix: stabilize vm health polling`).\n- Local bridge: `http://127.0.0.1:5000`, public LocalTunnel: `https://shaggy-kiwis-shout.loca.lt`.\n- `/ping`, `/health`, `/dashboard/status` pass locally and publicly.\n- `/dashboard/status`: `VM CHAT: OK`, cloud workers `1/1 ONLINE`, Gemini `ERROR`, OpenRouter `ERROR`.\n- `/health/deep` now uses passive VM readiness and preserves provider `error_type`.\n- `/chat/test`: Gemini returns `400 invalid_key`, OpenRouter returns `401 invalid_key`, VM worker returns `ok`.\n- VM worker is online as OS Login user `atibin7_gmail_com`; source bootstrap now targets that user and preserves plural `OPENROUTER_API_KEYS`.\n- Do not trust stale prior patches from sessions `2693363866417321141` or `3580112715401585773`; both were broad stale diffs that removed circuit-breaker wiring.\n\n## Task Details\n\nFiles likely involved only if you find a real code/config fix:\n\n- `modules/chat_service.py`\n- `modules/vm_relay.py`\n- `modules/health_service.py`\n- `modules/dashboard_module.py`\n- tests under `tests/`\n- docs/handoff files only if reporting evidence\n\nRequired investigation:\n\n1. Inspect current source at head `fa8e533`.\n2. Search for any non-secret installed credential source, env alias, config mismatch, or provider routing bug that could explain Gemini/OpenRouter `invalid_key`.\n3. Do not print, commit, upload, or paste raw secrets. Secret names, paths, presence, length, provider code, and redacted error class are allowed.\n4. If a real fix exists without new credentials, implement the smallest current-head patch and tests.\n5. If no real fix exists, do not make cosmetic changes. Write a concise completion report proving why the remaining blocker is external.\n\n## Hard Constraints\n\n- Do not edit `.env` or commit secrets.\n- Do not mark Gemini/OpenRouter fixed unless live checks prove it.\n- Do not remove `bridge.py` circuit-breaker wiring.\n- Do not add backup files.\n- Do not replay broad stale hunks.\n- Do not change dashboard semantics to hide provider failures.\n\n## Verification Requirements\n\nIf code changes:\n\n- Run the narrow relevant tests first.\n- Run full `python -m pytest tests/ -q`.\n- Include live route evidence for `/chat/test`, `/health/deep`, `/dashboard/status`, and public tunnel if practical.\n\nIf no code changes:\n\n- Include exact inspected files/surfaces.\n- Include exact current blocker classes.\n- State whether PR #64 should remain draft.\n\n## Completion Report\n\nWrite a short report with:\n\n- what changed, if anything\n- verification performed\n- files touched\n- whether provider blockers remain\n- whether a PR/commit was created\n- next action or blocker\n\nURL: https://jules.google.com/session/14998673751325827002\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "14998673751325827002",
+        "2693363866417321141",
+        "3580112715401585773"
+      ]
+    }
+  ],
+  "state_path": "",
+  "attempted_count": 1,
+  "skipped_launched_count": 0,
+  "force_packet_count": 1,
+  "preserve_existing_session_ids": true,
+  "note": "Live launch attempted through the Jules CLI.",
+  "tracked_count": 1
+}

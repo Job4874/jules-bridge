@@ -1,0 +1,54 @@
+{
+  "generated_at_utc": "2026-06-30T08:10:52.848607+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_vm_fallback_ui_dispatch",
+  "selected_count": 1,
+  "launched_count": 1,
+  "timeout_count": 0,
+  "jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_vm_fallback_ui_dispatch\\JT-001-0a7ebc-surface-vm-worker-fallback-readiness-in-the-dashboard-header.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 4002870015664374490\nTask: # Jules Worker Packet JT-001-0a7ebc\n\n- instance_index: 1\n- status: ready_for_review\n- task_type: code_health\n- source: inline\n- fingerprint: 0a7ebc3a5878\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nComplete exactly this Jules card: Surface vm_worker fallback readiness in the dashboard header and comm link so the UI does not look broken when Gemini/OpenRouter are failing but chat is functional through the VM worker\n\n## Task Details\n- File: dashboard-ui/src/App.jsx\n- Issue: Surface vm_worker fallback readiness in the dashboard header and comm link so the UI does not look broken when Gemini/OpenRouter are failing but chat is functional through the VM worker\n- Language: javascript\n- Rationale: Current live /dashboard/status includes providers.vm_worker.status = ok and /chat works through model_used vm/jules-worker, but the dashboard header only shows GEMINI: ERROR and OPENROUTER: ERROR. This makes the product look broken even though production chat is functional through the VM fallback. The dashboard should truthfully show local provider failures and also clearly show VM fallback readiness.\n\n## Operating Rules\n- Work on one card only; do not opportunistically refactor unrelated code.\n- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.\n- Preserve existing behavior unless the card explicitly asks for behavior change.\n- Run the narrowest relevant verification first, then the broader suite if practical.\n- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.\n- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.\n- If blocked, write the blocker, attempted evidence, and the exact next question.\n\n## Completion report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\n## Raw Card Excerpt\n```text\nCode Health Improvement Task\nYou are a production-focused Jules dashboard worker. Implement only the narrow dashboard readiness clarity fix described here. Do not refactor unrelated source. Do not print or persist raw secrets.\n\nTask Details\nFile: dashboard-ui/src/App.jsx Issue: Surface vm_worker fallback readiness in the dashboard header and comm link so the UI does not look broken when Gemini/OpenRouter are failing but chat is functional through the VM worker\n\nLanguage: javascript\n\nRationale: Current live /dashboard/status includes providers.vm_worker.status = ok and /chat works through model_used vm/jules-worker, but the dashboard header only shows GEMINI: ERROR and OPENROUTER: ERROR. This makes the product look broken even though production chat is functional through the VM fallback. The dashboard should truthfully show local provider failures and also clearly show VM fallback readiness.\n\nImplementation requirements:\n1. In dashboard-ui/src/App.jsx, extend default provider state to include vm_worker with status no_key/offline-safe fallback.\n2. Add a compact header badge such as VM CHAT: OK / OFFLINE / ERROR based on providers.vm_worker.status. Use success styling when ok, danger for error/offline, neutral for no_key/unknown.\n3. In the Comm Link panel header or near the model selector, show the active route/readiness summary so operators can tell that chat will use VM fallback when Gemini/OpenRouter are down. Keep it compact and operational, not marketing copy.\n4. Preserve truthful GEMINI and OPENROUTER badges. Do not hide their error states.\n5. Avoid layout overflow in the header at desktop width and keep mobile/short widths readable. If needed, let badges wrap cleanly.\n6. If CSS changes are needed, scope them in dashboard-ui/src/index.css and keep the existing dark operations-console style.\n7. Do not edit backend code or generated dispatch/runtime state.\n\nVerification expected from Jules:\n- Run dashboard-ui lint/build if available.\n- Report files changed and exact test/build commands/results.\nReady for review\n```\n\nURL: https://jules.google.com/session/4002870015664374490\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "4002870015664374490"
+      ]
+    }
+  ],
+  "attempt_results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_vm_fallback_ui_dispatch\\JT-001-0a7ebc-surface-vm-worker-fallback-readiness-in-the-dashboard-header.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 4002870015664374490\nTask: # Jules Worker Packet JT-001-0a7ebc\n\n- instance_index: 1\n- status: ready_for_review\n- task_type: code_health\n- source: inline\n- fingerprint: 0a7ebc3a5878\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nComplete exactly this Jules card: Surface vm_worker fallback readiness in the dashboard header and comm link so the UI does not look broken when Gemini/OpenRouter are failing but chat is functional through the VM worker\n\n## Task Details\n- File: dashboard-ui/src/App.jsx\n- Issue: Surface vm_worker fallback readiness in the dashboard header and comm link so the UI does not look broken when Gemini/OpenRouter are failing but chat is functional through the VM worker\n- Language: javascript\n- Rationale: Current live /dashboard/status includes providers.vm_worker.status = ok and /chat works through model_used vm/jules-worker, but the dashboard header only shows GEMINI: ERROR and OPENROUTER: ERROR. This makes the product look broken even though production chat is functional through the VM fallback. The dashboard should truthfully show local provider failures and also clearly show VM fallback readiness.\n\n## Operating Rules\n- Work on one card only; do not opportunistically refactor unrelated code.\n- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.\n- Preserve existing behavior unless the card explicitly asks for behavior change.\n- Run the narrowest relevant verification first, then the broader suite if practical.\n- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.\n- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.\n- If blocked, write the blocker, attempted evidence, and the exact next question.\n\n## Completion report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\n## Raw Card Excerpt\n```text\nCode Health Improvement Task\nYou are a production-focused Jules dashboard worker. Implement only the narrow dashboard readiness clarity fix described here. Do not refactor unrelated source. Do not print or persist raw secrets.\n\nTask Details\nFile: dashboard-ui/src/App.jsx Issue: Surface vm_worker fallback readiness in the dashboard header and comm link so the UI does not look broken when Gemini/OpenRouter are failing but chat is functional through the VM worker\n\nLanguage: javascript\n\nRationale: Current live /dashboard/status includes providers.vm_worker.status = ok and /chat works through model_used vm/jules-worker, but the dashboard header only shows GEMINI: ERROR and OPENROUTER: ERROR. This makes the product look broken even though production chat is functional through the VM fallback. The dashboard should truthfully show local provider failures and also clearly show VM fallback readiness.\n\nImplementation requirements:\n1. In dashboard-ui/src/App.jsx, extend default provider state to include vm_worker with status no_key/offline-safe fallback.\n2. Add a compact header badge such as VM CHAT: OK / OFFLINE / ERROR based on providers.vm_worker.status. Use success styling when ok, danger for error/offline, neutral for no_key/unknown.\n3. In the Comm Link panel header or near the model selector, show the active route/readiness summary so operators can tell that chat will use VM fallback when Gemini/OpenRouter are down. Keep it compact and operational, not marketing copy.\n4. Preserve truthful GEMINI and OPENROUTER badges. Do not hide their error states.\n5. Avoid layout overflow in the header at desktop width and keep mobile/short widths readable. If needed, let badges wrap cleanly.\n6. If CSS changes are needed, scope them in dashboard-ui/src/index.css and keep the existing dark operations-console style.\n7. Do not edit backend code or generated dispatch/runtime state.\n\nVerification expected from Jules:\n- Run dashboard-ui lint/build if available.\n- Report files changed and exact test/build commands/results.\nReady for review\n```\n\nURL: https://jules.google.com/session/4002870015664374490\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "4002870015664374490"
+      ]
+    }
+  ],
+  "state_path": "",
+  "attempted_count": 1,
+  "skipped_launched_count": 0,
+  "force_packet_count": 0,
+  "preserve_existing_session_ids": false,
+  "note": "Live launch attempted through the Jules CLI.",
+  "tracked_count": 1
+}

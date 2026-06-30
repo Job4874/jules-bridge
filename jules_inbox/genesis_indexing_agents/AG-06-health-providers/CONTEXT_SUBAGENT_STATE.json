@@ -1,0 +1,140 @@
+{
+  "generated_at_utc": "2026-06-30T12:27:45.524937+00:00",
+  "task": "Genesis codebase index subagent 06: Chat provider and deep health readiness map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+  "context_metrics": {
+    "source_count": 5,
+    "total_source_chars": 69880,
+    "active_prompt_chars": 11868,
+    "omitted_middle_chars": 57880,
+    "compression_ratio": 0.1698,
+    "signal_counts": {
+      "smart_truncation": 5
+    }
+  },
+  "context_budget": {
+    "context_window_chars": 170000,
+    "target_utilization_ratio": 0.4,
+    "target_active_chars": 68000,
+    "active_prompt_chars": 11868,
+    "utilization_ratio": 0.0698,
+    "over_budget": false,
+    "recommendation": "within_budget: keep research, plan, and implementation phases explicit"
+  },
+  "context_memory_store": {
+    "strategy": "head_tail_active_context_middle_memory_refs",
+    "stores_raw_text": false,
+    "entry_count": 5,
+    "entries": [
+      {
+        "id": "CM-001",
+        "name": "chat_service.py",
+        "path_ref": "path-ref:90fa313dd881",
+        "source_sha256": "26a3be9e19fd962e77f7c6d42be731fa5f204e2c1fdfac907398571f81809fe2",
+        "active_head_chars": 1188,
+        "active_tail_chars": 1189,
+        "omitted_middle_chars": 23150,
+        "omitted_middle_sha256": "ef3c5ffb7bcfd9d1cc5ef97346ae5a9ad84f6492cc7d5aa61d72049219d43f51",
+        "stored_text": false,
+        "retrieval_key": "path-ref:90fa313dd881:ef3c5ffb7bcf",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-002",
+        "name": "health_service.py",
+        "path_ref": "path-ref:bac7bc7a4a04",
+        "source_sha256": "5141dbcb9fc821883b9ab554c1bba63fcb2d6fd167c5c36bfded817044f696f9",
+        "active_head_chars": 1191,
+        "active_tail_chars": 1180,
+        "omitted_middle_chars": 1957,
+        "omitted_middle_sha256": "232031e6c6fa441734a9aa5c357829ca690b195d1170b4d692e8aa6b76a3e264",
+        "stored_text": false,
+        "retrieval_key": "path-ref:bac7bc7a4a04:232031e6c6fa",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-003",
+        "name": "test_chat_service.py",
+        "path_ref": "path-ref:c785b0d0ba64",
+        "source_sha256": "583d744963956333c74d8c8bb3e6bc2089565d51a70ca8cf9474064bb6a06e53",
+        "active_head_chars": 1170,
+        "active_tail_chars": 1200,
+        "omitted_middle_chars": 21979,
+        "omitted_middle_sha256": "6f22143e2cd3d15f407415971bfe2f927945fd1161690e076d6f9dd8fb24fc9d",
+        "stored_text": false,
+        "retrieval_key": "path-ref:c785b0d0ba64:6f22143e2cd3",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-004",
+        "name": "test_health_deep.py",
+        "path_ref": "path-ref:b6f438403620",
+        "source_sha256": "0407d1215a56da0f34ee28f04551baf0172f31789d0781008a4e9a41c356747c",
+        "active_head_chars": 1185,
+        "active_tail_chars": 1197,
+        "omitted_middle_chars": 1807,
+        "omitted_middle_sha256": "2e0463942992d822b03188a14252ea450539a10c366901e0d5c8b8c45a5d7537",
+        "stored_text": false,
+        "retrieval_key": "path-ref:b6f438403620:2e0463942992",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-005",
+        "name": "test_dashboard_module.py",
+        "path_ref": "path-ref:575c45fcfcb1",
+        "source_sha256": "a4a51c9ac0791fcb18606fbd8ed7c97c2289259e8b9d6bfb2712edfcd9345726",
+        "active_head_chars": 1168,
+        "active_tail_chars": 1200,
+        "omitted_middle_chars": 8987,
+        "omitted_middle_sha256": "762b87d9e3c208047d618e02fc565b2eeb4b11b8f112dcedf5dc1da929876741",
+        "stored_text": false,
+        "retrieval_key": "path-ref:575c45fcfcb1:762b87d9e3c2",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      }
+    ],
+    "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+  },
+  "long_session_eval_plan": {
+    "name": "ten_turn_preload_probe_turn_11",
+    "signal": "long_session_evals",
+    "preload_turns": 10,
+    "probe_turn": 11,
+    "purpose": "Expose late context failures by preloading 10 turns and checking whether probe turn 11 still uses the retained context correctly.",
+    "active_prompt_chars": 11868,
+    "context_over_budget": false,
+    "release_gate": "For long-running workflows, run or document this eval before marking context handling complete."
+  },
+  "no_slop_workflow": {
+    "mode": "spec_first",
+    "task": "Genesis codebase index subagent 06: Chat provider and deep health readiness map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+    "target_context_utilization_ratio": 0.4,
+    "compaction_required": false,
+    "phases": [
+      {
+        "id": "research",
+        "goal": "Find how the system works and identify exact files, flows, and line references.",
+        "artifact": "RESEARCH.md",
+        "done_when": "Reviewer can understand the system path without re-searching the repo."
+      },
+      {
+        "id": "plan",
+        "goal": "Specify every intended change, file target, test, and rollback concern before editing code.",
+        "artifact": "IMPLEMENTATION_PLAN.md",
+        "done_when": "Plan is shorter than the change and catches design mistakes before code."
+      },
+      {
+        "id": "implement",
+        "goal": "Make the planned changes, keep context under budget, and update the plan as phases complete.",
+        "artifact": "CODE_AND_EVIDENCE",
+        "done_when": "Tests, route smoke, hashes, or runtime evidence prove the requested behavior."
+      }
+    ],
+    "review_gates": [
+      "review_research_before_plan",
+      "review_plan_before_code",
+      "record_evidence_before_done"
+    ]
+  },
+  "packet_files": [
+    "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-06-health-providers\\CA-context_cartographer.md"
+  ]
+}

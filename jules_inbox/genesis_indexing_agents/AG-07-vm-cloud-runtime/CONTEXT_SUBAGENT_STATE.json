@@ -1,0 +1,140 @@
+{
+  "generated_at_utc": "2026-06-30T12:27:45.545320+00:00",
+  "task": "Genesis codebase index subagent 07: VM relay cloud worker offload and tunnel runtime map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+  "context_metrics": {
+    "source_count": 5,
+    "total_source_chars": 43421,
+    "active_prompt_chars": 11711,
+    "omitted_middle_chars": 31421,
+    "compression_ratio": 0.2697,
+    "signal_counts": {
+      "smart_truncation": 4
+    }
+  },
+  "context_budget": {
+    "context_window_chars": 170000,
+    "target_utilization_ratio": 0.4,
+    "target_active_chars": 68000,
+    "active_prompt_chars": 11711,
+    "utilization_ratio": 0.0689,
+    "over_budget": false,
+    "recommendation": "within_budget: keep research, plan, and implementation phases explicit"
+  },
+  "context_memory_store": {
+    "strategy": "head_tail_active_context_middle_memory_refs",
+    "stores_raw_text": false,
+    "entry_count": 5,
+    "entries": [
+      {
+        "id": "CM-001",
+        "name": "vm_relay.py",
+        "path_ref": "path-ref:2d9bedede7a0",
+        "source_sha256": "bfd018edf6527040de53e35c6dc06776d6570a8ce6b147c9aebfd4527dd69af3",
+        "active_head_chars": 1166,
+        "active_tail_chars": 1191,
+        "omitted_middle_chars": 11605,
+        "omitted_middle_sha256": "61b923f86ae4852823d5574ce22dcf3d5cff0829c7d4c03668725eb2e5020683",
+        "stored_text": false,
+        "retrieval_key": "path-ref:2d9bedede7a0:61b923f86ae4",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-002",
+        "name": "vm_manager.py",
+        "path_ref": "path-ref:57b7a4564b92",
+        "source_sha256": "2940c6c80f07714a412562f11e0d40ac629c0ce40be910a2988c8301d0f23d4b",
+        "active_head_chars": 1163,
+        "active_tail_chars": 1181,
+        "omitted_middle_chars": 8311,
+        "omitted_middle_sha256": "d6877c7b2188b7d21a25f6e79f938865a536b3a90d89d50c4770cd0651c8a9b6",
+        "stored_text": false,
+        "retrieval_key": "path-ref:57b7a4564b92:d6877c7b2188",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-003",
+        "name": "dashboard_module.py",
+        "path_ref": "path-ref:22b604c0cd5e",
+        "source_sha256": "94e707092e756f626f43e0af6a7e6917a91ef99d1cc9a2a9d4079f0ff8214763",
+        "active_head_chars": 1169,
+        "active_tail_chars": 1173,
+        "omitted_middle_chars": 7791,
+        "omitted_middle_sha256": "785db922c65e02c7f09a12d6ad50f47f85669719c8bcb06c63da8e56097248cb",
+        "stored_text": false,
+        "retrieval_key": "path-ref:22b604c0cd5e:785db922c65e",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-004",
+        "name": "Bootstrap-Jules-VM.ps1",
+        "path_ref": "path-ref:3aace94ce984",
+        "source_sha256": "7e78b3bf0511606ac85aea79849f1b5e9460f4c3a55255dd222ab0ef0d87b539",
+        "active_head_chars": 1168,
+        "active_tail_chars": 1156,
+        "omitted_middle_chars": 2591,
+        "omitted_middle_sha256": "78dcb101c437d7b1893328d7d63ec647eb6ea377b842aeb15f6a041777ff9941",
+        "stored_text": false,
+        "retrieval_key": "path-ref:3aace94ce984:78dcb101c437",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-005",
+        "name": "Boot-GCP-Worker.ps1",
+        "path_ref": "path-ref:4427a5575f49",
+        "source_sha256": "63778266dc046ea04cecd0e9dc4c74a4b0c6aa1eb74855cce5d17abf3a33215c",
+        "active_head_chars": 1172,
+        "active_tail_chars": 1172,
+        "omitted_middle_chars": 1123,
+        "omitted_middle_sha256": "99e30c2c1422bccaa45fbb28fd577939ce2906a3170e35fb041c93bdb2694296",
+        "stored_text": false,
+        "retrieval_key": "path-ref:4427a5575f49:99e30c2c1422",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      }
+    ],
+    "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+  },
+  "long_session_eval_plan": {
+    "name": "ten_turn_preload_probe_turn_11",
+    "signal": "long_session_evals",
+    "preload_turns": 10,
+    "probe_turn": 11,
+    "purpose": "Expose late context failures by preloading 10 turns and checking whether probe turn 11 still uses the retained context correctly.",
+    "active_prompt_chars": 11711,
+    "context_over_budget": false,
+    "release_gate": "For long-running workflows, run or document this eval before marking context handling complete."
+  },
+  "no_slop_workflow": {
+    "mode": "spec_first",
+    "task": "Genesis codebase index subagent 07: VM relay cloud worker offload and tunnel runtime map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+    "target_context_utilization_ratio": 0.4,
+    "compaction_required": false,
+    "phases": [
+      {
+        "id": "research",
+        "goal": "Find how the system works and identify exact files, flows, and line references.",
+        "artifact": "RESEARCH.md",
+        "done_when": "Reviewer can understand the system path without re-searching the repo."
+      },
+      {
+        "id": "plan",
+        "goal": "Specify every intended change, file target, test, and rollback concern before editing code.",
+        "artifact": "IMPLEMENTATION_PLAN.md",
+        "done_when": "Plan is shorter than the change and catches design mistakes before code."
+      },
+      {
+        "id": "implement",
+        "goal": "Make the planned changes, keep context under budget, and update the plan as phases complete.",
+        "artifact": "CODE_AND_EVIDENCE",
+        "done_when": "Tests, route smoke, hashes, or runtime evidence prove the requested behavior."
+      }
+    ],
+    "review_gates": [
+      "review_research_before_plan",
+      "review_plan_before_code",
+      "record_evidence_before_done"
+    ]
+  },
+  "packet_files": [
+    "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-07-vm-cloud-runtime\\CA-context_cartographer.md"
+  ]
+}

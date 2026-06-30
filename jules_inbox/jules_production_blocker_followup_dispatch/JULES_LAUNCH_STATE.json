@@ -1,0 +1,54 @@
+{
+  "generated_at_utc": "2026-06-30T12:38:09.615186+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
+  "selected_count": 1,
+  "launched_count": 1,
+  "timeout_count": 0,
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_production_blocker_followup_dispatch\\JT-001-current-head-production-readiness-followup.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 4009579503888711152\nTask: # Jules Worker Packet JT-001-current-head-production-readiness-followup\n\n- instance_index: 1\n- status: pending\n- task_type: production_readiness\n- source: codex-current-head-audit\n- repo_path: C:\\Users\\abdul\\jules-bridge\n- branch: codex/jules-production-finish\n- head: fa8e533723c2a131cd83d4f409508a164ad6bde8\n\n## Noninteractive Operating Rule\n\nDo not stop for plan approval or ask the operator to approve a plan. The current\nJules CLI cannot approve `Awaiting User` sessions. Proceed with research, then\nimplement only a narrow current-head fix if evidence proves one exists. If the\nremaining issue is external credentials/quota/capacity, write a completion\nreport and make no cosmetic source changes.\n\n## Current Live Evidence\n\n- Local bridge is live: `http://127.0.0.1:5000`.\n- Dashboard is live: `http://127.0.0.1:5173`.\n- Public LocalTunnel is live:\n  `https://shaggy-kiwis-shout.loca.lt`.\n- Local and public `/ping`, `/health`, and `/dashboard/status` pass.\n- Browser dashboard renders `JULES NEXUS`, `TUNNEL: ACTIVE`,\n  `GEMINI: ERROR`, `OPENROUTER: ERROR`, `CLOUD WORKERS`,\n  `1/1 ONLINE`, and `JULES ONLINE`.\n- GCP worker `jules-offload-worker` is online/reachable at\n  `34.132.193.73`.\n- Full test suite passed during the Codex handoff pass:\n  `434 passed`, evidence hash\n  `abe202689ecb0a56513e142eeb353a066d76a4528d41a724d8ac041d931d263a`.\n\n## Current Provider Truth\n\n- Local Gemini reports `invalid_key`.\n- Local OpenRouter reports `invalid_key`.\n- VM worker is online, but latest `/chat/test` reports VM fallback provider\n  unavailable: worker reported no LLM available.\n- A direct `/chat` call succeeded once through `vm/jules-worker` with `OK`,\n  but that success is not stable enough to mark production-clean.\n\nThis means the bridge, dashboard, tunnel, and VM process are alive. The remaining\nrelease blocker is provider readiness unless you find a genuine current-head\nlogic/config bug.\n\n## Scope\n\nInvestigate and fix only current-head production-readiness blockers that can be\nsolved in source or generated operational artifacts without new secrets.\n\nCandidate current-head issues to inspect:\n\n1. `/chat` and `/chat/test` are public/auth-exempt. Determine whether this is\n   intended for dashboard/dev convenience or a production exposure bug. Do not\n   break the dashboard.\n2. `/health/deep` top-level `status` can remain `ok` while provider checks fail.\n   Determine whether this is intentional degraded readiness or a misleading\n   production signal.\n3. `keyless_mode` may ignore plural `OPENROUTER_API_KEYS`.\n4. VM readiness in `/health/deep` is passive by design; ensure dashboard and\n   health semantics do not claim VM LLM readiness when only worker-online is\n   known.\n5. Dashboard fleet state may read root `JULES_*.json` while current dispatch\n   state lives under `jules_inbox/...`; fix only if this affects the production\n   dashboard truth and can be done narrowly.\n\n## Hard Constraints\n\n- Do not edit `.env`, print secrets, or commit/upload raw credentials.\n- Do not replay stale sessions `2693363866417321141`,\n  `3580112715401585773`, or `14998673751325827002`.\n- Do not remove bridge circuit-breaker wiring.\n- Do not add backup/shadow source files.\n- Do not hide provider failures or mark them green without live proof.\n- Do not broaden the patch beyond the smallest real production-readiness fix.\n\n## Verification If You Patch\n\n- Run focused tests for changed modules.\n- Run full `python -m pytest tests/ -q`.\n- Verify local `/dashboard/status`, `/health/deep`, `/chat/test`, and public\n  `/dashboard/status` if runtime access is available.\n- Report exact files touched and whether PR #64 should remain draft.\n\n## Completion Report Required\n\nReturn a concise report with:\n\n- current-head files inspected\n- whether code changed\n- files touched\n- verification performed\n- provider blocker status\n- whether PR #64 should remain draft\n- next smallest action\n\nURL: https://jules.google.com/session/4009579503888711152\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "4009579503888711152"
+      ]
+    }
+  ],
+  "attempt_results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_production_blocker_followup_dispatch\\JT-001-current-head-production-readiness-followup.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 4009579503888711152\nTask: # Jules Worker Packet JT-001-current-head-production-readiness-followup\n\n- instance_index: 1\n- status: pending\n- task_type: production_readiness\n- source: codex-current-head-audit\n- repo_path: C:\\Users\\abdul\\jules-bridge\n- branch: codex/jules-production-finish\n- head: fa8e533723c2a131cd83d4f409508a164ad6bde8\n\n## Noninteractive Operating Rule\n\nDo not stop for plan approval or ask the operator to approve a plan. The current\nJules CLI cannot approve `Awaiting User` sessions. Proceed with research, then\nimplement only a narrow current-head fix if evidence proves one exists. If the\nremaining issue is external credentials/quota/capacity, write a completion\nreport and make no cosmetic source changes.\n\n## Current Live Evidence\n\n- Local bridge is live: `http://127.0.0.1:5000`.\n- Dashboard is live: `http://127.0.0.1:5173`.\n- Public LocalTunnel is live:\n  `https://shaggy-kiwis-shout.loca.lt`.\n- Local and public `/ping`, `/health`, and `/dashboard/status` pass.\n- Browser dashboard renders `JULES NEXUS`, `TUNNEL: ACTIVE`,\n  `GEMINI: ERROR`, `OPENROUTER: ERROR`, `CLOUD WORKERS`,\n  `1/1 ONLINE`, and `JULES ONLINE`.\n- GCP worker `jules-offload-worker` is online/reachable at\n  `34.132.193.73`.\n- Full test suite passed during the Codex handoff pass:\n  `434 passed`, evidence hash\n  `abe202689ecb0a56513e142eeb353a066d76a4528d41a724d8ac041d931d263a`.\n\n## Current Provider Truth\n\n- Local Gemini reports `invalid_key`.\n- Local OpenRouter reports `invalid_key`.\n- VM worker is online, but latest `/chat/test` reports VM fallback provider\n  unavailable: worker reported no LLM available.\n- A direct `/chat` call succeeded once through `vm/jules-worker` with `OK`,\n  but that success is not stable enough to mark production-clean.\n\nThis means the bridge, dashboard, tunnel, and VM process are alive. The remaining\nrelease blocker is provider readiness unless you find a genuine current-head\nlogic/config bug.\n\n## Scope\n\nInvestigate and fix only current-head production-readiness blockers that can be\nsolved in source or generated operational artifacts without new secrets.\n\nCandidate current-head issues to inspect:\n\n1. `/chat` and `/chat/test` are public/auth-exempt. Determine whether this is\n   intended for dashboard/dev convenience or a production exposure bug. Do not\n   break the dashboard.\n2. `/health/deep` top-level `status` can remain `ok` while provider checks fail.\n   Determine whether this is intentional degraded readiness or a misleading\n   production signal.\n3. `keyless_mode` may ignore plural `OPENROUTER_API_KEYS`.\n4. VM readiness in `/health/deep` is passive by design; ensure dashboard and\n   health semantics do not claim VM LLM readiness when only worker-online is\n   known.\n5. Dashboard fleet state may read root `JULES_*.json` while current dispatch\n   state lives under `jules_inbox/...`; fix only if this affects the production\n   dashboard truth and can be done narrowly.\n\n## Hard Constraints\n\n- Do not edit `.env`, print secrets, or commit/upload raw credentials.\n- Do not replay stale sessions `2693363866417321141`,\n  `3580112715401585773`, or `14998673751325827002`.\n- Do not remove bridge circuit-breaker wiring.\n- Do not add backup/shadow source files.\n- Do not hide provider failures or mark them green without live proof.\n- Do not broaden the patch beyond the smallest real production-readiness fix.\n\n## Verification If You Patch\n\n- Run focused tests for changed modules.\n- Run full `python -m pytest tests/ -q`.\n- Verify local `/dashboard/status`, `/health/deep`, `/chat/test`, and public\n  `/dashboard/status` if runtime access is available.\n- Report exact files touched and whether PR #64 should remain draft.\n\n## Completion Report Required\n\nReturn a concise report with:\n\n- current-head files inspected\n- whether code changed\n- files touched\n- verification performed\n- provider blocker status\n- whether PR #64 should remain draft\n- next smallest action\n\nURL: https://jules.google.com/session/4009579503888711152\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "4009579503888711152"
+      ]
+    }
+  ],
+  "state_path": "",
+  "attempted_count": 1,
+  "skipped_launched_count": 0,
+  "force_packet_count": 1,
+  "preserve_existing_session_ids": true,
+  "note": "Live launch attempted through the Jules CLI.",
+  "tracked_count": 1
+}

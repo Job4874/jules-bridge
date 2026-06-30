@@ -1,0 +1,73 @@
+{
+  "strategy": "head_tail_active_context_middle_memory_refs",
+  "stores_raw_text": false,
+  "entry_count": 5,
+  "entries": [
+    {
+      "id": "CM-001",
+      "name": "bridge.py",
+      "path_ref": "path-ref:f14cb63d89be",
+      "source_sha256": "7104251c2cecccb3489509cf9bb9594c7417bf0a1c7f7a08c404b74f911702ba",
+      "active_head_chars": 1160,
+      "active_tail_chars": 1170,
+      "omitted_middle_chars": 81077,
+      "omitted_middle_sha256": "e01a04ec2b926c4df785f6db26f040cc4b7404cf05f5d62599c22dabb24707e5",
+      "stored_text": false,
+      "retrieval_key": "path-ref:f14cb63d89be:e01a04ec2b92",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-002",
+      "name": "http_utils.py",
+      "path_ref": "path-ref:ae8739281a5f",
+      "source_sha256": "52b6aba7d1e84c85057506f7f476c5c093bfeeed2276199d53c2d27c57e0ff61",
+      "active_head_chars": 1154,
+      "active_tail_chars": 1172,
+      "omitted_middle_chars": 5937,
+      "omitted_middle_sha256": "59165f373eb38eb80cf63014b34d8e64902a9258373e3e4f58c1a821175514b0",
+      "stored_text": false,
+      "retrieval_key": "path-ref:ae8739281a5f:59165f373eb3",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-003",
+      "name": "router.py",
+      "path_ref": "path-ref:2cf5a00e44e4",
+      "source_sha256": "2978e22f8da7f8fbdee2bd6cb3fe089e940d757c744b108269ad553674fea73a",
+      "active_head_chars": 380,
+      "active_tail_chars": 0,
+      "omitted_middle_chars": 0,
+      "omitted_middle_sha256": "",
+      "stored_text": false,
+      "retrieval_key": "path-ref:2cf5a00e44e4",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-004",
+      "name": "02_architecture.md",
+      "path_ref": "path-ref:f83a0dbc7fa0",
+      "source_sha256": "2257e98b11b16dcb6feaec1cf142b05133266632ceb57e754ced4cd864d9b94c",
+      "active_head_chars": 1179,
+      "active_tail_chars": 1183,
+      "omitted_middle_chars": 12479,
+      "omitted_middle_sha256": "9239aa8a591e2bd32c82f320366f020e2c8013423589f854febc191d96346ec4",
+      "stored_text": false,
+      "retrieval_key": "path-ref:f83a0dbc7fa0:9239aa8a591e",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-005",
+      "name": "05_gotchas.md",
+      "path_ref": "path-ref:e290e27a0f0a",
+      "source_sha256": "699789996c128bbfa1ab1ef36ddd4b5bec91858e5ea987e0be8ccffc1e52d6d4",
+      "active_head_chars": 1173,
+      "active_tail_chars": 1172,
+      "omitted_middle_chars": 17538,
+      "omitted_middle_sha256": "2980c5ecf96b1e64e2b9307e9eecd2138f47399abf03a50cf6c3b441828612b1",
+      "stored_text": false,
+      "retrieval_key": "path-ref:e290e27a0f0a:2980c5ecf96b",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    }
+  ],
+  "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+}

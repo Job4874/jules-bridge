@@ -1,0 +1,173 @@
+{
+  "generated_at_utc": "2026-06-30T12:27:45.495611+00:00",
+  "task": "Genesis codebase index subagent 04: AKC subagent and local skill system map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+  "context_metrics": {
+    "source_count": 7,
+    "total_source_chars": 64106,
+    "active_prompt_chars": 11761,
+    "omitted_middle_chars": 52050,
+    "compression_ratio": 0.1835,
+    "signal_counts": {
+      "context_engineering": 2,
+      "smart_truncation": 4,
+      "tdd": 2,
+      "evidence": 3,
+      "hrm": 2,
+      "memory_store": 1,
+      "subagents": 1,
+      "long_session_evals": 1
+    }
+  },
+  "context_budget": {
+    "context_window_chars": 170000,
+    "target_utilization_ratio": 0.4,
+    "target_active_chars": 68000,
+    "active_prompt_chars": 11761,
+    "utilization_ratio": 0.0692,
+    "over_budget": false,
+    "recommendation": "within_budget: keep research, plan, and implementation phases explicit"
+  },
+  "context_memory_store": {
+    "strategy": "head_tail_active_context_middle_memory_refs",
+    "stores_raw_text": false,
+    "entry_count": 7,
+    "entries": [
+      {
+        "id": "CM-001",
+        "name": "akc_module.py",
+        "path_ref": "path-ref:26cf320da283",
+        "source_sha256": "2f8d29c91896c28904a5c56fa7b48338dcd218126033066d2fb867cc6546ab25",
+        "active_head_chars": 1163,
+        "active_tail_chars": 1159,
+        "omitted_middle_chars": 12882,
+        "omitted_middle_sha256": "115da863fbb674e096eb65934196b2de10f9d56c74372f163f1fc00a0f17490a",
+        "stored_text": false,
+        "retrieval_key": "path-ref:26cf320da283:115da863fbb6",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-002",
+        "name": "context_orchestrator.py",
+        "path_ref": "path-ref:bd51e6ae3281",
+        "source_sha256": "ec7e2e97607117f9152204844a8c5349539e71421aef520283963874e80a18e5",
+        "active_head_chars": 1158,
+        "active_tail_chars": 1164,
+        "omitted_middle_chars": 33391,
+        "omitted_middle_sha256": "a340104739a504c3e3bef7d788904be27e4d1a055813de5e79b8dfd81a2bc9eb",
+        "stored_text": false,
+        "retrieval_key": "path-ref:bd51e6ae3281:a340104739a5",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-003",
+        "name": "AGENTS.md",
+        "path_ref": "path-ref:b054f06f1c9e",
+        "source_sha256": "83cc050b2c03ceab9aba01de7dbfad5de67ab3f5dff428e9b024c38011d89b65",
+        "active_head_chars": 1181,
+        "active_tail_chars": 1194,
+        "omitted_middle_chars": 5777,
+        "omitted_middle_sha256": "e362fd4b8884606bd88d544c28fe8d06afe1cdbe2b829e43537af1568b354d73",
+        "stored_text": false,
+        "retrieval_key": "path-ref:b054f06f1c9e:e362fd4b8884",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-004",
+        "name": "SKILL.md",
+        "path_ref": "path-ref:31329545867f",
+        "source_sha256": "5116d515e3c67729d4de6497f633dbcea3e206328e056cfa1e574c02a4d916fd",
+        "active_head_chars": 1433,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:31329545867f",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-005",
+        "name": "SKILL.md",
+        "path_ref": "path-ref:8ca1a1dcc028",
+        "source_sha256": "575061eb219e0f2a2a4dd1a4643cb0b201eff6e9a0ae5468ab3ce7aa36cc16ce",
+        "active_head_chars": 999,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:8ca1a1dcc028",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-006",
+        "name": "SKILL.md",
+        "path_ref": "path-ref:cf4d7a4287b8",
+        "source_sha256": "381ea0400ba54f2615c8cb9686850e750df1371f1f50e2ed8997f739c81641af",
+        "active_head_chars": 1184,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:cf4d7a4287b8",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-007",
+        "name": "SKILL.md",
+        "path_ref": "path-ref:af559f9340a5",
+        "source_sha256": "e28a3e55c804d2929ead2cf1479ef99d9135536cdfb2ab7e978ceb4d9d8779a8",
+        "active_head_chars": 1126,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:af559f9340a5",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      }
+    ],
+    "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+  },
+  "long_session_eval_plan": {
+    "name": "ten_turn_preload_probe_turn_11",
+    "signal": "long_session_evals",
+    "preload_turns": 10,
+    "probe_turn": 11,
+    "purpose": "Expose late context failures by preloading 10 turns and checking whether probe turn 11 still uses the retained context correctly.",
+    "active_prompt_chars": 11761,
+    "context_over_budget": false,
+    "release_gate": "For long-running workflows, run or document this eval before marking context handling complete."
+  },
+  "no_slop_workflow": {
+    "mode": "spec_first",
+    "task": "Genesis codebase index subagent 04: AKC subagent and local skill system map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+    "target_context_utilization_ratio": 0.4,
+    "compaction_required": false,
+    "phases": [
+      {
+        "id": "research",
+        "goal": "Find how the system works and identify exact files, flows, and line references.",
+        "artifact": "RESEARCH.md",
+        "done_when": "Reviewer can understand the system path without re-searching the repo."
+      },
+      {
+        "id": "plan",
+        "goal": "Specify every intended change, file target, test, and rollback concern before editing code.",
+        "artifact": "IMPLEMENTATION_PLAN.md",
+        "done_when": "Plan is shorter than the change and catches design mistakes before code."
+      },
+      {
+        "id": "implement",
+        "goal": "Make the planned changes, keep context under budget, and update the plan as phases complete.",
+        "artifact": "CODE_AND_EVIDENCE",
+        "done_when": "Tests, route smoke, hashes, or runtime evidence prove the requested behavior."
+      }
+    ],
+    "review_gates": [
+      "review_research_before_plan",
+      "review_plan_before_code",
+      "record_evidence_before_done"
+    ]
+  },
+  "packet_files": [
+    "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-04-akc-skills\\CA-context_cartographer.md"
+  ]
+}

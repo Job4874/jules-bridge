@@ -1,0 +1,73 @@
+{
+  "strategy": "head_tail_active_context_middle_memory_refs",
+  "stores_raw_text": false,
+  "entry_count": 5,
+  "entries": [
+    {
+      "id": "CM-001",
+      "name": "fs_service.py",
+      "path_ref": "path-ref:56cebebc6edb",
+      "source_sha256": "9aef1ec97d6559aa51a4b241d0c1c5e6a1aea2441c13fabf223f213ea8d9ca27",
+      "active_head_chars": 1158,
+      "active_tail_chars": 1162,
+      "omitted_middle_chars": 3712,
+      "omitted_middle_sha256": "19edfee25b7bc79fed35590304717a4f7f685f54b75450aab34d1c181b79b670",
+      "stored_text": false,
+      "retrieval_key": "path-ref:56cebebc6edb:19edfee25b7b",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-002",
+      "name": "shell_executor.py",
+      "path_ref": "path-ref:7f175dac0b08",
+      "source_sha256": "bf232686c43d6b0f9f2629899fb93da6ca9ca41b3f2caf86525564f75e38b384",
+      "active_head_chars": 1166,
+      "active_tail_chars": 1163,
+      "omitted_middle_chars": 7137,
+      "omitted_middle_sha256": "b18b79b5a494209a22dbba6e57efdea76e55bb06fc9314f7a6edfed71ba8892f",
+      "stored_text": false,
+      "retrieval_key": "path-ref:7f175dac0b08:b18b79b5a494",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-003",
+      "name": "inbox_service.py",
+      "path_ref": "path-ref:970b010158de",
+      "source_sha256": "6c030ebcb1d95247f5fb8685211c2873979efa41040f71e2b650bd6c4ccfff26",
+      "active_head_chars": 1159,
+      "active_tail_chars": 1162,
+      "omitted_middle_chars": 1836,
+      "omitted_middle_sha256": "aa4a2348fbc109e92d0de12802ddc4d5f2e9cc3196b8399c863af85649e6dc6e",
+      "stored_text": false,
+      "retrieval_key": "path-ref:970b010158de:aa4a2348fbc1",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-004",
+      "name": "retrospective_module.py",
+      "path_ref": "path-ref:41ab80cee797",
+      "source_sha256": "5e7e8e67168a51b27a7eecb2d4435b80f64a3180f365368a4b51837a455e1a5b",
+      "active_head_chars": 1175,
+      "active_tail_chars": 1162,
+      "omitted_middle_chars": 32297,
+      "omitted_middle_sha256": "dc4ef03ffb6a38d4160542a8b0bd408b5909dc86a5e240c4c10aeaea434600d6",
+      "stored_text": false,
+      "retrieval_key": "path-ref:41ab80cee797:dc4ef03ffb6a",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-005",
+      "name": "__init__.py",
+      "path_ref": "path-ref:672557dfcb03",
+      "source_sha256": "d3726b6f0f599cae258a7ef094f0360b527d74cec22feb1eb5797f21c2cdc630",
+      "active_head_chars": 1161,
+      "active_tail_chars": 1153,
+      "omitted_middle_chars": 3217,
+      "omitted_middle_sha256": "84de8231c085e1007760eee544c146effa91046155c1e93545905c3b838c8bda",
+      "stored_text": false,
+      "retrieval_key": "path-ref:672557dfcb03:84de8231c085",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    }
+  ],
+  "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+}

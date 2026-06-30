@@ -1,0 +1,86 @@
+{
+  "strategy": "head_tail_active_context_middle_memory_refs",
+  "stores_raw_text": false,
+  "entry_count": 6,
+  "entries": [
+    {
+      "id": "CM-001",
+      "name": "requirements.txt",
+      "path_ref": "path-ref:fafb365d99be",
+      "source_sha256": "e1cc6a2a9c594c43cdd6f0d924d2fb9fbc40c46ca506f0c0d37a10134331645a",
+      "active_head_chars": 68,
+      "active_tail_chars": 0,
+      "omitted_middle_chars": 0,
+      "omitted_middle_sha256": "",
+      "stored_text": false,
+      "retrieval_key": "path-ref:fafb365d99be",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-002",
+      "name": "Launch-Bridge-WithVM.cmd",
+      "path_ref": "path-ref:157afc3148b4",
+      "source_sha256": "feea498aea2406e8b2500d6ebc0fccc5ef7552df2b916e22c3614950dc6b9505",
+      "active_head_chars": 501,
+      "active_tail_chars": 0,
+      "omitted_middle_chars": 0,
+      "omitted_middle_sha256": "",
+      "stored_text": false,
+      "retrieval_key": "path-ref:157afc3148b4",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-003",
+      "name": "Run-JulesBridge.cmd",
+      "path_ref": "path-ref:7f5db56d288d",
+      "source_sha256": "f09d52e4e931f0124928853fb46c08f5d6722ad2e1f208716a1eb7f235f9de7c",
+      "active_head_chars": 766,
+      "active_tail_chars": 0,
+      "omitted_middle_chars": 0,
+      "omitted_middle_sha256": "",
+      "stored_text": false,
+      "retrieval_key": "path-ref:7f5db56d288d",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-004",
+      "name": "start.py",
+      "path_ref": "path-ref:086a37116d48",
+      "source_sha256": "b711e6ca2a3e28ee67497dd520d7706ef5d5fd34c509cd832eedb1d4201dc016",
+      "active_head_chars": 1157,
+      "active_tail_chars": 1173,
+      "omitted_middle_chars": 4946,
+      "omitted_middle_sha256": "9e636c052f2698cb8f25097ce3ef40c63f952e908fac76590e634f1148f5b049",
+      "stored_text": false,
+      "retrieval_key": "path-ref:086a37116d48:9e636c052f26",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-005",
+      "name": "Launch-Offload-Host.ps1",
+      "path_ref": "path-ref:21cd9eb123a5",
+      "source_sha256": "7d4619a29823dbde1f3e3a6ab0d8b5cbba4e99a5c8ac20a6da0123854e261c67",
+      "active_head_chars": 942,
+      "active_tail_chars": 1167,
+      "omitted_middle_chars": 1715,
+      "omitted_middle_sha256": "de3dc58cfef73589c03ddf0d43ab4628b872dd6f406d93764ba515c374f2734b",
+      "stored_text": false,
+      "retrieval_key": "path-ref:21cd9eb123a5:de3dc58cfef7",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-006",
+      "name": "package.json",
+      "path_ref": "path-ref:de73a5803117",
+      "source_sha256": "1981f04ab62070e0f9155bc526b4e6f7616658b2904f2cfe766e3dd36a9f8e0d",
+      "active_head_chars": 1225,
+      "active_tail_chars": 0,
+      "omitted_middle_chars": 0,
+      "omitted_middle_sha256": "",
+      "stored_text": false,
+      "retrieval_key": "path-ref:de73a5803117",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    }
+  ],
+  "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+}

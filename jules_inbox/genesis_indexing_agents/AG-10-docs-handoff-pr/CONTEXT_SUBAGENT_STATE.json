@@ -1,0 +1,159 @@
+{
+  "generated_at_utc": "2026-06-30T12:27:45.587461+00:00",
+  "task": "Genesis codebase index subagent 10: Docs memory handoff and PR readiness map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+  "context_metrics": {
+    "source_count": 6,
+    "total_source_chars": 138754,
+    "active_prompt_chars": 10709,
+    "omitted_middle_chars": 127639,
+    "compression_ratio": 0.0772,
+    "signal_counts": {
+      "smart_truncation": 3,
+      "long_session_evals": 3,
+      "evidence": 4,
+      "subagents": 3,
+      "memory_store": 2,
+      "tdd": 2,
+      "hrm": 2
+    }
+  },
+  "context_budget": {
+    "context_window_chars": 170000,
+    "target_utilization_ratio": 0.4,
+    "target_active_chars": 68000,
+    "active_prompt_chars": 10709,
+    "utilization_ratio": 0.063,
+    "over_budget": false,
+    "recommendation": "within_budget: keep research, plan, and implementation phases explicit"
+  },
+  "context_memory_store": {
+    "strategy": "head_tail_active_context_middle_memory_refs",
+    "stores_raw_text": false,
+    "entry_count": 6,
+    "entries": [
+      {
+        "id": "CM-001",
+        "name": "README.md",
+        "path_ref": "path-ref:60d2ef7bed95",
+        "source_sha256": "21953a335b60c3be496b5914e864ac3ae0d5458c78be3fe5f416e8d3e9563ad9",
+        "active_head_chars": 1066,
+        "active_tail_chars": 1160,
+        "omitted_middle_chars": 42851,
+        "omitted_middle_sha256": "b9f74ef9741d72de2deeb2928ff3572372254ac731411008ba188ff173a5a86d",
+        "stored_text": false,
+        "retrieval_key": "path-ref:60d2ef7bed95:b9f74ef9741d",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-002",
+        "name": "PROJECT_STATE.md",
+        "path_ref": "path-ref:589d0aa6337c",
+        "source_sha256": "0d5de1e542f80c4ac366253a671bac72e81d658deea565f7b2669ae26ef3c1fe",
+        "active_head_chars": 1100,
+        "active_tail_chars": 1161,
+        "omitted_middle_chars": 1484,
+        "omitted_middle_sha256": "020d0bbe76aa36bfb570783caff2fcb612afaf4697392f8ec2a81e0149e91661",
+        "stored_text": false,
+        "retrieval_key": "path-ref:589d0aa6337c:020d0bbe76aa",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-003",
+        "name": "pr_description.md",
+        "path_ref": "path-ref:26863f07eabb",
+        "source_sha256": "76ad4a64d35d10be27b42abd876fc7890e3e1f274cb303b2b10b406fff0e690e",
+        "active_head_chars": 385,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:26863f07eabb",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-004",
+        "name": "06_progress_tracker.md",
+        "path_ref": "path-ref:304c1e400e9c",
+        "source_sha256": "1e8a3d06fce3f56219982c6dc5e121112e5d1b92e7af6ec7cb4705204ea3e3ea",
+        "active_head_chars": 1181,
+        "active_tail_chars": 1199,
+        "omitted_middle_chars": 35264,
+        "omitted_middle_sha256": "8d212b36fbf5beed6c881ce047270fce83abb01f2f8408079d248c392de25dc0",
+        "stored_text": false,
+        "retrieval_key": "path-ref:304c1e400e9c:8d212b36fbf5",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-005",
+        "name": "general.md",
+        "path_ref": "path-ref:97cf69da61e8",
+        "source_sha256": "f4a71357552b9191966ac8bdf3ecb9e2cdfceea18cfab40b7d0a25407e92f1f6",
+        "active_head_chars": 1174,
+        "active_tail_chars": 1199,
+        "omitted_middle_chars": 48040,
+        "omitted_middle_sha256": "02923ef55b4a0e1d58448c02efbd73291b7cc58a16b9043f59c1acd220f091f0",
+        "stored_text": false,
+        "retrieval_key": "path-ref:97cf69da61e8:02923ef55b4a",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-006",
+        "name": "JULES_RESPONSE.md",
+        "path_ref": "path-ref:af4b1cd2f75c",
+        "source_sha256": "e87932c0316148a97a1ddb4b023dfabb68d30ad5e612b7e5e0f641ae1cfb1cc2",
+        "active_head_chars": 1084,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:af4b1cd2f75c",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      }
+    ],
+    "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+  },
+  "long_session_eval_plan": {
+    "name": "ten_turn_preload_probe_turn_11",
+    "signal": "long_session_evals",
+    "preload_turns": 10,
+    "probe_turn": 11,
+    "purpose": "Expose late context failures by preloading 10 turns and checking whether probe turn 11 still uses the retained context correctly.",
+    "active_prompt_chars": 10709,
+    "context_over_budget": false,
+    "release_gate": "For long-running workflows, run or document this eval before marking context handling complete."
+  },
+  "no_slop_workflow": {
+    "mode": "spec_first",
+    "task": "Genesis codebase index subagent 10: Docs memory handoff and PR readiness map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+    "target_context_utilization_ratio": 0.4,
+    "compaction_required": false,
+    "phases": [
+      {
+        "id": "research",
+        "goal": "Find how the system works and identify exact files, flows, and line references.",
+        "artifact": "RESEARCH.md",
+        "done_when": "Reviewer can understand the system path without re-searching the repo."
+      },
+      {
+        "id": "plan",
+        "goal": "Specify every intended change, file target, test, and rollback concern before editing code.",
+        "artifact": "IMPLEMENTATION_PLAN.md",
+        "done_when": "Plan is shorter than the change and catches design mistakes before code."
+      },
+      {
+        "id": "implement",
+        "goal": "Make the planned changes, keep context under budget, and update the plan as phases complete.",
+        "artifact": "CODE_AND_EVIDENCE",
+        "done_when": "Tests, route smoke, hashes, or runtime evidence prove the requested behavior."
+      }
+    ],
+    "review_gates": [
+      "review_research_before_plan",
+      "review_plan_before_code",
+      "record_evidence_before_done"
+    ]
+  },
+  "packet_files": [
+    "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-10-docs-handoff-pr\\CA-context_cartographer.md"
+  ]
+}

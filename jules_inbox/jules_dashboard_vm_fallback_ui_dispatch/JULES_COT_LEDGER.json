@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-06-30T08:10:55.863364+00:00",
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_vm_fallback_ui_dispatch",
+  "launch_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_vm_fallback_ui_dispatch\\JULES_LAUNCH_STATE.json",
+  "report_dir": "",
+  "selected_count": 1,
+  "completed_count": 0,
+  "blocked_count": 0,
+  "pending_count": 1,
+  "all_complete": false,
+  "status_counts": {
+    "launched_pending_cot": 1
+  },
+  "rows": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_vm_fallback_ui_dispatch\\JT-001-0a7ebc-surface-vm-worker-fallback-readiness-in-the-dashboard-header.md",
+      "packet_id": "JT-001-0a7ebc",
+      "launch_status": "launched",
+      "session_ids": [
+        "4002870015664374490"
+      ],
+      "timed_out": false,
+      "exit_code": 0,
+      "cot_status": "launched_pending_cot",
+      "report_files": []
+    }
+  ],
+  "ledger_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_vm_fallback_ui_dispatch\\JULES_COT_LEDGER.md",
+  "ledger_json_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_vm_fallback_ui_dispatch\\JULES_COT_LEDGER.json",
+  "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+}

@@ -1,0 +1,116 @@
+{
+  "generated_agent_count": 10,
+  "base_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents",
+  "agents": [
+    {
+      "id": "AG-01-bridge-api",
+      "status": "ready",
+      "readable_count": 5,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-01-bridge-api\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 9743,
+      "over_budget": false
+    },
+    {
+      "id": "AG-02-core-modules",
+      "status": "ready",
+      "readable_count": 5,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-02-core-modules\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 11621,
+      "over_budget": false
+    },
+    {
+      "id": "AG-03-jules-orchestration",
+      "status": "ready",
+      "readable_count": 5,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-03-jules-orchestration\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 9933,
+      "over_budget": false
+    },
+    {
+      "id": "AG-04-akc-skills",
+      "status": "ready",
+      "readable_count": 7,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-04-akc-skills\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 11761,
+      "over_budget": false
+    },
+    {
+      "id": "AG-05-dashboard-ui",
+      "status": "ready",
+      "readable_count": 5,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-05-dashboard-ui\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 7749,
+      "over_budget": false
+    },
+    {
+      "id": "AG-06-health-providers",
+      "status": "ready",
+      "readable_count": 5,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-06-health-providers\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 11868,
+      "over_budget": false
+    },
+    {
+      "id": "AG-07-vm-cloud-runtime",
+      "status": "ready",
+      "readable_count": 5,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-07-vm-cloud-runtime\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 11711,
+      "over_budget": false
+    },
+    {
+      "id": "AG-08-tests-evidence",
+      "status": "ready",
+      "readable_count": 5,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-08-tests-evidence\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 11595,
+      "over_budget": false
+    },
+    {
+      "id": "AG-09-install-boot",
+      "status": "ready",
+      "readable_count": 6,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-09-install-boot\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 6999,
+      "over_budget": false
+    },
+    {
+      "id": "AG-10-docs-handoff-pr",
+      "status": "ready",
+      "readable_count": 6,
+      "missing_count": 0,
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-10-docs-handoff-pr\\CA-context_cartographer.md"
+      ],
+      "active_prompt_chars": 10709,
+      "over_budget": false
+    }
+  ]
+}

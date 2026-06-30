@@ -1,0 +1,216 @@
+{
+  "generated_at_utc": "2026-06-30T06:09:32.080101+00:00",
+  "status": "pending",
+  "dry_run": false,
+  "packet_dir": "jules_inbox\\jules_provider_readiness_dispatch_strict",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "launch_requested": true,
+  "launch_dry_run": false,
+  "pull_requested": false,
+  "check_remote": true,
+  "require_remote_ready": true,
+  "blockers": [],
+  "dispatch": {
+    "source": "inline",
+    "source_sha256": "f1a37a88e79d617d1ea7d31e852954a4b664eb04353c90c7810736cfb5f16346",
+    "generated_at_utc": "2026-06-30T06:09:32.080101+00:00",
+    "task_count": 1,
+    "selected_count": 1,
+    "status_counts": {
+      "ready_for_review": 1
+    },
+    "include_statuses": [
+      "failed",
+      "needs_review",
+      "ready_for_review",
+      "unknown"
+    ],
+    "max_instances": 1,
+    "write_packets": true,
+    "output_dir": "jules_inbox\\jules_provider_readiness_dispatch_strict",
+    "repo_path": "C:\\Users\\abdul\\jules-bridge",
+    "selected_tasks": [
+      {
+        "id": "JT-001-99dce4",
+        "ordinal": 1,
+        "fingerprint": "99dce4d7a11c",
+        "task_type": "code_health",
+        "status": "ready_for_review",
+        "source": "inline",
+        "title": "Code Health for modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py",
+        "file": "modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py",
+        "issue": "",
+        "language": "Python",
+        "rationale": "Current live evidence: `/health/deep` marks OpenRouter pass by probing public `/models`, but `/chat/test` and `/chat` fail real OpenRouter chat completion with 401 `User not found`; Gemini returns invalid API key. Fix the code so provider readiness is honest and production-grade: deep health must not claim provider pass unless the provider can actually satisfy the bridge's chat path or equivalent authenticated probe. Reuse/shared logic if practical, redact secrets, preserve graceful offline chat, and add tests for invalid keys, one-provider-ok, and keyless/offline modes. Do not edit `.env`; do not print secrets; no unrelated refactors; no PR/commit needed. Output the exact patch and verification.",
+        "raw_excerpt": "# Code Health Improvement Task\nFile: modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py\nIssue: STRICT NONINTERACTIVE PATCH REQUEST. The previous provider-readiness session 4817979060578580922 remained in Planning and produced no diff. The installed Jules CLI has no plan-approval command available to the operator, so do not wait for approval. Implement immediately and return a unified diff/completion report.\nLanguage: Python\nRationale: Current live evidence: `/health/deep` marks OpenRouter pass by probing public `/models`, but `/chat/test` and `/chat` fail real OpenRouter chat completion with 401 `User not found`; Gemini returns invalid API key. Fix the code so provider readiness is honest and production-grade: deep health must not claim provider pass unless the provider can actually satisfy the bridge's chat path or equivalent authenticated probe. Reuse/shared logic if practical, redact secrets, preserve graceful offline chat, and add tests for invalid keys, one-provider-ok, and keyless/offline modes. Do not edit `.env`; do not print secrets; no unrelated refactors; no PR/commit needed. Output the exact patch and verification.\nReady for review"
+      }
+    ],
+    "packet_files": [
+      "jules_inbox\\jules_provider_readiness_dispatch_strict\\JT-001-99dce4-code-health-for-modules-health-service-py-modules-chat-servi.md"
+    ],
+    "launch_commands": [
+      "Push-Location 'C:\\Users\\abdul\\jules-bridge'; Get-Content -Raw -LiteralPath 'jules_inbox\\jules_provider_readiness_dispatch_strict\\JT-001-99dce4-code-health-for-modules-health-service-py-modules-chat-servi.md' | jules new; Pop-Location"
+    ],
+    "note": "Dry-run by default. Commands are generated for explicit operator launch; no remote Jules sessions were started."
+  },
+  "sessions": {
+    "dry_run": false,
+    "command": [
+      "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+      "remote",
+      "list",
+      "--session"
+    ],
+    "status": "ok",
+    "exit_code": 0,
+    "stdout": "           ID                                    Description                                    Repo                Last active                Status         \n 4817979060578580922     # Jules Worker Packet JT-001-09a40f- instance_index: 1- sta\u2026  Job4874/jules-bridge    30s ago                 Planning       \n 7860856984744967973     JULES FOCUSED WORKER - DASHBOARD TRUTH FIXRepo: Job4874/jul\u2026  Job4874/jules-bridge    26m0s ago               Completed      \n 10477893888121342630    JULES PRODUCTION FINISH SESSION - DEADLINE 2026-06-30 06:00\u2026  Job4874/jules-bridge    27m31s ago              Completed      \n 10183862037269750136    Owner avatar academic-command-center Private Job4874/academ\u2026  Job4874/academic-comm\u2026  53m0s ago                              \n 11444916563672286069    It looks like you've shared the repository overview for the\u2026  Job4874/financial-swi\u2026  1h48m39s ago            Completed      \n 13059720105187195261    Owner avatar academic-command-center Private Job4874/academ\u2026  Job4874/academic-comm\u2026  2h46m25s ago            Completed      \n 696329274680707693      This is exactly the right move. A clean build demands a fla\u2026  Job4874/jules-bridge    3h2m3s ago              Completed      \n 2929847332705694562     # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/OracleV5        2h48m56s ago                           \n 11740082699190749803    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/OracleV5        7m52s ago               Completed      \n 15488901075234016075    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/OracleV5        24m49s ago              Completed      \n 9401431252276674117     # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/OracleV5        11s ago                 In Progress    \n 7491225924654185179     All Scheduled Completed Archived  New Needs review Jules Wo\u2026  Job4874/OracleV5        3h17m24s ago            Completed      \n 8446852302933449848     I need you to get a production grade version following read\u2026  Job4874/academic-comm\u2026  3h3m27s ago             Completed      \n 13507659335916222020    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/OracleV5        6h2m40s ago             Completed      \n 17711699954038241171    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/OracleV5        5h31m7s ago             Completed      \n 17632343157354400653    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/OracleV5        4h38m1s ago                            \n 7397743281348714487     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/OracleV5        6h0m2s ago                             \n 9322931230070664332     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/OracleV5        5h10m18s ago            Completed      \n 15870046347555457537    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/OracleV5        5h52m5s ago             Completed      \n 192518133751447896      # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/OracleV5        5h41m36s ago            Completed      \n 9759427500840941867     # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/OracleV5        5h11m2s ago             Completed      \n 6816081737032804696     # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/OracleV5        2h45m11s ago            Completed      \n 888634429061233009      Got you, Abdul. Jules finished the first pass, you download\u2026  Job4874/academic-comm\u2026  7h43m13s ago                           \n 11824835345610591753    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    9h45m12s ago            Completed      \n 8212989228770008576     # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    9h44m53s ago            Completed      \n 15814420098995234638    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h51m44s ago                           \n 18126340333710020575    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h17m55s ago            Completed      \n 8727962457367302900     # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    9h46m30s ago            Completed      \n 16611382048744466213    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    9h48m13s ago            Completed      \n 14922376136978192588    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h44m47s ago            Completed      \n 17462765261478932984    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    8h24m19s ago            Completed      \n 240076491540381275      # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h37m17s ago            Completed      \n 17680317245051596957    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    9h42m58s ago            Completed      \n 14171075333719585717    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    9h34m54s ago            Completed      \n 6153177584741443944     # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    9h40m5s ago                            \n 16251499986558459810    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    9h51m1s ago             Completed      \n 6461505102290999940     # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/jules-bridge    9h46m20s ago            Completed      \n 4792355183947749762     # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/jules-bridge    9h51m46s ago            Completed      \n 1818010786061618853     ## Task: Point gcloud and ADC quota to correct project**Det\u2026  Job4874/jules-bridge    9h39m50s ago            Completed      \n 6935639710906067011     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h45m29s ago            Completed      \n 4157214027086040825     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h39m46s ago            Completed      \n 14377962564380967887    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h50m58s ago            Completed      \n 8040998858220789986     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h48m50s ago            Completed      \n 13617231381437972959    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h49m38s ago            Completed      \n 7039425020044686841     # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    9h52m17s ago            Completed      \n 11054873440547651283    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h40m0s ago             Completed      \n 13517667366949447601    # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/jules-bridge    9h50m28s ago            Completed      \n 995709237084059125      # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h48m31s ago            Completed      \n 6686296992165252548     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h49m24s ago            Completed      \n 14711501226970179376    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    9h50m17s ago            Completed      \n                                                                                                                                                      \n",
+    "stderr": "",
+    "timed_out": false,
+    "session_ids": [
+      "4817979060578580922",
+      "7860856984744967973",
+      "10477893888121342630",
+      "10183862037269750136",
+      "11444916563672286069",
+      "13059720105187195261",
+      "696329274680707693",
+      "2929847332705694562",
+      "11740082699190749803",
+      "15488901075234016075",
+      "9401431252276674117",
+      "7491225924654185179",
+      "8446852302933449848",
+      "13507659335916222020",
+      "17711699954038241171",
+      "17632343157354400653",
+      "7397743281348714487",
+      "9322931230070664332",
+      "15870046347555457537",
+      "192518133751447896",
+      "9759427500840941867",
+      "6816081737032804696",
+      "888634429061233009",
+      "11824835345610591753",
+      "8212989228770008576",
+      "15814420098995234638",
+      "18126340333710020575",
+      "8727962457367302900",
+      "16611382048744466213",
+      "14922376136978192588",
+      "17462765261478932984",
+      "240076491540381275",
+      "17680317245051596957",
+      "14171075333719585717",
+      "6153177584741443944",
+      "16251499986558459810",
+      "6461505102290999940",
+      "4792355183947749762",
+      "1818010786061618853",
+      "6935639710906067011",
+      "4157214027086040825",
+      "14377962564380967887",
+      "8040998858220789986",
+      "13617231381437972959",
+      "7039425020044686841",
+      "11054873440547651283",
+      "13517667366949447601",
+      "995709237084059125",
+      "6686296992165252548",
+      "14711501226970179376"
+    ],
+    "jules_command": "jules",
+    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+    "cache_hit": false
+  },
+  "launch_result": {
+    "generated_at_utc": "2026-06-30T06:09:38.913839+00:00",
+    "dry_run": false,
+    "packet_dir": "jules_inbox\\jules_provider_readiness_dispatch_strict",
+    "selected_count": 1,
+    "launched_count": 1,
+    "timeout_count": 0,
+    "jules_command": "jules",
+    "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+    "repo_path": "C:\\Users\\abdul\\jules-bridge",
+    "results": [
+      {
+        "packet": "jules_inbox\\jules_provider_readiness_dispatch_strict\\JT-001-99dce4-code-health-for-modules-health-service-py-modules-chat-servi.md",
+        "command": [
+          "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+          "new"
+        ],
+        "repo_path": "C:\\Users\\abdul\\jules-bridge",
+        "status": "launched",
+        "exit_code": 0,
+        "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 11181112389803823618\nTask: # Jules Worker Packet JT-001-99dce4\n\n- instance_index: 1\n- status: ready_for_review\n- task_type: code_health\n- source: inline\n- fingerprint: 99dce4d7a11c\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nComplete exactly this Jules card: Code Health for modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py\n\n## Task Details\n- File: modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py\n- Issue: (not provided)\n- Language: Python\n- Rationale: Current live evidence: `/health/deep` marks OpenRouter pass by probing public `/models`, but `/chat/test` and `/chat` fail real OpenRouter chat completion with 401 `User not found`; Gemini returns invalid API key. Fix the code so provider readiness is honest and production-grade: deep health must not claim provider pass unless the provider can actually satisfy the bridge's chat path or equivalent authenticated probe. Reuse/shared logic if practical, redact secrets, preserve graceful offline chat, and add tests for invalid keys, one-provider-ok, and keyless/offline modes. Do not edit `.env`; do not print secrets; no unrelated refactors; no PR/commit needed. Output the exact patch and verification.\n\n## Operating Rules\n- Work on one card only; do not opportunistically refactor unrelated code.\n- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.\n- Preserve existing behavior unless the card explicitly asks for behavior change.\n- Run the narrowest relevant verification first, then the broader suite if practical.\n- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.\n- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.\n- If blocked, write the blocker, attempted evidence, and the exact next question.\n\n## Completion report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\n## Raw Card Excerpt\n```text\n# Code Health Improvement Task\nFile: modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py\nIssue: STRICT NONINTERACTIVE PATCH REQUEST. The previous provider-readiness session 4817979060578580922 remained in Planning and produced no diff. The installed Jules CLI has no plan-approval command available to the operator, so do not wait for approval. Implement immediately and return a unified diff/completion report.\nLanguage: Python\nRationale: Current live evidence: `/health/deep` marks OpenRouter pass by probing public `/models`, but `/chat/test` and `/chat` fail real OpenRouter chat completion with 401 `User not found`; Gemini returns invalid API key. Fix the code so provider readiness is honest and production-grade: deep health must not claim provider pass unless the provider can actually satisfy the bridge's chat path or equivalent authenticated probe. Reuse/shared logic if practical, redact secrets, preserve graceful offline chat, and add tests for invalid keys, one-provider-ok, and keyless/offline modes. Do not edit `.env`; do not print secrets; no unrelated refactors; no PR/commit needed. Output the exact patch and verification.\nReady for review\n```\n\nURL: https://jules.google.com/session/11181112389803823618\n",
+        "stderr": "",
+        "timed_out": false,
+        "session_ids": [
+          "11181112389803823618",
+          "4817979060578580922"
+        ]
+      }
+    ],
+    "attempt_results": [
+      {
+        "packet": "jules_inbox\\jules_provider_readiness_dispatch_strict\\JT-001-99dce4-code-health-for-modules-health-service-py-modules-chat-servi.md",
+        "command": [
+          "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+          "new"
+        ],
+        "repo_path": "C:\\Users\\abdul\\jules-bridge",
+        "status": "launched",
+        "exit_code": 0,
+        "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 11181112389803823618\nTask: # Jules Worker Packet JT-001-99dce4\n\n- instance_index: 1\n- status: ready_for_review\n- task_type: code_health\n- source: inline\n- fingerprint: 99dce4d7a11c\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nComplete exactly this Jules card: Code Health for modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py\n\n## Task Details\n- File: modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py\n- Issue: (not provided)\n- Language: Python\n- Rationale: Current live evidence: `/health/deep` marks OpenRouter pass by probing public `/models`, but `/chat/test` and `/chat` fail real OpenRouter chat completion with 401 `User not found`; Gemini returns invalid API key. Fix the code so provider readiness is honest and production-grade: deep health must not claim provider pass unless the provider can actually satisfy the bridge's chat path or equivalent authenticated probe. Reuse/shared logic if practical, redact secrets, preserve graceful offline chat, and add tests for invalid keys, one-provider-ok, and keyless/offline modes. Do not edit `.env`; do not print secrets; no unrelated refactors; no PR/commit needed. Output the exact patch and verification.\n\n## Operating Rules\n- Work on one card only; do not opportunistically refactor unrelated code.\n- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.\n- Preserve existing behavior unless the card explicitly asks for behavior change.\n- Run the narrowest relevant verification first, then the broader suite if practical.\n- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.\n- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.\n- If blocked, write the blocker, attempted evidence, and the exact next question.\n\n## Completion report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\n## Raw Card Excerpt\n```text\n# Code Health Improvement Task\nFile: modules/health_service.py; modules/chat_service.py; tests/test_health_deep.py; tests/test_chat_service.py\nIssue: STRICT NONINTERACTIVE PATCH REQUEST. The previous provider-readiness session 4817979060578580922 remained in Planning and produced no diff. The installed Jules CLI has no plan-approval command available to the operator, so do not wait for approval. Implement immediately and return a unified diff/completion report.\nLanguage: Python\nRationale: Current live evidence: `/health/deep` marks OpenRouter pass by probing public `/models`, but `/chat/test` and `/chat` fail real OpenRouter chat completion with 401 `User not found`; Gemini returns invalid API key. Fix the code so provider readiness is honest and production-grade: deep health must not claim provider pass unless the provider can actually satisfy the bridge's chat path or equivalent authenticated probe. Reuse/shared logic if practical, redact secrets, preserve graceful offline chat, and add tests for invalid keys, one-provider-ok, and keyless/offline modes. Do not edit `.env`; do not print secrets; no unrelated refactors; no PR/commit needed. Output the exact patch and verification.\nReady for review\n```\n\nURL: https://jules.google.com/session/11181112389803823618\n",
+        "stderr": "",
+        "timed_out": false,
+        "session_ids": [
+          "11181112389803823618",
+          "4817979060578580922"
+        ]
+      }
+    ],
+    "state_path": "jules_inbox\\jules_provider_readiness_dispatch_strict\\JULES_LAUNCH_STATE.json",
+    "attempted_count": 1,
+    "skipped_launched_count": 0,
+    "force_packet_count": 0,
+    "preserve_existing_session_ids": false,
+    "note": "Live launch attempted through the Jules CLI.",
+    "tracked_count": 1
+  },
+  "pull_results": [],
+  "cot": {
+    "generated_at_utc": "2026-06-30T06:09:41.519784+00:00",
+    "packet_dir": "jules_inbox\\jules_provider_readiness_dispatch_strict",
+    "launch_state_path": "jules_inbox\\jules_provider_readiness_dispatch_strict\\JULES_LAUNCH_STATE.json",
+    "report_dir": "",
+    "selected_count": 1,
+    "completed_count": 0,
+    "blocked_count": 0,
+    "pending_count": 1,
+    "all_complete": false,
+    "status_counts": {
+      "launched_pending_cot": 1
+    },
+    "rows": [
+      {
+        "packet": "jules_inbox\\jules_provider_readiness_dispatch_strict\\JT-001-99dce4-code-health-for-modules-health-service-py-modules-chat-servi.md",
+        "packet_id": "JT-001-99dce4",
+        "launch_status": "launched",
+        "session_ids": [
+          "11181112389803823618",
+          "4817979060578580922"
+        ],
+        "timed_out": false,
+        "exit_code": 0,
+        "cot_status": "launched_pending_cot",
+        "report_files": []
+      }
+    ],
+    "ledger_path": "jules_inbox\\jules_provider_readiness_dispatch_strict\\JULES_COT_LEDGER.md",
+    "ledger_json_path": "jules_inbox\\jules_provider_readiness_dispatch_strict\\JULES_COT_LEDGER.json",
+    "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+  },
+  "cycle_state_path": "jules_inbox\\jules_provider_readiness_dispatch_strict\\JULES_CYCLE_STATE.json",
+  "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+}

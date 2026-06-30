@@ -1,0 +1,54 @@
+{
+  "generated_at_utc": "2026-06-30T09:58:37.954858+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
+  "selected_count": 1,
+  "launched_count": 1,
+  "timeout_count": 0,
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_provider_classification_health_dispatch\\JT-001-provider-classification-health-current-head.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 3580112715401585773\nTask: # Jules Worker Packet JT-001-provider-classification-health-current-head\n\nRepo: `Job4874/jules-bridge`\nLocal branch/head to target: `codex/jules-production-finish` at `ffe34b40a4d9ed64152f8bc630bef6ac2954f5a5`\nPR: `https://github.com/Job4874/jules-bridge/pull/64`\n\n## Objective\n\nRebase on the current pushed head and add only the missing provider-classification propagation needed for production-readiness evidence.\n\nCurrent live truth after commit `ffe34b4`:\n- `/chat/test` returns provider `error_type` correctly:\n  - Gemini: `status=error`, `code=400`, `error_type=invalid_key`\n  - OpenRouter: `status=error`, `code=401`, `error_type=invalid_key`\n  - VM worker: `status=ok`\n- `/health/deep` still maps provider rows through `modules.health_service._map_chat_provider_result(...)` and currently drops `error_type`.\n- Dashboard status already carries raw `test_chat_providers(...)` rows and should preserve classification metadata unless your verification proves otherwise.\n\n## Hard Constraints\n\n- Do not remove or relocate `bridge.py` circuit breaker wiring.\n- Do not add backup or snapshot modules like `modules/chat_service_087c5da.py`.\n- Do not replay old broad `modules/chat_service.py` hunks. Provider classification, OpenRouter model fallback, plural key rotation, and VM recent-success invalidation are already integrated in `ffe34b4`.\n- Do not touch secrets or print raw API keys.\n- Keep bridge routes thin. Any change should stay in service modules/tests unless live evidence proves otherwise.\n\n## Requested Work\n\n1. Inspect current `modules/health_service.py` and tests.\n2. If still missing, propagate `error_type` from chat provider results into `/health/deep` provider rows.\n3. Add/update focused tests in `tests/test_health_deep.py` proving `error_type` survives mapping for Gemini/OpenRouter failures.\n4. If dashboard already preserves provider `error_type`, leave it alone. If not, add the smallest service/test change needed.\n5. Run focused tests:\n   - `python -m pytest tests/test_health_deep.py tests/test_chat_service.py tests/test_dashboard_module.py -q`\n6. Return only a minimal diff. If no code change is needed, return a report with the current evidence and no diff.\n\n## Success Evidence\n\n- A minimal diff against `ffe34b4`.\n- No `bridge.py` circuit-breaker deletion.\n- No backup files.\n- Tests passing.\n- Live expected shape: `/health/deep.providers.gemini.error_type == \"invalid_key\"` and `/health/deep.providers.openrouter.error_type == \"invalid_key\"` when current invalid credentials are present.\n\nURL: https://jules.google.com/session/3580112715401585773\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "3580112715401585773"
+      ]
+    }
+  ],
+  "attempt_results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_provider_classification_health_dispatch\\JT-001-provider-classification-health-current-head.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 3580112715401585773\nTask: # Jules Worker Packet JT-001-provider-classification-health-current-head\n\nRepo: `Job4874/jules-bridge`\nLocal branch/head to target: `codex/jules-production-finish` at `ffe34b40a4d9ed64152f8bc630bef6ac2954f5a5`\nPR: `https://github.com/Job4874/jules-bridge/pull/64`\n\n## Objective\n\nRebase on the current pushed head and add only the missing provider-classification propagation needed for production-readiness evidence.\n\nCurrent live truth after commit `ffe34b4`:\n- `/chat/test` returns provider `error_type` correctly:\n  - Gemini: `status=error`, `code=400`, `error_type=invalid_key`\n  - OpenRouter: `status=error`, `code=401`, `error_type=invalid_key`\n  - VM worker: `status=ok`\n- `/health/deep` still maps provider rows through `modules.health_service._map_chat_provider_result(...)` and currently drops `error_type`.\n- Dashboard status already carries raw `test_chat_providers(...)` rows and should preserve classification metadata unless your verification proves otherwise.\n\n## Hard Constraints\n\n- Do not remove or relocate `bridge.py` circuit breaker wiring.\n- Do not add backup or snapshot modules like `modules/chat_service_087c5da.py`.\n- Do not replay old broad `modules/chat_service.py` hunks. Provider classification, OpenRouter model fallback, plural key rotation, and VM recent-success invalidation are already integrated in `ffe34b4`.\n- Do not touch secrets or print raw API keys.\n- Keep bridge routes thin. Any change should stay in service modules/tests unless live evidence proves otherwise.\n\n## Requested Work\n\n1. Inspect current `modules/health_service.py` and tests.\n2. If still missing, propagate `error_type` from chat provider results into `/health/deep` provider rows.\n3. Add/update focused tests in `tests/test_health_deep.py` proving `error_type` survives mapping for Gemini/OpenRouter failures.\n4. If dashboard already preserves provider `error_type`, leave it alone. If not, add the smallest service/test change needed.\n5. Run focused tests:\n   - `python -m pytest tests/test_health_deep.py tests/test_chat_service.py tests/test_dashboard_module.py -q`\n6. Return only a minimal diff. If no code change is needed, return a report with the current evidence and no diff.\n\n## Success Evidence\n\n- A minimal diff against `ffe34b4`.\n- No `bridge.py` circuit-breaker deletion.\n- No backup files.\n- Tests passing.\n- Live expected shape: `/health/deep.providers.gemini.error_type == \"invalid_key\"` and `/health/deep.providers.openrouter.error_type == \"invalid_key\"` when current invalid credentials are present.\n\nURL: https://jules.google.com/session/3580112715401585773\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "3580112715401585773"
+      ]
+    }
+  ],
+  "state_path": "",
+  "attempted_count": 1,
+  "skipped_launched_count": 0,
+  "force_packet_count": 0,
+  "preserve_existing_session_ids": false,
+  "note": "Live launch attempted through the Jules CLI.",
+  "tracked_count": 1
+}

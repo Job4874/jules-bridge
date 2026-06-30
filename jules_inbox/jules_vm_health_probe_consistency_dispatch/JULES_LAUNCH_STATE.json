@@ -1,0 +1,54 @@
+{
+  "generated_at_utc": "2026-06-30T08:59:12.924776+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
+  "selected_count": 1,
+  "launched_count": 1,
+  "timeout_count": 0,
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "results": [
+    {
+      "packet": "jules_inbox\\jules_vm_health_probe_consistency_dispatch\\JT-001-vm-health-readiness-consistency.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 2648582880137579851\nTask: # Jules Worker Packet JT-001-vm-health-readiness\n\n- instance_index: 1\n- status: pending\n- task_type: code_health\n- source: codex-live-audit\n- fingerprint: vm-health-readiness\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nFix VM chat health readiness consistency so health endpoints do not show a false VM failure when real chat is currently succeeding through the VM worker.\n\n## Task Details\n- Files: modules/chat_service.py, modules/health_service.py, tests/test_chat_service.py, tests/test_health_deep.py as needed\n- Issue: Live evidence showed `/chat` succeeding with `model_used=vm/jules-worker`, while `/chat/test` and `/health/deep` could still report `vm_worker=fail` from a transient health-probe response: `VM fallback provider unavailable: worker reported no LLM available`.\n- Language: python\n- Rationale: Production readiness must be truthful. It should fail when VM fallback is genuinely unavailable, but it should not show a false VM outage when there is fresh successful real VM chat evidence.\n\n## Implementation Requirements\n1. Inspect the current provider readiness flow in `modules/chat_service.py` and any health mapping in `modules/health_service.py`.\n2. Add the smallest production-quality fix so recent successful VM chat fallback evidence can clear or override stale local failure evidence for readiness checks without hiding genuine failures.\n3. Preserve dashboard lightweight behavior. Do not enqueue VM work on every dashboard poll.\n4. Keep bounded freshness if you add success evidence, for example a TTL. Do not make success permanent.\n5. Add focused tests covering:\n   - failed VM probe followed by recent VM chat success reports healthy/ok;\n   - genuine failure with no recent success still reports failure;\n   - success/failure evidence is bounded if a TTL is introduced.\n6. Run the narrowest relevant tests first, then the broader suite if practical.\n7. Do not expose secrets. Do not edit unrelated dispatch telemetry. Do not commit; leave a pullable diff for Codex review.\n\n## Current Live Evidence\n- Bridge: http://127.0.0.1:5000\n- Public tunnel: https://neat-oranges-wink.loca.lt/ping returned Jules Bridge Online\n- `/dashboard/status`: Gemini error, OpenRouter error, VM status may flip based on latest local evidence\n- `/chat`: can return `model_used=vm/jules-worker`\n- `/chat/test` and `/health/deep`: can report VM failure from a flaky VM probe\n\n## Operating Rules\n- Work on this one card only.\n- Do not stop at a plan or ask for plan approval.\n- Preserve existing behavior unless this card explicitly asks for behavior change.\n- Record concrete evidence: commands, test summaries, and files changed.\n- Keep bridge routes thin and module logic in modules.\n\n## Completion Report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\nURL: https://jules.google.com/session/2648582880137579851\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "2648582880137579851"
+      ]
+    }
+  ],
+  "attempt_results": [
+    {
+      "packet": "jules_inbox\\jules_vm_health_probe_consistency_dispatch\\JT-001-vm-health-readiness-consistency.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 2648582880137579851\nTask: # Jules Worker Packet JT-001-vm-health-readiness\n\n- instance_index: 1\n- status: pending\n- task_type: code_health\n- source: codex-live-audit\n- fingerprint: vm-health-readiness\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nFix VM chat health readiness consistency so health endpoints do not show a false VM failure when real chat is currently succeeding through the VM worker.\n\n## Task Details\n- Files: modules/chat_service.py, modules/health_service.py, tests/test_chat_service.py, tests/test_health_deep.py as needed\n- Issue: Live evidence showed `/chat` succeeding with `model_used=vm/jules-worker`, while `/chat/test` and `/health/deep` could still report `vm_worker=fail` from a transient health-probe response: `VM fallback provider unavailable: worker reported no LLM available`.\n- Language: python\n- Rationale: Production readiness must be truthful. It should fail when VM fallback is genuinely unavailable, but it should not show a false VM outage when there is fresh successful real VM chat evidence.\n\n## Implementation Requirements\n1. Inspect the current provider readiness flow in `modules/chat_service.py` and any health mapping in `modules/health_service.py`.\n2. Add the smallest production-quality fix so recent successful VM chat fallback evidence can clear or override stale local failure evidence for readiness checks without hiding genuine failures.\n3. Preserve dashboard lightweight behavior. Do not enqueue VM work on every dashboard poll.\n4. Keep bounded freshness if you add success evidence, for example a TTL. Do not make success permanent.\n5. Add focused tests covering:\n   - failed VM probe followed by recent VM chat success reports healthy/ok;\n   - genuine failure with no recent success still reports failure;\n   - success/failure evidence is bounded if a TTL is introduced.\n6. Run the narrowest relevant tests first, then the broader suite if practical.\n7. Do not expose secrets. Do not edit unrelated dispatch telemetry. Do not commit; leave a pullable diff for Codex review.\n\n## Current Live Evidence\n- Bridge: http://127.0.0.1:5000\n- Public tunnel: https://neat-oranges-wink.loca.lt/ping returned Jules Bridge Online\n- `/dashboard/status`: Gemini error, OpenRouter error, VM status may flip based on latest local evidence\n- `/chat`: can return `model_used=vm/jules-worker`\n- `/chat/test` and `/health/deep`: can report VM failure from a flaky VM probe\n\n## Operating Rules\n- Work on this one card only.\n- Do not stop at a plan or ask for plan approval.\n- Preserve existing behavior unless this card explicitly asks for behavior change.\n- Record concrete evidence: commands, test summaries, and files changed.\n- Keep bridge routes thin and module logic in modules.\n\n## Completion Report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\nURL: https://jules.google.com/session/2648582880137579851\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "2648582880137579851"
+      ]
+    }
+  ],
+  "state_path": "",
+  "attempted_count": 1,
+  "skipped_launched_count": 0,
+  "force_packet_count": 0,
+  "preserve_existing_session_ids": false,
+  "note": "Live launch attempted through the Jules CLI.",
+  "tracked_count": 1
+}

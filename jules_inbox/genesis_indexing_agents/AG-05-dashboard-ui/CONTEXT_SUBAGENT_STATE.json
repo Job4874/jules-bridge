@@ -1,0 +1,140 @@
+{
+  "generated_at_utc": "2026-06-30T12:27:45.510385+00:00",
+  "task": "Genesis codebase index subagent 05: Dashboard UI build and status panel map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+  "context_metrics": {
+    "source_count": 5,
+    "total_source_chars": 35506,
+    "active_prompt_chars": 7749,
+    "omitted_middle_chars": 27440,
+    "compression_ratio": 0.2182,
+    "signal_counts": {
+      "smart_truncation": 2
+    }
+  },
+  "context_budget": {
+    "context_window_chars": 170000,
+    "target_utilization_ratio": 0.4,
+    "target_active_chars": 68000,
+    "active_prompt_chars": 7749,
+    "utilization_ratio": 0.0456,
+    "over_budget": false,
+    "recommendation": "within_budget: keep research, plan, and implementation phases explicit"
+  },
+  "context_memory_store": {
+    "strategy": "head_tail_active_context_middle_memory_refs",
+    "stores_raw_text": false,
+    "entry_count": 5,
+    "entries": [
+      {
+        "id": "CM-001",
+        "name": "App.jsx",
+        "path_ref": "path-ref:629c358eca63",
+        "source_sha256": "1da0d27cd377dc4d3cdcfa0b47dcba646fb252d059daceac21b130efec71cda8",
+        "active_head_chars": 1172,
+        "active_tail_chars": 1150,
+        "omitted_middle_chars": 16925,
+        "omitted_middle_sha256": "8e71dd86fc7082e52fbd8312200b3a6bfaf652c7e461482bd1392264b0debe10",
+        "stored_text": false,
+        "retrieval_key": "path-ref:629c358eca63:8e71dd86fc70",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-002",
+        "name": "index.css",
+        "path_ref": "path-ref:51a8fadf6a19",
+        "source_sha256": "850cc06729d21feddba845a4f1deee2b42ba5ab70ebee7ef03dba08b8561829f",
+        "active_head_chars": 1136,
+        "active_tail_chars": 1145,
+        "omitted_middle_chars": 7582,
+        "omitted_middle_sha256": "ef13e37b06516f89bdaf2053e215a32b821e21aa7f15313aff649f5ab19150a3",
+        "stored_text": false,
+        "retrieval_key": "path-ref:51a8fadf6a19:ef13e37b0651",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-003",
+        "name": "package.json",
+        "path_ref": "path-ref:bf4cf1ed72ab",
+        "source_sha256": "b582cd17a8790112817a421b1835f06989f74c82497d7e49e5dc1f509ae14ac5",
+        "active_head_chars": 522,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:bf4cf1ed72ab",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-004",
+        "name": "Launch-Dashboard.ps1",
+        "path_ref": "path-ref:4223628f8457",
+        "source_sha256": "4c1d4bb23b8802683ca371961a8c49f66e62efb46d0d985720cce1c236d19c57",
+        "active_head_chars": 1159,
+        "active_tail_chars": 1179,
+        "omitted_middle_chars": 2933,
+        "omitted_middle_sha256": "0c12ae12a0e4088aeb964c464e8217c9ba060a22fbf5c6ce233d2f83a7b64337",
+        "stored_text": false,
+        "retrieval_key": "path-ref:4223628f8457:0c12ae12a0e4",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      },
+      {
+        "id": "CM-005",
+        "name": "Open-Dashboard.cmd",
+        "path_ref": "path-ref:4ac7f765cd3d",
+        "source_sha256": "901be12e6bbf95682d9ba6f65dfc19f3dade99ec8a8bcd925136668e1c311b9e",
+        "active_head_chars": 286,
+        "active_tail_chars": 0,
+        "omitted_middle_chars": 0,
+        "omitted_middle_sha256": "",
+        "stored_text": false,
+        "retrieval_key": "path-ref:4ac7f765cd3d",
+        "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+      }
+    ],
+    "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+  },
+  "long_session_eval_plan": {
+    "name": "ten_turn_preload_probe_turn_11",
+    "signal": "long_session_evals",
+    "preload_turns": 10,
+    "probe_turn": 11,
+    "purpose": "Expose late context failures by preloading 10 turns and checking whether probe turn 11 still uses the retained context correctly.",
+    "active_prompt_chars": 7749,
+    "context_over_budget": false,
+    "release_gate": "For long-running workflows, run or document this eval before marking context handling complete."
+  },
+  "no_slop_workflow": {
+    "mode": "spec_first",
+    "task": "Genesis codebase index subagent 05: Dashboard UI build and status panel map. Read-only. Do not edit source. Return files/routes indexed, boot implications, verification needed, and blockers.",
+    "target_context_utilization_ratio": 0.4,
+    "compaction_required": false,
+    "phases": [
+      {
+        "id": "research",
+        "goal": "Find how the system works and identify exact files, flows, and line references.",
+        "artifact": "RESEARCH.md",
+        "done_when": "Reviewer can understand the system path without re-searching the repo."
+      },
+      {
+        "id": "plan",
+        "goal": "Specify every intended change, file target, test, and rollback concern before editing code.",
+        "artifact": "IMPLEMENTATION_PLAN.md",
+        "done_when": "Plan is shorter than the change and catches design mistakes before code."
+      },
+      {
+        "id": "implement",
+        "goal": "Make the planned changes, keep context under budget, and update the plan as phases complete.",
+        "artifact": "CODE_AND_EVIDENCE",
+        "done_when": "Tests, route smoke, hashes, or runtime evidence prove the requested behavior."
+      }
+    ],
+    "review_gates": [
+      "review_research_before_plan",
+      "review_plan_before_code",
+      "record_evidence_before_done"
+    ]
+  },
+  "packet_files": [
+    "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\genesis_indexing_agents\\AG-05-dashboard-ui\\CA-context_cartographer.md"
+  ]
+}

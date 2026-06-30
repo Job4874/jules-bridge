@@ -1,0 +1,54 @@
+{
+  "generated_at_utc": "2026-06-30T07:41:25.709017+00:00",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_vm_chat_fallback_dispatch",
+  "selected_count": 1,
+  "launched_count": 1,
+  "timeout_count": 0,
+  "jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_vm_chat_fallback_dispatch\\JT-001-a7d59b-make-bridge-chat-production-ready-by-rotating-openrouter-api.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 18027306953388503868\nTask: # Jules Worker Packet JT-001-a7d59b\n\n- instance_index: 1\n- status: ready_for_review\n- task_type: code_health\n- source: inline\n- fingerprint: a7d59b0f623f\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nComplete exactly this Jules card: Make bridge chat production-ready by rotating OPENROUTER_API_KEYS and using the already-online VM worker as a truthful fallback when local Gemini/OpenRouter credentials fail\n\n## Task Details\n- File: modules/chat_service.py\n- Issue: Make bridge chat production-ready by rotating OPENROUTER_API_KEYS and using the already-online VM worker as a truthful fallback when local Gemini/OpenRouter credentials fail\n- Language: python\n- Rationale: Current local /chat/test and /chat report local Gemini/OpenRouter credential failures, but /vm/status is online and a VM chat task completed successfully. The production bridge should remain truthful about local provider failures while still using the VM worker path as a bounded fallback for /chat and readiness.\n\n## Operating Rules\n- Work on one card only; do not opportunistically refactor unrelated code.\n- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.\n- Preserve existing behavior unless the card explicitly asks for behavior change.\n- Run the narrowest relevant verification first, then the broader suite if practical.\n- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.\n- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.\n- If blocked, write the blocker, attempted evidence, and the exact next question.\n\n## Completion report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\n## Raw Card Excerpt\n```text\nCode Health Improvement Task\nYou are a production-focused Jules worker. Implement only the narrow provider-readiness self-heal described here. Do not refactor unrelated source. Do not print or persist raw secrets.\n\nTask Details\nFile: modules/chat_service.py Issue: Make bridge chat production-ready by rotating OPENROUTER_API_KEYS and using the already-online VM worker as a truthful fallback when local Gemini/OpenRouter credentials fail\n\nLanguage: python\n\nRationale: Current local /chat/test and /chat report local Gemini/OpenRouter credential failures, but /vm/status is online and a VM chat task completed successfully. The production bridge should remain truthful about local provider failures while still using the VM worker path as a bounded fallback for /chat and readiness.\n\nImplementation requirements:\n1. In modules/chat_service.py, support both OPENROUTER_API_KEY and comma-separated OPENROUTER_API_KEYS for provider checks and chat fallback. Try candidates in order, redact every candidate in error details, and never log/return raw keys.\n2. Add a bounded VM chat fallback using modules.vm_relay when local Gemini/OpenRouter do not produce a response. It should enqueue task_type=\"chat\" with a unique request marker, poll status briefly for the matching completed task, and return model_used like \"vm/jules-worker\" plus elapsed_ms. Use conservative timeouts suitable for HTTP routes.\n3. Update test_chat_providers() so healthy is true if any real provider path works, including the VM chat fallback/probe, while preserving truthful provider entries for local gemini/openrouter failures.\n4. Keep behavior offline-friendly and unit-testable by injecting env, request clients, clocks, and relay functions where practical.\n5. Add or update focused tests for OpenRouter key rotation, secret redaction across plural keys, VM fallback success, VM timeout/failure, and /chat/test readiness semantics if route tests exist.\n6. Do not edit generated dispatch state, screenshots, or unrelated dashboard files.\n\nVerification expected from Jules:\n- Run the focused pytest files you touched.\n- Report files changed and exact test commands/results.\nReady for review\n```\n\nURL: https://jules.google.com/session/18027306953388503868\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "18027306953388503868"
+      ]
+    }
+  ],
+  "attempt_results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_vm_chat_fallback_dispatch\\JT-001-a7d59b-make-bridge-chat-production-ready-by-rotating-openrouter-api.md",
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "new"
+      ],
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "status": "launched",
+      "exit_code": 0,
+      "stdout": "Using repository from working directory: Job4874/jules-bridge\nSession is created.\nID: 18027306953388503868\nTask: # Jules Worker Packet JT-001-a7d59b\n\n- instance_index: 1\n- status: ready_for_review\n- task_type: code_health\n- source: inline\n- fingerprint: a7d59b0f623f\n- repo_path: C:\\Users\\abdul\\jules-bridge\n\n## Objective\nComplete exactly this Jules card: Make bridge chat production-ready by rotating OPENROUTER_API_KEYS and using the already-online VM worker as a truthful fallback when local Gemini/OpenRouter credentials fail\n\n## Task Details\n- File: modules/chat_service.py\n- Issue: Make bridge chat production-ready by rotating OPENROUTER_API_KEYS and using the already-online VM worker as a truthful fallback when local Gemini/OpenRouter credentials fail\n- Language: python\n- Rationale: Current local /chat/test and /chat report local Gemini/OpenRouter credential failures, but /vm/status is online and a VM chat task completed successfully. The production bridge should remain truthful about local provider failures while still using the VM worker path as a bounded fallback for /chat and readiness.\n\n## Operating Rules\n- Work on one card only; do not opportunistically refactor unrelated code.\n- Do not stop at a plan or ask for plan approval; plan briefly in the report and proceed unless a hard blocker prevents work.\n- Preserve existing behavior unless the card explicitly asks for behavior change.\n- Run the narrowest relevant verification first, then the broader suite if practical.\n- Record concrete evidence: commands, test result summaries, hashes, screenshots, or PR links.\n- Do not reveal private chain-of-thought. Use a concise rationale, decision log, and evidence checklist instead.\n- If blocked, write the blocker, attempted evidence, and the exact next question.\n\n## Completion report\nWrite a short report with:\n- what changed\n- verification performed\n- files touched\n- whether a PR/commit was created\n- next action or blocker\n\n## Raw Card Excerpt\n```text\nCode Health Improvement Task\nYou are a production-focused Jules worker. Implement only the narrow provider-readiness self-heal described here. Do not refactor unrelated source. Do not print or persist raw secrets.\n\nTask Details\nFile: modules/chat_service.py Issue: Make bridge chat production-ready by rotating OPENROUTER_API_KEYS and using the already-online VM worker as a truthful fallback when local Gemini/OpenRouter credentials fail\n\nLanguage: python\n\nRationale: Current local /chat/test and /chat report local Gemini/OpenRouter credential failures, but /vm/status is online and a VM chat task completed successfully. The production bridge should remain truthful about local provider failures while still using the VM worker path as a bounded fallback for /chat and readiness.\n\nImplementation requirements:\n1. In modules/chat_service.py, support both OPENROUTER_API_KEY and comma-separated OPENROUTER_API_KEYS for provider checks and chat fallback. Try candidates in order, redact every candidate in error details, and never log/return raw keys.\n2. Add a bounded VM chat fallback using modules.vm_relay when local Gemini/OpenRouter do not produce a response. It should enqueue task_type=\"chat\" with a unique request marker, poll status briefly for the matching completed task, and return model_used like \"vm/jules-worker\" plus elapsed_ms. Use conservative timeouts suitable for HTTP routes.\n3. Update test_chat_providers() so healthy is true if any real provider path works, including the VM chat fallback/probe, while preserving truthful provider entries for local gemini/openrouter failures.\n4. Keep behavior offline-friendly and unit-testable by injecting env, request clients, clocks, and relay functions where practical.\n5. Add or update focused tests for OpenRouter key rotation, secret redaction across plural keys, VM fallback success, VM timeout/failure, and /chat/test readiness semantics if route tests exist.\n6. Do not edit generated dispatch state, screenshots, or unrelated dashboard files.\n\nVerification expected from Jules:\n- Run the focused pytest files you touched.\n- Report files changed and exact test commands/results.\nReady for review\n```\n\nURL: https://jules.google.com/session/18027306953388503868\n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "18027306953388503868"
+      ]
+    }
+  ],
+  "state_path": "",
+  "attempted_count": 1,
+  "skipped_launched_count": 0,
+  "force_packet_count": 0,
+  "preserve_existing_session_ids": false,
+  "note": "Live launch attempted through the Jules CLI.",
+  "tracked_count": 1
+}

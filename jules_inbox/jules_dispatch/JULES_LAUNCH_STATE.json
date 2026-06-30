@@ -1,18 +1,18 @@
 {
-  "generated_at_utc": "2026-06-29T19:25:25.114138+00:00",
+  "generated_at_utc": "2026-06-30T06:24:03.439682+00:00",
   "dry_run": true,
-  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
   "selected_count": 4,
   "launched_count": 0,
   "timeout_count": 0,
   "jules_command": "jules",
-  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
   "repo_path": "",
   "results": [
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
       "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
         "new"
       ],
       "repo_path": "",
@@ -24,9 +24,9 @@
       "session_ids": []
     },
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
       "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
         "new"
       ],
       "repo_path": "",
@@ -38,13 +38,10 @@
       "session_ids": []
     },
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+      "command": [],
       "repo_path": "",
-      "status": "dry_run",
+      "status": "not_launched",
       "exit_code": null,
       "stdout": "",
       "stderr": "",
@@ -52,13 +49,10 @@
       "session_ids": []
     },
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
-      "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
-        "new"
-      ],
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+      "command": [],
       "repo_path": "",
-      "status": "dry_run",
+      "status": "not_launched",
       "exit_code": null,
       "stdout": "",
       "stderr": "",
@@ -68,9 +62,9 @@
   ],
   "attempt_results": [
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
       "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
         "new"
       ],
       "repo_path": "",
@@ -82,9 +76,9 @@
       "session_ids": []
     },
     {
-      "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
       "command": [
-        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
         "new"
       ],
       "repo_path": "",

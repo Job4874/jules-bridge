@@ -1,0 +1,394 @@
+{
+  "generated_at_utc": "2026-06-30T07:07:11.980699+00:00",
+  "status": "pending",
+  "stop_reason": "max_wait_elapsed",
+  "dry_run": false,
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch",
+  "repo_path": "C:\\Users\\abdul\\jules-bridge",
+  "max_wait_s": 240,
+  "poll_interval_s": 20,
+  "timeout_s": 120,
+  "jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+  "require_remote_ready": true,
+  "iterations": [
+    {
+      "iteration": 1,
+      "timestamp_utc": "2026-06-30T07:07:11.996273+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 2,
+      "timestamp_utc": "2026-06-30T07:07:39.665652+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 3,
+      "timestamp_utc": "2026-06-30T07:07:59.671674+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 4,
+      "timestamp_utc": "2026-06-30T07:08:26.345218+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 5,
+      "timestamp_utc": "2026-06-30T07:08:46.349595+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 6,
+      "timestamp_utc": "2026-06-30T07:09:12.854730+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 7,
+      "timestamp_utc": "2026-06-30T07:09:32.856667+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 8,
+      "timestamp_utc": "2026-06-30T07:09:59.609442+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 9,
+      "timestamp_utc": "2026-06-30T07:10:19.614618+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 10,
+      "timestamp_utc": "2026-06-30T07:10:48.935141+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 11,
+      "timestamp_utc": "2026-06-30T07:11:08.936324+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    },
+    {
+      "iteration": 12,
+      "timestamp_utc": "2026-06-30T07:11:24.817488+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 1,
+      "cot_status_counts": {
+        "launched_pending_cot": 1
+      },
+      "remote_status_counts": {
+        "In Progress": 1
+      }
+    }
+  ],
+  "latest_remote_statuses": [
+    {
+      "session_id": "12782098339635048796",
+      "remote_status": "In Progress",
+      "last_active_s": 19,
+      "stale_unknown": false,
+      "line": " 12782098339635048796    # Jules Worker Packet JT-001-0a1bb7- instance_index: 1- sta\u2026  Job4874/jules-bridge    19s ago                 In Progress    "
+    }
+  ],
+  "final_cycle": {
+    "generated_at_utc": "2026-06-30T07:11:11.987272+00:00",
+    "status": "pending",
+    "dry_run": false,
+    "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch",
+    "repo_path": "C:\\Users\\abdul\\jules-bridge",
+    "launch_requested": false,
+    "launch_dry_run": true,
+    "pull_requested": true,
+    "check_remote": true,
+    "require_remote_ready": true,
+    "blockers": [],
+    "dispatch": {
+      "source": "existing_packets",
+      "generated_at_utc": "2026-06-30T07:11:11.987272+00:00",
+      "task_count": 0,
+      "selected_count": 1,
+      "status_counts": {},
+      "include_statuses": [
+        "failed",
+        "needs_review",
+        "ready_for_review",
+        "unknown"
+      ],
+      "max_instances": 4,
+      "write_packets": false,
+      "output_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch",
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "selected_tasks": [],
+      "packet_files": [
+        "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JT-001-0a1bb7-code-health-for-dashboard-ui-src-app-jsx-dashboard-ui-src-in.md"
+      ],
+      "launch_commands": [],
+      "note": "No task dump supplied; using existing packet files."
+    },
+    "sessions": {
+      "dry_run": false,
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+        "remote",
+        "list",
+        "--session"
+      ],
+      "status": "ok",
+      "exit_code": 0,
+      "stdout": "           ID                                    Description                                    Repo                Last active                Status         \n 12782098339635048796    # Jules Worker Packet JT-001-0a1bb7- instance_index: 1- sta\u2026  Job4874/jules-bridge    19s ago                 In Progress    \n 11181112389803823618    # Jules Worker Packet JT-001-99dce4- instance_index: 1- sta\u2026  Job4874/jules-bridge    36m5s ago               Completed      \n 4817979060578580922     # Jules Worker Packet JT-001-09a40f- instance_index: 1- sta\u2026  Job4874/jules-bridge    36m54s ago              Completed      \n 7860856984744967973     JULES FOCUSED WORKER - DASHBOARD TRUTH FIXRepo: Job4874/jul\u2026  Job4874/jules-bridge    1h27m46s ago            Completed      \n 10477893888121342630    JULES PRODUCTION FINISH SESSION - DEADLINE 2026-06-30 06:00\u2026  Job4874/jules-bridge    1h29m17s ago            Completed      \n 10183862037269750136    Owner avatar academic-command-center Private Job4874/academ\u2026  Job4874/academic-comm\u2026  1h54m45s ago                           \n 11444916563672286069    It looks like you've shared the repository overview for the\u2026  Job4874/financial-swi\u2026  2h50m25s ago            Completed      \n 13059720105187195261    Owner avatar academic-command-center Private Job4874/academ\u2026  Job4874/academic-comm\u2026  3h48m11s ago            Completed      \n 696329274680707693      This is exactly the right move. A clean build demands a fla\u2026  Job4874/jules-bridge    4h3m49s ago             Completed      \n 2929847332705694562     # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/OracleV5        3h50m42s ago                           \n 11740082699190749803    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/OracleV5        1h9m38s ago             Completed      \n 15488901075234016075    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/OracleV5        1h26m35s ago            Completed      \n 9401431252276674117     # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/OracleV5        20m5s ago               Completed      \n 7491225924654185179     All Scheduled Completed Archived  New Needs review Jules Wo\u2026  Job4874/OracleV5        4h19m10s ago            Completed      \n 8446852302933449848     I need you to get a production grade version following read\u2026  Job4874/academic-comm\u2026  4h5m12s ago             Completed      \n 13507659335916222020    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/OracleV5        7h4m25s ago             Completed      \n 17711699954038241171    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/OracleV5        6h32m53s ago            Completed      \n 17632343157354400653    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/OracleV5        5h39m47s ago                           \n 7397743281348714487     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/OracleV5        7h1m48s ago                            \n 9322931230070664332     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/OracleV5        6h12m4s ago             Completed      \n 15870046347555457537    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/OracleV5        6h53m51s ago            Completed      \n 192518133751447896      # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/OracleV5        6h43m22s ago            Completed      \n 9759427500840941867     # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/OracleV5        6h12m48s ago            Completed      \n 6816081737032804696     # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/OracleV5        3h46m57s ago            Completed      \n 888634429061233009      Got you, Abdul. Jules finished the first pass, you download\u2026  Job4874/academic-comm\u2026  8h44m58s ago                           \n 11824835345610591753    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    10h46m58s ago           Completed      \n 8212989228770008576     # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    10h46m39s ago           Completed      \n 15814420098995234638    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h53m29s ago                          \n 18126340333710020575    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h19m40s ago           Completed      \n 8727962457367302900     # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    10h48m16s ago           Completed      \n 16611382048744466213    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    10h49m59s ago           Completed      \n 14922376136978192588    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h46m33s ago           Completed      \n 17462765261478932984    # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    9h26m5s ago             Completed      \n 240076491540381275      # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h39m3s ago            Completed      \n 17680317245051596957    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    10h44m44s ago           Completed      \n 14171075333719585717    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    10h36m40s ago           Completed      \n 6153177584741443944     # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    10h41m50s ago                          \n 16251499986558459810    # \ud83d\udd12 Security Vulnerability Fix TaskYou are a security-focu\u2026  Job4874/jules-bridge    10h52m47s ago           Completed      \n 6461505102290999940     # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/jules-bridge    10h48m6s ago            Completed      \n 4792355183947749762     # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/jules-bridge    10h53m32s ago           Completed      \n 1818010786061618853     ## Task: Point gcloud and ADC quota to correct project**Det\u2026  Job4874/jules-bridge    10h41m36s ago           Completed      \n 6935639710906067011     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h47m15s ago           Completed      \n 4157214027086040825     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h41m32s ago           Completed      \n 14377962564380967887    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h52m44s ago           Completed      \n 8040998858220789986     # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h50m36s ago           Completed      \n 13617231381437972959    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h51m24s ago           Completed      \n 7039425020044686841     # \ud83e\uddf9 Code Health Improvement TaskYou are a code health agen\u2026  Job4874/jules-bridge    10h54m3s ago            Completed      \n 11054873440547651283    # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h41m45s ago           Completed      \n 13517667366949447601    # \u26a1 Performance Optimization TaskYou are a performance-foc\u2026  Job4874/jules-bridge    10h52m14s ago           Completed      \n 995709237084059125      # \ud83e\uddea Testing Improvement TaskYou are a testing-focused agen\u2026  Job4874/jules-bridge    10h50m17s ago           Completed      \n                                                                                                                                                      \n",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [
+        "12782098339635048796",
+        "11181112389803823618",
+        "4817979060578580922",
+        "7860856984744967973",
+        "10477893888121342630",
+        "10183862037269750136",
+        "11444916563672286069",
+        "13059720105187195261",
+        "696329274680707693",
+        "2929847332705694562",
+        "11740082699190749803",
+        "15488901075234016075",
+        "9401431252276674117",
+        "7491225924654185179",
+        "8446852302933449848",
+        "13507659335916222020",
+        "17711699954038241171",
+        "17632343157354400653",
+        "7397743281348714487",
+        "9322931230070664332",
+        "15870046347555457537",
+        "192518133751447896",
+        "9759427500840941867",
+        "6816081737032804696",
+        "888634429061233009",
+        "11824835345610591753",
+        "8212989228770008576",
+        "15814420098995234638",
+        "18126340333710020575",
+        "8727962457367302900",
+        "16611382048744466213",
+        "14922376136978192588",
+        "17462765261478932984",
+        "240076491540381275",
+        "17680317245051596957",
+        "14171075333719585717",
+        "6153177584741443944",
+        "16251499986558459810",
+        "6461505102290999940",
+        "4792355183947749762",
+        "1818010786061618853",
+        "6935639710906067011",
+        "4157214027086040825",
+        "14377962564380967887",
+        "8040998858220789986",
+        "13617231381437972959",
+        "7039425020044686841",
+        "11054873440547651283",
+        "13517667366949447601",
+        "995709237084059125"
+      ],
+      "jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+      "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+      "cache_hit": false
+    },
+    "launch_result": {
+      "generated_at_utc": "2026-06-30T07:11:24.817488+00:00",
+      "dry_run": true,
+      "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch",
+      "selected_count": 1,
+      "launched_count": 0,
+      "timeout_count": 0,
+      "jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+      "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+      "repo_path": "C:\\Users\\abdul\\jules-bridge",
+      "results": [
+        {
+          "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JT-001-0a1bb7-code-health-for-dashboard-ui-src-app-jsx-dashboard-ui-src-in.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+            "new"
+          ],
+          "repo_path": "C:\\Users\\abdul\\jules-bridge",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        }
+      ],
+      "attempt_results": [
+        {
+          "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JT-001-0a1bb7-code-health-for-dashboard-ui-src-app-jsx-dashboard-ui-src-in.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
+            "new"
+          ],
+          "repo_path": "C:\\Users\\abdul\\jules-bridge",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        }
+      ],
+      "state_path": "",
+      "attempted_count": 1,
+      "skipped_launched_count": 0,
+      "force_packet_count": 0,
+      "preserve_existing_session_ids": false,
+      "note": "Dry run only; no remote Jules sessions were started."
+    },
+    "pull_results": [],
+    "cot": {
+      "generated_at_utc": "2026-06-30T07:11:24.817488+00:00",
+      "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch",
+      "launch_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JULES_LAUNCH_STATE.json",
+      "report_dir": "",
+      "selected_count": 1,
+      "completed_count": 0,
+      "blocked_count": 0,
+      "pending_count": 1,
+      "all_complete": false,
+      "status_counts": {
+        "launched_pending_cot": 1
+      },
+      "rows": [
+        {
+          "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JT-001-0a1bb7-code-health-for-dashboard-ui-src-app-jsx-dashboard-ui-src-in.md",
+          "packet_id": "JT-001-0a1bb7",
+          "launch_status": "launched",
+          "session_ids": [
+            "12782098339635048796"
+          ],
+          "timed_out": false,
+          "exit_code": 0,
+          "cot_status": "launched_pending_cot",
+          "report_files": []
+        }
+      ],
+      "ledger_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JULES_COT_LEDGER.md",
+      "ledger_json_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JULES_COT_LEDGER.json",
+      "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+    },
+    "cycle_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JULES_CYCLE_STATE.json",
+    "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+  },
+  "watch_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_cloud_panel_dispatch\\JULES_WATCH_STATE.json",
+  "note": "COT means completion-of-task evidence summaries. Awaiting plan/user states require operator action because the Jules CLI exposes no plan approval command."
+}
