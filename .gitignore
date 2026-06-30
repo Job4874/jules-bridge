@@ -16,3 +16,4 @@ bridge.log
 .env
 .env.*
 !.env.example
+scratch/vm.env

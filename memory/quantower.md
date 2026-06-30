@@ -60,3 +60,8 @@ depends on the Quantower desktop state.
 - Evidence: `bridge.log` lines around `GET /oracle/status`, `Restart-QuantowerLoadOracle.ps1 -ForceClose`, `POST /oracle/build-deploy`, and repeated status checks.
 - Observation: the bridge has been used to restart Quantower, build/deploy Oracle, and poll `/oracle/status`; use those route outputs as structured proof instead of relying only on UI screenshots.
 - Use: pair screenshots with `/oracle/status` and `Verify-OracleReplayReady.ps1` output before claiming replay readiness.
+
+## Session 20260627T214922 — 2026-06-27T21:49:22.701894+00:00
+
+- DOOM LOOP: POST /ui/drive_quantower_login called 4x consecutively. Route 'POST /ui/drive_quantower_login' called 4x consecutively. Add a circuit breaker or cache the last response.
+- PERFORMANCE: Route 'POST /ui/drive_quantower_login' averaged 30016ms over 2 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.

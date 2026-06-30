@@ -1,0 +1,14 @@
+.context/**
+.vscode/**
+.vscode-test/**
+src/**
+node_modules/**
+tsconfig.json
+Makefile
+implementation_plan.md
+**/*.map
+**/*.ts
+!out/**
+!syntaxes/**
+!snippets/**
+!language-configuration.json

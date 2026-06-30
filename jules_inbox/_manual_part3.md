@@ -164,7 +164,7 @@ Tradeify uses **EOD Trailing Drawdown** (not intraday trailing). The floor recal
 **Drawdown Lock:** On $150K Sim Funded, when EOD balance reaches **$156,100** (post-Sep 2025) or **$155,100** (legacy), the floor locks permanently at **$150,100** ($100 above starting balance).
 
 | Metric | Post-Sep 2025 | Legacy | $1,500 Drawdown Implication |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Max Position | 12 Minis / 120 Micros | 15 Minis / 150 Micros | Use Micros exclusively |
 | DLL (soft) | $3,000 | $3,750 | Irrelevant — hard breach first |
 | Trailing Max DD | $5,250 | $6,000 | Deep drawdown state |

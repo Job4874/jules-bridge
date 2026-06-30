@@ -20,3 +20,9 @@ Session learnings about Oracle V5 and Quantower are appended here automatically.
 - DOOM LOOP: GET /oracle/status called 6x consecutively. Route 'GET /oracle/status' called 6x consecutively. Add a circuit breaker or cache the last response.
 - STATUS POLLING: Route 'GET /oracle/status' called 16 times in one log. High-frequency status polling should be paired with changed-state checks and fresh evidence.
 - ORACLE/QUANTOWER AUTOMATION: Oracle/Quantower host shell operations detected (5 examples captured). Treat shell restarts/build/deploy commands as host mutations and pair them with /oracle/status plus screenshot or verify evidence.
+
+## Session 20260627T214922 — 2026-06-27T21:49:22.701894+00:00
+
+- DOOM LOOP: GET /oracle/status called 6x consecutively. Route 'GET /oracle/status' called 6x consecutively. Add a circuit breaker or cache the last response.
+- STATUS POLLING: Route 'GET /oracle/status' called 286 times in one log. High-frequency status polling should be paired with changed-state checks and fresh evidence.
+- ORACLE/QUANTOWER AUTOMATION: Oracle/Quantower host shell operations detected (5 examples captured). Treat shell restarts/build/deploy commands as host mutations and pair them with /oracle/status plus screenshot or verify evidence.

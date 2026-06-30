@@ -8,9 +8,11 @@ description: >
 # Review Skill
 
 ## Purpose
+
 Enforce quality, standards, and correctness without making automatic edits. Provides feedback categorized by severity.
 
 ## Instructions
+
 1. **Compare Implementation against Plan**:
    - Check if all deliverables in the approved plan have been met.
    - Verify signatures match the spec.

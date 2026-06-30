@@ -1,6 +1,9 @@
 # OPERATOR → JULES (via bridge inbox)
 
 **Bridge status:** ONLINE  
+**Correct base URL:** `http://127.0.0.1:5000`  
+**Required auth header:** `Authorization: Bearer JULES-SECURE-999`  
+**Required POST header:** `Content-Type: application/json`  
 **Read this file:** `POST /fs/read` → `{"path":"c:\\Users\\abdul\\.jules\\jules_inbox\\OPERATOR_RESPONSE.md"}`  
 **Reply here:** `POST /fs/write` → `c:\\Users\\abdul\\.jules\\jules_inbox\\JULES_RESPONSE.md`
 
@@ -34,6 +37,57 @@ Do NOT re-evaluate the fix from the empty Linux tree. Finalize from Windows + Gi
 ---
 
 ## How to proceed (recommended order)
+
+## Live bridge actuation override - required JSON flags
+
+The bridge is safe by default. If you omit live flags, routes will dry-run,
+block launches, or return validation errors even when the task intent is live.
+
+For this operator-authorized execution pass, do not send partial POST bodies.
+Every protected request still requires:
+
+```http
+Authorization: Bearer JULES-SECURE-999
+Content-Type: application/json
+```
+
+Use these explicit payloads when you intend real actuation:
+
+### VM boot
+
+```json
+{
+  "script_name": "Start-SecondaryVM.ps1",
+  "allow_vm_boot": true,
+  "dry_run": false
+}
+```
+
+### Browser launch
+
+```json
+{
+  "url": "https://quantower.com",
+  "allow_launch": true
+}
+```
+
+### Jules cycle / packet execution
+
+```json
+{
+  "path": "C:\\tmp\\queue.txt",
+  "packet_dir": "C:\\tmp\\dispatch",
+  "dry_run": false,
+  "launch": true
+}
+```
+
+For fleet endpoints, also set `"dry_run": false` in the body. If you do not
+include these fields, the bridge will intentionally keep the operation in
+safe preview mode. This live override does not authorize live trading or order
+placement; keep broker/order mutation blocked unless the operator explicitly
+approves that later.
 
 ### Step 1 — Sync patch into the canonical deploy repo (Windows host)
 
@@ -97,7 +151,7 @@ Follow `diagnostics/REPLAY_POST_DEPLOY_CHECKLIST.md` on the **Windows host** via
 ## Path corrections (do not drift)
 
 | Wrong | Correct |
-|-------|---------|
+| ------- | --------- |
 | `test_contracts.py` on Windows | **Does not exist** — use playbook gates + `dotnet test` |
 | Quantower-c-sat LFS zip pointers | Canonical build tree: `C:\aotp\projects\OracleV5` |
 | Shell-only for Quantower UI | Use **`/ui/*` tentacles** |
@@ -108,8 +162,13 @@ Follow `diagnostics/REPLAY_POST_DEPLOY_CHECKLIST.md` on the **Windows host** via
 
 ```http
 POST /notify/email
+Authorization: Bearer JULES-SECURE-999
+Content-Type: application/json
+
 {"subject": "OracleV5 status", "body": "..."}
 ```
+
+If `/notify/email` fails with SMTP authentication or missing credentials, do not retry blindly. Record the notification blocker in `C:\Users\abdul\.jules\jules_inbox\JULES_RESPONSE.md` and halt. Treat email delivery as optional evidence, not a reason to abandon completed bridge/file work.
 
 ---
 

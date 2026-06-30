@@ -25,7 +25,18 @@ Every session MUST begin with:
 2. Read all context files in the order above
 3. Load memory: read `memory/general.md` (and domain-specific files if relevant)
 4. Check the progress tracker to understand current phase and what's next
-5. Only then proceed to the task
+5. Read `jules_inbox/JULES_SELF_UNBLOCKING_PROTOCOL.md` when the session has bridge/inbox access
+6. Only then proceed to the task
+
+## Self-Unblocking Requirement
+
+If blocked, do not immediately ask the operator. Use the HRE loop from `JULES_SELF_UNBLOCKING_PROTOCOL.md`:
+
+1. Hypothesis: classify the blocker.
+2. Route: inspect the relevant tool, route, extension, skill, file, or repo surface.
+3. Evidence: capture exact output before deciding.
+
+Run up to three bounded passes. Check `GET /tentacles`, request logs, gotchas, memory, and `.agents/skills/` before declaring a tool or extension unavailable. Escalate only with exact attempted tools/files, error output, and the smallest operator action required.
 
 ## Session End Protocol
 
@@ -39,7 +50,7 @@ Every session MUST end with:
 Five core skills are installed in `.agents/skills/`. Use them at these exact moments:
 
 | Skill | When to Run | What It Does |
-|-------|-------------|--------------|
+| --- | --- | --- |
 | **`architect`** | Before any new route, module, or complex feature | Reads context, asks focused questions, surfaces unmade decisions, produces a plan |
 | **`imprint`** | After building or modifying endpoints/modules | Captures API patterns into gotchas and module registry so future features stay consistent |
 | **`review`** | After any feature is implemented | Checks implementation against plan, architecture boundaries, and code standards. Reports issues by severity. Never auto-fixes. |
@@ -49,7 +60,7 @@ Five core skills are installed in `.agents/skills/`. Use them at these exact mom
 ### Bonus Skills
 
 | Skill | When to Run |
-|-------|-------------|
+| --- | --- |
 | **`grill-me`** | Before starting any new feature or non-trivial task — interactive interview to reach alignment |
 | **`write-prd`** | After a grill-me session — distill conversation into a Product Requirements Document |
 | **`prd-to-issues`** | After writing a PRD — break it into independently grabbable implementation tickets |
@@ -69,3 +80,14 @@ Five core skills are installed in `.agents/skills/`. Use them at these exact mom
 9. **Load the gotchas file** before touching any module — the landmines are there for a reason
 10. **Never modify bridge.py header or middleware** (lines 1–230) without explicit human approval
 11. **Never delete existing module files** or change public function signatures without human approval
+
+## Cursor Cloud specific instructions
+
+The startup update script already refreshes Python deps; do not reinstall as a routine step.
+
+- **Run the bridge:** `python3 bridge.py` (serves the Flask API on `0.0.0.0:5000`). Verify with `curl http://127.0.0.1:5000/health`.
+- **Do NOT use `start.py` in cloud.** It wraps `bridge.py` with a pyngrok tunnel bound to a reserved domain (`parade-marrow-pulp.ngrok-free.dev`) that needs an ngrok authtoken; the tunnel step fails here. It does fall back to local-only mode, but running `bridge.py` directly is cleaner.
+- **Tests:** `python3 -m pytest tests/ -v` (240 passing). `pytest` is not in `requirements.txt`; the update script installs it.
+- **`pyautogui` is headless-incompatible at call time.** It is lazily imported, so importing `modules`/`bridge.py` and running the server all work without a display. The `/ui/*` routes (screenshot/click/type) require an X display and will error in cloud — this is expected, not a regression.
+- **Console scripts (`pytest`, `flask`) install to `~/.local/bin`, which is not on PATH.** Always invoke via `python3 -m pytest` / `python3 bridge.py`.
+- **Offline-safe routes:** reasoning routes work with `{"model":"stub"}`. `{"model":"fast|smart"}` needs `GEMINI_API_KEY`; `/notify/email` needs `GMAIL_USER`/`GMAIL_APP_PASSWORD` (see `.env.example`). Without these, those specific features degrade/stub but the bridge still runs.
