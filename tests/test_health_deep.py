@@ -47,6 +47,7 @@ class TestHealthDeep(unittest.TestCase):
         self.assertEqual(data["providers"]["vm_worker"]["status"], "pass")
         self.assertEqual(data["providers"]["gcp"]["status"], "pass")
         self.assertEqual(data["providers"]["azure"]["status"], "pass")
+        mock_chat.assert_called_once_with(probe_vm_chat=False)
 
     @patch("modules.health_service.test_chat_providers")
     @patch("modules.health_service.detect_resource_pressure")
@@ -91,6 +92,7 @@ class TestHealthDeep(unittest.TestCase):
         self.assertEqual(data["providers"]["openrouter"]["status"], "fail")
         self.assertEqual(data["providers"]["openrouter"]["code"], 401)
         self.assertEqual(data["providers"]["openrouter"]["error_type"], "invalid_key")
+        mock_chat.assert_called_once_with(probe_vm_chat=False)
 
     def test_health_deep_unauthorized(self):
         response = self.app.get('/health/deep')

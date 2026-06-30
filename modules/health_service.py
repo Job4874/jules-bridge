@@ -40,8 +40,8 @@ def _map_chat_provider_result(result: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _check_chat_providers() -> Dict[str, Any]:
-    """Use the same authenticated probes that power /chat/test."""
-    health = test_chat_providers()
+    """Use chat provider probes without spending VM LLM quota on health polling."""
+    health = test_chat_providers(probe_vm_chat=False)
     providers = health.get("providers", {})
     mapped = {
         "gemini": _map_chat_provider_result(providers.get("gemini", {})),

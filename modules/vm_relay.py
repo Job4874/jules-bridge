@@ -50,7 +50,7 @@ VM_IP   = _env().get("GCE_WORKER_IP", "34.132.193.73")
 VM_NAME = _env().get("GCE_WORKER_NAME", "jules-offload-worker")
 VM_ZONE = _env().get("GCE_WORKER_ZONE", "us-central1-a")
 VM_PROJ = _env().get("GCE_WORKER_PROJECT", "tibin-terminal-2026")
-VM_USER = "julesadmin"
+VM_USER = _env().get("GCE_WORKER_USER", "atibin7_gmail_com")
 VM_PORT = 6000   # The agent port on the VM
 
 _relay_log_lock = threading.Lock()
@@ -91,6 +91,11 @@ def _gcloud_scp(local_path: str, remote_path: str) -> tuple[str, str, int]:
     return proc.stdout, proc.stderr, proc.returncode
 
 
+def _remote_home() -> str:
+    """Return the active VM user's home path."""
+    return f"/home/{VM_USER}"
+
+
 def bootstrap_vm() -> dict[str, Any]:
     """
     SSH into the VM and install the jules-worker-agent.
@@ -116,7 +121,8 @@ def bootstrap_vm() -> dict[str, Any]:
     agent_path.parent.mkdir(parents=True, exist_ok=True)
     agent_path.write_text(agent_script, encoding="utf-8")
 
-    _, _, rc = _gcloud_scp(str(agent_path), "/home/julesadmin/jules-worker-agent.py")
+    remote_home = _remote_home()
+    _, _, rc = _gcloud_scp(str(agent_path), f"{remote_home}/jules-worker-agent.py")
     results.append({"step": "push_agent", "rc": rc})
     _log(f"push_agent rc={rc}")
 
@@ -125,20 +131,21 @@ def bootstrap_vm() -> dict[str, Any]:
     minimal_env = "\n".join([
         f"GEMINI_API_KEY={env_vars.get('GEMINI_API_KEY','')}",
         f"OPENROUTER_API_KEY={env_vars.get('OPENROUTER_API_KEY','')}",
+        f"OPENROUTER_API_KEYS={env_vars.get('OPENROUTER_API_KEYS','')}",
         f"LOCAL_BRIDGE_URL=http://{_get_local_ip()}:5000",
-        "LOCAL_BRIDGE_TOKEN=JULES-SECURE-999",
+        f"LOCAL_BRIDGE_TOKEN={env_vars.get('LOCAL_BRIDGE_TOKEN') or env_vars.get('BRIDGE_TOKEN') or 'JULES-SECURE-999'}",
     ])
     env_path = _ROOT / "scratch" / "vm.env"
     env_path.write_text(minimal_env, encoding="utf-8")
-    _, _, rc = _gcloud_scp(str(env_path), "/home/julesadmin/.jules_worker.env")
+    _, _, rc = _gcloud_scp(str(env_path), f"{remote_home}/.jules_worker.env")
     results.append({"step": "push_env", "rc": rc})
     _log(f"push_env rc={rc}")
 
     # Step 4: Start (or restart) the worker agent
     _, _, rc = _gcloud_ssh(
         "pkill -f 'jules-worker-agent' 2>/dev/null || true; "
-        "nohup python3 /home/julesadmin/jules-worker-agent.py "
-        "> /home/julesadmin/worker.log 2>&1 &",
+        f"nohup python3 {remote_home}/jules-worker-agent.py "
+        f"> {remote_home}/worker.log 2>&1 &",
         timeout=30
     )
     results.append({"step": "start_agent", "rc": rc})
@@ -211,15 +218,22 @@ from pathlib import Path
 from flask import Flask, request, jsonify
 
 # Load env
-for line in Path("/home/julesadmin/.jules_worker.env").read_text().splitlines():
-    if "=" in line and not line.startswith("#"):
-        k, _, v = line.partition("=")
-        os.environ[k.strip()] = v.strip()
+env_file = Path.home() / ".jules_worker.env"
+if env_file.exists():
+    for line in env_file.read_text().splitlines():
+        if "=" in line and not line.startswith("#"):
+            k, _, v = line.partition("=")
+            os.environ[k.strip()] = v.strip()
 
 app = Flask(__name__)
 TOKEN = "JULES-VM-WORKER-999"
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
-OR_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OR_KEYS = []
+for value in (os.environ.get("OPENROUTER_API_KEY", ""), os.environ.get("OPENROUTER_API_KEYS", "")):
+    for key in value.split(","):
+        key = key.strip()
+        if key and key not in OR_KEYS:
+            OR_KEYS.append(key)
 LOCAL_BRIDGE = os.environ.get("LOCAL_BRIDGE_URL", "http://127.0.0.1:5000")
 LOCAL_TOKEN = os.environ.get("LOCAL_BRIDGE_TOKEN", "JULES-SECURE-999")
 
@@ -251,7 +265,7 @@ def status():
         "tasks_running": len(_TASKS_RUNNING),
         "recent": _TASKS_COMPLETED[-5:],
         "gemini": bool(GEMINI_KEY),
-        "openrouter": bool(OR_KEY),
+        "openrouter": bool(OR_KEYS),
     })
 
 @app.route("/task", methods=["POST"])
@@ -295,6 +309,16 @@ def execute_task(task: str, task_type: str, context: str) -> str:
     else:
         return call_llm(task, context)
 
+
+_FREE_MODELS = [
+    "google/gemma-4-31b-it:free",
+    "qwen/qwen3-next-80b-a3b-instruct:free",
+    "openai/gpt-oss-120b:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "cohere/north-mini-code:free",
+    "deepseek/deepseek-r1-0528:free",
+]
+
 def call_llm(prompt: str, context: str = "") -> str:
     """Call Gemini or OpenRouter with the task."""
     system = (
@@ -322,21 +346,27 @@ def call_llm(prompt: str, context: str = "") -> str:
             pass
 
     # OpenRouter fallback
-    if OR_KEY:
-        try:
-            r = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                json={"model": "google/gemma-3-27b-it:free",
-                      "messages": [{"role": "system", "content": system},
-                                   {"role": "user", "content": full_prompt}]},
-                headers={"Authorization": f"Bearer {OR_KEY}"}, timeout=45
-            )
-            if r.status_code == 200:
-                return r.json()["choices"][0]["message"]["content"]
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
+    for model in _FREE_MODELS:
+        for key in OR_KEYS:
+            try:
+                r = requests.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    json={
+                        "model": model,
+                        "messages": [{"role": "system", "content": system},
+                                     {"role": "user", "content": full_prompt}],
+                        "max_tokens": 4096,
+                    },
+                    headers={"Authorization": f"Bearer {key}"}, timeout=90
+                )
+                if r.status_code == 200:
+                    content = r.json()["choices"][0]["message"]["content"]
+                    if content:
+                        return content
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
 
-    return "No LLM available — GEMINI_API_KEY and OPENROUTER_API_KEY both failed."
+    return "No LLM available — GEMINI_API_KEY is rate-limited and all OpenRouter free models failed."
 
 if __name__ == "__main__":
     print(f"Jules Worker Agent starting on port 6000...")

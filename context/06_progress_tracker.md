@@ -316,3 +316,12 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Restarted bridge to PID `24292`, recycled LocalTunnel to `https://tall-rice-invite.loca.lt`, verified public `/ping`, `/health`, and `/dashboard/status`, and captured native Chrome dashboard proof at `jules_inbox/jules_dashboard_cloud_panel_dispatch/evidence/dashboard-provider-error-type-20260630T0420Z.png`.
 - [ ] Remaining release blocker: local Gemini/OpenRouter credentials still fail as `invalid_key`; VM worker is online and cloud worker is `1/1 ONLINE`, but VM chat can still flip to `No LLM available` from Gemini quota/OpenRouter free-model failure. PR #64 stays draft until fixed or explicitly accepted as non-blocking.
 
+## Session 20260630T043500 - Passive Deep Health And Active VM Bootstrap Target
+
+- [x] Changed `/health/deep` provider aggregation to call `test_chat_providers(probe_vm_chat=False)` so deep-health polling no longer launches VM LLM health tasks or burns scarce VM provider quota.
+- [x] Updated VM relay bootstrap defaults to target the active GCP OS Login worker user `atibin7_gmail_com`, write under `/home/{VM_USER}`, preserve `OPENROUTER_API_KEYS`, and generate a worker template with active-home env loading plus multi-model OpenRouter fallback.
+- [x] Added focused tests for passive deep-health VM probing, configured worker-user bootstrap paths, and generated worker OpenRouter rotation.
+- [x] Verification: focused health/chat/dashboard/vm relay slice passed (`54 passed`), full suite passed (`434 passed`), and `git diff --check` passed with only normal CRLF warnings.
+- [x] Restarted bridge to PID `37788`, recycled LocalTunnel to `https://shaggy-kiwis-shout.loca.lt`, verified public `/ping`, `/health`, and `/dashboard/status`, and captured native Chrome dashboard proof at `jules_inbox/jules_dashboard_cloud_panel_dispatch/evidence/dashboard-passive-vm-health-20260630T0435Z.png` with `VM CHAT: OK` and cloud workers `1/1 ONLINE`.
+- [ ] Remaining release blocker: local Gemini/OpenRouter credentials still fail as `invalid_key`; PR #64 stays draft until fixed or explicitly accepted as non-blocking.
+
