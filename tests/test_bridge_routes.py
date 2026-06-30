@@ -1148,9 +1148,28 @@ class TestBridgeTokenAuth(unittest.TestCase):
         self.client = bridge.app.test_client()
 
     def test_ping_and_health_exempt_without_token(self):
-        for path in ("/ping", "/health"):
+        for path in ("/ping", "/health", "/host/identity"):
             response = self.client.get(path)
             self.assertEqual(response.status_code, 200, path)
+
+    def test_host_gpg_public_requires_auth(self):
+        response = self.client.get("/host/gpg/public")
+        self.assertEqual(response.status_code, 401)
+
+    @patch("modules.host_identity.get_gpg_public_payload")
+    def test_host_gpg_public_returns_key_when_configured(self, mock_payload):
+        mock_payload.return_value = {
+            "title": "jules",
+            "key_id": "D9BC48A619204DA7",
+            "public_key": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nabc\n-----END PGP PUBLIC KEY BLOCK-----",
+            "configured": True,
+            "github_add_url": "https://github.com/settings/gpg/new",
+        }
+        response = self.client.get("/host/gpg/public", headers=BRIDGE_AUTH_HEADER)
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body["title"], "jules")
+        self.assertIn("BEGIN PGP PUBLIC KEY BLOCK", body["public_key"])
 
     def test_protected_route_rejects_missing_token(self):
         response = self.client.post("/notify/email", json={"subject": "x", "body": "y"})

@@ -83,7 +83,15 @@ if not BRIDGE_TOKEN:
 
 @app.before_request
 def require_auth():
-    if request.path in ("/health", "/ping", "/dashboard/status", "/vm/status", "/chat", "/chat/test"):
+    if request.path in (
+        "/health",
+        "/ping",
+        "/host/identity",
+        "/dashboard/status",
+        "/vm/status",
+        "/chat",
+        "/chat/test",
+    ):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -414,6 +422,8 @@ TENTACLES = [
     {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},  # pylint: disable=line-too-long
     {"name": "health_deep",  "route": "GET /health/deep",       "reach": "Authenticated provider connectivity and host resource health"},  # pylint: disable=line-too-long
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
+    {"name": "host_identity", "route": "GET /host/identity",   "reach": "Hostname, RAM, Jules identity label, GPG key id (no auth)"},  # pylint: disable=line-too-long
+    {"name": "host_gpg",     "route": "GET /host/gpg/public",  "reach": "Full GPG public key block for remote GitHub paste"},  # pylint: disable=line-too-long
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
     {"name": "session_log",  "route": "GET /session/log",        "reach": "Audit which tools Jules used recently"},
     {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},  # pylint: disable=line-too-long
@@ -491,7 +501,7 @@ def bridge_info_payload(include_routes=False):
         "uptime_s": uptime_s,
         "auth": {
             "type": "bearer",
-            "public_routes": ["GET /health", "GET /ping"],
+            "public_routes": ["GET /health", "GET /ping", "GET /host/identity"],
             "protected_routes": "All other routes require Authorization: Bearer <token>",
         },
         "manifest": "GET /tentacles",
@@ -526,13 +536,18 @@ def health():
     monitoring tools (ngrok health checks, agents) from flooding the log
     with 404s when polling for bridge availability.
     """
+    from modules.host_identity import get_host_identity  # pylint: disable=import-outside-toplevel
+
     uptime_s = round(
         (datetime.now(timezone.utc) - _BRIDGE_START_UTC).total_seconds(), 1
     )
+    host = get_host_identity()
     return jsonify({
         "status": "ok",
         "bridge": "Jules Bridge",
         "uptime_s": uptime_s,
+        "identity": host.get("identity"),
+        "execution_context": host.get("execution_context"),
     })
 
 
@@ -546,7 +561,43 @@ def health_deep():
 
 @app.route("/ping", methods=["GET"])
 def ping():
-    return jsonify({"status": "Jules Bridge Online"})
+    from modules.host_identity import get_host_identity  # pylint: disable=import-outside-toplevel
+
+    host = get_host_identity()
+    return jsonify({
+        "status": "Jules Bridge Online",
+        "identity": host.get("identity"),
+        "hostname": host.get("hostname"),
+        "ram_gb": host.get("ram_gb"),
+        "gpg_configured": host.get("gpg_configured"),
+    })
+
+
+@app.route("/host/identity", methods=["GET"])
+def host_identity():
+    """GET /host/identity — Public machine label for remote Jules reach-out."""
+    from modules.host_identity import get_host_identity  # pylint: disable=import-outside-toplevel
+
+    payload = get_host_identity()
+    payload["status"] = "ok"
+    payload["bridge"] = "Jules Bridge"
+    return jsonify(payload)
+
+
+@app.route("/host/gpg/public", methods=["GET"])
+@route_errors
+def host_gpg_public():
+    """GET /host/gpg/public — Return GPG public key for remote GitHub registration."""
+    from modules.host_identity import get_gpg_public_payload  # pylint: disable=import-outside-toplevel
+
+    payload = get_gpg_public_payload()
+    if not payload.get("configured"):
+        raise BridgeHTTPError(
+            404,
+            "GPG public key not found",
+            details="Run Copy-GithubGpg.cmd on the host or scripts/Setup-GitHubGpg.ps1",
+        )
+    return jsonify(payload)
 
 
 @app.route("/tentacles", methods=["GET"])
