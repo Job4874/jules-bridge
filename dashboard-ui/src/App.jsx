@@ -64,7 +64,12 @@ function App() {
     cpu: 0,
     mem: 0,
     fleet: { launched: 0, completed: 0, pending: 0 },
-    logs: []
+    logs: [],
+    providers: {
+      gemini: { status: 'unknown' },
+      openrouter: { status: 'unknown' },
+      vm_worker: { status: 'no_key' }
+    }
   });
 
   const [cpuHistory, setCpuHistory] = useState(Array(30).fill(0));
@@ -102,7 +107,12 @@ function App() {
           cpu,
           mem,
           fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },
-          logs: d.recent_logs || []
+          logs: d.recent_logs || [],
+          providers: d.providers || {
+            gemini: { status: 'unknown' },
+            openrouter: { status: 'unknown' },
+            vm_worker: { status: 'no_key' }
+          }
         });
 
         setCpuHistory(prev => {
@@ -220,6 +230,24 @@ function App() {
           <div className={`badge ${sysStatus.tunnel ? 'success' : 'danger'}`}>
             TUNNEL: {sysStatus.tunnel ? 'ACTIVE' : 'OFFLINE'}
           </div>
+          <div className={`badge ${
+            sysStatus.providers.gemini.status === 'ok' || sysStatus.providers.gemini.status === 'pass' ? 'success' :
+            (sysStatus.providers.gemini.status === 'error' || sysStatus.providers.gemini.status === 'fail') ? 'danger' : ''
+          }`}>
+            GEMINI: {sysStatus.providers.gemini.status.toUpperCase()}
+          </div>
+          <div className={`badge ${
+            sysStatus.providers.openrouter.status === 'ok' || sysStatus.providers.openrouter.status === 'pass' ? 'success' :
+            (sysStatus.providers.openrouter.status === 'error' || sysStatus.providers.openrouter.status === 'fail') ? 'danger' : ''
+          }`}>
+            OPENROUTER: {sysStatus.providers.openrouter.status.toUpperCase()}
+          </div>
+          <div className={`badge ${
+            sysStatus.providers.vm_worker.status === 'ok' ? 'success' :
+            (sysStatus.providers.vm_worker.status === 'error' || sysStatus.providers.vm_worker.status === 'offline') ? 'danger' : ''
+          }`}>
+            VM CHAT: {sysStatus.providers.vm_worker.status.toUpperCase()}
+          </div>
         </div>
       </div>
 
@@ -334,7 +362,18 @@ function App() {
         {/* Right Side: Chat */}
         <div className="panel right-panel">
           <div className="panel-header">
-            <span>Comm Link</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>Comm Link</span>
+              <span style={{
+                fontSize: '0.65rem',
+                color: sysStatus.providers.vm_worker.status === 'ok' ? 'var(--accent-green)' : 'var(--text-dim)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                padding: '1px 4px',
+                borderRadius: '4px'
+              }}>
+                {sysStatus.providers.vm_worker.status === 'ok' ? 'VM_READY' : 'LOCAL_ONLY'}
+              </span>
+            </div>
             <select
               value={model}
               onChange={e => setModel(e.target.value)}

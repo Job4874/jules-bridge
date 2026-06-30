@@ -85,7 +85,9 @@ body {
 
 .header-metrics {
   display: flex;
-  gap: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .badge {
