@@ -1,0 +1,51 @@
+{
+  "ok": true,
+  "timestamp": "2026-06-30T14:57:15.013Z",
+  "desktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "screenshot": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_realtime_enhancement\\evidence\\dashboard-live-recheck-desktop-20260630T085659.png",
+    "console": [],
+    "metrics": {
+      "title": "dashboard-ui",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyTextLength": 5367
+    },
+    "contains": {
+      "commandCenter": true,
+      "gemini": true,
+      "openrouter": true,
+      "vm": true,
+      "cloudWorkers": true,
+      "refresh": true
+    },
+    "sample": "JN Overview Agents Logs Comm JULES NEXUS Real-time bridge command center Live Sync 08:57:01 AM 4s ago 4005ms Cache 0s Pause Refresh BRIDGE RUNNING Uptime 56m 56s TUNNEL ACTIVE https://shaggy-kiwis-shout.loca.lt PROVIDERS 1/3 VM fallback FLEET 0% 0 done / 0 pending CLOUD 1/1 workers online PRESSURE OK CPU 58.0 / MEM 82.2 PROVIDER READINESS VM fallback Gemini invalid_key ERROR OpenRouter invalid_key ERROR VM Worker vm/jules-worker OK RESOURCE TELEMETRY CPU 58.0% Memory 82.2% No pressure reasons re"
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "isMobile": true
+    },
+    "screenshot": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dashboard_realtime_enhancement\\evidence\\dashboard-live-recheck-mobile-20260630T085659.png",
+    "console": [],
+    "metrics": {
+      "title": "dashboard-ui",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "bodyTextLength": 5390
+    },
+    "contains": {
+      "commandCenter": true,
+      "gemini": true,
+      "openrouter": true,
+      "vm": true,
+      "cloudWorkers": true,
+      "refresh": true
+    },
+    "sample": "JN Overview Agents Logs Comm JULES NEXUS Real-time bridge command center Live Sync 08:57:08 AM 4s ago 4459ms Cache 0s Pause Refresh BRIDGE RUNNING Uptime 57m 2s TUNNEL ACTIVE https://shaggy-kiwis-shout.loca.lt PROVIDERS 1/3 VM fallback FLEET 0% 0 done / 0 pending CLOUD 1/1 workers online PRESSURE OK CPU 60.0 / MEM 82.7 PROVIDER READINESS VM fallback Gemini invalid_key ERROR OpenRouter invalid_key ERROR VM Worker vm/jules-worker OK RESOURCE TELEMETRY CPU 60.0% Memory 82.7% No pressure reasons rep"
+  }
+}

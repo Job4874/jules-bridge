@@ -477,3 +477,9 @@ has gone wrong before and what to avoid.
 - Runtime proof: bridge PID `7364` serves port 5000, dashboard preview PID `39320` serves port 5173, local `/ping`, `/dashboard/status`, `/dashboard/status?bypass_cache=true`, protected `/health/deep`, direct `/chat`, `/vm/status`, and LocalTunnel `https://shaggy-kiwis-shout.loca.lt` `/ping`, `/health`, `/dashboard/status` were verified.
 - Current provider truth: local Gemini/OpenRouter are still `invalid_key`; GET `/chat/test` was healthy through VM worker and direct `/chat` returned `OK.` via `model_used=vm/jules-worker`, but VM recent tasks still include `No LLM available`, so provider readiness is degraded rather than production-clean.
 - Jules continuation truth: only poll/pull fresh session `14369052129679399317`; latest `POST /jules/sessions` live poll showed it `Planning`, so no pull was safe.
+
+## Session 20260630T085715 - Rendered Dashboard Live Recheck
+
+- Fresh Playwright QA against `http://127.0.0.1:5173/` saved `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-live-recheck-20260630T085659.json` plus desktop/mobile screenshots. Result was `ok: true`, no console/page errors, no horizontal overflow, and visible command-center/provider/VM/cloud/refresh text.
+- Runtime stayed live in the same continuation: local/public dashboard routes responded, `/health/deep` was `status: ok`, GET `/chat/test` was healthy through VM worker, direct `/chat` returned `OK` via `vm/jules-worker`, and `/vm/status` was online with recent mixed `No LLM available` then `OK` results.
+- Jules session `14369052129679399317` remained `Planning`; do not pull until a fresh live list reports `Completed`.

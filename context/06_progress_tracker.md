@@ -370,3 +370,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - [x] Polled Jules session `14369052129679399317` through `POST /jules/sessions` with `dry_run=false`, `bypass_cache=true`, and `timeout_s=90`; latest live status was `Planning`, so nothing was pulled.
 - [ ] Remaining release blockers are unchanged: provider readiness is degraded until credentials/quota/capacity are clean or accepted as non-blocking, and Jules current-head audit session `14369052129679399317` has not completed.
 
+## Session 20260630T085715 - Rendered Dashboard Live Recheck
+
+- [x] Captured fresh Playwright desktop and mobile proof for `http://127.0.0.1:5173/` after the latest continuation: `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-live-recheck-desktop-20260630T085659.png` and `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-live-recheck-mobile-20260630T085659.png`.
+- [x] Saved the structured QA result at `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-live-recheck-20260630T085659.json`; it reports `ok: true`, no console/page errors, no horizontal overflow on desktop or mobile, and visible command-center, Gemini, OpenRouter, VM, cloud, and refresh text.
+- [x] Reconfirmed live runtime routes in the same continuation: local dashboard and bridge, public LocalTunnel, protected `/health/deep`, GET `/chat/test`, direct `/chat`, and `/vm/status` all responded; direct `/chat` returned `OK` via `vm/jules-worker`.
+- [x] Re-polled Jules session `14369052129679399317`; latest live status stayed `Planning`, so no remote output was pulled.
+- [ ] Remaining release blockers are unchanged: local Gemini/OpenRouter invalid-key and intermittent VM provider quota/capacity limits keep PR #64 draft.
+

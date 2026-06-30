@@ -219,6 +219,23 @@ direct executable path:
   both `OK` and `No LLM available`; keep treating provider readiness as degraded
   until credentials/quota/capacity are clean or explicitly accepted.
 
+2026-06-30 08:57 America/Denver rendered dashboard recheck:
+
+- Playwright rendered `http://127.0.0.1:5173/` at desktop `1440x1000` and
+  mobile `390x844`.
+- Evidence:
+  `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-live-recheck-20260630T085659.json`
+- Screenshots:
+  `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-live-recheck-desktop-20260630T085659.png`
+  and
+  `jules_inbox/jules_dashboard_realtime_enhancement/evidence/dashboard-live-recheck-mobile-20260630T085659.png`
+- Result: `ok: true`; no console errors/page errors; desktop and mobile had no
+  horizontal overflow; UI text included `JULES NEXUS`, `Real-time bridge command
+  center`, active tunnel, Gemini/OpenRouter invalid-key provider truth, VM
+  worker OK, cloud `1/1` online, and refresh controls.
+- The same live pass confirmed Jules session `14369052129679399317` remained
+  `Planning`; no pull was safe.
+
 ## Dirty-State Discipline
 
 Preserved pre-existing dirty runtime state:
