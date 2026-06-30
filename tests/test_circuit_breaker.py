@@ -1,3 +1,5 @@
+import os
+os.environ["BRIDGE_TOKEN"] = "JULES-SECURE-999"
 """Tests for the circuit breaker middleware."""
 
 # pylint: disable=redefined-outer-name,protected-access

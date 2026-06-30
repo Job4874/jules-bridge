@@ -312,6 +312,16 @@
 
 
 
+## chat_service
+
+
+
+- Keep Gemini/OpenRouter payload construction, provider fallback, timing, and error-chain redaction in `modules/chat_service.py`; `/chat` and `/chat/test` should only validate fields and return `dict(result)`.
+
+- Never return `GEMINI_API_KEY` or `OPENROUTER_API_KEY` values in provider diagnostics. Sanitize exception text and response bodies before returning them.
+
+
+
 ## ngrok_tunnel
 
 

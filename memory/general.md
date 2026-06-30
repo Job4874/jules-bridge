@@ -358,3 +358,10 @@ has gone wrong before and what to avoid.
 - **Gotchas Recovery**: Fixed `context/05_gotchas.md` which had been corrupted with Chinese character unicode sequences (e.g., `\u80e2\ue7a3\u8a95...`) due to a double UTF-16LE -> UTF-8 encoding bug in previous agent sessions. Created `scratch/double_recover.py` to reverse this corruption by encoding UTF-8 characters back to UTF-16LE bytes twice, and restored the original clean English gotchas file.
 - **Verification**: Verified the entire test suite is completely green (307/307 passed). Started the bridge server via `python bridge.py` on port 5000 and confirmed both `/health` and `/akc/readiness` respond successfully.
 
+## Session 20260629T122530 — Chat Service Deep Module Cleanup (315 tests passing)
+
+- Extracted Gemini/OpenRouter chat provider routing from `bridge.py` into `modules/chat_service.py`; `/chat` and `/chat/test` are now thin validate -> module -> JSON wrappers.
+- New canonical chat terms: `ChatResult`, `ChatHealthResult`, and `Chat provider routing`. Keep provider payload construction, fallback, timing, and secret redaction inside `chat_service`.
+- Added module-boundary tests in `tests/test_chat_service.py` and route-thinness tests in `tests/test_bridge_routes.py`.
+- Verification: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py`; focused pytest passed 74 tests; full `python -m pytest tests/ -q` passed 315 tests. Evidence hash `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`.
+

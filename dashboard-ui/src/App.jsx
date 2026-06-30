@@ -26,8 +26,8 @@ ChartJS.register(
   Filler
 );
 
-const BRIDGE = 'http://127.0.0.1:5000';
-const TOKEN = 'JULES-SECURE-999';
+const BRIDGE = import.meta.env.VITE_BRIDGE_URL || 'http://127.0.0.1:5000';
+const TOKEN = import.meta.env.VITE_BRIDGE_TOKEN || '';
 
 // Chart common options
 const lineOptions = {

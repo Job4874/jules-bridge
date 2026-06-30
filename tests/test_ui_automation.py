@@ -141,5 +141,62 @@ class TestTypeText(unittest.TestCase):
         self.assertIn("status", result)
 
 
+
+class TestGetSecret(unittest.TestCase):
+    def test_get_secret_blocked(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        result = get_secret("target")
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["target"], "target")
+        self.assertEqual(result["username"], "")
+        self.assertFalse(result["secret_available"])
+        self.assertEqual(result["error"], "allow_secret_use must be true")
+
+    def test_get_secret_provider_missing(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        result = get_secret("target", allow_secret_use=True)
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["target"], "target")
+        self.assertEqual(result["username"], "")
+        self.assertFalse(result["secret_available"])
+        self.assertEqual(result["error"], "secret provider is required")
+
+    def test_get_secret_provider_raises(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        provider = MagicMock()
+        provider.get_secret.side_effect = Exception("failed")
+        result = get_secret("target", allow_secret_use=True, provider=provider)
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["target"], "target")
+        self.assertEqual(result["username"], "")
+        self.assertFalse(result["secret_available"])
+        self.assertEqual(result["error"], "secret provider lookup failed")
+        provider.get_secret.assert_called_once_with("target")
+
+    def test_get_secret_provider_dict(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        provider = MagicMock()
+        provider.get_secret.return_value = {"username": "admin", "password": "password"}
+        result = get_secret("target", allow_secret_use=True, provider=provider)
+        self.assertEqual(result["status"], "available")
+        self.assertEqual(result["target"], "target")
+        self.assertTrue(result["secret_available"])
+        self.assertEqual(result["username"], "admin")
+        self.assertIsNone(result["error"])
+        provider.get_secret.assert_called_once_with("target")
+
+    def test_get_secret_provider_string(self):
+        from modules.ui_automation import get_secret  # pylint: disable=import-outside-toplevel
+        provider = MagicMock()
+        provider.get_secret.return_value = "secret123"
+        result = get_secret("target", allow_secret_use=True, provider=provider)
+        self.assertEqual(result["status"], "available")
+        self.assertEqual(result["target"], "target")
+        self.assertTrue(result["secret_available"])
+        self.assertEqual(result["username"], "")
+        self.assertIsNone(result["error"])
+        provider.get_secret.assert_called_once_with("target")
+
+
 if __name__ == "__main__":
     unittest.main()
