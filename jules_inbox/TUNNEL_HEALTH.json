@@ -1,7 +1,7 @@
 {
   "status": "reconnecting",
-  "last_check_utc": "2026-06-30T17:20:55.845064+00:00",
-  "consecutive_failures": 15,
+  "last_check_utc": "2026-06-30T17:22:00.246270+00:00",
+  "consecutive_failures": 16,
   "last_reconnect_utc": null,
-  "uptime_s": 947.266175
+  "uptime_s": 1011.667816
 }
