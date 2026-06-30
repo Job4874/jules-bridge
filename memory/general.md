@@ -387,5 +387,5 @@ has gone wrong before and what to avoid.
 - Current public tunnel: `https://clever-seas-go.loca.lt`; local and public `/health` pass, and authenticated `/health/deep` returns `status: ok`.
 - Current deep-health provider truth: GCP token pass, Azure SSH pass, Gemini fail invalid API key, OpenRouter fail 401 `User not found`; `/dashboard/status` still reports `jules-offload-worker` as `not_configured` because `GCE_WORKER_IP` is unset.
 - Jules duplicate session `11181112389803823618` completed after `4817979060578580922`; its patch was reviewed without `--apply` and left unapplied because it overlapped the pushed fix and dropped useful HTTP status detail.
-- Updated heartbeat automation `jules-bridge-overnight-production-loop` with head `090d7bb`, current tunnel, reviewed duplicate session state, and remaining external readiness blockers.
+- Updated heartbeat automation `jules-bridge-overnight-production-loop` with source/readiness head `090d7bb`, current tunnel, reviewed duplicate session state, and remaining external readiness blockers.
 
