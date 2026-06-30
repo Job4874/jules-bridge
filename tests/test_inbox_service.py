@@ -8,6 +8,7 @@ Tests at the module interface level — no Flask or HTTP involved.
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 class TestInboxRead(unittest.TestCase):
@@ -48,6 +49,18 @@ class TestInboxRead(unittest.TestCase):
             message, status = self.svc.inbox_read(file="MISSING.md", inbox_dir=d)
             self.assertEqual(status, 404)
             self.assertIn("OTHER.md", message["inbox_files"])
+
+    def test_read_permission_error_returns_403(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "locked.md")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("secret")
+
+            with patch("modules.inbox_service.open", side_effect=PermissionError("denied")):
+                message, status = self.svc.inbox_read(file="locked.md", inbox_dir=d)
+
+            self.assertEqual(status, 403)
+            self.assertIn("unable to read", message["error"])
 
     def test_read_path_traversal_safe_basename(self):
         with tempfile.TemporaryDirectory() as d:

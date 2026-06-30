@@ -98,7 +98,7 @@ function App() {
         setSysStatus({
           uptime: d.bridge?.uptime_human || '--',
           online: true,
-          tunnel: !!d.bridge?.ngrok_url,
+          tunnel: !!(d.bridge?.tunnel_url || d.bridge?.ngrok_url),
           cpu,
           mem,
           fleet: d.jules_fleet || { launched: 0, completed: 0, pending: 0 },

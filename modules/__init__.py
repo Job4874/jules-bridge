@@ -34,6 +34,7 @@ from .vm_manager import (
     VMBootResult,
     detect_resource_pressure,
     boot_secondary_vm,
+    check_and_scale_compute,
 )
 from .windows_secret_provider import (
     WindowsSecretProvider,
@@ -148,6 +149,7 @@ __all__ = [
     "VMBootResult",
     "detect_resource_pressure",
     "boot_secondary_vm",
+    "check_and_scale_compute",
     # windows_secret_provider
     "WindowsSecretProvider",
     "build_windows_secret_provider",

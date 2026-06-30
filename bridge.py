@@ -1,9 +1,9 @@
-"""Jules God-Mode Bridge — thin HTTP routing layer.
+﻿"""Jules God-Mode Bridge â€” thin HTTP routing layer.
 
 This file contains ONLY:
   - Flask app setup and middleware
   - HTTP request validation (parsing JSON, field extraction)
-  - Route handlers (validate → call module → return JSON)
+  - Route handlers (validate â†’ call module â†’ return JSON)
 
 All business logic lives in modules/:
   fs_service, shell_executor, ui_automation, inbox_service, oracle_session
@@ -159,7 +159,7 @@ def route_errors(func):
     return wrapper
 
 # ---------------------------------------------------------------------------
-# Request field helpers (validation only — no business logic)
+# Request field helpers (validation only â€” no business logic)
 # ---------------------------------------------------------------------------
 
 def json_payload():
@@ -241,12 +241,6 @@ def path_field(data, key="path", default=MISSING):
     return string_field(data, key, default=default, control_safe=True)
 
 
-@app.before_request
-def _circuit_breaker_check():
-    from modules.circuit_breaker import circuit_breaker_hook
-    return circuit_breaker_hook()
-
-
 def existing_path(path, kind="file"):
     if not os.path.exists(path):
         raise BridgeHTTPError(404, "Resource not found", path=path)
@@ -293,37 +287,34 @@ def _start_timer():
 
 
 def _stale_evidence_state():
-    evidence_path = os.path.join(ROOT_DIR, "memory", "test_evidence.json")
-    threshold_s = 3600
-    try:
-        with open(evidence_path, encoding="utf-8") as _f:
-            ev = json.load(_f)
-        if isinstance(ev, list):
-            ev = ev[-1] if ev else {}
-        if not isinstance(ev, dict):
-            return None
-        ts = ev.get("timestamp_utc", "")
-        if not ts:
-            return None
-        age_s = round((datetime.now(timezone.utc) - datetime.fromisoformat(ts)).total_seconds())
-        if age_s <= threshold_s:
-            return None
-        return {"age_s": age_s, "threshold_s": threshold_s}
-    except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return None  # evidence file missing or malformed — proceed without warning
+    memory_path = os.path.join(ROOT_DIR, "memory")
+    staleness = modules.check_test_evidence_staleness(memory_path)
+    if staleness:
+        return {
+            "age_s": staleness.age_s,
+            "threshold_s": staleness.threshold_s,
+            "reason": staleness.reason,
+        }
+    return None
 
 
 @app.before_request
 def _evidence_hard_gate():
     if not request.path.startswith("/oracle/"):
         return None
-    if os.environ.get("EVIDENCE_GATE_HARD") != "1":
+    if not modules.is_evidence_hard_gate_enabled():
         return None
     stale = _stale_evidence_state()
     if not stale:
         return None
+    error_map = {
+        "stale": "evidence_stale",
+        "clock_skew": "evidence_future",
+        "malformed": "evidence_malformed",
+    }
     return jsonify({
-        "error": "evidence_stale",
+        "error": error_map.get(stale["reason"], "evidence_invalid"),
+        "reason": stale["reason"],
         "age_s": stale["age_s"],
         "threshold_s": stale["threshold_s"],
     }), 423
@@ -399,7 +390,7 @@ TENTACLES = [
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
     {"name": "eyes",         "route": "GET /ui/screenshot",      "reach": "See the desktop (optional save to inbox/screenshots)"},  # pylint: disable=line-too-long
-    {"name": "operator",     "route": "POST /execute",           "reach": "Universal driver — click, type, and launch shell actions in one call"},  # pylint: disable=line-too-long
+    {"name": "operator",     "route": "POST /execute",           "reach": "Universal driver â€” click, type, and launch shell actions in one call"},  # pylint: disable=line-too-long
     {"name": "hand",         "route": "POST /ui/click",          "reach": "Click the mouse"},
     {"name": "voice",        "route": "POST /ui/type",           "reach": "Type on the keyboard"},
     {"name": "ui_quantower_driver", "route": "POST /ui/drive_quantower_login", "reach": "Run guarded H/L/ACT Quantower login driver"},  # pylint: disable=line-too-long
@@ -420,9 +411,9 @@ TENTACLES = [
     {"name": "jules_fleet",     "route": "POST /jules/fleet",              "reach": "Scale Jules workers within max_concurrent and refresh pull/COT state"},  # pylint: disable=line-too-long
     {"name": "jules_fleet_watch", "route": "POST /jules/fleet-watch",      "reach": "Loop fleet scale-out, pull, and COT refresh until complete or timed out"},  # pylint: disable=line-too-long
     # Reasoning routes (HRM-inspired H/L/ACT)
-    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full H→L hierarchical reasoning with ACT halting"},  # pylint: disable=line-too-long
-    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only — preview the abstract plan"},  # pylint: disable=line-too-long
-    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only — execute one plan step"},  # pylint: disable=line-too-long
+    {"name": "reason_solve",    "route": "POST /reasoning/solve",          "reach": "Full Hâ†’L hierarchical reasoning with ACT halting"},  # pylint: disable=line-too-long
+    {"name": "reason_plan",     "route": "POST /reasoning/plan",           "reach": "H module only â€” preview the abstract plan"},  # pylint: disable=line-too-long
+    {"name": "reason_step",     "route": "POST /reasoning/execute_step",   "reach": "L module only â€” execute one plan step"},  # pylint: disable=line-too-long
     {"name": "reason_skills",   "route": "GET /reasoning/skills",          "reach": "Inventory of available agent skills"},  # pylint: disable=line-too-long
     {"name": "reason_gotcha",   "route": "POST /reasoning/inject_gotcha",  "reach": "Inject new edge case into gotchas context"},  # pylint: disable=line-too-long
     # Retrospective routes (self-improving memory)
@@ -485,7 +476,7 @@ def bridge_info():
 
 @app.route("/health", methods=["GET"])
 def health():
-    """GET /health — Liveness + uptime check for monitoring tools and ngrok.
+    """GET /health â€” Liveness + uptime check for monitoring tools and ngrok.
 
     Returns uptime since the bridge process started. This route stops
     monitoring tools (ngrok health checks, agents) from flooding the log
@@ -504,6 +495,15 @@ def health():
 @app.route("/ping", methods=["GET"])
 def ping():
     return jsonify({"status": "Jules Bridge Online"})
+
+
+@app.route("/health/deep", methods=["GET"])
+@route_errors
+def health_deep():
+    """GET /health/deep - Proof of system readiness."""
+    from modules.health_service import get_deep_health  # pylint: disable=import-outside-toplevel
+
+    return jsonify(dict(get_deep_health()))
 
 
 @app.route("/tentacles", methods=["GET"])
@@ -530,7 +530,7 @@ def session_log():
     return jsonify({"entries": list(REQUEST_LOG)[:limit]})
 
 
-# — Inbox routes —
+# â€” Inbox routes â€”
 
 @app.route("/inbox/read", methods=["POST"])
 @route_errors
@@ -1005,7 +1005,7 @@ def run_shell():
         }), 504
 
 
-# — Filesystem routes —
+# â€” Filesystem routes â€”
 
 @app.route("/fs/read", methods=["POST"])
 @route_errors
@@ -1058,7 +1058,7 @@ def save_file_content():
     return jsonify({"status": "success", "path": result["path"]})
 
 
-# — Oracle routes —
+# â€” Oracle routes â€”
 
 @app.route("/oracle/status", methods=["GET"])
 @route_errors
@@ -1078,20 +1078,20 @@ def codex_handover():
     return jsonify(dict(modules.codex_handover_index()))
 
 
-# — Universal operator route —
+# â€” Universal operator route â€”
 
 @app.route("/execute", methods=["POST"])
 @route_errors
 def execute_operator():
-    """POST /execute — Run one or more host actions in a single request.
+    """POST /execute â€” Run one or more host actions in a single request.
 
     Body (JSON), at least one field required:
-        click (object): {x, y, button?} — mouse click via ui_automation
+        click (object): {x, y, button?} â€” mouse click via ui_automation
         type  (str): text to type at current focus
         text  (str): alias for type (matches /ui/type)
         shell (str): command to run; defaults to fire-and-forget spawn via cmd
         wait  (bool): when true with shell, block on /shell-style execute
-        shell_name (str): shell selector for shell — cmd (default), powershell, bash
+        shell_name (str): shell selector for shell â€” cmd (default), powershell, bash
         cwd (str): working directory for shell actions
         timeout (int): seconds when wait=true
     """
@@ -1151,7 +1151,7 @@ def execute_operator():
     return jsonify(results)
 
 
-# — UI routes —
+# â€” UI routes â€”
 
 @app.route("/ui/screenshot", methods=["GET"])
 @route_errors
@@ -1184,7 +1184,7 @@ def type_text_route():
 @app.route("/ui/drive_quantower_login", methods=["POST"])
 @route_errors
 def drive_quantower_login_route():
-    """POST /ui/drive_quantower_login — Run guarded Quantower login ACT loop.
+    """POST /ui/drive_quantower_login â€” Run guarded Quantower login ACT loop.
 
     Body (JSON):
         ocr_text         (str, optional): OCR text from the current screen
@@ -1280,7 +1280,7 @@ def vm_boot_secondary_route():
 @app.route("/apps/launch_browser", methods=["POST"])
 @route_errors
 def launch_browser_route():
-    """POST /apps/launch_browser — Launch Edge to an approved http(s) URL.
+    """POST /apps/launch_browser â€” Launch Edge to an approved http(s) URL.
 
     Body (JSON):
         url (str, required): Target http:// or https:// URL
@@ -1293,7 +1293,7 @@ def launch_browser_route():
     return jsonify(dict(result))
 
 
-# — Notify route —
+# â€” Notify route â€”
 
 @app.route("/notify/email", methods=["POST"])
 @route_errors
@@ -1311,12 +1311,12 @@ def send_notify_email():
     return jsonify({"status": "sent", **result})
 
 
-# — Reasoning routes (HRM-inspired H/L/ACT) —
+# â€” Reasoning routes (HRM-inspired H/L/ACT) â€”
 
 @app.route("/reasoning/solve", methods=["POST"])
 @route_errors
 def reasoning_solve():
-    """POST /reasoning/solve — Run hierarchical H→L reasoning with ACT halting.
+    """POST /reasoning/solve â€” Run hierarchical Hâ†’L reasoning with ACT halting.
 
     Body (JSON):
         problem  (str, required): The problem to solve
@@ -1369,7 +1369,7 @@ def reasoning_solve():
 @app.route("/reasoning/plan", methods=["POST"])
 @route_errors
 def reasoning_plan():
-    """POST /reasoning/plan — Run only the H module, return the abstract plan.
+    """POST /reasoning/plan â€” Run only the H module, return the abstract plan.
 
     Use this to preview the plan before committing to full execution.
 
@@ -1397,7 +1397,7 @@ def reasoning_plan():
 @app.route("/reasoning/execute_step", methods=["POST"])
 @route_errors
 def reasoning_execute_step():
-    """POST /reasoning/execute_step — Run only the L module for one step.
+    """POST /reasoning/execute_step â€” Run only the L module for one step.
 
     Use for manual, step-by-step control of the execution.
 
@@ -1433,7 +1433,7 @@ def reasoning_execute_step():
 @app.route("/reasoning/skills", methods=["GET"])
 @route_errors
 def reasoning_skills():
-    """GET /reasoning/skills — Inventory of available agent skills."""
+    """GET /reasoning/skills â€” Inventory of available agent skills."""
     skills_dir = request.args.get("skills_dir", os.path.join(ROOT_DIR, ".agents", "skills"))
     skills = modules.reasoning_module.discover_skills(skills_dir)
     return jsonify({"skills": skills})
@@ -1442,7 +1442,7 @@ def reasoning_skills():
 @app.route("/reasoning/inject_gotcha", methods=["POST"])
 @route_errors
 def reasoning_inject_gotcha():
-    """POST /reasoning/inject_gotcha — Inject new edge case into gotchas context."""
+    """POST /reasoning/inject_gotcha â€” Inject new edge case into gotchas context."""
     data = json_payload()
     module = string_field(data, "module")
     text = string_field(data, "text")
@@ -1450,12 +1450,12 @@ def reasoning_inject_gotcha():
     return jsonify(result)
 
 
-# — Retrospective routes (Nick Ni's "Case" harness pattern) —
+# â€” Retrospective routes (Nick Ni's "Case" harness pattern) â€”
 
 @app.route("/retrospective/analyze", methods=["POST"])
 @route_errors
 def retrospective_analyze():
-    """POST /retrospective/analyze — Analyze a session and write to memory.
+    """POST /retrospective/analyze â€” Analyze a session and write to memory.
 
     Reads bridge.log, detects doom loops and error patterns, extracts
     learnings, writes them to per-domain memory markdown files.
@@ -1521,7 +1521,7 @@ def retrospective_analyze():
 @app.route("/retrospective/record_evidence", methods=["POST"])
 @route_errors
 def retrospective_record_evidence():
-    """POST /retrospective/record_evidence — SHA-256 test output for cryptographic proof.
+    """POST /retrospective/record_evidence â€” SHA-256 test output for cryptographic proof.
 
     Nick: "Take the test output and SHA-256 that and save that into the
     tested file, then verify cryptographically that you actually ran the tests."
@@ -1549,7 +1549,7 @@ def retrospective_record_evidence():
 @app.route("/retrospective/memory", methods=["GET"])
 @route_errors
 def retrospective_memory():
-    """GET /retrospective/memory?domain=general — Load memory for a domain.
+    """GET /retrospective/memory?domain=general â€” Load memory for a domain.
 
     Returns the accumulated learnings markdown for a domain.
     Call this at the start of each session to load what the harness learned.
@@ -1581,7 +1581,7 @@ def retrospective_memory():
 @app.route("/retrospective/prune_memory", methods=["POST"])
 @route_errors
 def retrospective_prune_memory():
-    """POST /retrospective/prune_memory — Age-based pruning of memory files.
+    """POST /retrospective/prune_memory â€” Age-based pruning of memory files.
 
     Removes learning sections older than max_age_days from all memory/*.md files.
     Sections with no parseable datestamp are kept (conservative default).
@@ -1610,7 +1610,7 @@ def retrospective_prune_memory():
 @app.route("/retrospective/memory_quality", methods=["GET"])
 @route_errors
 def retrospective_memory_quality():
-    """GET /retrospective/memory_quality — Assess memory structural quality."""
+    """GET /retrospective/memory_quality â€” Assess memory structural quality."""
     domain = request.args.get("domain", "general")
     memory_path = os.path.join(ROOT_DIR, "memory", f"{domain}.md")
     result = modules.retrospective_module.assess_memory_quality(memory_path)
@@ -1741,20 +1741,20 @@ def akc_subagents_post():
 @app.route("/dashboard/status", methods=["GET"])
 @route_errors
 def dashboard_status():
-    """GET /dashboard/status — real-time multi-cloud mission control snapshot."""
+    """GET /dashboard/status â€” real-time multi-cloud mission control snapshot."""
     from modules.dashboard_module import get_dashboard_status  # pylint: disable=import-outside-toplevel
     result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
     return jsonify(result), 200 if result.get("ok") else 500
 
 
 # ---------------------------------------------------------------------------
-# VM Two-Way Relay — local bridge <-> jules-worker-agent on GCP VM
+# VM Two-Way Relay â€” local bridge <-> jules-worker-agent on GCP VM
 # ---------------------------------------------------------------------------
 
 @app.route("/vm/bootstrap", methods=["POST"])
 @route_errors
 def vm_bootstrap():
-    """POST /vm/bootstrap — install jules-worker-agent on the GCP VM."""
+    """POST /vm/bootstrap â€” install jules-worker-agent on the GCP VM."""
     from modules.vm_relay import bootstrap_vm  # pylint: disable=import-outside-toplevel
     result = bootstrap_vm()
     return jsonify(result), 200 if result.get("ok") else 500
@@ -1763,7 +1763,7 @@ def vm_bootstrap():
 @app.route("/vm/task", methods=["POST"])
 @route_errors
 def vm_task():
-    """POST /vm/task — dispatch a task to the jules-worker-agent on the GCP VM.
+    """POST /vm/task â€” dispatch a task to the jules-worker-agent on the GCP VM.
 
     Body: {"task": "...", "task_type": "build|research|shell|chat", "context": "..."}
     """
@@ -1779,20 +1779,20 @@ def vm_task():
 @app.route("/vm/status", methods=["GET"])
 @route_errors
 def vm_relay_status():
-    """GET /vm/status — get live status from the jules-worker-agent on the VM."""
+    """GET /vm/status â€” get live status from the jules-worker-agent on the VM."""
     from modules.vm_relay import get_vm_status  # pylint: disable=import-outside-toplevel
     result = get_vm_status()
     return jsonify(result), 200
 
 
 # ---------------------------------------------------------------------------
-# Chat — multi-provider conversational endpoint + diagnostics
+# Chat â€” multi-provider conversational endpoint + diagnostics
 # ---------------------------------------------------------------------------
 
 @app.route("/chat/test", methods=["GET"])
 @route_errors
 def chat_test():
-    """GET /chat/test — probe each LLM provider with a minimal request.
+    """GET /chat/test â€” probe each LLM provider with a minimal request.
 
     Returns per-provider status so operators can debug which keys work.
     """
@@ -1802,7 +1802,7 @@ def chat_test():
 @app.route("/chat", methods=["POST"])
 @route_errors
 def chat() -> Any:
-    """POST /chat — send a message (+ optional screenshot) to Jules.
+    """POST /chat â€” send a message (+ optional screenshot) to Jules.
 
     Body (JSON):
         message (str): user message

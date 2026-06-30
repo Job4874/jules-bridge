@@ -5,6 +5,7 @@
 Tests at the module interface level — subprocess calls are mocked.
 """
 
+import os
 import subprocess
 import unittest
 from unittest.mock import MagicMock, patch
@@ -73,6 +74,32 @@ class TestShellExecutorExecute(unittest.TestCase):
         mock_run.return_value = MagicMock(returncode=0, stdout="ok", stderr="")
         result = self.se.execute("echo", shell="ps")
         self.assertEqual(result["shell"], "powershell")
+
+    @patch("modules.shell_executor.subprocess.run")
+    @patch("modules.shell_executor.os.path.exists", side_effect=lambda p: "Git" in str(p))
+    def test_execute_auto_routes_unix_syntax_to_bash(self, _mock_exists, mock_run):
+        mock_run.return_value = MagicMock(returncode=0, stdout="ok", stderr="")
+        result = self.se.execute("ls -t /tmp/screenshot_v2.png | head -n 1")
+        self.assertEqual(result["shell"], "bash")
+        self.assertTrue(result.get("shell_auto_selected"))
+        args = mock_run.call_args.args[0]
+        self.assertTrue(str(args[0]).endswith("bash.exe") or "bash" in str(args[0]).lower())
+
+    @patch("modules.shell_executor.os.path.exists", return_value=False)
+    @patch("modules.shell_executor.shutil.which", return_value=None)
+    def test_execute_unix_syntax_without_bash_raises(self, _mock_which, _mock_exists):
+        with self.assertRaises(self.se.ShellNotAvailableError) as ctx:
+            self.se.execute("ls -t /tmp/x | head -n 1")
+        self.assertIn("Unix shell syntax", str(ctx.exception))
+
+    @patch("modules.shell_executor.subprocess.run")
+    def test_execute_bypass_cache_skips_cached_result(self, mock_run):
+        mock_run.return_value = MagicMock(returncode=0, stdout="one", stderr="")
+        with patch.dict(os.environ, {"SHELL_CACHE_TTL_S": "60"}):
+            self.se._shell_result_cache.clear()
+            self.se.execute("echo cached", shell="cmd")
+            self.se.execute("echo cached", shell="cmd", bypass_cache=True)
+        self.assertEqual(mock_run.call_count, 2)
 
 
 

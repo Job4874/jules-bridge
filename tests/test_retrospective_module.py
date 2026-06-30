@@ -45,6 +45,12 @@ def setup_dirs():
         yield {"log": log_path, "memory": memory_path, "root": tmpdir}
 
 
+@pytest.fixture()
+def tmp_dirs(setup_dirs):
+    """Alias for setup_dirs to support TestCheckEvidenceStaleness."""
+    return setup_dirs
+
+
 def _write_log(log_path: str, lines: list[str]) -> None:
     with open(log_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

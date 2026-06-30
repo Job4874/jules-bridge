@@ -508,6 +508,7 @@ def list_remote_sessions(
     jules_command: str = "jules",
     timeout_s: int = 30,
     dry_run: bool = True,
+    bypass_cache: bool = False,
 ) -> JulesRemoteResult:
     """List remote Jules sessions with a timeout.
 
@@ -522,7 +523,12 @@ def list_remote_sessions(
     cache_ttl = int(os.environ.get('JULES_SESSION_CACHE_TTL_S', '30'))
     now = time.time()
 
-    if not dry_run and jules_command in _session_list_cache and cache_ttl > 0:
+    if (
+        not dry_run
+        and not bypass_cache
+        and jules_command in _session_list_cache
+        and cache_ttl > 0
+    ):
         ts, cached_res = _session_list_cache[jules_command]
         if now - ts < cache_ttl:
             cached_res['cache_hit'] = True

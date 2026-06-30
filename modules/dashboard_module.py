@@ -23,6 +23,7 @@ from modules.vm_manager import detect_resource_pressure
 
 _ROOT = Path(__file__).parent.parent
 _LOG_PATH = _ROOT / "bridge.log"
+_LT_LOG_PATH = _ROOT / "jules_inbox" / "LOCAL_TUNNEL_CURRENT.log"
 _LAUNCH_STATE = _ROOT / "JULES_LAUNCH_STATE.json"
 _COT_LEDGER = _ROOT / "JULES_COT_LEDGER.json"
 _WATCH_STATE = _ROOT / "JULES_WATCH_STATE.json"
@@ -188,13 +189,37 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         logs = _tail_log()
 
         ngrok_url = ""
-        # Try to extract ngrok URL from recent logs
+        tunnel_url = ""
+        # 1. Try to discover tunnel from bridge.log.
         for line in reversed(logs):
             if "ngrok-free.dev" in line or "ngrok.io" in line:
                 match = re.search(r"https://[a-z0-9\-]+\.ngrok[a-z.\-]*/", line)
                 if match:
                     ngrok_url = match.group(0).rstrip("/")
+                    tunnel_url = ngrok_url
                     break
+            if "loca.lt" in line:
+                match = re.search(r"https://[a-z0-9\-]+\.loca\.lt", line)
+                if match:
+                    tunnel_url = match.group(0).rstrip("/")
+                    break
+
+        # 2. Try to discover fallback tunnel from the LocalTunnel process log.
+        if not tunnel_url and _LT_LOG_PATH.exists():
+            try:
+                lt_content = _LT_LOG_PATH.read_text(encoding="utf-8").strip()
+                for line in reversed(lt_content.splitlines()):
+                    if "loca.lt" in line:
+                        match = re.search(r"https://[a-z0-9\-]+\.loca\.lt", line)
+                        if match:
+                            tunnel_url = match.group(0).rstrip("/")
+                            break
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+
+        # 3. Try to discover fallback tunnel from .env.
+        if not tunnel_url:
+            tunnel_url = env.get("FALLBACK_TUNNEL_URL") or env.get("PUBLIC_BRIDGE_URL") or ""
 
         result = {
             "ok": True,
@@ -205,6 +230,7 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
                 "uptime_s": uptime_s,
                 "uptime_human": _fmt_uptime(uptime_s),
                 "ngrok_url": ngrok_url,
+                "tunnel_url": tunnel_url,
                 "local_url": "http://127.0.0.1:5000",
             },
             "resource_pressure": {
