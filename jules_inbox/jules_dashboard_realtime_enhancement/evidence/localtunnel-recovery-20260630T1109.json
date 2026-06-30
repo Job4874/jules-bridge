@@ -1,0 +1,60 @@
+{
+  "timestamp_local": "2026-06-30T11:09:00-06:00",
+  "branch": "codex/jules-production-finish",
+  "head_before_evidence_commit": "eefae7e0f470e7900d62be61e17f79704d988e14",
+  "purpose": "Secret-free recovery evidence for public LocalTunnel outage while local bridge/dashboard remained healthy.",
+  "symptom": {
+    "public_ping_before_recovery": 503,
+    "public_dashboard_status_before_recovery": 503,
+    "local_bridge_ping": "online",
+    "local_dashboard_ui": "online"
+  },
+  "diagnosis": {
+    "active_localtunnel_helper_before_recovery": false,
+    "bridge_process": "running",
+    "dashboard_preview_process": "running",
+    "conclusion": "Public tunnel helper was absent/stale; local bridge and dashboard did not need a restart."
+  },
+  "recovery": {
+    "first_attempt": {
+      "result": "failed",
+      "reason": "PATH command string was malformed; localtunnel exited with node not recognized.",
+      "out_log": "jules_inbox/runtime_logs/localtunnel-20260630T170758Z.out.log",
+      "err_log": "jules_inbox/runtime_logs/localtunnel-20260630T170758Z.err.log"
+    },
+    "second_attempt": {
+      "result": "passed",
+      "process_family": "powershell -> pnpm dlx localtunnel@2.0.2 -> node localtunnel",
+      "out_log": "jules_inbox/runtime_logs/localtunnel-20260630T170819Z.out.log",
+      "err_log": "jules_inbox/runtime_logs/localtunnel-20260630T170819Z.err.log",
+      "reported_url": "https://shaggy-kiwis-shout.loca.lt"
+    }
+  },
+  "post_recovery_verification": {
+    "public_ping": {
+      "route": "GET https://shaggy-kiwis-shout.loca.lt/ping",
+      "result": "passed",
+      "status_text": "Jules Bridge Online"
+    },
+    "public_dashboard_status": {
+      "route": "GET https://shaggy-kiwis-shout.loca.lt/dashboard/status",
+      "result": "passed",
+      "cloud_online": 1,
+      "gemini": "error",
+      "openrouter": "error"
+    }
+  },
+  "jules_sessions": {
+    "primary": "7152730290236054698",
+    "primary_status": "In Progress",
+    "secondary": "14369052129679399317",
+    "pull_applied": false,
+    "pull_reason": "Primary Jules session was not Completed in the fresh /jules/sessions poll."
+  },
+  "production_readiness": {
+    "public_tunnel_recovered": true,
+    "provider_readiness": "degraded",
+    "ready_to_mark_clean": false,
+    "pr64_should_remain_draft": true
+  }
+}
