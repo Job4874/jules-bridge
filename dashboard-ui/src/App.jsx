@@ -1,49 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  ArcElement,
-  Filler,
-} from 'chart.js';
-import { Line, Doughnut } from 'react-chartjs-2';
 import './index.css';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  ArcElement,
-  Filler,
-);
 
 const BRIDGE = import.meta.env.VITE_BRIDGE_URL || 'http://127.0.0.1:5000';
 const TOKEN = import.meta.env.VITE_BRIDGE_TOKEN || '';
-const HISTORY_POINTS = 48;
+const HISTORY_POINTS = 42;
+
+const NAV_ITEMS = [
+  ['Home', 'HM'],
+  ['Providers', 'PV'],
+  ['Artifacts', 'AR'],
+  ['Scratch', 'SC'],
+  ['Integrations', 'IN'],
+  ['Alerts', 'AL'],
+  ['Settings', 'ST'],
+];
+
+const PROVIDER_KEYS = [
+  ['gemini', 'Gemini'],
+  ['openrouter', 'OpenRouter'],
+  ['vm_worker', 'VM Worker'],
+];
 
 const DEFAULT_PROVIDERS = {
   gemini: { status: 'no_key' },
   openrouter: { status: 'no_key' },
   vm_worker: { status: 'offline' },
 };
-
-const NAV_ITEMS = ['Overview', 'Agents', 'Logs', 'Comm'];
-const NAV_TARGETS = {
-  Overview: 'dashboard-overview',
-  Agents: 'dashboard-agents',
-  Logs: 'dashboard-logs',
-  Comm: 'dashboard-comm',
-};
-const PROVIDER_KEYS = [
-  ['gemini', 'Gemini'],
-  ['openrouter', 'OpenRouter'],
-  ['vm_worker', 'VM Worker'],
-];
 
 const emptySnapshot = {
   ok: false,
@@ -83,40 +65,10 @@ const emptySnapshot = {
   envKeysPresent: [],
 };
 
-const lineOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  animation: false,
-  scales: {
-    x: { display: false },
-    y: {
-      min: 0,
-      max: 100,
-      border: { display: false },
-      grid: { color: 'rgba(148, 163, 184, 0.1)' },
-      ticks: {
-        stepSize: 25,
-        color: '#6b7280',
-        font: { size: 10, family: 'JetBrains Mono, Consolas, monospace' },
-      },
-    },
-  },
-  plugins: { legend: { display: false }, tooltip: { enabled: false } },
-  elements: { point: { radius: 0 }, line: { tension: 0.35, borderWidth: 2 } },
-};
-
-const ringOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  cutout: '76%',
-  animation: false,
-  plugins: { legend: { display: false }, tooltip: { enabled: false } },
-};
-
 function clampPercent(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return 0;
-  return Math.max(0, Math.min(100, n));
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.max(0, Math.min(100, number));
 }
 
 function normalizeDashboard(raw) {
@@ -169,7 +121,7 @@ function statusTone(status) {
   const normalized = String(status || '').toLowerCase();
   if (['ok', 'online', 'running', 'active', 'pass', 'complete'].includes(normalized)) return 'good';
   if (['error', 'failed', 'offline', 'exception', 'invalid_key'].includes(normalized)) return 'bad';
-  if (['no_key', 'unknown', 'provisioning', 'planning', 'in progress'].includes(normalized)) return 'warn';
+  if (['no_key', 'unknown', 'provisioning', 'planning', 'blocked', 'in progress'].includes(normalized)) return 'warn';
   return 'neutral';
 }
 
@@ -179,7 +131,7 @@ function providerStatus(snapshot, key) {
 
 function providerLabel(status) {
   if (status === 'no_key') return 'NO KEY';
-  if (status === 'invalid_key') return 'INVALID KEY';
+  if (status === 'invalid_key') return 'INVALID';
   return String(status || 'unknown').replaceAll('_', ' ').toUpperCase();
 }
 
@@ -191,9 +143,9 @@ function routeLabel(snapshot) {
 }
 
 function formatClock(value) {
-  if (!value) return '--';
+  if (!value) return '--:--:--';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '--';
+  if (Number.isNaN(date.getTime())) return '--:--:--';
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
@@ -202,10 +154,10 @@ function timeAgo(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '--';
   const seconds = Math.max(0, Math.round((Date.now() - date.getTime()) / 1000));
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  return `${Math.floor(minutes / 60)}h ago`;
+  if (minutes < 60) return `${minutes}m`;
+  return `${Math.floor(minutes / 60)}h`;
 }
 
 function percent(value, total) {
@@ -266,16 +218,6 @@ function createEvents(next, previous) {
     });
   }
 
-  if (next.fleet.completed !== previous.fleet.completed || next.fleet.pending !== previous.fleet.pending) {
-    events.push({
-      id: eventId('fleet'),
-      tone: next.fleet.pending === 0 && next.fleet.completed > 0 ? 'good' : 'neutral',
-      title: 'Jules fleet progress updated',
-      detail: `${next.fleet.completed} complete, ${next.fleet.pending} pending`,
-      at,
-    });
-  }
-
   if (next.resource.maxedOut !== previous.resource.maxedOut) {
     events.push({
       id: eventId('pressure'),
@@ -293,8 +235,8 @@ function parseLogLine(line) {
   const match = String(line).match(/^(\[[^\]]+\])\s?(.*)$/);
   const message = match ? match[2] : String(line);
   let level = 'INFO';
-  if (/error|fail|exception/i.test(message)) level = 'ERROR';
-  else if (/warn|blocked|stale|invalid/i.test(message)) level = 'WARN';
+  if (/error|fail|exception|invalid/i.test(message)) level = 'ERROR';
+  else if (/warn|blocked|stale|dry_run/i.test(message)) level = 'WARN';
   return {
     time: match ? match[1] : '',
     level,
@@ -302,57 +244,190 @@ function parseLogLine(line) {
   };
 }
 
-function makeLineData(values, color) {
-  return {
-    labels: values.map((_, index) => String(index)),
-    datasets: [
-      {
-        data: values,
-        borderColor: color,
-        backgroundColor: `${color}22`,
-        fill: true,
-      },
-    ],
-  };
+function sparkPoints(values) {
+  const width = 148;
+  const height = 42;
+  const safeValues = values.length ? values : [0];
+  return safeValues.map((value, index) => {
+    const x = safeValues.length === 1 ? 0 : (index / (safeValues.length - 1)) * width;
+    const y = height - (clampPercent(value) / 100) * height;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
 }
 
-function MetricTile({ label, value, detail, tone = 'neutral', sparkline }) {
+function cx(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
+
+function Dot({ tone = 'neutral' }) {
+  return <span className={cx('dot', tone)} aria-hidden="true" />;
+}
+
+function Panel({ title, meta, className = '', children }) {
   return (
-    <section className={`metric-tile ${tone}`}>
-      <div className="tile-kicker">{label}</div>
-      <div className="tile-value">{value}</div>
-      <div className="tile-detail">{detail}</div>
-      {sparkline && <div className="tile-chart">{sparkline}</div>}
+    <section className={cx('cockpit-panel', className)}>
+      <header className="panel-titlebar">
+        <h2>{title}</h2>
+        {meta && <div className="panel-meta">{meta}</div>}
+      </header>
+      <div className="panel-content">{children}</div>
     </section>
   );
 }
 
-function Panel({ title, action, className = '', id, children }) {
+function Sidebar({ activeNav, setActiveNav, connection, snapshot }) {
   return (
-    <section className={`panel ${className}`} id={id}>
-      <div className="panel-header">
-        <h2>{title}</h2>
-        {action && <div className="panel-action">{action}</div>}
+    <aside className="side-rail">
+      <div className="rail-logo">
+        <span>JB</span>
       </div>
-      <div className="panel-body">{children}</div>
-    </section>
+      <nav aria-label="Cockpit navigation">
+        {NAV_ITEMS.map(([label, code]) => (
+          <button
+            className={activeNav === label ? 'active' : ''}
+            key={label}
+            onClick={() => setActiveNav(label)}
+            title={label}
+            type="button"
+          >
+            <span>{code}</span>
+            <b>{label}</b>
+          </button>
+        ))}
+      </nav>
+      <div className="rail-status">
+        <Dot tone={connection.online ? 'good' : 'bad'} />
+        <strong>{connection.online ? 'System Operational' : 'System Offline'}</strong>
+        <span>{snapshot.cloud.online}/{snapshot.cloud.total} workers</span>
+        <span>Sync {timeAgo(connection.lastUpdated)} ago</span>
+      </div>
+    </aside>
+  );
+}
+
+function TopBar({ connection, snapshot, onPause, onRefresh }) {
+  return (
+    <header className="top-strip">
+      <div className="top-title">
+        <span>JULES BRIDGE</span>
+        <h1>Live operations cockpit</h1>
+      </div>
+      <div className="top-stats">
+        <span><Dot tone={connection.online ? 'good' : 'bad'} />{connection.online ? 'LIVE' : 'OFFLINE'}</span>
+        <span>Sync {formatClock(connection.lastUpdated)}</span>
+        <span>{timeAgo(connection.lastUpdated)} ago</span>
+        <span>{connection.latencyMs}ms</span>
+        <span>Cache {snapshot.cacheAge}s</span>
+      </div>
+      <div className="top-actions">
+        <button onClick={onPause} type="button">{connection.paused ? 'Resume' : 'Pause'}</button>
+        <button disabled={connection.loading} onClick={onRefresh} type="button">
+          {connection.loading ? 'Refreshing' : 'Refresh'}
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function TaskTimeline({ snapshot, connection }) {
+  const providerFailures = PROVIDER_KEYS.filter(([key]) => statusTone(providerStatus(snapshot, key)) === 'bad').length;
+  const vmReady = providerStatus(snapshot, 'vm_worker') === 'ok';
+  const tasks = [
+    {
+      name: 'provider audit',
+      owner: 'Jules-01',
+      status: providerFailures ? 'waiting feedback' : 'clear',
+      tone: providerFailures ? 'warn' : 'good',
+      offset: 7,
+      span: 38,
+    },
+    {
+      name: 'VM chat route',
+      owner: 'Fallback',
+      status: vmReady ? 'ready' : 'erroring',
+      tone: vmReady ? 'good' : 'bad',
+      offset: 21,
+      span: 34,
+    },
+    {
+      name: 'public ngrok route',
+      owner: 'Bridge',
+      status: snapshot.bridge.tunnelActive ? 'active' : '404 / offline',
+      tone: snapshot.bridge.tunnelActive ? 'good' : 'bad',
+      offset: 34,
+      span: 42,
+    },
+    {
+      name: 'readiness PR',
+      owner: 'Codex',
+      status: connection.online ? 'live verify' : 'blocked',
+      tone: connection.online ? 'blue' : 'warn',
+      offset: 12,
+      span: 52,
+    },
+    {
+      name: 'dispatch queue',
+      owner: 'Fleet',
+      status: `${snapshot.fleet.pending} pending`,
+      tone: snapshot.fleet.failed ? 'bad' : 'neutral',
+      offset: 52,
+      span: 28,
+    },
+  ];
+
+  return (
+    <div className="timeline-board">
+      <div className="time-axis">
+        <span>now</span>
+        <span>+15m</span>
+        <span>+30m</span>
+        <span>+45m</span>
+      </div>
+      {tasks.map((task) => (
+        <div className="timeline-row" key={task.name}>
+          <div className="task-copy">
+            <strong>{task.name}</strong>
+            <span>{task.owner}</span>
+          </div>
+          <div className="task-track">
+            <span
+              className={cx('task-bar', task.tone)}
+              style={{ left: `${task.offset}%`, width: `${task.span}%` }}
+            >
+              {task.status}
+            </span>
+          </div>
+        </div>
+      ))}
+      <div className="timeline-footer">
+        <span>bridge {snapshot.bridge.status}</span>
+        <span>{routeLabel(snapshot)}</span>
+        <span>{snapshot.bridge.tunnelUrl || snapshot.bridge.localUrl}</span>
+      </div>
+    </div>
   );
 }
 
 function ProviderMatrix({ snapshot }) {
   return (
-    <div className="provider-grid">
+    <div className="provider-matrix">
+      <div className="provider-head">
+        <span>Provider</span>
+        <span>Auth</span>
+        <span>Route</span>
+        <span>State</span>
+      </div>
       {PROVIDER_KEYS.map(([key, label]) => {
         const provider = snapshot.providers?.[key] || {};
         const status = provider.status || 'unknown';
-        const detail = provider.error_type || provider.http_status || provider.model || routeLabel(snapshot);
+        const tone = statusTone(status);
+        const detail = provider.error_type || provider.http_status || provider.model || (key === 'vm_worker' ? 'vm/jules-worker' : 'env key');
         return (
-          <div className={`provider-row ${statusTone(status)}`} key={key}>
-            <div>
-              <div className="row-title">{label}</div>
-              <div className="row-subtitle">{String(detail || '--')}</div>
-            </div>
-            <span className="status-pill">{providerLabel(status)}</span>
+          <div className={cx('provider-line', tone)} key={key}>
+            <span><Dot tone={tone} />{label}</span>
+            <span>{providerLabel(status)}</span>
+            <span>{String(detail || '--')}</span>
+            <span>{tone === 'good' ? 'Ready' : tone === 'bad' ? 'Blocker' : 'Watch'}</span>
           </div>
         );
       })}
@@ -360,143 +435,185 @@ function ProviderMatrix({ snapshot }) {
   );
 }
 
-function FleetBoard({ fleet }) {
-  const total = Math.max(fleet.launched, fleet.completed + fleet.pending + fleet.failed);
-  const completePct = percent(fleet.completed, total);
-  const pendingPct = percent(fleet.pending, total);
-  const failedPct = percent(fleet.failed, total);
-  const activePct = Math.max(0, 100 - completePct - pendingPct - failedPct);
-
+function Meter({ label, value, tone = 'blue' }) {
   return (
-    <div className="fleet-board">
-      <div className="fleet-rings">
-        <div className="ring-wrap">
-          <Doughnut
-            data={{
-              datasets: [
-                {
-                  data: [fleet.completed, Math.max(1, total - fleet.completed)],
-                  backgroundColor: ['#38c172', 'rgba(148, 163, 184, 0.12)'],
-                  borderWidth: 0,
-                },
-              ],
-            }}
-            options={ringOptions}
-          />
-          <div className="ring-center">
-            <strong>{fleet.completed}</strong>
-            <span>done</span>
-          </div>
-        </div>
-        <div className="fleet-numbers">
-          <div><strong>{fleet.launched}</strong><span>launched</span></div>
-          <div><strong>{fleet.inProgress}</strong><span>active</span></div>
-          <div><strong>{fleet.pending}</strong><span>pending</span></div>
-          <div><strong>{fleet.failed}</strong><span>failed</span></div>
-        </div>
+    <div className="meter-row">
+      <div>
+        <strong>{label}</strong>
+        <span>{Math.round(value)}%</span>
       </div>
-      <div className="fleet-bar" aria-label="Fleet status distribution">
-        <span className="bar-complete" style={{ width: `${completePct}%` }} />
-        <span className="bar-active" style={{ width: `${activePct}%` }} />
-        <span className="bar-pending" style={{ width: `${pendingPct}%` }} />
-        <span className="bar-failed" style={{ width: `${failedPct}%` }} />
+      <div className="meter-track">
+        <span className={tone} style={{ width: `${clampPercent(value)}%` }} />
       </div>
     </div>
   );
 }
 
-function WorkerTopology({ cloud }) {
-  if (!cloud.vms.length) {
-    return <div className="empty-state">No cloud workers reported.</div>;
-  }
-
+function WorkerSystems({ snapshot, cpuHistory, memHistory }) {
+  const cloudPercent = percent(snapshot.cloud.online, snapshot.cloud.total || 1);
   return (
-    <div className="worker-topology">
-      {cloud.vms.map((vm, index) => {
-        const status = vm.status || 'unknown';
-        const key = `${vm.provider || 'worker'}-${vm.name || vm.ip || index}`;
-        return (
-          <div className={`worker-node ${vm.reachable ? 'good' : 'warn'}`} key={key}>
-            <div className="node-head">
-              <span className="node-provider">{vm.provider || 'Cloud'}</span>
-              <span className={`live-dot ${vm.reachable ? '' : 'warn'}`} />
-            </div>
-            <div className="node-name" title={vm.name || ''}>{vm.name || '--'}</div>
-            <div className="node-meta">
-              <span>{String(status).toUpperCase()}</span>
-              <span>{vm.ip || '--'}</span>
-            </div>
-          </div>
-        );
-      })}
+    <div className="systems-board">
+      <div className="spark-grid">
+        <div className="spark-card">
+          <span>CPU</span>
+          <strong>{snapshot.resource.cpu.toFixed(1)}%</strong>
+          <svg viewBox="0 0 148 42" role="img" aria-label="CPU history sparkline">
+            <polyline points={sparkPoints(cpuHistory)} />
+          </svg>
+        </div>
+        <div className="spark-card">
+          <span>MEM</span>
+          <strong>{snapshot.resource.memory.toFixed(1)}%</strong>
+          <svg viewBox="0 0 148 42" role="img" aria-label="Memory history sparkline">
+            <polyline points={sparkPoints(memHistory)} />
+          </svg>
+        </div>
+      </div>
+      <Meter label="Cloud workers" value={cloudPercent} tone="green" />
+      <Meter label="Bridge pressure" value={snapshot.resource.maxedOut ? 86 : Math.max(snapshot.resource.cpu, snapshot.resource.memory)} tone={snapshot.resource.maxedOut ? 'red' : 'blue'} />
+      <div className="mini-legend">
+        <span><Dot tone="good" />live</span>
+        <span><Dot tone="warn" />watch</span>
+        <span><Dot tone="bad" />block</span>
+      </div>
     </div>
   );
 }
 
-function EventStream({ events }) {
-  if (!events.length) return <div className="empty-state">Awaiting live changes.</div>;
+function EventQueue({ events, snapshot }) {
+  const fallbackEvents = [
+    {
+      id: 'provider-baseline',
+      tone: PROVIDER_KEYS.some(([key]) => statusTone(providerStatus(snapshot, key)) === 'bad') ? 'bad' : 'good',
+      title: 'Provider readiness sampled',
+      detail: routeLabel(snapshot),
+      at: snapshot.timestamp,
+    },
+    {
+      id: 'tunnel-baseline',
+      tone: snapshot.bridge.tunnelActive ? 'good' : 'bad',
+      title: snapshot.bridge.tunnelActive ? 'Public tunnel active' : 'Public route unavailable',
+      detail: snapshot.bridge.tunnelUrl || 'No tunnel URL reported',
+      at: snapshot.timestamp,
+    },
+    {
+      id: 'cloud-baseline',
+      tone: snapshot.cloud.online > 0 ? 'good' : 'warn',
+      title: 'Cloud worker census',
+      detail: `${snapshot.cloud.online}/${snapshot.cloud.total} online`,
+      at: snapshot.timestamp,
+    },
+  ];
+  const visible = [
+    ...events,
+    ...fallbackEvents.filter((fallback) => !events.some((event) => event.id === fallback.id)),
+  ];
+
   return (
-    <div className="event-stream">
-      {events.slice(0, 12).map((event) => (
-        <div className={`event-row ${event.tone}`} key={event.id}>
-          <span className="event-rail" />
+    <div className="event-queue">
+      {visible.slice(0, 10).map((event) => (
+        <article className={cx('queue-row', event.tone)} key={event.id}>
+          <span>{event.tone.toUpperCase()}</span>
           <div>
-            <div className="event-title">{event.title}</div>
-            <div className="event-detail">{event.detail}</div>
+            <strong>{event.title}</strong>
+            <p>{event.detail}</p>
           </div>
           <time>{formatClock(event.at)}</time>
-        </div>
+        </article>
       ))}
     </div>
   );
 }
 
-function TerminalStream({ logs, filter, onFilterChange }) {
-  const parsed = logs.map(parseLogLine);
+function TerminalStream({ logs, filter, setFilter }) {
+  const parsed = logs.length ? logs.map(parseLogLine) : [
+    { time: '[local]', level: 'INFO', message: 'Waiting for bridge log lines.' },
+    { time: '[route]', level: 'INFO', message: `Status source ${BRIDGE}/dashboard/status` },
+  ];
   const filtered = filter === 'ALL' ? parsed : parsed.filter((line) => line.level === filter);
 
   return (
-    <>
-      <div className="segmented-control">
+    <div className="terminal-wrap">
+      <div className="terminal-tabs">
         {['ALL', 'INFO', 'WARN', 'ERROR'].map((item) => (
           <button
             className={filter === item ? 'active' : ''}
             key={item}
-            onClick={() => onFilterChange(item)}
+            onClick={() => setFilter(item)}
             type="button"
           >
             {item}
           </button>
         ))}
       </div>
-      <div className="terminal-stream">
-        {filtered.length === 0 ? (
-          <div className="empty-state">No matching log lines.</div>
-        ) : (
-          filtered.slice(-80).map((line, index) => (
-            <div className={`terminal-line ${line.level}`} key={`${line.time}-${index}`}>
-              <span className="terminal-time">{line.time}</span>
-              <span className="terminal-level">{line.level}</span>
-              <span className="terminal-message">{line.message}</span>
-            </div>
-          ))
-        )}
+      <div className="terminal-box" role="log" aria-label="Bridge terminal stream">
+        {filtered.slice(-60).map((line, index) => (
+          <div className={cx('terminal-line', line.level)} key={`${line.time}-${index}`}>
+            <span>{line.time}</span>
+            <b>{line.level}</b>
+            <code>{line.message}</code>
+          </div>
+        ))}
       </div>
-    </>
+    </div>
   );
 }
 
-function ChatPanel({ route, model, setModel }) {
+function FleetCloudBoard({ snapshot }) {
+  const total = Math.max(snapshot.fleet.launched, snapshot.fleet.completed + snapshot.fleet.pending + snapshot.fleet.failed);
+  const done = percent(snapshot.fleet.completed, total);
+  const active = percent(snapshot.fleet.inProgress, total);
+  const pending = percent(snapshot.fleet.pending, total);
+  const failed = percent(snapshot.fleet.failed, total);
+
+  return (
+    <div className="fleet-cloud">
+      <div className="fleet-stat-ring" style={{ '--done': `${done}%` }}>
+        <strong>{snapshot.fleet.completed}</strong>
+        <span>done</span>
+      </div>
+      <div className="fleet-cards">
+        <span><b>{snapshot.fleet.launched}</b>launched</span>
+        <span><b>{snapshot.fleet.inProgress}</b>active</span>
+        <span><b>{snapshot.fleet.pending}</b>pending</span>
+        <span><b>{snapshot.fleet.failed}</b>failed</span>
+      </div>
+      <div className="fleet-progress" aria-label="Fleet status distribution">
+        <span className="green" style={{ width: `${done}%` }} />
+        <span className="blue" style={{ width: `${active}%` }} />
+        <span className="amber" style={{ width: `${pending}%` }} />
+        <span className="red" style={{ width: `${failed}%` }} />
+      </div>
+      <div className="cloud-list">
+        {snapshot.cloud.vms.length ? snapshot.cloud.vms.slice(0, 3).map((vm, index) => (
+          <div className="cloud-node" key={`${vm.name || vm.ip || index}`}>
+            <Dot tone={vm.reachable ? 'good' : 'warn'} />
+            <strong>{vm.name || 'cloud worker'}</strong>
+            <span>{vm.ip || vm.status || '--'}</span>
+          </div>
+        )) : (
+          <div className="cloud-node">
+            <Dot tone="warn" />
+            <strong>No workers reported</strong>
+            <span>waiting for VM census</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CodexPanel({ route, model, setModel }) {
   const [messages, setMessages] = useState([
     { role: 'system', content: 'Comm link ready. Bridge-backed chat responses appear here.' },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [pendingImage, setPendingImage] = useState(null);
   const [isThinking, setIsThinking] = useState(false);
-  const chatBoxRef = useRef(null);
+  const feedRef = useRef(null);
 
   useEffect(() => {
-    if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
   }, [messages, isThinking]);
 
   useEffect(() => {
@@ -528,8 +645,8 @@ function ChatPanel({ route, model, setModel }) {
     const image = pendingImage;
     setInputValue('');
     setPendingImage(null);
-    setMessages((prev) => [
-      ...prev,
+    setMessages((previous) => [
+      ...previous,
       { role: 'user', content: message || '[visual attachment]', img: image?.src },
     ]);
     setIsThinking(true);
@@ -537,24 +654,23 @@ function ChatPanel({ route, model, setModel }) {
     try {
       const payload = { message: message || 'Analyze this visual data.', model };
       if (image) payload.image_base64 = image.base64;
+      const headers = { 'Content-Type': 'application/json' };
+      if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
 
       const response = await fetch(`${BRIDGE}/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${TOKEN}`,
-        },
+        headers,
         body: JSON.stringify(payload),
       });
       const data = await response.json();
       const meta = data.model_used ? `${data.model_used} / ${data.elapsed_ms || 0}ms` : '';
-      setMessages((prev) => [
-        ...prev,
+      setMessages((previous) => [
+        ...previous,
         { role: response.ok ? 'ai' : 'system', content: data.response || data.error || 'No response.', meta },
       ]);
     } catch (error) {
-      setMessages((prev) => [
-        ...prev,
+      setMessages((previous) => [
+        ...previous,
         { role: 'system', content: `Comm link failed: ${error.message}` },
       ]);
     } finally {
@@ -570,51 +686,47 @@ function ChatPanel({ route, model, setModel }) {
   };
 
   return (
-    <aside className="comm-panel" id="dashboard-comm">
-      <div className="comm-header">
+    <section className="cockpit-panel codex-panel">
+      <header className="panel-titlebar codex-titlebar">
         <div>
-          <h2>Comm Link</h2>
-          <p>{route}</p>
+          <h2>Codex</h2>
+          <span>{route}</span>
         </div>
         <select value={model} onChange={(event) => setModel(event.target.value)} aria-label="Chat model">
           <option value="fast">fast</option>
           <option value="smart">smart</option>
         </select>
-      </div>
-
-      <div className="chat-feed" ref={chatBoxRef}>
+      </header>
+      <div className="chat-feed" ref={feedRef}>
         {messages.map((message, index) => (
-          <div className={`message ${message.role}`} key={`${message.role}-${index}`}>
-            <div>{message.content}</div>
+          <article className={cx('chat-bubble', message.role)} key={`${message.role}-${index}`}>
+            <p>{message.content}</p>
             {message.img && <img src={message.img} alt="Attached visual" />}
             {message.meta && <span>{message.meta}</span>}
-          </div>
+          </article>
         ))}
-        {isThinking && <div className="message ai thinking">Receiving...</div>}
+        {isThinking && <article className="chat-bubble ai"><p>Receiving...</p></article>}
       </div>
-
-      <div className="chat-composer">
+      <div className="composer">
         {pendingImage && (
-          <div className="attachment-strip">
+          <div className="attachment">
             <img src={pendingImage.src} alt="Pending visual" />
-            <span>Visual attached</span>
-            <button type="button" onClick={() => setPendingImage(null)} aria-label="Remove attachment">x</button>
+            <span>visual attached</span>
+            <button onClick={() => setPendingImage(null)} type="button">x</button>
           </div>
         )}
         <div className="composer-row">
           <textarea
-            value={inputValue}
             onChange={(event) => setInputValue(event.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Message the bridge..."
+            placeholder="Message bridge..."
             rows={1}
+            value={inputValue}
           />
-          <button type="button" onClick={sendChat} disabled={isThinking} aria-label="Send message">
-            Send
-          </button>
+          <button disabled={isThinking} onClick={sendChat} type="button">Send</button>
         </div>
       </div>
-    </aside>
+    </section>
   );
 }
 
@@ -631,10 +743,9 @@ function App() {
     lastUpdated: '',
     error: '',
   });
-  const [activeNav, setActiveNav] = useState('Overview');
+  const [activeNav, setActiveNav] = useState('Home');
   const [logFilter, setLogFilter] = useState('ALL');
   const [model, setModel] = useState('fast');
-
   const controllerRef = useRef(null);
   const inFlightRef = useRef(false);
 
@@ -642,9 +753,7 @@ function App() {
     const next = normalizeDashboard(raw);
     setSnapshot((previous) => {
       const diffEvents = createEvents(next, previous);
-      if (diffEvents.length) {
-        setEvents((prev) => [...diffEvents, ...prev].slice(0, 60));
-      }
+      if (diffEvents.length) setEvents((prev) => [...diffEvents, ...prev].slice(0, 60));
       return next;
     });
     setCpuHistory((previous) => [...previous.slice(1), next.resource.cpu]);
@@ -669,8 +778,8 @@ function App() {
     controllerRef.current = controller;
     inFlightRef.current = true;
     const started = performance.now();
-
     setConnection((previous) => ({ ...previous, loading: bypassCache ? true : previous.loading }));
+
     try {
       const suffix = bypassCache ? '?bypass_cache=true' : '';
       const response = await fetch(`${BRIDGE}/dashboard/status${suffix}`, {
@@ -702,9 +811,7 @@ function App() {
       if (controllerRef.current === controller) {
         inFlightRef.current = false;
         controllerRef.current = null;
-        setConnection((previous) => (
-          previous.loading ? { ...previous, loading: false } : previous
-        ));
+        setConnection((previous) => (previous.loading ? { ...previous, loading: false } : previous));
       }
     }
   }, [applySnapshot]);
@@ -719,149 +826,45 @@ function App() {
     };
   }, [connection.paused, fetchStatus]);
 
-  const cpuData = useMemo(() => makeLineData(cpuHistory, '#58a6ff'), [cpuHistory]);
-  const memData = useMemo(() => makeLineData(memHistory, '#38c172'), [memHistory]);
-  const route = routeLabel(snapshot);
-  const providerFailures = PROVIDER_KEYS.filter(([key]) => statusTone(providerStatus(snapshot, key)) === 'bad').length;
-  const fleetTotal = Math.max(snapshot.fleet.launched, snapshot.fleet.completed + snapshot.fleet.pending + snapshot.fleet.failed);
-  const fleetProgress = percent(snapshot.fleet.completed, fleetTotal);
-  const selectNav = (item) => {
-    setActiveNav(item);
-    window.requestAnimationFrame(() => {
-      document.getElementById(NAV_TARGETS[item])?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
-  };
+  const route = useMemo(() => routeLabel(snapshot), [snapshot]);
 
   return (
     <div className="app-shell">
-      <nav className="nav-rail" aria-label="Dashboard navigation">
-        <div className="brand-mark">JN</div>
-        {NAV_ITEMS.map((item) => (
-          <button
-            className={activeNav === item ? 'active' : ''}
-            key={item}
-            onClick={() => selectNav(item)}
-            type="button"
-          >
-            {item}
-          </button>
-        ))}
-      </nav>
-
-      <main className="dashboard-shell">
-        <header className="command-bar">
-          <div>
-            <div className="eyebrow">Jules Nexus</div>
-            <h1>Real-time bridge command center</h1>
-          </div>
-          <div className="command-status">
-            <span className={`live-dot ${connection.online ? '' : 'bad'}`} />
-            <span>{connection.online ? 'Live' : 'Offline'}</span>
-            <span>Sync {formatClock(connection.lastUpdated)}</span>
-            <span>{timeAgo(connection.lastUpdated)}</span>
-            <span>{connection.latencyMs}ms</span>
-            <span>Cache {snapshot.cacheAge}s</span>
-          </div>
-          <div className="command-actions">
-            <button type="button" onClick={() => setConnection((prev) => ({ ...prev, paused: !prev.paused }))}>
-              {connection.paused ? 'Resume' : 'Pause'}
-            </button>
-            <button type="button" onClick={() => fetchStatus(true)} disabled={connection.loading}>
-              {connection.loading ? 'Refreshing' : 'Refresh'}
-            </button>
-          </div>
-        </header>
-
+      <Sidebar
+        activeNav={activeNav}
+        connection={connection}
+        setActiveNav={setActiveNav}
+        snapshot={snapshot}
+      />
+      <main className="cockpit-shell">
+        <TopBar
+          connection={connection}
+          onPause={() => setConnection((previous) => ({ ...previous, paused: !previous.paused }))}
+          onRefresh={() => fetchStatus(true)}
+          snapshot={snapshot}
+        />
         {connection.error && <div className="sync-error">{connection.error}</div>}
-
-        <section className="metric-strip" id="dashboard-overview">
-          <MetricTile
-            label="Bridge"
-            value={snapshot.bridge.status.toUpperCase()}
-            detail={`Uptime ${snapshot.bridge.uptime}`}
-            tone={connection.online ? 'good' : 'bad'}
-          />
-          <MetricTile
-            label="Tunnel"
-            value={snapshot.bridge.tunnelActive ? 'ACTIVE' : 'OFFLINE'}
-            detail={snapshot.bridge.tunnelUrl || 'No public route'}
-            tone={snapshot.bridge.tunnelActive ? 'good' : 'bad'}
-          />
-          <MetricTile
-            label="Providers"
-            value={`${3 - providerFailures}/3`}
-            detail={route}
-            tone={providerFailures ? 'warn' : 'good'}
-          />
-          <MetricTile
-            label="Fleet"
-            value={`${fleetProgress}%`}
-            detail={`${snapshot.fleet.completed} done / ${snapshot.fleet.pending} pending`}
-            tone={snapshot.fleet.failed ? 'bad' : 'neutral'}
-          />
-          <MetricTile
-            label="Cloud"
-            value={`${snapshot.cloud.online}/${snapshot.cloud.total}`}
-            detail="workers online"
-            tone={snapshot.cloud.online > 0 ? 'good' : 'warn'}
-          />
-          <MetricTile
-            label="Pressure"
-            value={snapshot.resource.maxedOut ? 'HIGH' : snapshot.resource.status.toUpperCase()}
-            detail={`CPU ${snapshot.resource.cpu.toFixed(1)} / MEM ${snapshot.resource.memory.toFixed(1)}`}
-            tone={snapshot.resource.maxedOut ? 'bad' : 'good'}
-          />
+        <section className="cockpit-grid" aria-label={`${activeNav} operations dashboard`}>
+          <Panel className="timeline-panel" meta={<span>View all</span>} title="Next Tasks Live">
+            <TaskTimeline connection={connection} snapshot={snapshot} />
+          </Panel>
+          <Panel className="provider-panel" meta={<span>{route}</span>} title="Provider Matrix">
+            <ProviderMatrix snapshot={snapshot} />
+          </Panel>
+          <Panel className="system-panel" meta={<span>Live backend health</span>} title="Worker Systems">
+            <WorkerSystems cpuHistory={cpuHistory} memHistory={memHistory} snapshot={snapshot} />
+          </Panel>
+          <Panel className="events-panel" meta={<span>{events.length || 3} events</span>} title="Event Queue">
+            <EventQueue events={events} snapshot={snapshot} />
+          </Panel>
+          <Panel className="terminal-panel" meta={<span>{snapshot.logs.length} lines</span>} title="Terminal Stream">
+            <TerminalStream filter={logFilter} logs={snapshot.logs} setFilter={setLogFilter} />
+          </Panel>
+          <Panel className="fleet-panel" meta={<span>{snapshot.cloud.online}/{snapshot.cloud.total} online</span>} title="Fleet + Cloud">
+            <FleetCloudBoard snapshot={snapshot} />
+          </Panel>
+          <CodexPanel model={model} route={route} setModel={setModel} />
         </section>
-
-        <div className="workspace-grid">
-          <section className="center-stack">
-            <div className="focus-grid">
-              <Panel title="Provider Readiness" action={<span className="route-label">{route}</span>}>
-                <ProviderMatrix snapshot={snapshot} />
-              </Panel>
-
-              <Panel title="Resource Telemetry">
-                <div className="telemetry-grid">
-                  <div>
-                    <div className="chart-label">CPU {snapshot.resource.cpu.toFixed(1)}%</div>
-                    <div className="chart-box"><Line data={cpuData} options={lineOptions} /></div>
-                  </div>
-                  <div>
-                    <div className="chart-label">Memory {snapshot.resource.memory.toFixed(1)}%</div>
-                    <div className="chart-box"><Line data={memData} options={lineOptions} /></div>
-                  </div>
-                </div>
-                <div className="reason-list">
-                  {snapshot.resource.reasons.length ? snapshot.resource.reasons.map((reason) => (
-                    <span key={reason}>{reason}</span>
-                  )) : <span>No pressure reasons reported</span>}
-                </div>
-              </Panel>
-            </div>
-
-            <div className="operations-grid">
-              <Panel title="Fleet Runway" id="dashboard-agents">
-                <FleetBoard fleet={snapshot.fleet} />
-              </Panel>
-
-              <Panel title="Cloud Topology" action={<span>{snapshot.cloud.online}/{snapshot.cloud.total} online</span>}>
-                <WorkerTopology cloud={snapshot.cloud} />
-              </Panel>
-            </div>
-
-            <div className="operations-grid tall">
-              <Panel title="Live Event Stream">
-                <EventStream events={events} />
-              </Panel>
-
-              <Panel title="Terminal Stream" id="dashboard-logs" action={<span>{snapshot.logs.length} lines</span>}>
-                <TerminalStream logs={snapshot.logs} filter={logFilter} onFilterChange={setLogFilter} />
-              </Panel>
-            </div>
-          </section>
-
-          <ChatPanel route={route} model={model} setModel={setModel} />
-        </div>
       </main>
     </div>
   );
