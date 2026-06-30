@@ -1,20 +1,122 @@
 [
   {
-    "name": "parse_json",
-    "detail": "parse_json!(value: string)",
-    "doc": "Parses a JSON string into a structured value and aborts on failure.",
-    "insertText": "parse_json!(${1:value})"
+    "name": "append",
+    "detail": "append(value: array, items: array)",
+    "doc": "Appends each item in the items array to the end of the value array.",
+    "insertText": "append(${1:value}, ${2:items})"
+  },
+  {
+    "name": "contains",
+    "detail": "contains(value: string, substring: string, [case_sensitive: boolean])",
+    "doc": "Determines whether the value string contains the specified substring.",
+    "insertText": "contains(${1:value}, ${2:substring})"
+  },
+  {
+    "name": "del",
+    "detail": "del(target: any, [compact: boolean])",
+    "doc": "Removes the field specified by the static path from the target. Use remove for dynamic path deletion.",
+    "insertText": "del(${1:.field})"
+  },
+  {
+    "name": "downcase",
+    "detail": "downcase(value: string)",
+    "doc": "Downcases the value string using Unicode lowercase rules.",
+    "insertText": "downcase(${1:value})"
+  },
+  {
+    "name": "exists",
+    "detail": "exists(field: any)",
+    "doc": "Checks whether the path exists for the target, distinguishing missing paths from null values.",
+    "insertText": "exists(${1:.field})"
+  },
+  {
+    "name": "get",
+    "detail": "get(value: object | array, path: array)",
+    "doc": "Dynamically gets the value of a given path from an object or array.",
+    "insertText": "get!(${1:value}, ${2:path})"
+  },
+  {
+    "name": "includes",
+    "detail": "includes(value: array, item: any)",
+    "doc": "Determines whether the value array includes the specified item.",
+    "insertText": "includes(${1:value}, ${2:item})"
+  },
+  {
+    "name": "length",
+    "detail": "length(value: string | object | array)",
+    "doc": "Returns the byte length of a string, the number of array elements, or the number of top-level object keys.",
+    "insertText": "length(${1:value})"
+  },
+  {
+    "name": "log",
+    "detail": "log(value: any, [level: string, rate_limit_secs: integer])",
+    "doc": "Logs the value to stdout at the specified level.",
+    "insertText": "log(${1:value})"
   },
   {
     "name": "now",
     "detail": "now()",
-    "doc": "Returns the current timestamp.",
+    "doc": "Returns the current timestamp in the UTC timezone with nanosecond precision.",
     "insertText": "now()"
+  },
+  {
+    "name": "parse_json",
+    "detail": "parse_json(value: string, [max_depth: integer, lossy: boolean])",
+    "doc": "Parses the provided value as JSON and returns a structured JSON value.",
+    "insertText": "parse_json!(${1:value})"
+  },
+  {
+    "name": "pop",
+    "detail": "pop(value: array)",
+    "doc": "Removes the last item from the value array.",
+    "insertText": "pop(${1:value})"
+  },
+  {
+    "name": "push",
+    "detail": "push(value: array, item: any)",
+    "doc": "Adds the item to the end of the value array.",
+    "insertText": "push(${1:value}, ${2:item})"
+  },
+  {
+    "name": "replace",
+    "detail": "replace(value: string, pattern: string | regex, with: string)",
+    "doc": "Replaces all matching instances of pattern in value.",
+    "insertText": "replace(${1:value}, ${2:pattern}, ${3:with})"
+  },
+  {
+    "name": "set",
+    "detail": "set(value: object | array, path: array, data: any)",
+    "doc": "Dynamically inserts data into the path of a given object or array.",
+    "insertText": "set!(${1:value}, ${2:path}, ${3:data})"
+  },
+  {
+    "name": "split",
+    "detail": "split(value: string, pattern: string | regex, [limit: integer])",
+    "doc": "Splits the value string using pattern.",
+    "insertText": "split(${1:value}, ${2:pattern})"
+  },
+  {
+    "name": "strip_whitespace",
+    "detail": "strip_whitespace(value: string)",
+    "doc": "Strips Unicode whitespace from the start and end of value.",
+    "insertText": "strip_whitespace(${1:value})"
+  },
+  {
+    "name": "to_int",
+    "detail": "to_int(value: any)",
+    "doc": "Coerces the value into an integer.",
+    "insertText": "to_int!(${1:value})"
+  },
+  {
+    "name": "to_string",
+    "detail": "to_string(value: any)",
+    "doc": "Coerces the value into a string.",
+    "insertText": "to_string!(${1:value})"
   },
   {
     "name": "upcase",
     "detail": "upcase(value: string)",
-    "doc": "Converts a string to uppercase.",
+    "doc": "Upcases value using Unicode uppercase rules.",
     "insertText": "upcase(${1:value})"
   }
 ]

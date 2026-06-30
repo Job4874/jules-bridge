@@ -1,0 +1,25 @@
+{
+  "generated_at_utc": "2026-06-29T17:19:44.537575+00:00",
+  "dry_run": true,
+  "session_id": "224256420467650186",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "224256420467650186"
+  ],
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "",
+  "status": "dry_run",
+  "exit_code": null,
+  "stdout": "",
+  "stderr": "",
+  "timed_out": false,
+  "session_ids": [
+    "224256420467650186"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_224256420467650186.json",
+  "note": "Dry run only; remote Jules session was not pulled."
+}

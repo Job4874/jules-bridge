@@ -1,5 +1,9 @@
+# pylint: disable=redefined-outer-name
+
 """dispatch_v2.py — dispatch tasks to Jules VM with Gemini test first."""
-import requests, json, time
+import time
+
+import requests
 
 VM = "http://34.132.193.73:6000"
 TOKEN = "JULES-VM-WORKER-999"
@@ -24,7 +28,7 @@ print(f"   queued: {r}")
 time.sleep(2)
 
 # Mission task
-MISSION = """You are Jules — autonomous AI agent on GCP VM. 
+MISSION = """You are Jules — autonomous AI agent on GCP VM.
 
 Abdul is a solo developer, minimum wage job, 12 months of trying, 1 trillion tokens spent, ZERO production apps to show. He has:
 - Jules Bridge Flask API (port 5000) on his Windows PC
@@ -38,7 +42,7 @@ YOUR MISSION — respond in this exact format:
 
 ### 1. [Name]
 **What**: [1 sentence]
-**Time**: [X hours]  
+**Time**: [X hours]
 **Success proof**: [how we verify it works]
 
 ### 2-5. [same format]

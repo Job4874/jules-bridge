@@ -10,12 +10,14 @@
 - compression_ratio: 0.1111
 
 ## No Slop Workflow
+
 - mode: spec_first
 - compaction_required: False
 - phases: research -> plan -> implement
 - gates: review research before plan; review plan before code; record evidence before done
 
 ## Context Handling Policy
+
 - active_context: source head/tail excerpts only
 - memory_store: head_tail_active_context_middle_memory_refs (2 refs)
 - retrieve omitted middles before assuming missing details are irrelevant
@@ -23,12 +25,14 @@
 - long_session_eval: preload 10 turns; probe turn 11
 
 ## Operating Rules
+
 - Keep the main conversation light; do heavy source analysis inside this packet.
 - Use source fingerprints and path refs for retrieval; do not assume omitted middle content is irrelevant.
 - Preserve head/tail evidence and ask for retrieval only when the missing middle is necessary.
 - Do not reveal private chain-of-thought. Return concise rationale, decisions, and evidence.
 
 ## Deliverables
+
 - source inventory
 - operating rules
 - missing or risky source notes
@@ -36,6 +40,7 @@
 ## Source Capsules
 
 ### pasted-text-1.txt
+
 - path_ref: path-ref:47be67f6cb96
 - sha256: 481519daebbe72768edd9f212e222ed5c856af326937fa97236cc588430473eb
 - chars: 6926
@@ -44,6 +49,7 @@
 - signals: long_session_evals, evidence
 
 Head:
+
 ```text
 
 Referenced pasted text files:
@@ -66,6 +72,7 @@ Implemented the safe Jules dispatcher layer and left the broader goa
 ```
 
 Tail:
+
 ```text
 rectly returned status=blocked because jules remote list --session timed out; launch stayed dry-run, and no node / jules.exe process was left behind.
 Verification:
@@ -104,6 +111,7 @@ context/02
 ```
 
 ### pasted-text-2.txt
+
 - path_ref: path-ref:7a9e895ab013
 - sha256: 8e2163d980af6250ccae62c04e345f0fe208799821b6f11df5bb0a7cac6b9bd2
 - chars: 23524
@@ -112,6 +120,7 @@ context/02
 - signals: context_engineering, smart_truncation, memory_store, subagents, long_session_evals
 
 Head:
+
 ```text
 Introduction and speaker background
 0:00
@@ -158,6 +167,7 @@ function a l
 ```
 
 Tail:
+
 ```text
  Basically, we have it saved off
 15:24
@@ -201,4 +211,5 @@ much for the the time. [applause]
 ```
 
 ## Completion Report
+
 Return: findings, decisions, files or routes affected, verification needed, blockers.

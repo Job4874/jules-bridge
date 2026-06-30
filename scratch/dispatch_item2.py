@@ -1,5 +1,5 @@
 """dispatch_item2.py — dispatch TIBIN Core Integration to Jules VM."""
-import requests, json
+import requests
 
 VM = "http://34.132.193.73:6000"
 TOKEN = "JULES-VM-WORKER-999"

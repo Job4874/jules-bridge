@@ -25,6 +25,7 @@ C:\Users\abdul\.gemini\antigravity-ide\scratch\tibin_handover\TIBIN_CODEX_MASTER
 ```
 
 Start files:
+
 1. `00_START_HERE/README_FIRST.md`
 2. `00_START_HERE/CURRENT_HANDOVER_STATUS.md`
 3. `05_IMPLEMENTATION_SPECS/API_AND_AUTH_SPEC_SUMMARY.md`
@@ -37,7 +38,7 @@ Bridge read via: `POST /fs/read` with path above.
 ## Bridge Tentacles for Antigravity Tools
 
 | Antigravity need | Jules route |
-|------------------|-------------|
+| ------------------ | ------------- |
 | Read handover specs | `POST /fs/read`, `POST /fs/list` |
 | Run gcloud / deploy | `POST /shell` (powershell) |
 | Gemini / LLM reasoning | `POST /reasoning/solve` `{model:"fast\|smart"}` |

@@ -8,6 +8,7 @@
 Jules Bridge is a self-improving agentic harness for orchestrating AI coding agents (Jules, Claude, Codex) alongside live trading infrastructure (Quantower + Oracle V5).
 
 It is an HTTP API that runs locally on Windows and exposes structured, typed endpoints for:
+
 - File system operations (read, write, grep, tail)
 - Shell execution (PowerShell, cmd)
 - UI automation (screenshot, click, type)
@@ -27,7 +28,7 @@ It is an HTTP API that runs locally on Windows and exposes structured, typed end
 
 ## Core User Flow
 
-```
+```text
 Session start
   → GET /retrospective/memory?domain=general    (load what went wrong before)
   → GET /oracle/status                           (understand current system state)

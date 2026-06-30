@@ -1,56 +1,62 @@
-import unittest
-from unittest.mock import patch, MagicMock
-import notify_email
 import os
-import base64
+import tempfile
+import unittest
+from unittest.mock import patch
 
-class TestNotifyEmail(unittest.TestCase):
-    @patch('smtplib.SMTP_SSL')
-    @patch('notify_email.load_env')
-    @patch('os.environ.get')
-    def test_send_email_with_attachments(self, mock_env_get, mock_load_env, mock_smtp_ssl):
-        # Setup mocks
-        mock_env_get.side_effect = lambda k, d=None: {
-            'GMAIL_USER': 'test@gmail.com',
-            'GMAIL_APP_PASSWORD': 'password',
-            'SMTP_HOST': 'smtp.gmail.com',
-            'SMTP_PORT': '465',
-            'SMTP_USE_SSL': '1'
-        }.get(k, d)
+import notify_email
 
-        mock_smtp = MagicMock()
-        mock_smtp_ssl.return_value.__enter__.return_value = mock_smtp
 
-        # Create a dummy attachment
-        test_file = 'test_attachment_unit.txt'
-        with open(test_file, 'w') as f:
-            f.write('hello world')
+class TestNotifyEmailAttachments(unittest.TestCase):
+    def _env(self):
+        return {
+            "GMAIL_USER": "sender@example.test",
+            "GMAIL_APP_PASSWORD": "app-password",
+            "EMAIL_TO": "operator@example.test",
+            "SMTP_HOST": "smtp.example.test",
+            "SMTP_PORT": "465",
+            "SMTP_USE_SSL": "1",
+        }
+
+    @patch("notify_email.smtplib.SMTP_SSL")
+    @patch("notify_email.load_env")
+    def test_send_email_attaches_existing_file(self, _mock_load_env, mock_smtp_ssl):
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as handle:
+            handle.write(b"hello screenshot evidence")
+            attachment = handle.name
 
         try:
-            result = notify_email.send_email(
-                subject='Test Subject',
-                body='Test Body',
-                mail_to='recipient@example.com',
-                attachments=[test_file]
-            )
+            with patch.dict(os.environ, self._env(), clear=True):
+                result = notify_email.send_email(
+                    "Status",
+                    "Body",
+                    attachments=[attachment],
+                )
 
-            self.assertEqual(result['subject'], 'Test Subject')
-            self.assertEqual(len(result['attachments']), 1)
+            smtp = mock_smtp_ssl.return_value.__enter__.return_value
+            smtp.login.assert_called_once_with("sender@example.test", "app-password")
+            smtp.sendmail.assert_called_once()
+            message = smtp.sendmail.call_args.args[2]
 
-            # Verify SMTP calls
-            mock_smtp.login.assert_called_with('test@gmail.com', 'password')
-            self.assertTrue(mock_smtp.sendmail.called)
-
-            # Verify message structure
-            args, kwargs = mock_smtp.sendmail.call_args
-            msg_string = args[2]
-            self.assertIn('Content-Type: multipart/mixed', msg_string)
-            self.assertIn(test_file, msg_string)
-            self.assertIn(base64.b64encode(b'hello world').decode(), msg_string)
-
+            self.assertEqual(result["attachments"], [attachment])
+            self.assertIn("Content-Type: multipart/mixed", message)
+            self.assertIn(os.path.basename(attachment), message)
+            self.assertIn("aGVsbG8gc2NyZWVuc2hvdCBldmlkZW5jZQ==", message)
         finally:
-            if os.path.exists(test_file):
-                os.remove(test_file)
+            os.unlink(attachment)
 
-if __name__ == '__main__':
+    @patch("notify_email.smtplib.SMTP_SSL")
+    @patch("notify_email.load_env")
+    def test_send_email_rejects_missing_attachment_before_smtp(self, _mock_load_env, mock_smtp_ssl):
+        missing = os.path.join(tempfile.gettempdir(), "missing-jules-attachment.png")
+        if os.path.exists(missing):
+            os.unlink(missing)
+
+        with patch.dict(os.environ, self._env(), clear=True):
+            with self.assertRaises(FileNotFoundError):
+                notify_email.send_email("Status", "Body", attachments=[missing])
+
+        mock_smtp_ssl.assert_not_called()
+
+
+if __name__ == "__main__":
     unittest.main()

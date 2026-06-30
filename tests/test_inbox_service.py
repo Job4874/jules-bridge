@@ -1,3 +1,5 @@
+# pylint: disable=import-outside-toplevel, unused-variable
+
 """Unit tests for modules/inbox_service.py.
 
 Tests at the module interface level — no Flask or HTTP involved.
@@ -16,7 +18,7 @@ class TestInboxRead(unittest.TestCase):
     def test_read_returns_content(self):
         with tempfile.TemporaryDirectory() as d:
             path = os.path.join(d, "OPERATOR_RESPONSE.md")
-            with open(path, "w") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 f.write("hello from operator")
             message, status = self.svc.inbox_read(file="OPERATOR_RESPONSE.md", inbox_dir=d)
             self.assertEqual(status, 200)
@@ -33,7 +35,7 @@ class TestInboxRead(unittest.TestCase):
     def test_read_default_filename(self):
         with tempfile.TemporaryDirectory() as d:
             path = os.path.join(d, "OPERATOR_RESPONSE.md")
-            with open(path, "w") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 f.write("default")
             message, status = self.svc.inbox_read(file=None, inbox_dir=d)
             self.assertEqual(status, 200)
@@ -41,7 +43,7 @@ class TestInboxRead(unittest.TestCase):
 
     def test_read_lists_available_on_404(self):
         with tempfile.TemporaryDirectory() as d:
-            with open(os.path.join(d, "OTHER.md"), "w") as f:
+            with open(os.path.join(d, "OTHER.md"), "w", encoding="utf-8") as f:
                 f.write("x")
             message, status = self.svc.inbox_read(file="MISSING.md", inbox_dir=d)
             self.assertEqual(status, 404)
@@ -49,7 +51,7 @@ class TestInboxRead(unittest.TestCase):
 
     def test_read_path_traversal_safe_basename(self):
         with tempfile.TemporaryDirectory() as d:
-            with open(os.path.join(d, "safe.md"), "w") as f:
+            with open(os.path.join(d, "safe.md"), "w", encoding="utf-8") as f:
                 f.write("safe")
             # Attempt path traversal via ../../etc/passwd
             message, status = self.svc.inbox_read(
@@ -70,7 +72,7 @@ class TestInboxWrite(unittest.TestCase):
             self.assertEqual(result["status"], "success")
             path = os.path.join(d, "JULES_RESPONSE.md")
             self.assertTrue(os.path.exists(path))
-            with open(path, "r") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 self.assertEqual(f.read(), "Jules was here")
 
     def test_write_default_filename(self):
