@@ -294,3 +294,15 @@ def boot_secondary_vm(
             dry_run=dry_run,
             error=str(exc),
         )
+
+def check_and_scale_compute(dry_run: bool = True, allow_vm_boot: bool = False) -> str:
+    """Check resource pressure and scale compute if needed."""
+    pressure = detect_resource_pressure()
+    if pressure.get("status") == "maxed_out":
+        boot_res = boot_secondary_vm("Boot-GCP-Worker.ps1", allow_vm_boot=allow_vm_boot, dry_run=dry_run)
+        return f"EXECUTED: {boot_res.get('selected_script', 'Boot-GCP-Worker.ps1')}"
+
+    mem = pressure.get('memory_percent')
+    if mem is None:
+        mem = 0.0
+    return f"Memory at {mem}%, no action needed."
