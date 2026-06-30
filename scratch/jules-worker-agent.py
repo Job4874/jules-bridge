@@ -1,3 +1,7 @@
+# pylint: disable=subprocess-run-check
+
+# pylint: disable=invalid-name, broad-exception-caught, redefined-outer-name
+
 #!/usr/bin/env python3
 """
 jules-worker-agent.py — runs on the GCP VM (jules-offload-worker)
@@ -6,18 +10,19 @@ Calls back to local bridge with results.
 """
 import json
 import os
+import shlex
 import subprocess
 import threading
-import time
-import requests
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, request, jsonify
+
+import requests
+from flask import Flask, jsonify, request
 
 # Load env
 env_file = Path(os.path.expanduser("~/.jules_worker.env"))
 if env_file.exists():
-    for line in env_file.read_text().splitlines():
+    for line in env_file.read_text(encoding='utf-8').splitlines():
         if "=" in line and not line.startswith("#"):
             k, _, v = line.partition("=")
             os.environ[k.strip()] = v.strip()
@@ -55,7 +60,7 @@ def ping():
     try:
         ext_ip = subprocess.check_output(["curl", "-s", "--max-time", "3", "ifconfig.me"],
                                           text=True).strip()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
     return jsonify({"ok": True, "agent": "jules-worker", "ip": ext_ip})
 
@@ -108,7 +113,7 @@ def task():
     def run():
         try:
             result = execute_task(task_text, task_type, context)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             result = f"ERROR: {exc}"
         entry["status"] = "done"
         entry["result"] = str(result)[:10000]  # store up to 10k chars
@@ -124,7 +129,7 @@ def task():
                 headers={"Authorization": f"Bearer {LOCAL_TOKEN}"},
                 timeout=10
             )
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
     threading.Thread(target=run, daemon=True).start()
@@ -134,7 +139,7 @@ def task():
 def execute_task(task: str, task_type: str, context: str) -> str:
     """Route task to appropriate executor."""
     if task_type == "shell":
-        proc = subprocess.run(task, shell=True, capture_output=True, text=True, timeout=60)
+        proc = subprocess.run(shlex.split(task), shell=False, capture_output=True, text=True, timeout=60)
         return (proc.stdout + proc.stderr).strip()
     else:
         return call_llm(task, context)

@@ -9,7 +9,9 @@ description: >
 # PRD to Issues Skill
 
 ## Purpose
+
 Transform the destination document (PRD) into a **journey map** — a set of concrete, independently implementable tickets that:
+
 - Are ordered by dependency (blocking relationships)
 - Each touch multiple layers (vertical slices, not horizontal)
 - Are classified as AFK or human-in-the-loop
@@ -18,20 +20,24 @@ Transform the destination document (PRD) into a **journey map** — a set of con
 ## The Most Important Rule: Vertical Slices
 
 ### ❌ BAD — Horizontal Slices (what AI naturally produces)
-```
+
+```text
 Issue 1: Create all database schema changes
 Issue 2: Build all service/business logic
 Issue 3: Add all frontend components
 ```
+
 Problem: You don't know if anything works until Issue 3 is complete. No feedback loop.
 
 ### ✅ GOOD — Vertical Slices (tracer bullets)
-```
+
+```text
 Issue 1: Award points for lesson completion, visible on dashboard
   → Schema change + service logic + dashboard counter = end-to-end feedback
 Issue 2: Add streak tracking, visible on dashboard
   → New streak table + streak service + streak badge on dashboard
 ```
+
 Each issue crosses ALL layers. You can test it end-to-end when it's done.
 
 > **Tracer Bullet Analogy**: Anti-aircraft gunners attach phosphor to every 6th bullet so they can SEE where they're aiming in the dark. Without it, they shoot blind. Horizontal coding = shooting blind. Vertical slices = tracer bullets = immediate feedback.
@@ -39,17 +45,22 @@ Each issue crosses ALL layers. You can test it end-to-end when it's done.
 ## Instructions
 
 ### Step 1: Locate the PRD
+
 Find `./issues/prd-[feature-name].md` or ask the user where the PRD is.
 
 ### Step 2: Explore the Codebase (if fresh session)
+
 Use a sub-agent to understand the layer structure:
+
 - What are the database/schema layers?
 - What are the service/API layers?
 - What are the UI/frontend layers?
 - What are the cross-cutting concerns (auth, logging, etc.)?
 
 ### Step 3: Draft Vertical Slice Issues
+
 For each proposed issue, verify it contains work across AT LEAST:
+
 - One data layer change (schema, migration, or data access)
 - One business logic change (service, handler, or controller)
 - One observable output (UI element, API response, or log entry a human can verify)
@@ -57,11 +68,12 @@ For each proposed issue, verify it contains work across AT LEAST:
 If an issue only touches one layer → it's horizontal → split or merge it.
 
 ### Step 4: Present the Kanban Board
+
 Show the user a summary table before creating files:
 
-```
+```text
 | # | Title | Blocked By | Type | Vertical Slice? |
-|---|-------|------------|------|-----------------|
+|---|-------|------------|------|-----------------| 
 | 1 | Award points for lesson completion, visible on dashboard | none | AFK | ✅ |
 | 2 | Streak tracking with dashboard badge | #1 | AFK | ✅ |
 | 3 | Retroactive points backfill for existing users | #1 | AFK | ✅ |
@@ -71,6 +83,7 @@ Show the user a summary table before creating files:
 Ask: "Does this look right? Are any slices too horizontal?"
 
 ### Step 5: Create Issue Files
+
 After user confirms, write each issue to `./issues/issue-[N]-[slug].md`:
 
 ```markdown
@@ -101,6 +114,7 @@ After user confirms, write each issue to `./issues/issue-[N]-[slug].md`:
 ```
 
 ## Rules
+
 - Never create an issue that only touches one architectural layer
 - The first issue should ALWAYS be a vertical slice that produces something visible
 - Classify every issue as AFK or human-in-loop explicitly

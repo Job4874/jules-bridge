@@ -1,0 +1,1 @@
+Immediate structured report email failed to send due to missing GMAIL_USER and GMAIL_APP_PASSWORD in the .env file. Continuing with safe source work.

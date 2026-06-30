@@ -1,0 +1,1043 @@
+[2026-06-29T07:06:53.721239+00:00] Starting Auto-Fix Watcher (1-minute interval)
+[2026-06-29T07:07:07.833409+00:00] No problems detected.
+[2026-06-29T07:08:21.349188+00:00] No problems detected.
+[2026-06-29T07:09:34.624666+00:00] No problems detected.
+[2026-06-29T07:10:47.540465+00:00] No problems detected.
+[2026-06-29T07:12:01.278568+00:00] No problems detected.
+[2026-06-29T07:13:14.501292+00:00] No problems detected.
+[2026-06-29T07:14:28.614666+00:00] No problems detected.
+[2026-06-29T07:15:41.568481+00:00] No problems detected.
+[2026-06-29T07:16:54.998535+00:00] No problems detected.
+[2026-06-29T07:18:08.868411+00:00] No problems detected.
+[2026-06-29T07:19:22.502985+00:00] No problems detected.
+[2026-06-29T07:20:36.510793+00:00] No problems detected.
+[2026-06-29T07:21:52.521249+00:00] No problems detected.
+[2026-06-29T07:23:06.207535+00:00] No problems detected.
+[2026-06-29T07:24:19.294589+00:00] No problems detected.
+[2026-06-29T07:25:35.964412+00:00] No problems detected.
+[2026-06-29T07:26:53.080649+00:00] No problems detected.
+[2026-06-29T07:28:06.315019+00:00] No problems detected.
+[2026-06-29T07:29:19.905402+00:00] No problems detected.
+[2026-06-29T07:30:33.282821+00:00] No problems detected.
+[2026-06-29T07:31:46.815379+00:00] No problems detected.
+[2026-06-29T07:33:00.542658+00:00] No problems detected.
+[2026-06-29T07:34:14.355636+00:00] No problems detected.
+[2026-06-29T07:35:27.701333+00:00] No problems detected.
+[2026-06-29T07:36:41.120741+00:00] No problems detected.
+[2026-06-29T07:37:54.680483+00:00] No problems detected.
+[2026-06-29T07:39:09.283148+00:00] No problems detected.
+[2026-06-29T07:40:23.990939+00:00] No problems detected.
+[2026-06-29T07:41:37.654176+00:00] No problems detected.
+[2026-06-29T07:42:50.791640+00:00] No problems detected.
+[2026-06-29T07:44:04.163100+00:00] No problems detected.
+[2026-06-29T07:45:17.675820+00:00] No problems detected.
+[2026-06-29T07:46:31.510792+00:00] No problems detected.
+[2026-06-29T07:47:44.528574+00:00] No problems detected.
+[2026-06-29T07:48:57.458930+00:00] No problems detected.
+[2026-06-29T07:50:10.738348+00:00] No problems detected.
+[2026-06-29T07:51:24.354438+00:00] No problems detected.
+[2026-06-29T07:52:36.834548+00:00] No problems detected.
+[2026-06-29T07:53:49.207857+00:00] No problems detected.
+[2026-06-29T07:55:02.379012+00:00] No problems detected.
+[2026-06-29T07:56:16.356297+00:00] No problems detected.
+[2026-06-29T07:57:31.451086+00:00] No problems detected.
+[2026-06-29T07:58:45.889534+00:00] No problems detected.
+[2026-06-29T07:59:58.305036+00:00] No problems detected.
+[2026-06-29T08:01:11.030521+00:00] No problems detected.
+[2026-06-29T08:02:23.560923+00:00] No problems detected.
+[2026-06-29T08:03:36.156118+00:00] No problems detected.
+[2026-06-29T08:04:48.716080+00:00] No problems detected.
+[2026-06-29T08:06:02.230886+00:00] No problems detected.
+[2026-06-29T08:07:15.038547+00:00] No problems detected.
+[2026-06-29T08:08:27.635631+00:00] No problems detected.
+[2026-06-29T08:09:41.310882+00:00] No problems detected.
+[2026-06-29T08:10:53.880521+00:00] No problems detected.
+[2026-06-29T08:12:06.396878+00:00] No problems detected.
+[2026-06-29T08:13:18.995722+00:00] No problems detected.
+[2026-06-29T08:14:31.326693+00:00] No problems detected.
+[2026-06-29T08:15:43.678989+00:00] No problems detected.
+[2026-06-29T08:16:56.367723+00:00] No problems detected.
+[2026-06-29T08:18:08.631107+00:00] No problems detected.
+[2026-06-29T08:19:21.191090+00:00] No problems detected.
+[2026-06-29T08:20:33.983967+00:00] No problems detected.
+[2026-06-29T08:21:46.582515+00:00] No problems detected.
+[2026-06-29T08:22:59.324364+00:00] No problems detected.
+[2026-06-29T08:24:12.188911+00:00] No problems detected.
+[2026-06-29T08:25:24.684561+00:00] No problems detected.
+[2026-06-29T08:26:37.031245+00:00] No problems detected.
+[2026-06-29T08:27:49.531473+00:00] No problems detected.
+[2026-06-29T08:29:02.537187+00:00] No problems detected.
+[2026-06-29T08:30:15.141345+00:00] No problems detected.
+[2026-06-29T08:31:27.903452+00:00] No problems detected.
+[2026-06-29T08:32:40.660924+00:00] No problems detected.
+[2026-06-29T08:33:53.593505+00:00] No problems detected.
+[2026-06-29T08:35:06.325565+00:00] No problems detected.
+[2026-06-29T08:36:19.120718+00:00] No problems detected.
+[2026-06-29T08:37:32.059902+00:00] No problems detected.
+[2026-06-29T08:38:44.760955+00:00] No problems detected.
+[2026-06-29T08:39:57.384458+00:00] No problems detected.
+[2026-06-29T08:41:09.798471+00:00] No problems detected.
+[2026-06-29T08:42:22.128385+00:00] No problems detected.
+[2026-06-29T08:43:34.663946+00:00] No problems detected.
+[2026-06-29T08:44:47.123658+00:00] No problems detected.
+[2026-06-29T08:45:59.632277+00:00] No problems detected.
+[2026-06-29T08:47:12.160823+00:00] No problems detected.
+[2026-06-29T08:48:24.747222+00:00] No problems detected.
+[2026-06-29T08:49:38.023496+00:00] No problems detected.
+[2026-06-29T08:50:50.940232+00:00] No problems detected.
+[2026-06-29T08:52:03.660657+00:00] No problems detected.
+[2026-06-29T08:53:16.152232+00:00] No problems detected.
+[2026-06-29T08:54:28.805117+00:00] No problems detected.
+[2026-06-29T08:55:41.733299+00:00] No problems detected.
+[2026-06-29T08:56:54.383788+00:00] No problems detected.
+[2026-06-29T08:58:08.285777+00:00] No problems detected.
+[2026-06-29T08:59:20.777961+00:00] No problems detected.
+[2026-06-29T09:00:33.368374+00:00] No problems detected.
+[2026-06-29T09:01:45.865875+00:00] No problems detected.
+[2026-06-29T09:02:58.001484+00:00] No problems detected.
+[2026-06-29T09:04:10.490097+00:00] No problems detected.
+[2026-06-29T09:05:23.056524+00:00] No problems detected.
+[2026-06-29T09:06:35.322576+00:00] No problems detected.
+[2026-06-29T09:07:47.636133+00:00] No problems detected.
+[2026-06-29T09:09:00.001554+00:00] No problems detected.
+[2026-06-29T09:10:12.318149+00:00] No problems detected.
+[2026-06-29T09:11:24.802826+00:00] No problems detected.
+[2026-06-29T09:14:18.218414+00:00] Starting Auto-Fix Watcher (1-minute interval)
+[2026-06-29T09:14:31.887163+00:00] No problems detected.
+[2026-06-29T09:15:43.811627+00:00] No problems detected.
+[2026-06-29T09:16:55.602678+00:00] No problems detected.
+[2026-06-29T09:18:07.375581+00:00] No problems detected.
+[2026-06-29T09:19:19.540200+00:00] No problems detected.
+[2026-06-29T09:20:31.741019+00:00] No problems detected.
+[2026-06-29T09:21:44.108768+00:00] No problems detected.
+[2026-06-29T09:22:56.342374+00:00] No problems detected.
+[2026-06-29T09:24:08.518280+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:24:08.518280+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:24:10.569192+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:25:22.701549+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:25:22.701549+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:25:24.731136+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:26:37.415107+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:26:37.415530+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:26:39.447432+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:27:51.467398+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:27:51.467398+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:27:53.495911+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:29:05.444793+00:00] No problems detected.
+[2026-06-29T09:30:17.361642+00:00] No problems detected.
+[2026-06-29T09:31:29.663268+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:31:29.663268+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:31:31.692814+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:32:43.944749+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:32:43.951415+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:32:45.965513+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:33:58.370059+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:33:58.371696+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:34:00.421819+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:35:12.272859+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:35:12.272859+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:35:14.304421+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:36:26.269461+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:36:26.269461+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:36:28.304761+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:37:42.167044+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:37:42.168580+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:37:44.217720+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:38:57.474045+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:38:57.475571+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:38:59.501650+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:40:12.486156+00:00] No problems detected.
+[2026-06-29T09:41:25.072721+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:41:25.074270+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:41:27.096104+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:42:39.559964+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:42:39.559964+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:42:41.591429+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:43:53.678499+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:43:53.679620+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:43:55.725740+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:45:08.026844+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:45:08.026844+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:45:10.076587+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:46:22.468929+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:46:22.468929+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:46:24.492219+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:47:36.782605+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:47:36.782605+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:47:38.823120+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:48:51.304080+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:48:51.304080+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:48:53.350048+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:50:06.203015+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:50:06.203015+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:50:08.237373+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:51:21.486674+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:51:21.488288+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:51:23.549511+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:52:36.603878+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:52:36.603878+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:52:38.653442+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:53:51.585849+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:53:51.587827+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:53:53.627127+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:55:06.407705+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:55:06.407705+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:55:08.449706+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:56:20.974780+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:56:20.974780+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:56:22.999456+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:57:35.632931+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:57:35.632931+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:57:37.646447+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T09:58:50.260481+00:00] Problem detected. Sending to Jules.
+[2026-06-29T09:58:50.260481+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T09:58:52.312104+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:00:05.085077+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:00:05.085077+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:00:07.112112+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:01:19.929470+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:01:19.929470+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:01:21.990516+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:02:34.816220+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:02:34.816220+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:02:36.842693+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:03:49.664919+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:03:49.670271+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:03:51.708672+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:05:04.287348+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:05:04.287348+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:05:06.326416+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:06:19.125008+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:06:19.125008+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:06:21.139192+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:07:33.644812+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:07:33.644812+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:07:35.708399+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:08:48.250344+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:08:48.250344+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:08:50.298305+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:10:02.634972+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:10:02.635662+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:10:04.665554+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:11:17.350479+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:11:17.350479+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:11:19.380962+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:12:32.094813+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:12:32.094813+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:12:34.128416+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:13:46.912537+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:13:46.913576+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:13:48.945554+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:15:01.664314+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:15:01.664314+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:15:03.682911+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:16:16.269989+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:16:16.271533+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:16:18.307691+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:17:30.888461+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:17:30.888461+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:17:32.908956+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:18:45.525145+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:18:45.525145+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:18:47.556992+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:19:59.999765+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:19:59.999765+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:20:02.021928+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:21:14.816563+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:21:14.816563+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:21:16.839216+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:22:29.254791+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:22:29.255489+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:22:31.302832+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:23:43.630437+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:23:43.630437+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:23:45.698529+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:24:58.416381+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:24:58.416381+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:25:00.463799+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:26:13.165518+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:26:13.165518+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:26:15.199454+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:27:27.849500+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:27:27.849500+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:27:29.897024+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:28:42.682519+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:28:42.682519+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:28:44.713046+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:29:57.307627+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:29:57.307627+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:29:59.344303+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:31:11.956360+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:31:11.956360+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:31:14.007598+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:32:26.431547+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:32:26.431952+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:32:28.459078+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:33:40.868382+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:33:40.868382+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:33:42.893897+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:34:55.567586+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:34:55.567586+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:34:57.591260+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:36:10.069734+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:36:10.069734+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:36:12.122689+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:37:24.656176+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:37:24.656176+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:37:26.695433+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:38:39.070929+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:38:39.070929+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:38:41.089724+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:39:53.954135+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:39:53.954135+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:39:55.987349+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:41:08.390087+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:41:08.390087+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:41:10.416240+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:42:22.989449+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:42:22.989449+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:42:25.017011+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:43:37.617562+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:43:37.617562+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:43:39.651363+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:44:52.198978+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:44:52.198978+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:44:54.231571+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:46:06.728587+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:46:06.729550+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:46:08.760061+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:47:21.761454+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:47:21.761454+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:47:23.809265+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:48:36.464151+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:48:36.464151+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:48:38.508580+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:49:50.975355+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:49:50.975355+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:49:53.007219+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:51:05.611518+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:51:05.613531+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:51:07.638763+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:52:20.081026+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:52:20.081026+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:52:22.116662+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:53:34.536255+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:53:34.537542+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:53:36.569390+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:54:48.786216+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:54:48.786216+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:54:50.802951+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:56:03.131281+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:56:03.131281+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:56:05.152094+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:57:17.407358+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:57:17.409365+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:57:19.449788+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:58:31.599459+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:58:31.599459+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:58:33.632925+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T10:59:46.070745+00:00] Problem detected. Sending to Jules.
+[2026-06-29T10:59:46.070745+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T10:59:48.093112+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:01:00.721800+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:01:00.721800+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:01:02.745671+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:02:15.878740+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:02:15.879492+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:02:17.912387+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:03:30.610676+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:03:30.610676+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:03:32.644042+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:04:45.215724+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:04:45.215724+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:04:47.240672+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:05:59.757655+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:05:59.757655+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:06:01.806941+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:07:14.373360+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:07:14.373360+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:07:16.406156+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:08:29.132150+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:08:29.132150+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:08:31.154561+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:09:43.469862+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:09:43.469862+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:09:45.502328+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:10:58.151991+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:10:58.151991+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:11:00.185061+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:12:12.669632+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:12:12.669632+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:12:14.696292+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:13:27.124636+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:13:27.124636+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:13:29.149559+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:14:41.566359+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:14:41.566359+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:14:43.600811+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:15:55.898395+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:15:55.898395+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:15:57.914425+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:17:10.230429+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:17:10.230429+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:17:12.263566+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:18:24.968446+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:18:24.969443+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:18:26.994410+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:19:39.616320+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:19:39.616320+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:19:41.628716+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:20:54.474094+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:20:54.475063+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:20:56.507864+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:22:09.491308+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:22:09.491308+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:22:11.506365+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:23:24.273505+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:23:24.273505+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:23:26.304131+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:24:39.120876+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:24:39.120876+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:24:41.170432+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:25:53.505880+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:25:53.506447+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:25:55.550545+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:27:08.012883+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:27:08.013885+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:27:10.035300+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:28:22.357084+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:28:22.357084+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:28:24.381769+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:29:37.065864+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:29:37.065864+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:29:39.099525+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:30:51.456675+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:30:51.456675+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:30:53.495499+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:32:05.830996+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:32:05.830996+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:32:07.849518+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:33:20.359710+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:33:20.360526+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:33:22.394401+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:34:34.826382+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:34:34.826382+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:34:36.859494+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:35:49.308269+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:35:49.308269+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:35:51.340145+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:37:03.823160+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:37:03.823160+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:37:05.873433+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:38:18.346549+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:38:18.348555+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:38:20.370815+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:39:32.792218+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:39:32.792218+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:39:34.809758+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:40:47.026929+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:40:47.026929+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:40:49.069364+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:42:01.451425+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:42:01.451425+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:42:03.483717+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:43:15.583997+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:43:15.583997+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:43:17.616668+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:44:30.279347+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:44:30.279347+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:44:32.315097+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:45:44.630806+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:45:44.630806+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:45:46.662903+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:46:58.879836+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:46:58.879836+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:47:00.911537+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:48:13.228045+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:48:13.228045+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:48:15.260393+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:49:27.827258+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:49:27.827258+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:49:29.859465+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:50:42.383048+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:50:42.383048+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:50:44.409371+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:51:56.974867+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:51:56.974867+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:51:59.024064+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:53:11.672708+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:53:11.672708+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:53:13.697604+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:54:26.437083+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:54:26.437990+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:54:28.486681+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:55:41.170675+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:55:41.170675+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:55:43.203275+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:56:56.182966+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:56:56.186383+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:56:58.218717+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:58:10.735204+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:58:10.735204+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:58:12.766702+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T11:59:25.115880+00:00] Problem detected. Sending to Jules.
+[2026-06-29T11:59:25.115880+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T11:59:27.148855+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:00:39.947831+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:00:39.947831+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:00:41.964476+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:01:54.275479+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:01:54.275479+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:01:56.295201+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:03:08.739738+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:03:08.739738+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:03:10.777121+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:04:23.110446+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:04:23.114045+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:04:25.142415+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:05:37.309201+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:05:37.309201+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:05:39.325857+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:06:51.791012+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:06:51.797687+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:06:53.807809+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:08:06.413032+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:08:06.415043+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:08:08.439435+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:09:20.655078+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:09:20.655078+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:09:22.704058+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:10:35.020401+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:10:35.020401+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:10:37.052294+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:11:49.500931+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:11:49.502373+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:11:51.534674+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:13:04.099732+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:13:04.100981+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:13:06.119188+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:14:19.261747+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:14:19.261747+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:14:21.282953+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:15:34.794627+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:15:34.796639+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:15:36.830220+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:16:49.686697+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:16:49.686697+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:16:51.713203+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:18:04.195512+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:18:04.195512+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:18:06.228319+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:19:17.731340+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:19:17.731340+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:19:19.777310+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:20:30.709739+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:20:30.709739+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:20:32.731953+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:21:43.782322+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:21:43.782322+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:21:45.824702+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:22:56.856963+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:22:56.856963+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:22:58.889032+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:24:09.576039+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:24:09.576039+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:24:11.604366+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:25:22.537266+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:25:22.537266+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:25:24.569537+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:26:35.420282+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:26:35.420282+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:26:37.435626+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:27:48.251741+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:27:48.251741+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:27:50.285484+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:29:01.483650+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:29:01.483650+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:29:03.532243+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:30:14.265248+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:30:14.265248+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:30:16.282105+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:31:27.119983+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:31:27.119983+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:31:29.147563+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:32:39.946427+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:32:39.946427+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:32:41.979247+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:33:52.711744+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:33:52.711744+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:33:54.744211+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:35:05.650274+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:35:05.650274+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:35:07.676805+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:36:18.868880+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:36:18.868880+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:36:20.878452+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:37:31.731082+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:37:31.731082+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:37:33.756414+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:38:44.673021+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:38:44.673021+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:38:46.705041+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:39:57.488381+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:39:57.488381+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:39:59.520159+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:41:10.370459+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:41:10.370459+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:41:12.402458+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:42:23.632851+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:42:23.634863+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:42:25.653303+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:43:36.873627+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:43:36.873627+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:43:38.890811+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:44:50.401912+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:44:50.401912+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:44:52.450188+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:46:03.281439+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:46:03.281772+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:46:05.313959+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:47:16.195428+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:47:16.196830+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:47:18.229306+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:48:29.138047+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:48:29.138047+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:48:31.146789+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:49:42.028300+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:49:42.028300+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:49:44.061117+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:50:54.709851+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:50:54.709851+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:50:56.741987+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:52:07.570960+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:52:07.570960+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:52:09.607094+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:53:20.340603+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:53:20.340603+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:53:22.389153+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:54:33.139239+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:54:33.139239+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:54:35.159454+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:55:46.011780+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:55:46.011780+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:55:48.053206+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:56:58.920893+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:56:58.920893+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:57:00.936152+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:58:12.101838+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:58:12.106638+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:58:14.135088+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T12:59:24.817261+00:00] Problem detected. Sending to Jules.
+[2026-06-29T12:59:24.817261+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T12:59:26.833953+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:00:37.777648+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:00:37.779661+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:00:39.797826+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:01:50.888830+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:01:50.888830+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:01:52.913181+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:03:03.691924+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:03:03.691924+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:03:05.713061+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:04:16.795456+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:04:16.795456+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:04:18.813338+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:05:29.446772+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:05:29.446772+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:05:31.460623+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:06:42.429971+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:06:42.429971+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:06:44.457413+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:07:55.257913+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:07:55.257913+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:07:57.290997+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:09:08.490116+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:09:08.490116+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:09:10.507009+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:10:21.510651+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:10:21.510651+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:10:23.554170+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:11:34.376186+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:11:34.376186+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:11:36.419319+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:12:47.315122+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:12:47.315122+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:12:49.336005+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:14:00.351787+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:14:00.351787+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:14:02.392620+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:15:13.463487+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:15:13.463487+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:15:15.498873+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:16:27.207172+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:16:27.207172+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:16:29.230821+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:17:40.797410+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:17:40.797410+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:17:42.845899+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:18:54.062273+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:18:54.062273+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:18:56.095020+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:20:07.128006+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:20:07.128006+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:20:09.178443+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:21:20.333344+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:21:20.333928+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:21:22.351303+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:22:33.586109+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:22:33.590552+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:22:35.608718+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:23:46.498017+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:23:46.498017+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:23:48.525242+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:24:59.962069+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:24:59.962069+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:25:01.973942+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:26:13.221485+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:26:13.221485+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:26:15.253783+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:27:26.366645+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:27:26.367646+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:27:28.383874+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:28:39.362503+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:28:39.363504+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:28:41.375964+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:29:52.418820+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:29:52.418820+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:29:54.443777+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:31:05.469772+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:31:05.470773+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:31:07.492152+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:32:18.419488+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:32:18.420455+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:32:20.451811+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:33:31.998730+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:33:31.999831+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:33:34.025109+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:34:44.965388+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:34:44.966389+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:34:46.993956+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:35:58.008247+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:35:58.009248+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:36:00.041737+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:37:11.014648+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:37:11.014648+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:37:13.040002+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:38:24.281326+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:38:24.283328+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:38:26.318460+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:39:37.059813+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:39:37.060812+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:39:39.094722+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:40:49.936554+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:40:49.937557+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:40:51.949242+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:42:02.903400+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:42:02.904402+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:42:04.948592+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:43:15.874358+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:43:15.875355+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:43:17.889186+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:44:28.658165+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:44:28.658165+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:44:30.677762+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:45:41.710966+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:45:41.710966+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:45:43.749141+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:46:54.721527+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:46:54.722524+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:46:56.761845+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:48:07.841458+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:48:07.841458+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:48:09.892166+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:49:20.657347+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:49:20.658347+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:49:22.680325+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:50:33.483820+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:50:33.484821+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:50:35.499201+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:51:46.282706+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:51:46.282706+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:51:48.323061+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:52:59.188554+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:52:59.189553+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:53:01.206571+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:54:12.177913+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:54:12.177913+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:54:14.198748+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:55:25.031992+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:55:25.031992+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:55:27.046942+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:56:37.847279+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:56:37.847279+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:56:39.871910+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:57:51.041943+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:57:51.042814+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:57:53.066022+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T13:59:04.254373+00:00] Problem detected. Sending to Jules.
+[2026-06-29T13:59:04.255375+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T13:59:06.291663+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:00:17.197074+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:00:17.198254+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:00:19.221572+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:01:30.150901+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:01:30.150901+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:01:32.185032+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:02:43.245803+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:02:43.245803+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:02:45.258904+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:03:56.291045+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:03:56.291045+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:03:58.318209+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:05:09.409671+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:05:09.410670+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:05:11.428932+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:06:22.500160+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:06:22.501189+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:06:24.521793+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:07:35.281339+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:07:35.281339+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:07:37.311774+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:08:48.090284+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:08:48.091149+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:08:50.124480+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:10:00.869887+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:10:00.870885+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:10:02.901235+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:11:13.923513+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:11:13.924514+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:11:15.948270+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:12:27.002963+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:12:27.003960+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:12:29.031931+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:13:39.921586+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:13:39.922587+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:13:41.961148+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:14:52.876126+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:14:52.877128+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:14:54.892955+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:16:05.910038+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:16:05.910038+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:16:07.959723+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:17:19.173488+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:17:19.174488+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:17:21.211233+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:18:32.060171+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:18:32.061167+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:18:34.085262+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:19:45.258269+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:19:45.259268+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:19:47.296121+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:20:58.275066+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:20:58.276065+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:21:00.297622+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:22:11.114874+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:22:11.115873+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:22:13.155349+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:23:24.113311+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:23:24.114311+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:23:26.133911+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:24:37.971580+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:24:37.972589+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:24:40.000963+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:25:51.351279+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:25:51.351279+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:25:53.423016+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:27:05.085616+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:27:05.085616+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:27:07.104317+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:28:18.612903+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:28:18.612903+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:28:20.624322+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:29:31.956432+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:29:31.957435+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:29:33.985754+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:30:45.621273+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:30:45.621792+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:30:47.664228+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:31:59.119660+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:31:59.121226+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:32:01.155772+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:33:12.506901+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:33:12.508443+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:33:14.553720+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:34:26.090382+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:34:26.091380+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:34:28.126176+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:35:39.477202+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:35:39.478748+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:35:41.516184+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:36:52.868772+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:36:52.868772+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:36:54.917190+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:38:06.456271+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:38:06.457901+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:38:08.481638+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:39:20.091845+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:39:20.093622+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:39:22.111337+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:40:33.392914+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:40:33.393916+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:40:35.411780+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:41:46.747755+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:41:46.747755+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:41:48.789411+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:43:00.422833+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:43:00.422833+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:43:02.458675+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:44:13.848670+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:44:13.850260+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:44:15.887035+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:45:27.434333+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:45:27.434333+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:45:29.460764+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:46:40.802993+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:46:40.804005+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:46:42.841231+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:47:54.024732+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:47:54.025730+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:47:56.055450+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:49:06.948019+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:49:06.949018+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:49:08.982093+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:50:20.275673+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:50:20.275673+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:50:22.301502+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:51:33.553489+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:51:33.554488+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:51:35.581608+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:52:46.571608+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:52:46.571608+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:52:48.620160+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:53:59.506278+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:53:59.507281+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:54:01.528405+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:55:12.535322+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:55:12.536322+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:55:14.566790+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:56:25.563041+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:56:25.564041+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:56:27.583252+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:57:38.365178+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:57:38.365178+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:57:40.392814+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T14:58:51.144420+00:00] Problem detected. Sending to Jules.
+[2026-06-29T14:58:51.145421+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T14:58:53.181756+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:00:04.060234+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:00:04.061234+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:00:06.085205+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:01:16.942412+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:01:16.943412+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:01:18.960050+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:02:29.948378+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:02:29.949380+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:02:31.972262+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:03:42.820218+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:03:42.820218+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:03:44.833350+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:04:55.914479+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:04:55.914479+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:04:57.939646+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:06:09.720550+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:06:09.720550+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:06:11.774382+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:07:23.313023+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:07:23.314081+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:07:25.344115+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:08:36.815894+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:08:36.821246+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:08:38.855182+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:09:50.343828+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:09:50.347452+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:09:52.376452+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:11:03.605603+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:11:03.605603+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:11:05.635152+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:12:16.979459+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:12:16.981004+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:12:19.017503+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:13:30.462545+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:13:30.464112+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:13:32.501393+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:14:43.651465+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:14:43.652591+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:14:45.682225+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:15:57.056488+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:15:57.056488+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:15:59.099097+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:17:10.467577+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:17:10.469383+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:17:12.495078+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:18:23.894950+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:18:23.894950+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:18:25.931024+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:19:37.774342+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:19:37.775374+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:19:39.795580+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:20:50.482731+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:20:50.484263+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:20:52.503508+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:22:02.963850+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:22:02.963850+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:22:05.043608+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:23:14.545945+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:23:14.546519+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:23:16.560426+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:24:26.396981+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:24:26.401928+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:24:28.441019+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:25:37.964389+00:00] Problem detected. Sending to Jules.
+[2026-06-29T15:25:37.966922+00:00] Dispatching problem to Jules HRM Reasoning Engine...
+[2026-06-29T15:25:39.990366+00:00] Error calling Jules: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: /reasoning/solve (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=5000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))
+[2026-06-29T15:26:49.730368+00:00] No problems detected.
+[2026-06-29T15:27:59.367856+00:00] No problems detected.
+[2026-06-29T15:29:09.235280+00:00] No problems detected.
+[2026-06-29T15:30:18.284114+00:00] No problems detected.
+[2026-06-29T15:31:27.444270+00:00] No problems detected.
+[2026-06-29T15:32:37.634103+00:00] No problems detected.
+[2026-06-29T15:33:46.897219+00:00] No problems detected.
+[2026-06-29T15:34:56.045205+00:00] No problems detected.
+[2026-06-29T15:36:05.497158+00:00] No problems detected.
+[2026-06-29T15:37:15.446280+00:00] No problems detected.
+[2026-06-29T15:38:24.451148+00:00] No problems detected.
+[2026-06-29T15:39:33.894581+00:00] No problems detected.
+[2026-06-29T15:40:43.103331+00:00] No problems detected.
+[2026-06-29T15:41:52.174872+00:00] No problems detected.
+[2026-06-29T15:43:01.385994+00:00] No problems detected.
+[2026-06-29T15:44:10.708418+00:00] No problems detected.
+[2026-06-29T15:45:20.090331+00:00] No problems detected.
+[2026-06-29T15:46:29.722528+00:00] No problems detected.
+[2026-06-29T15:47:39.845613+00:00] No problems detected.
+[2026-06-29T15:48:49.816650+00:00] No problems detected.
+[2026-06-29T15:50:00.399970+00:00] No problems detected.
+[2026-06-29T15:51:10.976053+00:00] No problems detected.
+[2026-06-29T15:53:57.921675+00:00] Starting Auto-Fix Watcher (1-minute interval)
+[2026-06-29T15:54:13.318796+00:00] No problems detected.
+[2026-06-29T15:55:27.719293+00:00] No problems detected.
+[2026-06-29T15:56:42.396519+00:00] No problems detected.
+[2026-06-29T15:57:56.762434+00:00] No problems detected.
+[2026-06-29T15:59:11.027193+00:00] No problems detected.
+[2026-06-29T16:00:25.250028+00:00] No problems detected.
+[2026-06-29T16:01:39.411537+00:00] No problems detected.
+[2026-06-29T16:02:53.824209+00:00] No problems detected.
+[2026-06-29T16:04:09.119614+00:00] No problems detected.
+[2026-06-29T16:05:24.141466+00:00] No problems detected.
+[2026-06-29T16:06:39.403914+00:00] No problems detected.
+[2026-06-29T16:07:55.166168+00:00] No problems detected.
+[2026-06-29T16:09:11.942121+00:00] No problems detected.
+[2026-06-29T16:10:27.551740+00:00] No problems detected.
+[2026-06-29T16:11:44.350704+00:00] No problems detected.
+[2026-06-29T16:12:59.469846+00:00] No problems detected.
+[2026-06-29T16:14:13.847506+00:00] No problems detected.
+[2026-06-29T16:15:28.176056+00:00] No problems detected.
+[2026-06-29T16:16:42.511457+00:00] No problems detected.
+[2026-06-29T16:17:56.773893+00:00] No problems detected.
+[2026-06-29T16:19:10.699386+00:00] No problems detected.
+[2026-06-29T16:20:25.282366+00:00] No problems detected.
+[2026-06-29T16:21:41.002004+00:00] No problems detected.
+[2026-06-29T16:23:12.191644+00:00] No problems detected.
+[2026-06-29T16:24:27.552683+00:00] No problems detected.
+[2026-06-29T16:25:43.201437+00:00] No problems detected.
+[2026-06-29T16:26:57.294130+00:00] No problems detected.
+[2026-06-29T16:28:12.251598+00:00] No problems detected.

@@ -7,6 +7,7 @@ Full operator technical guide: platform operations, volume metrics, order flow, 
 **Note:** Manual default paths use `%LocalAppData%\Quantower`. This host uses `C:\Quantower\` — see digest Section B.
 
 ---
+
 # Quantower & Visual Studio: The Ultimate Quantitative Trading & Algorithmic Development Master Manual
 
 A Comprehensive Technical Guide on Platform Operations, Advanced Volume Metrics, Order Flow Analytics, and C# Algorithmic Trading with Visual Studio 2022
@@ -35,7 +36,7 @@ Quantower provides native, low-latency support for:
 To run real-time volume calculations, maintain complex multi-monitor layouts, and compute microsecond-level Depth of Market (DOM) heatmaps, the system must meet rigorous hardware specifications. Quantower relies heavily on hardware acceleration to render visual elements without blocking the main trading threads.
 
 | Hardware Component | Minimum Requirement | Recommended Specification (Institutional / High-Frequency) |
-|---|---|---|
+| --- | --- | --- |
 | Operating System | Windows 10 (64-bit) | Windows 11 or Windows Server 2022 (64-bit) |
 | Processor (CPU) | Intel Core i5 / AMD Ryzen 5 (4 Cores) | Intel Core i9 / AMD Ryzen 9 (16+ Cores, high single-core frequency) |
 | System Memory (RAM) | 8 GB DDR4 | 32 GB or 64 GB DDR5 (For high-frequency tick history caching) |
@@ -126,7 +127,7 @@ CQG is a premier financial technology provider delivering low-latency connection
 
 #### Resolving Common CQG Errors
 
-- **Error: "Invalid Username or Password":** Ensure you are using your CQG credentials, not your broker's client portal login. CQG logins are usually specifically prefixed (e.g., AMP_ or OP_).
+- **Error: "Invalid Username or Password":** Ensure you are using your CQG credentials, not your broker's client portal login. CQG logins are usually specifically prefixed (e.g., AMP_or OP_).
 - **Error: "Connection limit reached":** CQG limits active sessions per user. If you are logged into another platform (like TradingView or Multicharts) with the same credentials, CQG will block Quantower from authenticating. You must disconnect the other sessions first.
 
 ### Connection to Rithmic
@@ -657,7 +658,7 @@ Tradeify uses **EOD Trailing Drawdown** (not intraday trailing). The floor recal
 **Drawdown Lock:** On $150K Sim Funded, when EOD balance reaches **$156,100** (post-Sep 2025) or **$155,100** (legacy), the floor locks permanently at **$150,100** ($100 above starting balance).
 
 | Metric | Post-Sep 2025 | Legacy | $1,500 Drawdown Implication |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Max Position | 12 Minis / 120 Micros | 15 Minis / 150 Micros | Use Micros exclusively |
 | DLL (soft) | $3,000 | $3,750 | Irrelevant — hard breach first |
 | Trailing Max DD | $5,250 | $6,000 | Deep drawdown state |
