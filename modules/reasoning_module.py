@@ -27,34 +27,21 @@ from __future__ import annotations
 import json
 import logging
 import os
-import subprocess
 import time
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-import requests
-
 _LOGGER = logging.getLogger("jules_bridge.reasoning")
 
 # ---------------------------------------------------------------------------
-# Model alias table — callers use aliases, not raw provider model strings
+# Model alias table — callers use aliases, not provider model strings
 # ---------------------------------------------------------------------------
-# Swap the right-hand values to change models without touching call sites.
 _MODEL_ALIASES: Dict[str, Optional[str]] = {
     "stub":  None,                    # deterministic stub — for unit tests
-    "fast":  "gemini-2.0-flash",      # cheap, fast reasoning (Gemini fallback)
-    "smart": "gemini-2.5-pro",        # high-quality planning (Gemini fallback)
+    "fast":  "vm/browser-loop",       # automated language-model browser loop
+    "smart": "vm/browser-loop",       # same loop, higher-level prompt contract
 }
-
-_OPENROUTER_MODEL_ALIASES: Dict[str, str] = {
-    # Reliable free-tier models on OpenRouter (updated 2026-06)
-    # gemma-4 free models are frequently rate-limited; deepseek-r1 is stable
-    "fast": "deepseek/deepseek-r1-0528:free",
-    "smart": "deepseek/deepseek-r1-0528:free",
-}
-
-_OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 # ---------------------------------------------------------------------------
@@ -191,162 +178,25 @@ def _l_stub(_step: str, step_index: int, _model: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# LLM helpers — OpenRouter (preferred) then Gemini when model != "stub"
+# Model-loop helper — use the automated VM/browser loop when model != "stub"
 # ---------------------------------------------------------------------------
 
-def _load_env_keys() -> None:
+def _model_loop_chat(system_prompt: str, user_prompt: str, model_alias: str) -> str:
+    """Send structured reasoning prompts through chat_service's VM/browser loop."""
     try:
-        from notify_email import load_env  # pylint: disable=import-outside-toplevel
+        from modules.chat_service import chat  # pylint: disable=import-outside-toplevel
 
-        load_env()
-    except ImportError:
-        pass
-
-
-def _openrouter_api_keys() -> List[str]:
-    """Return configured OpenRouter keys in rotation order."""
-    _load_env_keys()
-    keys: List[str] = []
-    multi = os.environ.get("OPENROUTER_API_KEYS", "").strip()
-    if multi:
-        keys.extend(part.strip() for part in multi.split(",") if part.strip())
-    single = os.environ.get("OPENROUTER_API_KEY", "").strip()
-    if single and single not in keys:
-        keys.insert(0, single)
-    return keys
-
-
-def _resolve_model_name(model: str, use_openrouter: bool) -> str:
-    if use_openrouter:
-        if model in _OPENROUTER_MODEL_ALIASES:
-            return _OPENROUTER_MODEL_ALIASES[model]
-        if model in _MODEL_ALIASES and _MODEL_ALIASES[model]:
-            return _OPENROUTER_MODEL_ALIASES.get("fast", model)
-    resolved = _MODEL_ALIASES.get(model, model)
-    if resolved is None:
-        return model
-    return resolved
-
-
-def _openrouter_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
-    """Call OpenRouter chat completions; rotate keys on rate-limit errors."""
-    keys = _openrouter_api_keys()
-    if not keys:
-        return json.dumps({"error": "OPENROUTER_API_KEY not set"})
-
-    payload = {
-        "model": model_name,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        "temperature": 0.2,
-        "response_format": {"type": "json_object"},
-    }
-    headers = {
-        "Authorization": f"Bearer {keys[0]}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "http://127.0.0.1:5000",
-        "X-Title": "Jules Bridge",
-    }
-
-    last_error = "OpenRouter request failed"
-    for key in keys:
-        headers["Authorization"] = f"Bearer {key}"
-        try:
-            response = requests.post(
-                _OPENROUTER_API_URL,
-                headers=headers,
-                json=payload,
-                timeout=30,
-            )
-            if response.status_code == 429 and len(keys) > 1:
-                last_error = "OpenRouter rate limited"
-                continue
-            response.raise_for_status()
-            data = response.json()
-            if "error" in data:
-                last_error = str(data["error"])
-                continue
-            content = data["choices"][0]["message"]["content"]
-            return content if isinstance(content, str) else json.dumps(content)
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            last_error = str(exc)
-            _LOGGER.warning("OpenRouter call failed with key rotation: %s", exc)
-
-    return json.dumps({"error": last_error})
-
-
-def _llm_chat(system_prompt: str, user_prompt: str, model_name: str, model_alias: str) -> str:
-    """Prefer OpenRouter free models; fall back to Vertex AI Gemini (via ADC) on error."""
-    if _openrouter_api_keys():
-        resolved = _resolve_model_name(model_alias, use_openrouter=True)
-        raw = _openrouter_chat(system_prompt, user_prompt, resolved)
-        try:
-            data = json.loads(raw)
-            if "error" not in data:
-                return raw
-            _LOGGER.warning("OpenRouter error: %s — trying Vertex AI Gemini fallback", data["error"])
-        except json.JSONDecodeError:
-            if raw and not raw.startswith("{"):
-                return raw
-    return _gemini_chat(system_prompt, user_prompt, model_name)
-
-
-def _gcloud_access_token() -> str:
-    """Return a fresh OAuth2 bearer token via `gcloud auth print-access-token`.
-
-    Uses the interactive gcloud login (ya29.*) which has full API scopes,
-    including generativelanguage.googleapis.com. Returns empty string on failure.
-    On Windows, gcloud is a .cmd batch file so shell=True is required.
-    """
-    for cmd in (["gcloud", "auth", "print-access-token"], ["gcloud.cmd", "auth", "print-access-token"]):
-        try:
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=15, shell=True, check=False,
-            )
-            token = result.stdout.strip()
-            if result.returncode == 0 and token.startswith("ya29"):
-                return token
-        except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
-            continue
-    _LOGGER.warning("gcloud token fetch failed — ensure gcloud is installed and `gcloud auth login` has been run")
-    return ""
-
-
-def _gemini_chat(system_prompt: str, user_prompt: str, model_name: str) -> str:
-    """Call Gemini via the Generative Language REST API using a gcloud OAuth2 token.
-
-    No API key required — uses `gcloud auth print-access-token` (the interactive
-    gcloud login token which has full API scopes).  Falls back to a JSON error
-    string if gcloud is unavailable or the call fails.
-    """
-    token = _gcloud_access_token()
-    if not token:
-        _LOGGER.warning("No gcloud token available; cannot call Gemini")
-        return json.dumps({"error": "gcloud auth token unavailable — run: gcloud auth login"})
-
-    _load_env_keys()
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-    )
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "systemInstruction": {"parts": [{"text": system_prompt}]},
-        "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
-        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
-    }
-
-    try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=60)
-        resp.raise_for_status()
-        data = resp.json()
-        return data["candidates"][0]["content"]["parts"][0]["text"]
+        result = chat(
+            message=user_prompt,
+            model_alias=model_alias,
+            system_prompt=system_prompt,
+        )
+        if result.get("model_used") == "none":
+            return json.dumps({"error": result.get("response", "model loop unavailable")})
+        response = result.get("response", "")
+        return response if isinstance(response, str) else json.dumps(response)
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        _LOGGER.error("Gemini REST call failed: %s", exc)
+        _LOGGER.warning("Model loop call failed: %s", exc)
         return json.dumps({"error": str(exc)})
 
 
@@ -410,25 +260,25 @@ def _parse_llm_json(raw: str) -> Dict[str, Any]:
     return data
 
 
-def _h_gemini_call(problem: str, context: str, model_name: str, model_alias: str = "fast") -> Dict[str, Any]:
-    """H module backed by OpenRouter or Gemini."""
+def _h_model_loop_call(problem: str, context: str, model_name: str, model_alias: str = "fast") -> Dict[str, Any]:
+    """H module backed by the VM/browser model loop."""
     user_prompt = f"Problem: {problem}"
     if context:
         user_prompt += f"\n\nContext:\n{context}"
-    raw = _llm_chat(_H_SYSTEM_PROMPT, user_prompt, model_name, model_alias)
+    raw = _model_loop_chat(_H_SYSTEM_PROMPT, user_prompt, model_alias)
     try:
         data = _parse_llm_json(raw)
         if "error" in data:
-            _LOGGER.warning("Gemini H-module error: %s — using stub fallback", data["error"])
+            _LOGGER.warning("Model-loop H-module error: %s — using stub fallback", data["error"])
             return _h_stub(problem, model_name)
         data.setdefault("model", model_name)
         return data
     except json.JSONDecodeError:
-        _LOGGER.warning("Gemini H-module returned non-JSON — using stub fallback")
+        _LOGGER.warning("Model-loop H-module returned non-JSON — using stub fallback")
         return _h_stub(problem, model_name)
 
 
-def _l_gemini_call(
+def _l_model_loop_call(
     step: str,
     step_index: int,
     problem: str,
@@ -436,33 +286,33 @@ def _l_gemini_call(
     model_name: str,
     model_alias: str = "fast",
 ) -> Dict[str, Any]:
-    """L module backed by OpenRouter or Gemini."""
+    """L module backed by the VM/browser model loop."""
     user_prompt = (
         f"Original problem: {problem}\n"
         f"Step {step_index}: {step}"
     )
     if context:
         user_prompt += f"\nContext: {context}"
-    raw = _llm_chat(_L_SYSTEM_PROMPT, user_prompt, model_name, model_alias)
+    raw = _model_loop_chat(_L_SYSTEM_PROMPT, user_prompt, model_alias)
     try:
         data = _parse_llm_json(raw)
         if "error" in data:
-            _LOGGER.warning("Gemini L-module error: %s — using stub fallback", data["error"])
+            _LOGGER.warning("Model-loop L-module error: %s — using stub fallback", data["error"])
             return _l_stub(step, step_index, model_name)
         return data
     except json.JSONDecodeError:
-        _LOGGER.warning("Gemini L-module returned non-JSON — using stub fallback")
+        _LOGGER.warning("Model-loop L-module returned non-JSON — using stub fallback")
         return _l_stub(step, step_index, model_name)
 
 
 # ---------------------------------------------------------------------------
-# Public dispatch functions — route stub vs. Gemini based on model alias
+# Public dispatch functions — route stub vs. model loop based on model alias
 # ---------------------------------------------------------------------------
 
 def _h_module_call(problem: str, context: str, model: str = "stub") -> Dict[str, Any]:
     """H module: high-level planning call.
 
-    Dispatches to Gemini when model is a known alias ("fast" or "smart").
+    Dispatches to the VM/browser model loop when model is a known alias ("fast" or "smart").
     Falls back to deterministic stub when model="stub" or alias is unknown.
 
     System prompt template (H module):
@@ -474,7 +324,7 @@ def _h_module_call(problem: str, context: str, model: str = "stub") -> Dict[str,
     Args:
         problem: The problem to solve
         context: Relevant background context
-        model: "stub" | "fast" | "smart" | raw Gemini model string
+        model: "stub" | "fast" | "smart" | raw model-loop label
 
     Returns:
         JSON-parseable dict with goal_statement, steps, confidence, reasoning
@@ -482,7 +332,7 @@ def _h_module_call(problem: str, context: str, model: str = "stub") -> Dict[str,
     resolved = _MODEL_ALIASES.get(model, model)  # unknown alias treated as raw model name
     if resolved is None:
         return _h_stub(problem, model)
-    return _h_gemini_call(problem, context, resolved, model_alias=model)
+    return _h_model_loop_call(problem, context, resolved, model_alias=model)
 
 
 def _l_module_call(
@@ -494,7 +344,7 @@ def _l_module_call(
 ) -> Dict[str, Any]:
     """L module: low-level execution planning for one H step.
 
-    Dispatches to Gemini when model is a known alias ("fast" or "smart").
+    Dispatches to the VM/browser model loop when model is a known alias ("fast" or "smart").
     Falls back to deterministic stub when model="stub" or alias is unknown.
 
     System prompt template (L module):
@@ -508,7 +358,7 @@ def _l_module_call(
         step_index: Index of this step in the plan
         problem: The original problem (full context)
         context: Additional context
-        model: "stub" | "fast" | "smart" | raw Gemini model string
+        model: "stub" | "fast" | "smart" | raw model-loop label
 
     Returns:
         JSON-parseable dict with action_type, payload, confidence, reasoning
@@ -516,7 +366,7 @@ def _l_module_call(
     resolved = _MODEL_ALIASES.get(model, model)
     if resolved is None:
         return _l_stub(step, step_index, model)
-    return _l_gemini_call(step, step_index, problem, context, resolved, model_alias=model)
+    return _l_model_loop_call(step, step_index, problem, context, resolved, model_alias=model)
 
 
 def _halt_check(

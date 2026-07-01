@@ -7,6 +7,7 @@ To run:
     python -m pytest tests/test_reasoning_module.py -v
 """
 import pytest
+from unittest.mock import patch
 from modules.reasoning_module import (
     HLevelPlan,
     LLevelAction,
@@ -112,6 +113,19 @@ class TestPlanOnly:
     def test_context_is_accepted(self):
         plan = plan_only("problem", context="Quantower is running, Oracle DLL deployed")
         assert isinstance(plan, HLevelPlan)
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_fast_model_uses_model_loop(self, mock_model_loop):
+        mock_model_loop.return_value = (
+            '{"goal_statement": "Use the loop", "steps": ["check loop"], '
+            '"confidence": 0.9, "reasoning": "loop-backed"}'
+        )
+
+        plan = plan_only("Use fast model", model="fast")
+
+        assert plan.goal_statement == "Use the loop"
+        assert plan.model == "vm/browser-loop"
+        mock_model_loop.assert_called_once()
 
 
 # ---------------------------------------------------------------------------

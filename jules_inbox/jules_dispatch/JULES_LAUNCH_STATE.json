@@ -1,94 +1,135 @@
 {
-  "generated_at_utc": "2026-06-30T18:48:33.223095+00:00",
-  "dry_run": false,
+  "generated_at_utc": "2026-07-01T02:02:45.125262+00:00",
+  "dry_run": true,
   "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
   "selected_count": 4,
-  "launched_count": 4,
+  "launched_count": 0,
   "timeout_count": 0,
   "jules_command": "jules",
   "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe",
   "rest_api": true,
-  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "repo_path": "C:\\Users\\abdul\\academic-command-center",
   "results": [
     {
       "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
       "command": [
-        "REST",
-        "POST",
-        "https://jules.googleapis.com/v1alpha/sessions"
+        "JULES_REST_API",
+        "sessions.create"
       ],
-      "repo_path": "C:\\aotp\\projects\\OracleV5",
-      "status": "launched",
-      "exit_code": 0,
-      "stdout": "1350802469136779091  Planning  0s ago  JT-002-6b1194-codex-master-handover-prompt",
+      "repo_path": "C:\\Users\\abdul\\academic-command-center",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
       "stderr": "",
       "timed_out": false,
-      "session_ids": [
-        "1350802469136779091"
-      ],
-      "transport": "rest"
+      "session_ids": []
     },
     {
       "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
       "command": [
-        "REST",
-        "POST",
-        "https://jules.googleapis.com/v1alpha/sessions"
+        "JULES_REST_API",
+        "sessions.create"
       ],
-      "repo_path": "C:\\aotp\\projects\\OracleV5",
-      "status": "launched",
-      "exit_code": 0,
-      "stdout": "12191767466353160942  Planning  0s ago  JT-003-aab6ea-codex-phase0-repository-archaeology-prompt",
+      "repo_path": "C:\\Users\\abdul\\academic-command-center",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
       "stderr": "",
       "timed_out": false,
-      "session_ids": [
-        "12191767466353160942"
-      ],
-      "transport": "rest"
+      "session_ids": []
     },
     {
       "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
       "command": [
-        "REST",
-        "POST",
-        "https://jules.googleapis.com/v1alpha/sessions"
+        "JULES_REST_API",
+        "sessions.create"
       ],
-      "repo_path": "C:\\aotp\\projects\\OracleV5",
-      "status": "launched",
-      "exit_code": 0,
-      "stdout": "3137837830710772283  Planning  0s ago  JT-004-1e0abd-codex-phase1-stabilization-prompt",
+      "repo_path": "C:\\Users\\abdul\\academic-command-center",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
       "stderr": "",
       "timed_out": false,
-      "session_ids": [
-        "3137837830710772283"
-      ],
-      "transport": "rest"
+      "session_ids": []
     },
     {
       "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
       "command": [
-        "REST",
-        "POST",
-        "https://jules.googleapis.com/v1alpha/sessions"
+        "JULES_REST_API",
+        "sessions.create"
       ],
-      "repo_path": "C:\\aotp\\projects\\OracleV5",
-      "status": "launched",
-      "exit_code": 0,
-      "stdout": "17070279950870586732  Planning  0s ago  JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation",
+      "repo_path": "C:\\Users\\abdul\\academic-command-center",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
       "stderr": "",
       "timed_out": false,
-      "session_ids": [
-        "17070279950870586732"
-      ],
-      "transport": "rest"
+      "session_ids": []
     }
   ],
-  "attempt_results": [],
+  "attempt_results": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+      "command": [
+        "JULES_REST_API",
+        "sessions.create"
+      ],
+      "repo_path": "C:\\Users\\abdul\\academic-command-center",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+      "command": [
+        "JULES_REST_API",
+        "sessions.create"
+      ],
+      "repo_path": "C:\\Users\\abdul\\academic-command-center",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+      "command": [
+        "JULES_REST_API",
+        "sessions.create"
+      ],
+      "repo_path": "C:\\Users\\abdul\\academic-command-center",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+      "command": [
+        "JULES_REST_API",
+        "sessions.create"
+      ],
+      "repo_path": "C:\\Users\\abdul\\academic-command-center",
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": []
+    }
+  ],
   "state_path": "",
-  "attempted_count": 0,
-  "skipped_launched_count": 4,
+  "attempted_count": 4,
+  "skipped_launched_count": 0,
   "force_packet_count": 0,
   "preserve_existing_session_ids": false,
-  "note": "Live launch attempted through the Jules CLI.",
+  "note": "Dry run only; no remote Jules sessions were started.",
   "tracked_count": 4
 }

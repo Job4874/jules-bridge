@@ -5,7 +5,7 @@
 | Decision | Choice | Rationale |
 | Memory format | Markdown files | Human + agent readable; matches Nick's Case |
 | Evidence storage | SHA-256 in JSON | Cryptographic proof; cannot be faked |
-| LLM integration | Gemini via alias system | No new API key; `fast`/`smart` aliases hide provider details |
+| LLM integration | VM/browser model loop via alias system | No provider API keys in the bridge; `fast`/`smart` hide loop details |
 | Module contract | Never raises | Partial data beats exceptions in a harness |
 | Context system | 7-file + AGENTS.md | Ghost AI spec-driven approach + orchestrator |
 | Gotchas over docs | ~553 lines | Guides without prescribing; smaller context |
@@ -24,7 +24,7 @@
 - [x] `modules/vm_manager.py` (resource pressure + dry-run-first VM boot gating)
 - [x] `modules/inbox_service.py`
 - [x] `modules/oracle_session.py`
-- [x] `modules/reasoning_module.py` (HRM H/L/ACT + Gemini integration)
+- [x] `modules/reasoning_module.py` (HRM H/L/ACT + VM/browser model-loop integration)
 - [x] `modules/retrospective_module.py` (Nick's Case pattern + `prune_memory`)
 - [x] `tests/test_reasoning_module.py` — 34 tests
 - [x] `tests/test_retrospective_module.py`
@@ -35,7 +35,7 @@
 - [x] Reusable skills: `architect`, `remember`, `review`, `recover`, `imprint`
 - [x] `GET /health` — fixes 404 storm; returns uptime; listed in TENTACLES
 - [x] `POST /vm/resource_pressure` + `POST /vm/boot_secondary` - Local Node VM pressure and allowlisted boot control
-- [x] Gemini wired to `reasoning_module` via `_MODEL_ALIASES` (`fast`/`smart`/`stub`)
+- [x] VM/browser model loop wired to `reasoning_module` via `_MODEL_ALIASES` (`fast`/`smart`/`stub`)
 - [x] Evidence gating — `X-Evidence-Age-Warning` header on stale `/oracle/*` routes, with opt-in `EVIDENCE_GATE_HARD=1` HTTP 423 hard mode
 - [x] `POST /retrospective/prune_memory` — age-based pruning, 30-day default
 - [x] All missing routes added to TENTACLES manifest
@@ -237,7 +237,7 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 ## Session 20260629T122530 — Chat Service Deep Module Cleanup
 
 - **Bridge Thinning**: Extracted `/chat` and `/chat/test` provider routing from `bridge.py` into `modules/chat_service.py`. The bridge routes now validate fields, call `modules.test_chat_providers()` or `modules.chat(...)`, and return `dict(result)`.
-- **Deep Module Boundary**: Added `ChatHealthResult`, `ChatResult`, Gemini-first/OpenRouter-fallback handling, provider payload construction, model selection, timing, and secret-redacted error chains inside `chat_service`.
+- **Deep Module Boundary**: Added `ChatHealthResult`, `ChatResult`, provider-fallback handling, payload construction, model selection, timing, and secret-redacted error chains inside `chat_service`.
 - **Documentation/Imprint**: Updated `context/02_architecture.md`, `context/05_gotchas.md`, and `UBIQUITOUS_LANGUAGE.md` with the new chat-service boundary. External walkthrough markdownlint diagnostics were fixed at `C:\Users\abdul\.gemini\antigravity-ide\brain\364f444e-3fef-4431-847b-e3adeb9c786a\walkthrough.md`.
 - **Verification**: `python -m py_compile bridge.py modules\chat_service.py modules\__init__.py` passed; `python -m pytest tests/test_chat_service.py tests/test_bridge_routes.py -q` passed 74 tests; `python -m pytest tests/ -q` passed 315 tests; `npx --yes markdownlint-cli ...\walkthrough.md` passed with no output; `git diff --check` reported only expected CRLF warnings.
 - Evidence: recorded `python -m pytest tests/ -q` as 315 tests passed, SHA-256 `e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408`. Local bridge was not listening on `127.0.0.1:5000`, so evidence was recorded through `modules.record_test_evidence(...)` rather than the HTTP route.
@@ -294,3 +294,31 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Browser QA verified desktop 1280x720 three-column layout, mobile 390x844 no-horizontal-overflow layout, focus rail, stream pause, WARN filter, worker selection, and model selector with no console errors.
 - Evidence: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, `python -m pytest tests/ -q`, and `git diff --check` passed.
 
+
+## Session 20260630T235000 - Chat Fallback and VM Provider Fix
+- Cloned the \cademic-command-center\ repository for integration.
+- Investigated and merged PR #74 to fix the bridge offline provider state (VM Fallback logic).
+- Validated \modules.chat\ fallback correctly fails over to the VM via \m_relay\ without crashing when no API key is supplied via \.env\.
+- Recorded evidence: \python -m pytest tests/ -q\ passed all tests.
+
+
+
+## Session 20260630T200000 - HRE Depth & Skill Discovery Execution
+
+- Executed the Ralph Loop on Ticket 009 (doc/tickets/009_hrm_skill_depth.md). Verified that `reasoning_module.py` contains `score_hre_depth`, `discover_skills`, and `inject_gotcha`, while `retrospective_module.py` contains `assess_memory_quality`.
+- Autonomously proved the efficiency of the HRM/Ralph loop connected agent patterns by running tests and verifying the code is operational.
+- Recorded test evidence. python -m pytest tests/ -v passed all 426 tests.
+
+## Session 20260630T211700 - Model Loop Cleanup And Local Boot Proof
+
+- Removed direct provider-key dependency from the active bridge model surfaces: `reasoning_module` routes non-stub `fast`/`smart` calls through `chat_service.chat(...)`, `/health/deep` reports `model_loop` readiness, and generated VM worker scripts use `BROWSER_MODEL_LOOP_URL`.
+- Sped up `/dashboard/status` by making host resource pressure use a fast `psutil` path before falling back to PowerShell/CIM.
+- Clean local boot proof: one `python bridge.py` process owns port 5000, dashboard-ui serves on 127.0.0.1:5173, live `/dashboard/status` returned HTTP 200 in about 1.0s, and the dashboard URL was opened locally.
+- Evidence: `python -m pytest tests/ -q` passed 429 tests in 64.64s. SHA-256 `5644577224bae6ab58f576a5206e1c42c39c2611751def13c1f4234fc16078e7`.
+
+## Session 20260630T213500 - Keyless Bootstrap Hardening
+
+- Removed the remaining provider-key assumptions from `vm_scripts/Bootstrap-Jules-VM.ps1` and README examples: VM bootstrap now writes `BROWSER_MODEL_LOOP_URL`, `LOCAL_BRIDGE_URL`, and `LOCAL_BRIDGE_TOKEN` only, and no longer installs provider SDKs.
+- Hardened `modules/vm_relay.py` so generated VM env uses configured `LOCAL_BRIDGE_TOKEN` or `BRIDGE_TOKEN` instead of a literal token, while keeping provider keys out of worker env.
+- Rebooted the local bridge after the final code change. Live ports: bridge 5000, dashboard-ui 5173, Chrome debug 9222.
+- Evidence: `python -m pytest tests/ -q` passed 430 tests in 36.76s. SHA-256 `fb218182e8ee7edf67bee4b96692edef8fc3591f944e5155646b778341c12c5a`.

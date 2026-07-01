@@ -35,7 +35,7 @@ def test_get_dashboard_status_happy_path():
          patch('modules.dashboard_module.build_repo_context_guard') as mock_repo_guard:
 
         mock_env_vars.return_value = {
-            "GEMINI_API_KEY": "yes",
+            "BROWSER_MODEL_LOOP_URL": "http://127.0.0.1:8765/model-loop",
             "GCE_WORKER_IP": "10.0.0.1"
         }
         mock_pressure.return_value = {
@@ -98,9 +98,11 @@ def test_get_dashboard_status_happy_path():
         assert result["repo_context"]["collisions"][0]["type"] == "port_collision"
 
         assert result["recent_logs"] == ["Log line 1", "Starting ngrok at https://random-ngrok-url.ngrok.io/"]
-        assert "GEMINI_API_KEY" in result["env_keys_present"]
+        assert result["model_loop"]["mode"] == "vm_browser"
+        assert result["model_loop"]["requires_provider_api_keys"] is False
+        assert "BROWSER_MODEL_LOOP_URL" in result["env_keys_present"]
         assert "GCE_WORKER_IP" in result["env_keys_present"]
-        assert "OPENROUTER_API_KEY" not in result["env_keys_present"]
+        assert "GEMINI_API_KEY" not in result["env_keys_present"]
 
 def test_get_dashboard_status_cache():
     # Setup initial cache
@@ -130,10 +132,10 @@ def test_fmt_uptime():
     assert _fmt_uptime(7200) == "2h 0m 0s"
 
 def test_env_vars():
-    env_content = "GEMINI_API_KEY=12345\n#COMMENT\n\nGCE_WORKER_IP = 10.0.0.1"
+    env_content = "BROWSER_MODEL_LOOP_URL=http://127.0.0.1:8765/model-loop\n#COMMENT\n\nGCE_WORKER_IP = 10.0.0.1"
     with patch('pathlib.Path.read_text', return_value=env_content):
         env = _env_vars()
-        assert env.get("GEMINI_API_KEY") == "12345"
+        assert env.get("BROWSER_MODEL_LOOP_URL") == "http://127.0.0.1:8765/model-loop"
         assert env.get("GCE_WORKER_IP") == "10.0.0.1"
 
 def test_env_vars_exception():

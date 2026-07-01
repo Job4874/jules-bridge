@@ -414,3 +414,30 @@ has gone wrong before and what to avoid.
 - Privacy boundary remains canonical: `/dashboard/status` stays compact and unauthenticated; do not show repo sample names/full paths/full remotes/env key lists. Use masked endpoints (`34.132.x.x`) and key counts only.
 - Verification: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, `python -m pytest tests/ -q`, and `git diff --check` passed; Browser QA covered 1280x720 desktop, 390x844 mobile no-horizontal-overflow, no console errors, focus rail, stream pause/filter, worker selection, and model selector.
 
+
+## Session 20260630T235000 - Chat Fallback and VM Provider Fix
+- Cloned the \cademic-command-center\ repository for future frontend UI and helper service integration.
+- Merged PR #74 to resolve the bridge offline provider state (VM Fallback logic).
+- \modules.chat\ fallback correctly fails over to the VM via \m_relay\ without crashing when no API key is supplied via \.env\.
+- Evaluated integration architecture via \grill-me\: determined that the Academic Command Center should interact directly with the Jules Bridge REST API via CORS rather than tunneling through \cademic-helper.mjs\, to reduce token state complexity and latency.
+- Validated tests via \python -m pytest tests/ -q\ which passed all 432 tests.
+
+
+- Removed all dependencies on Gemini and OpenRouter API keys from \modules/chat_service.py\.
+- Rewrote the bridge's chat service to strictly use the automated VM language model fallback loop (\m_relay\).
+- Updated and executed unit tests in \	est_chat_service.py\ and \	est_chat_service_pro.py\ to verify that VM Fallback acts as the sole primary model, with 426 tests passing successfully.
+
+## Session 20260630T211700 - Model Loop Cleanup And Local Boot Proof
+
+- Removed direct provider-key dependency from the active bridge model surfaces: `reasoning_module` now routes non-stub `fast`/`smart` calls through `chat_service.chat(...)`, `/health/deep` reports `model_loop` readiness instead of provider API probes, and generated VM worker scripts accept `BROWSER_MODEL_LOOP_URL` instead of copied model-provider keys.
+- Sped up dashboard status polling by making `vm_manager.detect_resource_pressure(...)` use a fast `psutil` host-metric path before falling back to PowerShell/CIM. Live `/dashboard/status` returned HTTP 200 in about 1.0s after restart.
+- Clean local boot state: exactly one `python bridge.py` process owns port 5000, dashboard-ui serves on 127.0.0.1:5173, and the dashboard URL was opened locally.
+- Verification: `python -m pytest tests/ -q` passed 429 tests in 64.64s. Evidence hash `5644577224bae6ab58f576a5206e1c42c39c2611751def13c1f4234fc16078e7`.
+
+## Session 20260630T213500 - Keyless Bootstrap Hardening
+
+- Removed the remaining provider-key assumptions from `vm_scripts/Bootstrap-Jules-VM.ps1` and README examples: VM bootstrap now writes `BROWSER_MODEL_LOOP_URL`, `LOCAL_BRIDGE_URL`, and `LOCAL_BRIDGE_TOKEN` only, and no longer installs provider SDKs.
+- Hardened `modules/vm_relay.py` so generated VM env uses configured `LOCAL_BRIDGE_TOKEN` or `BRIDGE_TOKEN` instead of a literal token, while keeping provider keys out of worker env.
+- Rebooted the local bridge after the final code change. Live ports: bridge 5000, dashboard-ui 5173, Chrome debug 9222.
+- Verification: `python -m pytest tests/ -q` passed 430 tests in 36.76s. Evidence hash `fb218182e8ee7edf67bee4b96692edef8fc3591f944e5155646b778341c12c5a`.
+

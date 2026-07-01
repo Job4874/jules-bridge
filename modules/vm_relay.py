@@ -14,7 +14,7 @@ The VM runs its own lightweight agent (jules-worker-agent.py) that:
   - Accepts POST /task packets
   - Executes them (code, research, browser, file ops)
   - Returns results to local bridge relay
-  - Has its own Gemini key and can make autonomous decisions
+  - Delegates model work to an operator-configured browser model loop
 
 Architecture:
   [User/Dashboard] -> [Local Bridge :5000] -> [VM Relay] -> [VM Agent :6000]
@@ -104,7 +104,7 @@ def bootstrap_vm() -> dict[str, Any]:
     _, stderr, rc = _gcloud_ssh(
         "sudo apt-get update -qq && sudo apt-get install -y -qq "
         "python3 python3-pip git curl && "
-        "pip3 install flask requests google-generativeai --quiet",
+        "pip3 install flask requests --quiet",
         timeout=180
     )
     results.append({"step": "install_deps", "rc": rc, "stderr": stderr[:200] if stderr else ""})
@@ -120,14 +120,9 @@ def bootstrap_vm() -> dict[str, Any]:
     results.append({"step": "push_agent", "rc": rc})
     _log(f"push_agent rc={rc}")
 
-    # Step 3: Push env (API keys only, no secrets logged)
+    # Step 3: Push env (loop endpoints only, no provider API keys)
     env_vars = _env()
-    minimal_env = "\n".join([
-        f"GEMINI_API_KEY={env_vars.get('GEMINI_API_KEY','')}",
-        f"OPENROUTER_API_KEY={env_vars.get('OPENROUTER_API_KEY','')}",
-        f"LOCAL_BRIDGE_URL=http://{_get_local_ip()}:5000",
-        "LOCAL_BRIDGE_TOKEN=JULES-SECURE-999",
-    ])
+    minimal_env = _build_worker_env(env_vars, _get_local_ip())
     env_path = _ROOT / "scratch" / "vm.env"
     env_path.write_text(minimal_env, encoding="utf-8")
     _, _, rc = _gcloud_scp(str(env_path), "/home/julesadmin/.jules_worker.env")
@@ -145,6 +140,15 @@ def bootstrap_vm() -> dict[str, Any]:
     _log(f"start_agent rc={rc}")
 
     return {"ok": all(r["rc"] == 0 for r in results), "steps": results, "vm": VM_IP}
+
+
+def _build_worker_env(env_vars: dict[str, str], local_ip: str) -> str:
+    bridge_token = env_vars.get("LOCAL_BRIDGE_TOKEN") or env_vars.get("BRIDGE_TOKEN", "")
+    return "\n".join([
+        f"BROWSER_MODEL_LOOP_URL={env_vars.get('BROWSER_MODEL_LOOP_URL','')}",
+        f"LOCAL_BRIDGE_URL=http://{local_ip}:5000",
+        f"LOCAL_BRIDGE_TOKEN={bridge_token}",
+    ])
 
 
 def _get_local_ip() -> str:
@@ -218,10 +222,9 @@ for line in Path("/home/julesadmin/.jules_worker.env").read_text().splitlines():
 
 app = Flask(__name__)
 TOKEN = "JULES-VM-WORKER-999"
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
-OR_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+BROWSER_MODEL_LOOP_URL = os.environ.get("BROWSER_MODEL_LOOP_URL", "")
 LOCAL_BRIDGE = os.environ.get("LOCAL_BRIDGE_URL", "http://127.0.0.1:5000")
-LOCAL_TOKEN = os.environ.get("LOCAL_BRIDGE_TOKEN", "JULES-SECURE-999")
+LOCAL_TOKEN = os.environ.get("LOCAL_BRIDGE_TOKEN", "")
 
 _START = datetime.now(timezone.utc)
 _TASKS_COMPLETED = []
@@ -250,8 +253,7 @@ def status():
         "tasks_completed": len(_TASKS_COMPLETED),
         "tasks_running": len(_TASKS_RUNNING),
         "recent": _TASKS_COMPLETED[-5:],
-        "gemini": bool(GEMINI_KEY),
-        "openrouter": bool(OR_KEY),
+        "browser_model_loop": bool(BROWSER_MODEL_LOOP_URL),
     })
 
 @app.route("/task", methods=["POST"])
@@ -296,7 +298,7 @@ def execute_task(task: str, task_type: str, context: str) -> str:
         return call_llm(task, context)
 
 def call_llm(prompt: str, context: str = "") -> str:
-    """Call Gemini or OpenRouter with the task."""
+    """Call the configured browser model loop with the task."""
     system = (
         "You are Jules — an autonomous AI engineering agent running on a GCP VM. "
         "You are the worker node in a multi-agent system. Your job is to build, fix, research, "
@@ -306,37 +308,22 @@ def call_llm(prompt: str, context: str = "") -> str:
     )
     full_prompt = f"{context}\\n\\n{prompt}" if context else prompt
 
-    # Try Gemini
-    if GEMINI_KEY:
-        try:
-            r = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}",
-                json={
-                    "system_instruction": {"parts": [{"text": system}]},
-                    "contents": [{"role": "user", "parts": [{"text": full_prompt}]}]
-                }, timeout=30
-            )
-            if r.status_code == 200:
-                return r.json()["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception as e:
-            pass
-
-    # OpenRouter fallback
-    if OR_KEY:
-        try:
-            r = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                json={"model": "google/gemma-3-27b-it:free",
-                      "messages": [{"role": "system", "content": system},
-                                   {"role": "user", "content": full_prompt}]},
-                headers={"Authorization": f"Bearer {OR_KEY}"}, timeout=45
-            )
-            if r.status_code == 200:
-                return r.json()["choices"][0]["message"]["content"]
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
-
-    return "No LLM available — GEMINI_API_KEY and OPENROUTER_API_KEY both failed."
+    if not BROWSER_MODEL_LOOP_URL:
+        return "No browser model loop configured. Set BROWSER_MODEL_LOOP_URL in the worker env."
+    try:
+        r = requests.post(
+            BROWSER_MODEL_LOOP_URL,
+            json={"system": system, "prompt": full_prompt},
+            timeout=120,
+        )
+        r.raise_for_status()
+        data = r.json()
+        for key in ("response", "result", "text", "content"):
+            if data.get(key):
+                return str(data[key])
+        return json.dumps(data)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        return f"Browser model loop failed: {exc}"
 
 if __name__ == "__main__":
     print(f"Jules Worker Agent starting on port 6000...")

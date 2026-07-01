@@ -1,60 +1,57 @@
-"""Health service deep module — multi-provider connectivity and host status.
+"""Health service deep module — model-loop connectivity and host status.
 
-Tests API keys (or acknowledges keyless state), cloud reachability, and
+Tests the VM/browser model loop, cloud reachability, and
 resource pressure to provide a proof of system readiness.
 """
 
 from __future__ import annotations
 
-import os
 import time
 import socket
+import subprocess
+import os
 from datetime import datetime, timezone
-import requests
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict
 
+from modules.chat_service import test_chat_providers
 from modules.vm_manager import detect_resource_pressure
 
-def _check_gemini() -> Dict[str, Any]:
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        return {"status": "keyless", "detail": "GEMINI_API_KEY unset; using stub mode"}
-
+def _check_model_loop() -> Dict[str, Any]:
+    """Check the local VM/browser model loop without probing provider API keys."""
     t0 = time.monotonic()
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-        r = requests.get(url, timeout=10)
+        result = test_chat_providers()
         elapsed = int((time.monotonic() - t0) * 1000)
-        if r.status_code == 200:
-            return {"status": "pass", "ms": elapsed, "detail": "API key valid"}
-        return {"status": "fail", "code": r.status_code, "ms": elapsed, "detail": r.text[:200]}
-    except Exception as exc:
-        elapsed = int((time.monotonic() - t0) * 1000)
-        return {"status": "error", "ms": elapsed, "detail": str(exc)}
-
-def _check_openrouter() -> Dict[str, Any]:
-    or_key = os.environ.get("OPENROUTER_API_KEY", "")
-    if not or_key:
-        return {"status": "keyless", "detail": "OPENROUTER_API_KEY unset; using stub mode"}
-
-    t0 = time.monotonic()
-    try:
-        url = "https://openrouter.ai/api/v1/models"
-        headers = {"Authorization": f"Bearer {or_key}"}
-        r = requests.get(url, headers=headers, timeout=10)
-        elapsed = int((time.monotonic() - t0) * 1000)
-        if r.status_code == 200:
-            return {"status": "pass", "ms": elapsed, "detail": "API key valid"}
-        return {"status": "fail", "code": r.status_code, "ms": elapsed, "detail": r.text[:200]}
+        return {
+            "status": "pass" if result.get("healthy") else "fail",
+            "ms": elapsed,
+            "detail": "VM/browser model loop reachable" if result.get("healthy") else "VM/browser model loop unavailable",
+            "providers": result.get("providers", {}),
+        }
     except Exception as exc:
         elapsed = int((time.monotonic() - t0) * 1000)
         return {"status": "error", "ms": elapsed, "detail": str(exc)}
 
 def _check_gcp() -> Dict[str, Any]:
-    from modules.reasoning_module import _gcloud_access_token
     t0 = time.monotonic()
-    token = _gcloud_access_token()
+    token = ""
+    for cmd in (["gcloud", "auth", "print-access-token"], ["gcloud.cmd", "auth", "print-access-token"]):
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=15,
+                shell=True,
+                check=False,
+            )
+            candidate = result.stdout.strip()
+            if result.returncode == 0 and candidate:
+                token = candidate
+                break
+        except Exception:  # pylint: disable=broad-exception-caught
+            continue
     elapsed = int((time.monotonic() - t0) * 1000)
     if token:
         return {"status": "pass", "ms": elapsed, "detail": "gcloud token active"}
@@ -89,15 +86,13 @@ def get_disk_usage() -> Dict[str, Any]:
 
 def get_deep_health() -> Dict[str, Any]:
     """Execute all health checks in parallel and return aggregated status."""
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        f_gemini = executor.submit(_check_gemini)
-        f_openrouter = executor.submit(_check_openrouter)
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        f_model_loop = executor.submit(_check_model_loop)
         f_gcp = executor.submit(_check_gcp)
         f_azure = executor.submit(_check_azure)
 
         results = {
-            "gemini": f_gemini.result(),
-            "openrouter": f_openrouter.result(),
+            "model_loop": f_model_loop.result(),
             "gcp": f_gcp.result(),
             "azure": f_azure.result(),
         }
@@ -107,7 +102,8 @@ def get_deep_health() -> Dict[str, Any]:
 
     return {
         "status": "ok",
-        "keyless_mode": not (os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENROUTER_API_KEY")),
+        "keyless_mode": True,
+        "model_loop_mode": "vm_browser",
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "providers": results,
         "resources": {

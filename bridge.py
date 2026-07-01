@@ -473,8 +473,8 @@ TENTACLES = [
     {"name": "repo_context_guard", "route": "GET /repo/context-guard",       "reach": "Protected Git repo inventory with port/node/dependency collision guardrails"},  # pylint: disable=line-too-long
     # Dashboard + Chat routes
     {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
-    {"name": "chat",             "route": "POST /chat",                      "reach": "Multi-provider conversational endpoint (Gemini + OpenRouter fallback)"},  # pylint: disable=line-too-long
-    {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test each LLM provider and report status per provider"},  # pylint: disable=line-too-long
+    {"name": "chat",             "route": "POST /chat",                      "reach": "Conversational endpoint routed through the VM/browser model loop"},  # pylint: disable=line-too-long
+    {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test the configured VM/browser model loop"},  # pylint: disable=line-too-long
 ]
 
 # ---------------------------------------------------------------------------

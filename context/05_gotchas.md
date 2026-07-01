@@ -102,13 +102,13 @@
 
 
 
-- **Model aliases** — use `"stub"` (tests), `"fast"` (gemini-2.0-flash), `"smart"` (gemini-2.5-pro). Never pass raw model strings unless the alias doesn't exist yet.
+- **Model aliases** — use `"stub"` for deterministic tests; `"fast"` and `"smart"` route through the VM/browser model loop. Do not add direct provider API calls back into `reasoning_module`.
 
-- **`tests/eval_reasoning.py`** — CDLC eval harness for `reasoning_module`; run `python tests/eval_reasoning.py --model stub` for offline proof, or `--model fast` when a live Gemini eval is explicitly desired
+- **`tests/eval_reasoning.py`** — CDLC eval harness for `reasoning_module`; run `python tests/eval_reasoning.py --model stub` for offline proof, or `--model fast` when the VM/browser model loop is live
 
 - **Eval results** — `memory/eval_results.json` is structured JSON, not markdown memory; do not append prose to it by hand
 
-- **`GEMINI_API_KEY`** — must be set in environment for `model="fast"` or `model="smart"`; if missing, falls back to stub output with a WARNING log (does NOT raise)
+- **Provider API keys** — are not a `reasoning_module` dependency. If the VM/browser model loop is unavailable, the module falls back to stub output with a WARNING log (does NOT raise)
 
 - **`reason(problem, budget=10)`** — budget is max L-level steps; keep under 20 to avoid token bloat
 
@@ -118,7 +118,7 @@
 
 - **`plan_only()`** — does NOT run L module; use this for previewing plans without executing
 
-- **Gemini fallback** — if Gemini call fails (network, quota, JSON parse error), falls back to stub output silently; check logs for `WARNING jules_bridge.reasoning`
+- **Model-loop fallback** — if the VM/browser loop fails or returns non-JSON, reasoning falls back to stub output silently; check logs for `WARNING jules_bridge.reasoning`
 
 
 
@@ -344,9 +344,9 @@
 
 
 
-- Keep Gemini/OpenRouter payload construction, provider fallback, timing, and error-chain redaction in `modules/chat_service.py`; `/chat` and `/chat/test` should only validate fields and return `dict(result)`.
+- Keep VM/browser-loop routing, timing, and stable offline behavior in `modules/chat_service.py`; `/chat` and `/chat/test` should only validate fields and return `dict(result)`.
 
-- Never return `GEMINI_API_KEY` or `OPENROUTER_API_KEY` values in provider diagnostics. Sanitize exception text and response bodies before returning them.
+- `/chat/test` diagnostics should report loop readiness only. Do not make provider-key presence a bridge health signal.
 
 
 

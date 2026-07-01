@@ -208,11 +208,25 @@ class TestInternalHelpers:
         assert _threshold_value({"cpu": None}, "cpu", 90.0) == 90.0
 
 class TestReadHostMetrics:
+    @patch("modules.vm_manager._read_psutil_metrics")
+    def test_read_host_metrics_uses_psutil_first(self, mock_psutil):
+        from modules.vm_manager import _read_host_metrics  # pylint: disable=import-outside-toplevel
+
+        mock_psutil.return_value = (12.0, 34.0, None)
+
+        cpu, mem, err = _read_host_metrics()
+
+        assert cpu == 12.0
+        assert mem == 34.0
+        assert err is None
+
+    @patch("modules.vm_manager._read_psutil_metrics")
     @patch("modules.vm_manager.subprocess.run")
-    def test_read_host_metrics_success(self, mock_run):
+    def test_read_host_metrics_falls_back_to_powershell_success(self, mock_run, mock_psutil):
         from modules.vm_manager import _read_host_metrics  # pylint: disable=import-outside-toplevel
         import json
 
+        mock_psutil.return_value = (None, None, "psutil unavailable")
         mock_result = MagicMock()
         mock_result.returncode = 0
         mock_result.stdout = json.dumps({"cpu_percent": 45.5, "memory_percent": 60.2})
@@ -224,10 +238,12 @@ class TestReadHostMetrics:
         assert mem == 60.2
         assert err is None
 
+    @patch("modules.vm_manager._read_psutil_metrics")
     @patch("modules.vm_manager.subprocess.run")
-    def test_read_host_metrics_non_zero_exit(self, mock_run):
+    def test_read_host_metrics_non_zero_exit(self, mock_run, mock_psutil):
         from modules.vm_manager import _read_host_metrics  # pylint: disable=import-outside-toplevel
 
+        mock_psutil.return_value = (None, None, "psutil unavailable")
         mock_result = MagicMock()
         mock_result.returncode = 1
         mock_run.return_value = mock_result
@@ -238,11 +254,13 @@ class TestReadHostMetrics:
         assert mem is None
         assert err == "host metric reader failed"
 
+    @patch("modules.vm_manager._read_psutil_metrics")
     @patch("modules.vm_manager.subprocess.run")
-    def test_read_host_metrics_exception(self, mock_run):
+    def test_read_host_metrics_exception(self, mock_run, mock_psutil):
         from modules.vm_manager import _read_host_metrics  # pylint: disable=import-outside-toplevel
         import subprocess
 
+        mock_psutil.return_value = (None, None, "psutil unavailable")
         mock_run.side_effect = subprocess.TimeoutExpired(cmd="powershell.exe", timeout=10)
 
         cpu, mem, err = _read_host_metrics()
