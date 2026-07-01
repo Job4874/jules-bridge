@@ -61,12 +61,12 @@
         "remote": "https://github.com/Job4874/jules-bridge.git"
       },
       "jules_source": "sources/github/owner/repo",
-      "ghost_locked": true,
-      "last_seen_utc": "2026-06-30T21:59:31.990440+00:00",
+      "ghost_locked": false,
+      "last_seen_utc": "2026-07-01T19:43:04.246405+00:00",
       "status": "online"
     }
   ],
-  "updated_utc": "2026-06-30T21:59:31.991956+00:00",
+  "updated_utc": "2026-07-01T19:43:04.246986+00:00",
   "connect": {
     "primary_bridge_remote": "https://parade-marrow-pulp.ngrok-free.dev",
     "auth_header": "Authorization: Bearer <BRIDGE_TOKEN>",

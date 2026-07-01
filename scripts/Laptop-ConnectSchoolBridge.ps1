@@ -6,12 +6,25 @@
 [CmdletBinding()]
 param(
     [string]$RemoteUrl = "https://parade-marrow-pulp.ngrok-free.dev",
-    [string]$BridgeToken = "JULES-SECURE-999",
+    [string]$BridgeToken = "",
     [string]$RepoRoot = ""
 )
 
 if (-not $RepoRoot) {
     $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+}
+
+if (-not $BridgeToken) {
+    $envPath = Join-Path $RepoRoot ".env"
+    if (Test-Path $envPath) {
+        foreach ($line in Get-Content $envPath) {
+            if ($line -match '^\s*BRIDGE_TOKEN\s*=\s*(.+)\s*$') {
+                $BridgeToken = $Matches[1].Trim().Trim('"').Trim("'")
+                break
+            }
+        }
+    }
+    if (-not $BridgeToken) { $BridgeToken = "JULES-SECURE-999" }
 }
 
 $headers = @{
@@ -42,10 +55,13 @@ try {
 }
 
 try {
-    $id = Invoke-RestMethod "$RemoteUrl/host/identity" -Headers $headers -TimeoutSec 10
-    Write-Host "[OK] Host: $($id.host_id) ($($id.location), $($id.ram_gb)GB RAM)" -ForegroundColor Green
+    $talk = Invoke-RestMethod "$RemoteUrl/mesh/talk" -Headers $headers -TimeoutSec 10
+    Write-Host "[OK] Two-way talk channel ready" -ForegroundColor Green
+    if ($talk.to_laptop.content) {
+        Write-Host "     School says: $($talk.to_laptop.content.Split("`n")[1])" -ForegroundColor Gray
+    }
 } catch {
-    Write-Host "[WARN] Host identity unavailable" -ForegroundColor Yellow
+    Write-Host "[WARN] /mesh/talk not available yet (restart school bridge)" -ForegroundColor Yellow
 }
 
 # Save laptop-side env for Cursor agents on laptop
@@ -60,6 +76,28 @@ $laptopEnv = Join-Path $RepoRoot ".env.laptop"
 ) | Set-Content -Path $laptopEnv -Encoding UTF8
 
 & (Join-Path $RepoRoot "scripts\Register-MeshNode.ps1") -RepoRoot $RepoRoot -HostId "laptop" -Role "mobile" 2>$null
+
+try {
+    $regBody = @{
+        host_id   = "laptop"
+        role      = "mobile"
+        location  = "mobile"
+        hostname  = $env:COMPUTERNAME
+        status    = "online"
+    } | ConvertTo-Json
+    Invoke-RestMethod "$RemoteUrl/mesh/register" -Method POST -Headers $headers -ContentType "application/json" -Body $regBody -TimeoutSec 10 | Out-Null
+    Write-Host "[OK] Laptop registered on school mesh" -ForegroundColor Green
+} catch {
+    Write-Host "[WARN] Remote mesh register failed: $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
+try {
+    $reply = @{ from = "laptop"; message = "Laptop connected at $(Get-Date -Format o)" } | ConvertTo-Json
+    Invoke-RestMethod "$RemoteUrl/mesh/talk" -Method POST -Headers $headers -ContentType "application/json" -Body $reply -TimeoutSec 10 | Out-Null
+    Write-Host "[OK] Sent hello to school via /mesh/talk" -ForegroundColor Green
+} catch {
+    Write-Host "[WARN] Could not send laptop hello" -ForegroundColor Yellow
+}
 
 Write-Host ""
 Write-Host "  Saved: .env.laptop" -ForegroundColor Green

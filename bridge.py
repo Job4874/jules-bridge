@@ -600,6 +600,54 @@ def host_gpg_public():
     return jsonify(payload)
 
 
+@app.route("/mesh/status", methods=["GET"])
+@route_errors
+def mesh_status():
+    """GET /mesh/status — Mesh discovery: nodes, tunnel, primary bridge URLs."""
+    return jsonify(modules.get_mesh_status())
+
+
+@app.route("/mesh/register", methods=["POST"])
+@route_errors
+def mesh_register():
+    """POST /mesh/register — Register or refresh this host in MESH_REGISTRY.json."""
+    data = json_payload()
+    overrides = {}
+    for key in ("host_id", "role", "location", "hostname", "status"):
+        if key in data and data[key] is not None:
+            overrides[key] = string_field(data, key)
+    if "ram_gb" in data:
+        overrides["ram_gb"] = int_field(data, "ram_gb", min_value=1)
+    if "bridge_urls" in data and isinstance(data["bridge_urls"], dict):
+        overrides["bridge_urls"] = data["bridge_urls"]
+    registry = modules.register_local_node(**overrides)
+    return jsonify({"status": "registered", "primary_host_id": registry.get("primary_host_id"), "nodes": registry.get("nodes")})
+
+
+@app.route("/mesh/talk", methods=["GET", "POST"])
+@route_errors
+def mesh_talk():
+    """Two-way school ↔ laptop messages via jules_inbox/LAPTOP_MESSAGE.md and SCHOOL_MESSAGE.md."""
+    if request.method == "GET":
+        laptop_msg, laptop_status = modules.inbox_read(file="LAPTOP_MESSAGE.md")
+        school_msg, school_status = modules.inbox_read(file="SCHOOL_MESSAGE.md")
+        return jsonify({
+            "to_laptop": dict(laptop_msg) if laptop_status == 200 else {"content": "", "missing": True},
+            "from_laptop": dict(school_msg) if school_status == 200 else {"content": "", "missing": True},
+        })
+
+    data = json_payload()
+    sender = string_field(data, "from")
+    message = string_field(data, "message")
+    if sender not in ("school", "laptop"):
+        raise BridgeHTTPError(400, "Invalid input", details="from must be 'school' or 'laptop'")
+    target = "LAPTOP_MESSAGE.md" if sender == "school" else "SCHOOL_MESSAGE.md"
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    body = f"[{stamp}] {sender}:\n{message}\n"
+    result = modules.inbox_write(content=body, file=target)
+    return jsonify({"status": "sent", "channel": target, **result})
+
+
 @app.route("/tentacles", methods=["GET"])
 def tentacles():
     return jsonify({
