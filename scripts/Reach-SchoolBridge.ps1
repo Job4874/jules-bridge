@@ -56,8 +56,10 @@ function Test-SchoolHost {
     $ram = [double]$Ping.ram_gb
     $ctx = [string]$Identity.execution_context
     $label = [string]$Ping.identity
-    if ($ctx -eq '[SCHOOL_COMPUTE]' -and $ram -ge 32) { return $true }
-    if ($label -match 'School-64|School-PC-RAM-(6[4-9]|[7-9]\d|\d{3,})') { return $true }
+    if ($label -match '^Laptop-PC') { return $false }
+    if ($ctx -eq '[SCHOOL_COMPUTE]') { return $true }
+    if ($label -match '^School-PC') { return $true }
+    if ($ram -ge 28) { return $true }
     return $false
 }
 

@@ -25,9 +25,9 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ramGb = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB)
 
-if ($ramGb -lt 32) {
+if ($ramGb -lt 28) {
     Write-Host "[ERROR] This machine reports ${ramGb}GB RAM." -ForegroundColor Red
-    Write-Host "Bootstrap-SchoolBridge.ps1 must run on the 64GB school PC, not a laptop." -ForegroundColor Yellow
+    Write-Host "Bootstrap-SchoolBridge.ps1 must run on the school/work PC, not a laptop." -ForegroundColor Yellow
     Write-Host "On a laptop use: .\scripts\Setup-LaptopIdentity.ps1" -ForegroundColor Yellow
     exit 1
 }
