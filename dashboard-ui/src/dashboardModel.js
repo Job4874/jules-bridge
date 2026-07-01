@@ -34,6 +34,8 @@ export const DEFAULT_STATUS = {
   cacheAge: 0,
   bridgeStatus: 'unknown',
   localUrl: '',
+  ghostLocked: false,
+  ghostHostId: '',
   logs: []
 };
 
@@ -118,6 +120,8 @@ export const normalizeDashboardPayload = payload => {
     cacheAge: payload.cache_age_s ?? 0,
     bridgeStatus: bridge.status || 'unknown',
     localUrl: bridge.local_url || '',
+    ghostLocked: !!payload.ghost?.ghost_locked,
+    ghostHostId: payload.ghost?.host_id || '',
     logs: Array.isArray(payload.recent_logs) ? payload.recent_logs : []
   };
 };
@@ -164,6 +168,16 @@ export const buildOpsChecklist = status => {
       detail: status.online ? `${status.bridgeStatus}; cache ${status.cacheAge}s` : 'status poll failed',
       tone: status.online ? (status.tunnel ? 'success' : 'warn') : 'danger',
       progress: status.online ? 100 : 0
+    },
+    {
+      id: 'ghost',
+      label: 'Ghost mode',
+      state: status.ghostLocked ? 'Locked' : 'Unlocked',
+      detail: status.ghostLocked
+        ? `Always-on enforced on ${status.ghostHostId || 'school host'}`
+        : 'Bridge can be stopped without unlock password',
+      tone: status.ghostLocked ? 'success' : 'info',
+      progress: status.ghostLocked ? 100 : 35
     },
     {
       id: 'context',
@@ -213,6 +227,13 @@ export const buildTopology = status => {
       detail: status.online ? status.uptime : 'offline',
       tone: status.online ? (status.tunnel ? 'success' : 'warn') : 'danger',
       metric: status.tunnel ? 'public tunnel' : 'local relay'
+    },
+    {
+      id: 'ghost',
+      label: 'Ghost',
+      detail: status.ghostLocked ? 'always-on locked' : 'unlocked',
+      tone: status.ghostLocked ? 'success' : 'info',
+      metric: status.ghostHostId || 'school-64gb'
     },
     {
       id: 'runtime',

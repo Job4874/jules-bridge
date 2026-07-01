@@ -1270,5 +1270,55 @@ class TestChatRoutes(unittest.TestCase):
         )
 
 
+class TestGhostRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    def test_ghost_status_public_without_token(self):
+        response = self.client.get("/ghost/status")
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body["status"], "ok")
+        self.assertIn("ghost_locked", body)
+        self.assertNotIn("unlock_password_hash", body)
+
+    @patch("modules.ghost_state.lock_ghost")
+    def test_ghost_lock_requires_auth_and_password(self, mock_lock):
+        mock_lock.return_value = {
+            "status": "locked",
+            "locked_at_utc": "2026-07-01T00:00:00+00:00",
+            "host_id": "school-64gb",
+            "location": "school",
+        }
+        denied = self.client.post("/ghost/lock", json={"password": "secret"})
+        self.assertEqual(denied.status_code, 401)
+
+        response = self.client.post(
+            "/ghost/lock",
+            json={"password": "secret"},
+            headers=BRIDGE_AUTH_HEADER,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["ghost_locked"])
+
+    @patch("modules.ghost_state.unlock_ghost")
+    def test_ghost_unlock_rejects_bad_password(self, mock_unlock):
+        mock_unlock.return_value = {"status": "denied", "error": "invalid unlock password"}
+        response = self.client.post(
+            "/ghost/unlock",
+            json={"password": "wrong"},
+            headers=BRIDGE_AUTH_HEADER,
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_ping_includes_ghost_fields(self):
+        response = self.client.get("/ping")
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertIn("ghost_locked", body)
+        self.assertIn("host_id", body)
+
+
 if __name__ == "__main__":
     unittest.main()

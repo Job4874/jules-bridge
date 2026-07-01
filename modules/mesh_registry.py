@@ -194,7 +194,11 @@ def get_mesh_status(repo_root: str | None = None) -> MeshStatus:
     tunnel_path = root / "jules_inbox" / "TUNNEL_HEALTH.json"
     tunnel = _read_json(tunnel_path)
     identity_path = root / "jules_inbox" / "HOST_IDENTITY.json"
-    identity = _read_json(identity_path)
+    file_identity = _read_json(identity_path)
+    from modules import ghost_state  # pylint: disable=import-outside-toplevel
+
+    live_identity = ghost_state.get_ghost_status()
+    identity = {**file_identity, **live_identity, "updated_utc": datetime.now(timezone.utc).isoformat()}
     fleet_path = root / "jules_inbox" / "jules_dispatch" / "JULES_FLEET_STATE.json"
     fleet = _read_json(fleet_path)
 
@@ -214,6 +218,11 @@ def get_mesh_status(repo_root: str | None = None) -> MeshStatus:
             },
             "tunnel": tunnel or {"status": "unknown"},
             "host_identity": identity,
+            "ghost": {
+                "ghost_locked": live_identity.get("ghost_locked", False),
+                "always_on_enforced": live_identity.get("always_on_enforced", False),
+                "remote_access_intro": live_identity.get("remote_access_intro"),
+            },
             "nodes": nodes,
             "jules_fleet": {
                 "status": fleet.get("status"),

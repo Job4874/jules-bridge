@@ -77,6 +77,22 @@ if (-not (Test-TunnelUp)) {
 # Step 3: Mesh registry
 & (Join-Path $RepoRoot "scripts\Register-MeshNode.ps1") -RepoRoot $RepoRoot | Out-Null
 
+# Step 3b: Sync ghost state through bridge API when local bridge is up
+if (Test-BridgeUp) {
+    try {
+        $headers = @{ Authorization = "Bearer $BridgeToken" }
+        $ghost = Invoke-RestMethod "http://127.0.0.1:5000/ghost/status" -TimeoutSec 5 -UseBasicParsing
+        Write-Host "[OK] Bridge ghost status: locked=$($ghost.ghost_locked) host=$($ghost.host_id)" -ForegroundColor Green
+        if ($UnlockPassword -and -not $ghost.ghost_locked) {
+            $body = @{ password = $UnlockPassword } | ConvertTo-Json
+            Invoke-RestMethod "http://127.0.0.1:5000/ghost/lock" -Method POST -Body $body -ContentType "application/json" -Headers $headers -TimeoutSec 10 | Out-Null
+            Write-Host "[OK] Ghost lock confirmed via bridge API" -ForegroundColor Green
+        }
+    } catch {
+        Write-Host "[WARN] Bridge ghost API sync skipped: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}
+
 # Step 4: Write laptop connect card
 $cardPath = Join-Path $RepoRoot "jules_inbox\LAPTOP_CURSOR_CONNECT.json"
 $card = @{
@@ -88,6 +104,8 @@ $card = @{
     ping             = "$RemoteUrl/ping"
     mesh_status      = "$RemoteUrl/mesh/status"
     host_identity    = "$RemoteUrl/host/identity"
+    ghost_status     = "$RemoteUrl/ghost/status"
+    mesh_talk        = "$RemoteUrl/mesh/talk"
     cursor_on_laptop = @{
         step1 = "Clone or sync jules-bridge-master to laptop"
         step2 = "In laptop Cursor terminal run scripts/Laptop-ConnectSchoolBridge.ps1"

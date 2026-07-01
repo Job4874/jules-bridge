@@ -245,6 +245,9 @@ function MissionSummary({ sysStatus, topology }) {
             <StatusPill tone={sysStatus.tunnel ? 'success' : 'warn'}>
               {sysStatus.tunnel ? 'Tunnel active' : 'Local relay'}
             </StatusPill>
+            <StatusPill tone={sysStatus.ghostLocked ? 'success' : 'info'}>
+              {sysStatus.ghostLocked ? 'Ghost locked' : 'Ghost off'}
+            </StatusPill>
             <StatusPill tone={gateTone(sysStatus)}>{sysStatus.quantAllowed ? 'Quant enabled' : 'Quant locked'}</StatusPill>
             <StatusPill tone={(repoSummary.collision_count || 0) > 0 ? 'warn' : 'success'}>
               {repoSummary.collision_count || 0} collisions
@@ -889,6 +892,7 @@ function App() {
         <div className="command-status">
           <StatusPill tone={sysStatus.online ? 'success' : 'danger'}>{sysStatus.online ? 'LIVE' : 'OFFLINE'}</StatusPill>
           <StatusPill tone={sysStatus.tunnel ? 'success' : 'warn'}>{sysStatus.tunnel ? 'TUNNEL' : 'LOCAL'}</StatusPill>
+          <StatusPill tone={sysStatus.ghostLocked ? 'success' : 'info'}>{sysStatus.ghostLocked ? 'GHOST LOCK' : 'GHOST OFF'}</StatusPill>
           <StatusPill tone={gateTone(sysStatus)}>{sysStatus.executionContext}</StatusPill>
           <StatusPill tone={sysStatus.quantAllowed ? 'success' : 'warn'}>{sysStatus.quantAllowed ? 'QUANT ON' : 'QUANT LOCKED'}</StatusPill>
         </div>

@@ -201,6 +201,14 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         repo_summary = dict(repo_context.get("summary", {}))
         repo_summary.pop("sample_repos", None)
 
+        ghost = {}
+        try:
+            from modules.ghost_state import get_ghost_status  # pylint: disable=import-outside-toplevel
+
+            ghost = get_ghost_status()
+        except Exception:  # pylint: disable=broad-exception-caught
+            ghost = {"ghost_locked": False, "always_on_enforced": False}
+
         ngrok_url = ""
         # Try to extract ngrok URL from recent logs
         for line in reversed(logs):
@@ -253,6 +261,13 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
                 and env.get("GMAIL_USER") not in ("your@gmail.com", "")
                 and env.get("GMAIL_APP_PASSWORD") not in ("your-16-char-app-password", "")
             ),
+            "ghost": {
+                "ghost_locked": ghost.get("ghost_locked", False),
+                "always_on_enforced": ghost.get("always_on_enforced", False),
+                "host_id": ghost.get("host_id"),
+                "location": ghost.get("location"),
+                "locked_at_utc": ghost.get("locked_at_utc"),
+            },
         }
         _dashboard_status_cache['last'] = (now_ts, result)
         return result

@@ -132,6 +132,18 @@ from .repo_context_guard import (
 )
 from .app_launcher import LaunchResult, launch_browser_to_url
 from .chat_service import ChatHealthResult, ChatResult, test_chat_providers, chat
+from .ghost_state import (
+    GhostState,
+    HostIdentity,
+    load_ghost_state,
+    lock_ghost,
+    unlock_ghost,
+    verify_unlock,
+    ghost_protected,
+    get_ghost_status,
+    get_bridge_urls,
+    get_host_identity as get_ghost_host_identity,
+)
 
 __all__ = [
     # fs_service
@@ -267,4 +279,15 @@ __all__ = [
     "ChatResult",
     "test_chat_providers",
     "chat",
+    # ghost_state
+    "GhostState",
+    "HostIdentity",
+    "load_ghost_state",
+    "lock_ghost",
+    "unlock_ghost",
+    "verify_unlock",
+    "ghost_protected",
+    "get_ghost_status",
+    "get_bridge_urls",
+    "get_ghost_host_identity",
 ]

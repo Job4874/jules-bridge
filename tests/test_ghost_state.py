@@ -29,3 +29,13 @@ def test_host_identity_includes_remote_intro():
     assert identity["location"] == "school"
     assert "remote_access_intro" in identity
     assert "school" in identity["remote_access_intro"].lower()
+
+
+def test_get_ghost_status_never_exposes_hash(tmp_path, monkeypatch):
+    state_file = tmp_path / "ghost_state.json"
+    monkeypatch.setattr(gs, "ghost_state_path", lambda: state_file)
+    gs.lock_ghost("pw", repo_root=str(tmp_path))
+    status = gs.get_ghost_status()
+    assert status["ghost_locked"] is True
+    assert "unlock_password_hash" not in status
+    assert status["always_on_enforced"] is True

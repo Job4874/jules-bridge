@@ -87,6 +87,7 @@ def require_auth():
         "/health",
         "/ping",
         "/host/identity",
+        "/ghost/status",
         "/dashboard/status",
         "/vm/status",
         "/chat",
@@ -422,8 +423,14 @@ TENTACLES = [
     {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},  # pylint: disable=line-too-long
     {"name": "health_deep",  "route": "GET /health/deep",       "reach": "Authenticated provider connectivity and host resource health"},  # pylint: disable=line-too-long
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
-    {"name": "host_identity", "route": "GET /host/identity",   "reach": "Hostname, RAM, Jules identity label, GPG key id (no auth)"},  # pylint: disable=line-too-long
+    {"name": "host_identity", "route": "GET /host/identity",   "reach": "Hostname, RAM, Jules identity label, GPG key id, ghost state (no auth)"},  # pylint: disable=line-too-long
     {"name": "host_gpg",     "route": "GET /host/gpg/public",  "reach": "Full GPG public key block for remote GitHub paste"},  # pylint: disable=line-too-long
+    {"name": "ghost_status", "route": "GET /ghost/status",     "reach": "Ghost lock state, operator intro, bridge URLs (no auth)"},  # pylint: disable=line-too-long
+    {"name": "ghost_lock",   "route": "POST /ghost/lock",      "reach": "Lock always-on ghost mode with operator password"},  # pylint: disable=line-too-long
+    {"name": "ghost_unlock", "route": "POST /ghost/unlock",    "reach": "Unlock ghost mode with operator password"},  # pylint: disable=line-too-long
+    {"name": "mesh_status",  "route": "GET /mesh/status",      "reach": "Fleet mesh discovery, tunnel health, live ghost identity"},  # pylint: disable=line-too-long
+    {"name": "mesh_register","route": "POST /mesh/register",   "reach": "Register or refresh this host in MESH_REGISTRY.json"},  # pylint: disable=line-too-long
+    {"name": "mesh_talk",    "route": "GET|POST /mesh/talk",   "reach": "Two-way school ↔ laptop inbox messages"},  # pylint: disable=line-too-long
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
     {"name": "session_log",  "route": "GET /session/log",        "reach": "Audit which tools Jules used recently"},
     {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},  # pylint: disable=line-too-long
@@ -501,7 +508,7 @@ def bridge_info_payload(include_routes=False):
         "uptime_s": uptime_s,
         "auth": {
             "type": "bearer",
-            "public_routes": ["GET /health", "GET /ping", "GET /host/identity"],
+            "public_routes": ["GET /health", "GET /ping", "GET /host/identity", "GET /ghost/status"],
             "protected_routes": "All other routes require Authorization: Bearer <token>",
         },
         "manifest": "GET /tentacles",
@@ -570,6 +577,9 @@ def ping():
         "hostname": host.get("hostname"),
         "ram_gb": host.get("ram_gb"),
         "gpg_configured": host.get("gpg_configured"),
+        "ghost_locked": host.get("ghost_locked", False),
+        "host_id": host.get("host_id"),
+        "location": host.get("location"),
     })
 
 
@@ -598,6 +608,64 @@ def host_gpg_public():
             details="Run Copy-GithubGpg.cmd on the host or scripts/Setup-GitHubGpg.ps1",
         )
     return jsonify(payload)
+
+
+@app.route("/ghost/status", methods=["GET"])
+@route_errors
+def ghost_status():
+    """GET /ghost/status — Public ghost lock snapshot for remote Jules agents."""
+    from modules.ghost_state import get_ghost_status  # pylint: disable=import-outside-toplevel
+
+    payload = get_ghost_status()
+    payload["status"] = "ok"
+    return jsonify(payload)
+
+
+@app.route("/ghost/lock", methods=["POST"])
+@route_errors
+def ghost_lock():
+    """POST /ghost/lock — Lock always-on ghost mode (password required)."""
+    from modules.ghost_state import lock_ghost  # pylint: disable=import-outside-toplevel
+
+    data = json_payload()
+    password = string_field(data, "password")
+    overrides = {}
+    for key in ("host_id", "location"):
+        if key in data and data[key] is not None:
+            overrides[key] = string_field(data, key)
+    if "ram_gb" in data:
+        overrides["ram_gb"] = int_field(data, "ram_gb", min_value=1)
+    result = lock_ghost(password, repo_root=ROOT_DIR, **overrides)
+    status = result.get("status")
+    if status == "error":
+        raise BridgeHTTPError(400, "Invalid input", details=result.get("error", "lock failed"))
+    safe = {
+        "status": status,
+        "ghost_locked": True,
+        "locked_at_utc": result.get("locked_at_utc"),
+        "host_id": result.get("host_id"),
+        "location": result.get("location"),
+    }
+    return jsonify(safe)
+
+
+@app.route("/ghost/unlock", methods=["POST"])
+@route_errors
+def ghost_unlock():
+    """POST /ghost/unlock — Unlock ghost mode with operator password."""
+    from modules.ghost_state import unlock_ghost  # pylint: disable=import-outside-toplevel
+
+    data = json_payload()
+    password = string_field(data, "password")
+    result = unlock_ghost(password, repo_root=ROOT_DIR)
+    status = result.get("status")
+    if status == "denied":
+        raise BridgeHTTPError(403, "Access denied", reason=result.get("error", "invalid unlock password"))
+    return jsonify({
+        "status": status,
+        "ghost_locked": False,
+        "unlocked_at_utc": result.get("unlocked_at_utc"),
+    })
 
 
 @app.route("/mesh/status", methods=["GET"])

@@ -6,6 +6,8 @@ Public interface:
     unlock_ghost(password) -> GhostState
     verify_unlock(password) -> bool
     ghost_protected() -> bool
+    get_ghost_status() -> dict[str, Any]
+    get_bridge_urls() -> dict[str, str]
     get_host_identity() -> HostIdentity
 """
 from __future__ import annotations
@@ -161,12 +163,44 @@ def ghost_protected() -> bool:
     return bool(load_ghost_state().get("locked"))
 
 
+def get_ghost_status() -> dict[str, Any]:
+    """Safe ghost snapshot for HTTP routes — never exposes password hashes."""
+    state = load_ghost_state()
+    return {
+        "ghost_locked": bool(state.get("locked")),
+        "locked_at_utc": state.get("locked_at_utc"),
+        "unlocked_at_utc": state.get("unlocked_at_utc"),
+        "host_id": state.get("host_id", DEFAULT_HOST_ID),
+        "location": state.get("location", DEFAULT_LOCATION),
+        "ram_gb": state.get("ram_gb", DEFAULT_RAM_GB),
+        "hostname": state.get("hostname", socket.gethostname()),
+        "remote_access_intro": state.get("remote_access_intro", REMOTE_ACCESS_INTRO),
+        "identity_disclosure_policy": state.get(
+            "identity_disclosure_policy",
+            _default_state()["identity_disclosure_policy"],
+        ),
+        "bridge_urls": {
+            "local": "http://127.0.0.1:5000",
+            "remote": _public_bridge_url(),
+        },
+        "always_on_enforced": bool(state.get("locked")),
+    }
+
+
 def _public_bridge_url() -> str:
     explicit = os.environ.get("NGROK_PUBLIC_URL", "").strip()
     if explicit:
         return explicit.rstrip("/")
     domain = os.environ.get("NGROK_DOMAIN", "parade-marrow-pulp.ngrok-free.dev").strip()
     return f"https://{domain}"
+
+
+def get_bridge_urls() -> dict[str, str]:
+    """Local and remote bridge URLs for fleet cards and identity payloads."""
+    return {
+        "local": "http://127.0.0.1:5000",
+        "remote": _public_bridge_url(),
+    }
 
 
 def get_host_identity() -> HostIdentity:

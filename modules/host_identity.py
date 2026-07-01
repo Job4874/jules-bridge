@@ -98,7 +98,7 @@ def get_host_identity() -> dict[str, Any]:
         identity_label = f"School-PC-RAM-{int(ram)}GB"
 
     gpg_key_id = _gpg_key_id()
-    return {
+    payload: dict[str, Any] = {
         "hostname": hostname,
         "identity": identity_label or hostname,
         "execution_context": context,
@@ -108,6 +108,29 @@ def get_host_identity() -> dict[str, Any]:
         "gpg_configured": gpg_key_id is not None,
         "repo_root": str(_ROOT),
     }
+
+    try:
+        from modules import ghost_state as gs  # pylint: disable=import-outside-toplevel
+
+        ghost = gs.get_ghost_status()
+        payload.update(
+            {
+                "host_id": ghost.get("host_id", gs.DEFAULT_HOST_ID),
+                "location": ghost.get("location", gs.DEFAULT_LOCATION),
+                "ghost_locked": ghost.get("ghost_locked", False),
+                "locked_at_utc": ghost.get("locked_at_utc"),
+                "remote_access_intro": ghost.get("remote_access_intro", gs.REMOTE_ACCESS_INTRO),
+                "identity_disclosure_policy": ghost.get("identity_disclosure_policy"),
+                "bridge_urls": ghost.get("bridge_urls", gs.get_bridge_urls()),
+                "always_on_enforced": ghost.get("always_on_enforced", False),
+            }
+        )
+        if payload.get("ram_gb") is None and ghost.get("ram_gb"):
+            payload["ram_gb"] = ghost.get("ram_gb")
+    except Exception:  # pylint: disable=broad-exception-caught
+        payload.setdefault("ghost_locked", False)
+
+    return payload
 
 
 def get_gpg_public_payload() -> dict[str, Any]:
