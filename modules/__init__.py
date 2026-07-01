@@ -24,6 +24,7 @@ from .ui_automation import (
     get_secret,
     detect_ui_state,
 )
+from .inbox_service import InboxMessage, inbox_read, inbox_write
 from .mesh_registry import get_mesh_status, register_local_node
 from .human_mimic_driver import (
     HumanMimicResult,
