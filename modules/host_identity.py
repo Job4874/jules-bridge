@@ -95,7 +95,10 @@ def get_host_identity() -> dict[str, Any]:
 
     identity_label = env_identity or system_id
     if not identity_label and ram is not None:
-        identity_label = f"School-PC-RAM-{int(ram)}GB"
+        if context == "[SCHOOL_COMPUTE]" or ram >= 32:
+            identity_label = f"School-PC-RAM-{int(ram)}GB"
+        else:
+            identity_label = f"Laptop-PC-RAM-{int(ram)}GB"
 
     gpg_key_id = _gpg_key_id()
     return {
