@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "primary_host_id": "school-64gb",
+  "nodes": [
+    {
+      "host_id": "gcp-offload-worker",
+      "role": "compute_worker",
+      "capabilities": [
+        "shell",
+        "llm",
+        "build"
+      ],
+      "parent_host_id": "school-64gb",
+      "agent_url": "http://34.132.193.73:6000",
+      "cloud": "gcp"
+    },
+    {
+      "host_id": "jules-cloud-fleet",
+      "role": "jules_workers",
+      "capabilities": [
+        "jules_cli",
+        "jules_rest"
+      ],
+      "parent_host_id": "school-64gb",
+      "notes": "Google Jules remote sessions via POST /jules/fleet on primary bridge"
+    },
+    {
+      "host_id": "laptop",
+      "role": "mobile",
+      "capabilities": [
+        "jules_cli",
+        "cursor",
+        "bridge"
+      ],
+      "location": "mobile",
+      "status": "offline",
+      "notes": "Register laptop with HOST_ID=laptop on that machine"
+    },
+    {
+      "host_id": "school-64gb",
+      "role": "primary",
+      "hostname": "PPCEA200P350B4",
+      "location": "school",
+      "ram_gb": 64,
+      "capabilities": [
+        "bridge",
+        "jules_cli",
+        "shell",
+        "ui",
+        "oracle",
+        "git",
+        "gpg"
+      ],
+      "bridge_urls": {
+        "local": "http://127.0.0.1:5000",
+        "remote": "https://parade-marrow-pulp.ngrok-free.dev"
+      },
+      "github": {
+        "user": "Job4874",
+        "repo": "Job4874/jules-bridge",
+        "remote": "https://github.com/Job4874/jules-bridge.git"
+      },
+      "jules_source": "sources/github/owner/repo",
+      "ghost_locked": true,
+      "last_seen_utc": "2026-06-30T21:59:31.990440+00:00",
+      "status": "online"
+    }
+  ],
+  "updated_utc": "2026-06-30T21:59:31.991956+00:00",
+  "connect": {
+    "primary_bridge_remote": "https://parade-marrow-pulp.ngrok-free.dev",
+    "auth_header": "Authorization: Bearer <BRIDGE_TOKEN>",
+    "ngrok_header": "ngrok-skip-browser-warning: true",
+    "discovery": "GET /mesh/status",
+    "identity": "GET /host/identity"
+  }
+}

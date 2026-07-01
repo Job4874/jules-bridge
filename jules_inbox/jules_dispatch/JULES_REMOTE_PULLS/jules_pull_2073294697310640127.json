@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-06-26T05:53:40.135038+00:00",
+  "dry_run": false,
+  "session_id": "2073294697310640127",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "2073294697310640127"
+  ],
+  "jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "status": "pulled",
+  "exit_code": 0,
+  "stdout": "diff --git a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\nindex 99d4acc..d745f22 100644\n--- a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n+++ b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n@@ -27,6 +27,7 @@ namespace OracleV5\n \n             TestPositionSizer();\n             TestAccountGuardDrawdown();\n+            TestHeartbeatMonitor();\n \n             OracleLog.Write(\"SELF_TEST\", \"==================================================\");\n             OracleLog.Write(\"SELF_TEST\", \"   SIM-MODE SELF-TEST COMPLETED                   \");\n@@ -113,6 +114,53 @@ namespace OracleV5\n             OracleLog.Write(\"SELF_TEST\", $\"State 3 (Drop): {state3.State}, DD={dd3.DrawdownFromPeak:F2}, Reason={state3.ReasonCode}\");\n         }\n \n+        private void TestHeartbeatMonitor()\n+        {\n+            OracleLog.Write(\"SELF_TEST\", \">>> TESTING HEARTBEAT MONITOR\");\n+\n+            var monitor = new HeartbeatMonitor(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15));\n+            DateTime now = DateTime.UtcNow;\n+\n+            // Scenario 1: Unknown Engine\n+            double secondsUnknown = monitor.SecondsSinceLastPulse(\"UnknownEngine\", now);\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 1 (Unknown Engine): Expected=Infinity, Actual={secondsUnknown}\");\n+\n+            // Scenario 2: Newly Pulsed Engine\n+            monitor.Pulse(\"EngineA\", now);\n+            double secondsNew = monitor.SecondsSinceLastPulse(\"EngineA\", now);\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 2 (New Pulse): Expected=0, Actual={secondsNew}\");\n+\n+            // Scenario 3: Elapsed Time (10 seconds)\n+            DateTime later = now.AddSeconds(10);\n+            double secondsElapsed = monitor.SecondsSinceLastPulse(\"EngineA\", later);\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 3 (Elapsed 10s): Expected=10, Actual={secondsElapsed}\");\n+\n+            // Scenario 4: Negative Elapsed Time (Clock drift)\n+            DateTime earlier = now.AddSeconds(-5);\n+            double secondsNegative = monitor.SecondsSinceLastPulse(\"EngineA\", earlier);\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 4 (Earlier Time): Expected=0, Actual={secondsNegative}\");\n+\n+            // Scenario 5: Invalid Engine Names\n+            double secondsEmpty = monitor.SecondsSinceLastPulse(\"\", now);\n+            double secondsNull = monitor.SecondsSinceLastPulse(null, now);\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 5 (Invalid Names): Empty={secondsEmpty}, Null={secondsNull}\");\n+\n+            // Scenario 6: Mixed DateTimeKind (Local vs Utc)\n+            DateTime localNow = DateTime.SpecifyKind(now, DateTimeKind.Local);\n+            double secondsLocal = monitor.SecondsSinceLastPulse(\"EngineA\", localNow);\n+            // EnsureUtc converts local to universal, so it should still be consistent\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 6 (Local Time): Expected consistent, Actual={secondsLocal}\");\n+\n+            // Scenario 7: State verification alongside seconds\n+            HeartbeatState state = monitor.GetState(\"EngineA\", later);\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 7 (State at 10s): Expected=Warning, Actual={state}\");\n+\n+            // Scenario 8: Evaluated Snapshot\n+            HeartbeatMonitorSnapshot snapshot = monitor.Evaluate(later);\n+            var record = snapshot.Records[0];\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 8 (Snapshot): Engine={record.EngineName}, Seconds={record.SecondsSinceLastPulse}, State={record.State}\");\n+        }\n+\n         private static AccountGuardSnapshot BuildSelfTestGuardSnapshot(DrawdownMonitorResult drawdown)\n         {\n             return new AccountGuardSnapshot\n\n",
+  "stderr": "",
+  "timed_out": false,
+  "session_ids": [
+    "2073294697310640127",
+    "100644"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_2073294697310640127.json",
+  "note": "Live pull attempted through the Jules CLI."
+}

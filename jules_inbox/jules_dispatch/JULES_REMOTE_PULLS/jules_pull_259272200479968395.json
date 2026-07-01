@@ -1,0 +1,27 @@
+{
+  "generated_at_utc": "2026-06-26T09:39:27.908308+00:00",
+  "dry_run": false,
+  "session_id": "259272200479968395",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "259272200479968395"
+  ],
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "status": "pulled",
+  "exit_code": 0,
+  "stdout": "diff --git a/.gitignore b/.gitignore\nnew file mode 100644\nindex 0000000..2109ddd\n--- /dev/null\n+++ b/.gitignore\n@@ -0,0 +1,6 @@\n+[Bb]in/\n+[Oo]bj/\n+.vs/\n+*.user\n+*.suo\n+test_results.txt\ndiff --git a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\nindex 99d4acc..64e5e53 100644\n--- a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n+++ b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n@@ -27,6 +27,7 @@ namespace OracleV5\n \n             TestPositionSizer();\n             TestAccountGuardDrawdown();\n+            TestTrendDetector();\n \n             OracleLog.Write(\"SELF_TEST\", \"==================================================\");\n             OracleLog.Write(\"SELF_TEST\", \"   SIM-MODE SELF-TEST COMPLETED                   \");\n@@ -113,6 +114,41 @@ namespace OracleV5\n             OracleLog.Write(\"SELF_TEST\", $\"State 3 (Drop): {state3.State}, DD={dd3.DrawdownFromPeak:F2}, Reason={state3.ReasonCode}\");\n         }\n \n+        private void TestTrendDetector()\n+        {\n+            OracleLog.Write(\"SELF_TEST\", \">>> TESTING TREND DETECTOR RESET\");\n+\n+            var detector = new TrendDetector(slopeLookback: 5);\n+\n+            // 1. Establish a rising slope trend\n+            // Analyze(currentPrice, fastMa, slowMa, adx, atr)\n+            detector.Analyze(100, 10, 5, 25); // slope = 5\n+            detector.Analyze(100, 11, 5, 25); // slope = 6\n+            TrendSnapshot snapshot1 = detector.Analyze(100, 13, 5, 25); // slope = 8\n+\n+            bool isRisingBefore = snapshot1.IsSlopeRising;\n+            OracleLog.Write(\"SELF_TEST\", $\"Trend before Reset: IsSlopeRising={isRisingBefore}\");\n+\n+            // 2. Reset the detector\n+            detector.Reset();\n+\n+            // 3. Verify that history is cleared. \n+            // After reset, IsSlopeRising should be false because it needs at least 3 samples.\n+            TrendSnapshot snapshot2 = detector.Analyze(100, 15, 5, 25); // slope = 10 (1st sample after reset)\n+            bool isRisingAfter = snapshot2.IsSlopeRising;\n+\n+            OracleLog.Write(\"SELF_TEST\", $\"Trend after Reset + 1 sample: IsSlopeRising={isRisingAfter}\");\n+\n+            if (isRisingBefore && !isRisingAfter)\n+            {\n+                OracleLog.Write(\"SELF_TEST\", \"SUCCESS: TrendDetector.Reset() cleared slope history.\");\n+            }\n+            else\n+            {\n+                OracleLog.Write(\"SELF_TEST\", $\"FAILURE: TrendDetector.Reset() check. Before={isRisingBefore}, After={isRisingAfter}\");\n+            }\n+        }\n+\n         private static AccountGuardSnapshot BuildSelfTestGuardSnapshot(DrawdownMonitorResult drawdown)\n         {\n             return new AccountGuardSnapshot\n\n",
+  "stderr": "",
+  "timed_out": false,
+  "session_ids": [
+    "259272200479968395",
+    "100644",
+    "0000000"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_259272200479968395.json",
+  "note": "Live pull attempted through the Jules CLI."
+}

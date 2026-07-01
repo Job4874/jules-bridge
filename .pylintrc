@@ -1,0 +1,15 @@
+[MASTER]
+ignore=CVS,_extracted_jules_session
+
+[FORMAT]
+max-line-length=120
+
+[MESSAGES CONTROL]
+# bridge.py is intentionally a thin routing monolith; business logic lives in modules/.
+disable=
+    too-many-lines,
+    too-many-return-statements,
+    too-many-locals,
+    missing-function-docstring,
+    missing-class-docstring,
+    line-too-long

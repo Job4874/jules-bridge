@@ -1,0 +1,17 @@
+﻿{
+    "updated_utc":  "2026-06-30T21:59:32.0286596Z",
+    "host_identity":  "https://parade-marrow-pulp.ngrok-free.dev/host/identity",
+    "mesh_status":  "https://parade-marrow-pulp.ngrok-free.dev/mesh/status",
+    "ping":  "https://parade-marrow-pulp.ngrok-free.dev/ping",
+    "remote_bridge":  "https://parade-marrow-pulp.ngrok-free.dev",
+    "cursor_on_laptop":  {
+                             "step2":  "In laptop Cursor terminal run scripts/Laptop-ConnectSchoolBridge.ps1",
+                             "step4":  "Cursor agent uses remote bridge for shell/ui on school PC",
+                             "step1":  "Clone or sync jules-bridge-master to laptop",
+                             "step3":  "Or paste LAPTOP-CONNECT.txt one-liner on laptop"
+                         },
+    "bridge_token":  "JULES-SECURE-999",
+    "auth_header":  "Authorization: Bearer JULES-SECURE-999",
+    "primary_host_id":  "school-64gb",
+    "ngrok_header":  "ngrok-skip-browser-warning: true"
+}

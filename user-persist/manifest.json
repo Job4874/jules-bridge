@@ -1,0 +1,13 @@
+﻿{
+    "saved_at":  "2026-07-01T13:09:43.2620389-06:00",
+    "auth":  [
+                 {
+                     "target":  "C:\\Users\\shpctac10028\\AppData\\Local\\ngrok",
+                     "label":  "auth_0"
+                 },
+                 {
+                     "target":  "C:\\Users\\shpctac10028\\.gnupg",
+                     "label":  "auth_1"
+                 }
+             ]
+}

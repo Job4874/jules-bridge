@@ -1,0 +1,127 @@
+[
+  {
+    "output_hash": "8de1babe4bdad5b8fbc168813686c348a5073fdf758f71cd4b4dd788fddf7007",
+    "timestamp_utc": "2026-06-26T20:38:37.116440+00:00",
+    "passed": true,
+    "test_count": 244,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n244 passed, 1 warning in 1.68s"
+  },
+  {
+    "output_hash": "665ca5504aaad019c608b6186db9fb6e62ab8865aa30f01c05433173abec703d",
+    "timestamp_utc": "2026-06-26T20:50:26.142820+00:00",
+    "passed": true,
+    "test_count": 248,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n248 passed, 1 warning in 1.71s"
+  },
+  {
+    "output_hash": "770defafb30620443caac2e1948960ca262a7699951fc8eb49ccc88065acde10",
+    "timestamp_utc": "2026-06-26T20:50:54.328377+00:00",
+    "passed": true,
+    "test_count": 248,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n248 passed, 1 warning in 1.70s"
+  },
+  {
+    "output_hash": "345a334043ad604b3bb248efa4ac2a4bea96a4cc8551c9325fb79fe2bcc9ad34",
+    "timestamp_utc": "2026-06-27T02:26:35.709465+00:00",
+    "passed": true,
+    "test_count": 274,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n274 passed, 1 warning in 3.93s"
+  },
+  {
+    "output_hash": "9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a",
+    "timestamp_utc": "2026-06-27T02:29:02.733206+00:00",
+    "passed": true,
+    "test_count": 274,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n274 passed, 1 warning in 4.42s"
+  },
+  {
+    "output_hash": "3bd4877b9b4e3313f93f5ba9f70a4051c373c8045ac0f4747832d81263ccc357",
+    "timestamp_utc": "2026-06-27T21:50:48.627325+00:00",
+    "passed": true,
+    "test_count": 280,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 280 passed, 1 warning in 2.21s ========================"
+  },
+  {
+    "output_hash": "281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4",
+    "timestamp_utc": "2026-06-28T07:51:34.934759+00:00",
+    "passed": true,
+    "test_count": 284,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n284 passed, 1 warning in 3.86s"
+  },
+  {
+    "output_hash": "93c3c248eb977a5969a1ab02fc9d3968a721e6ef40b5947319b117a9874ad68b",
+    "timestamp_utc": "2026-06-29T06:20:13.532671+00:00",
+    "passed": true,
+    "test_count": 290,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 290 passed, 1 warning in 2.20s ========================"
+  },
+  {
+    "output_hash": "93c3c248eb977a5969a1ab02fc9d3968a721e6ef40b5947319b117a9874ad68b",
+    "timestamp_utc": "2026-06-29T06:20:37.444096+00:00",
+    "passed": true,
+    "test_count": 290,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 290 passed, 1 warning in 2.20s ========================"
+  },
+  {
+    "timestamp_utc": "2026-06-29T15:26:20.653615+00:00",
+    "type": "pytest_run",
+    "output_sha256": "220249393f995f8939b48b6a6839f7a784a73e6f51636ab9dce145c3b5b61646",
+    "output_snippet": "304 passed in 9.06s"
+  },
+  {
+    "output_hash": "3031a1ea1e97a8c01522812371f86e98efcd1e265e94f5c83e09ce18f32274f3",
+    "timestamp_utc": "2026-06-29T17:13:33.825254+00:00",
+    "passed": true,
+    "test_count": 307,
+    "raw_output_tail": "307 passed in 14.08s"
+  },
+  {
+    "output_hash": "40e1389e0c36e3f2471acae69bd158c0022dc0f9257a47ffa0c8a6b0cc65b86a",
+    "timestamp_utc": "2026-06-29T17:21:29.387869+00:00",
+    "passed": true,
+    "test_count": 307,
+    "raw_output_tail": "307 passed in 14.31s"
+  },
+  {
+    "output_hash": "fd5a5a13015e3f4bf8f36720d7acb9aafa4e7b2eee3d0caa1d2714b22fb65022",
+    "timestamp_utc": "2026-06-29T18:25:05.263907+00:00",
+    "passed": true,
+    "test_count": 314,
+    "raw_output_tail": "python -m pytest tests/ -q\n314 passed in 13.89s"
+  },
+  {
+    "output_hash": "e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408",
+    "timestamp_utc": "2026-06-29T18:27:32.710356+00:00",
+    "passed": true,
+    "test_count": 315,
+    "raw_output_tail": "python -m pytest tests/ -q\n315 passed in 13.10s"
+  },
+  {
+    "output_hash": "aec621dd9213862d8b20486cad0a6d68e88d7c494ac6c57788262927eb03f5e6",
+    "timestamp_utc": "2026-06-30T17:56:57.716418+00:00",
+    "passed": true,
+    "test_count": 415,
+    "raw_output_tail": "python -m py_compile bridge.py modules\\jules_api.py modules\\jules_orchestrator.py modules\\__init__.py modules\\dashboard_module.py modules\\ui_automation.py modules\\retrospective_module.py modules\\health_service.py -> passed\npython -m pytest tests/ -q -> 415 passed in 16.21s\nlive smoke http://127.0.0.1:5000 -> /health ok; /health/deep ok keyless_mode=False; /jules/preflight ready rest_api=True; /jules/api/sources ok target_source_present=True sources_total_returned=15; /jules/api/sessions/list ok sessions_count=5"
+  },
+  {
+    "output_hash": "ba8774986e7c2fa4ff30f8883de494bfc49236f31e41c715cfe881fc2dba6001",
+    "timestamp_utc": "2026-07-01T03:14:13.799704+00:00",
+    "passed": true,
+    "test_count": 429,
+    "raw_output_tail": "python -m pytest tests/ -q\n429 passed in 27.27s"
+  },
+  {
+    "output_hash": "5644577224bae6ab58f576a5206e1c42c39c2611751def13c1f4234fc16078e7",
+    "timestamp_utc": "2026-07-01T03:23:34.007289+00:00",
+    "passed": true,
+    "test_count": 429,
+    "raw_output_tail": "python -m pytest tests/ -q\n429 passed in 64.64s (0:01:04)"
+  },
+  {
+    "output_hash": "fb218182e8ee7edf67bee4b96692edef8fc3591f944e5155646b778341c12c5a",
+    "timestamp_utc": "2026-07-01T03:33:35.707353+00:00",
+    "passed": true,
+    "test_count": 430,
+    "raw_output_tail": "python -m pytest tests/ -q\n430 passed in 36.76s"
+  }
+]

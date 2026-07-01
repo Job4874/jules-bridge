@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-07-01T02:02:45.162302+00:00",
+  "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
+  "launch_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
+  "report_dir": "",
+  "selected_count": 4,
+  "completed_count": 0,
+  "blocked_count": 0,
+  "pending_count": 4,
+  "all_complete": false,
+  "status_counts": {
+    "not_launched": 4
+  },
+  "rows": [
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+      "packet_id": "JT-002-6b1194",
+      "launch_status": "dry_run",
+      "session_ids": [],
+      "timed_out": false,
+      "exit_code": null,
+      "cot_status": "not_launched",
+      "report_files": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+      "packet_id": "JT-003-aab6ea",
+      "launch_status": "dry_run",
+      "session_ids": [],
+      "timed_out": false,
+      "exit_code": null,
+      "cot_status": "not_launched",
+      "report_files": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+      "packet_id": "JT-004-1e0abd",
+      "launch_status": "dry_run",
+      "session_ids": [],
+      "timed_out": false,
+      "exit_code": null,
+      "cot_status": "not_launched",
+      "report_files": []
+    },
+    {
+      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+      "packet_id": "JT-001-59ae6d",
+      "launch_status": "dry_run",
+      "session_ids": [],
+      "timed_out": false,
+      "exit_code": null,
+      "cot_status": "not_launched",
+      "report_files": []
+    }
+  ],
+  "ledger_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.md",
+  "ledger_json_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.json",
+  "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+}

@@ -1,0 +1,5 @@
+# GHOST MODE - school 64GB PC (paste in PowerShell terminal, NOT Cursor .cmd click)
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; & "c:\jules-bridge-master\scripts\Ghost-Ready.ps1" -Code 48741721 -UnlockPassword "YOUR_PASSWORD"
+
+# Replace YOUR_PASSWORD with your ghost unlock password before pasting.

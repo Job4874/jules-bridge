@@ -1,0 +1,21 @@
+# /god — copy everything below the line into PowerShell (one paste, zero prompts)
+
+--- COPY FROM HERE ---
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; $r='c:\jules-bridge-master'; if (-not (Test-Path "$r\bridge.py")) { $r=@('c:\jules-bridge-master',"$env:USERPROFILE\jules-bridge-master")|?{Test-Path "$_\bridge.py"}|Select -First 1 }; if (-not $r){throw 'Put jules-bridge at c:\jules-bridge-master first'}; & "$r\scripts\God-Paste.ps1"
+
+--- OR full readable version ---
+
+Set-ExecutionPolicy Bypass -Scope Process -Force
+& "c:\jules-bridge-master\scripts\God-Paste.ps1"
+
+--- WITH black screen at end ---
+
+Set-ExecutionPolicy Bypass -Scope Process -Force
+& "c:\jules-bridge-master\scripts\God-Paste.ps1" -BlackScreenNow
+
+--- GHOST MODE (code 48741721) — paste this one line ---
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; & "c:\jules-bridge-master\scripts\Ghost-Mode.ps1" -Code 48741721
+
+--- OR double-click: 48741721.cmd ---

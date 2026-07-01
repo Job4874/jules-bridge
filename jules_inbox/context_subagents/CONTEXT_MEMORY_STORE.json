@@ -1,0 +1,34 @@
+{
+  "strategy": "head_tail_active_context_middle_memory_refs",
+  "stores_raw_text": false,
+  "entry_count": 2,
+  "entries": [
+    {
+      "id": "CM-001",
+      "name": "pasted-text-1.txt",
+      "path_ref": "path-ref:47be67f6cb96",
+      "source_sha256": "481519daebbe72768edd9f212e222ed5c856af326937fa97236cc588430473eb",
+      "active_head_chars": 808,
+      "active_tail_chars": 861,
+      "omitted_middle_chars": 5126,
+      "omitted_middle_sha256": "5055825dbb9e578af5bb68bd7c25efdd4a7ccfb05997900819910a9486ac4cef",
+      "stored_text": false,
+      "retrieval_key": "path-ref:47be67f6cb96:5055825dbb9e",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    },
+    {
+      "id": "CM-002",
+      "name": "pasted-text-2.txt",
+      "path_ref": "path-ref:7a9e895ab013",
+      "source_sha256": "8e2163d980af6250ccae62c04e345f0fe208799821b6f11df5bb0a7cac6b9bd2",
+      "active_head_chars": 858,
+      "active_tail_chars": 855,
+      "omitted_middle_chars": 21724,
+      "omitted_middle_sha256": "b2696dc0e26a54fbd63459704702f856f5cf39e87140f97ed124eb81856f5d25",
+      "stored_text": false,
+      "retrieval_key": "path-ref:7a9e895ab013:b2696dc0e26a",
+      "retrieval_instruction": "Retrieve the original source by path_ref and source_sha256 before treating omitted middle context as known."
+    }
+  ],
+  "policy": "Active packets carry source heads/tails only. Omitted middles survive as hashed retrieval refs so the main conversation stays small."
+}

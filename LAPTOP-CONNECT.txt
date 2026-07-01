@@ -1,0 +1,10 @@
+# LAPTOP Cursor -> school PC ghost bridge (paste on LAPTOP in PowerShell)
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; & "C:\path\to\jules-bridge-master\scripts\Laptop-ConnectSchoolBridge.ps1"
+
+# Change C:\path\to\ to where jules-bridge-master lives on your laptop.
+
+# Remote bridge (school PC):
+#   https://parade-marrow-pulp.ngrok-free.dev
+# Token: JULES-SECURE-999
+# Header: ngrok-skip-browser-warning: true

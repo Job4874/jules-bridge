@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-06-30T17:56:07.883252+00:00",
+  "ready": true,
+  "likely_blocker": "",
+  "jules_command": "jules",
+  "resolved_jules_command": "JULES_REST_API",
+  "preferred_jules_command": "JULES_REST_API",
+  "candidate_commands": [],
+  "version": {
+    "status": "skipped",
+    "note": "JULES_USE_REST_API=1; CLI version probe skipped."
+  },
+  "remote": {
+    "generated_at_utc": "2026-06-30T17:56:07.883252+00:00",
+    "status": "ok",
+    "ready": true,
+    "likely_blocker": "",
+    "api_key_present": true,
+    "source": "sources/github/Job4874/jules-bridge",
+    "base_url": "https://jules.googleapis.com/v1alpha",
+    "sources": {
+      "generated_at_utc": "2026-06-30T17:56:09.199487+00:00",
+      "operation": "sources.list",
+      "status": "ok",
+      "http_status": 200,
+      "api_key_present": true,
+      "error": "",
+      "likely_blocker": "",
+      "source_count": 15,
+      "source_names": [
+        "sources/github/Job4874/All-project-files-End-folders-Plus-Project-context",
+        "sources/github/Job4874/FinancialAnalyst_Swing",
+        "sources/github/Job4874/OracleV5",
+        "sources/github/Job4874/Quantower-c-sat",
+        "sources/github/Job4874/Research-gathering",
+        "sources/github/Job4874/TIBIN_Rebuild",
+        "sources/github/Job4874/academic-command-center",
+        "sources/github/Job4874/all-of-the-projects",
+        "sources/github/Job4874/financial-swing-analyst-data-engine",
+        "sources/github/Job4874/futures-macro-terminal",
+        "sources/github/Job4874/jules-bridge",
+        "sources/github/Job4874/order-flow-trader",
+        "sources/github/Job4874/tibin-fullstack-agent-runtime",
+        "sources/github/Job4874/tibin-portable-workspace",
+        "sources/github/Job4874/tibin-workspace"
+      ],
+      "next_page_token": ""
+    }
+  },
+  "auth_indicators": {
+    "api_key_present": true,
+    "source": "sources/github/Job4874/jules-bridge",
+    "base_url": "https://jules.googleapis.com/v1alpha"
+  },
+  "login_command": [],
+  "rest_api": true,
+  "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_PREFLIGHT.json",
+  "note": "REST preflight is diagnostic only; it lists configured sources and does not create sessions."
+}

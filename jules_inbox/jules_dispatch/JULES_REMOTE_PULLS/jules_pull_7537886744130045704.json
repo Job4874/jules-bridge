@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-06-26T09:54:51.317548+00:00",
+  "dry_run": false,
+  "session_id": "7537886744130045704",
+  "command": [
+    "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+    "remote",
+    "pull",
+    "--session",
+    "7537886744130045704"
+  ],
+  "jules_command": "jules",
+  "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+  "repo_path": "C:\\aotp\\projects\\OracleV5",
+  "status": "pulled",
+  "exit_code": 0,
+  "stdout": "diff --git a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\nindex 99d4acc..e20c413 100644\n--- a/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n+++ b/OracleV5.Strategy/Diagnostics/OracleStrategy_Part99_SelfTest.cs\n@@ -28,6 +28,10 @@ namespace OracleV5\n             TestPositionSizer();\n             TestAccountGuardDrawdown();\n \n+#if NINJATRADER\n+            TestSelectorTradeAllowed();\n+#endif\n+\n             OracleLog.Write(\"SELF_TEST\", \"==================================================\");\n             OracleLog.Write(\"SELF_TEST\", \"   SIM-MODE SELF-TEST COMPLETED                   \");\n             OracleLog.Write(\"SELF_TEST\", \"==================================================\");\n@@ -138,5 +142,35 @@ namespace OracleV5\n                 }\n             };\n         }\n+\n+#if NINJATRADER\n+        private void TestSelectorTradeAllowed()\n+        {\n+            OracleLog.Write(\"SELF_TEST\", \">>> TESTING SELECTOR TRADE ALLOWED\");\n+\n+            // Scenario 1: Null candidate\n+            selectedCandidate = null;\n+            bool allowed1 = IsSelectorTradeAllowed();\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 1 (Null): Allowed={allowed1} (Expected: False)\");\n+\n+            // Scenario 2: Candidate present but not eligible\n+            selectedCandidate = new SelectorCandidate { IsEligible = false, IsVetoed = false };\n+            bool allowed2 = IsSelectorTradeAllowed();\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 2 (Not Eligible): Allowed={allowed2} (Expected: False)\");\n+\n+            // Scenario 3: Candidate present, eligible, but vetoed\n+            selectedCandidate = new SelectorCandidate { IsEligible = true, IsVetoed = true };\n+            bool allowed3 = IsSelectorTradeAllowed();\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 3 (Vetoed): Allowed={allowed3} (Expected: False)\");\n+\n+            // Scenario 4: Candidate present, eligible, and NOT vetoed\n+            selectedCandidate = new SelectorCandidate { IsEligible = true, IsVetoed = false };\n+            bool allowed4 = IsSelectorTradeAllowed();\n+            OracleLog.Write(\"SELF_TEST\", $\"Scenario 4 (Valid): Allowed={allowed4} (Expected: True)\");\n+\n+            // Clean up\n+            selectedCandidate = null;\n+        }\n+#endif\n     }\n }\n\n",
+  "stderr": "",
+  "timed_out": false,
+  "session_ids": [
+    "7537886744130045704",
+    "100644"
+  ],
+  "output_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_REMOTE_PULLS\\jules_pull_7537886744130045704.json",
+  "note": "Live pull attempted through the Jules CLI."
+}

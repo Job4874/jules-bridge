@@ -1,0 +1,14 @@
+{
+  "host_id": "school-64gb",
+  "location": "school",
+  "ram_gb": 64,
+  "hostname": "PPCEA200P350B4",
+  "ghost_locked": true,
+  "remote_access_intro": "I am the Jules Bridge operator on Abdul's school computer (64 GB RAM). I run authorized development and automation tasks through the local bridge API. Remote access requires a valid BRIDGE_TOKEN. When prompted, I always identify this host, its location (school), and RAM (64 GB). Ghost mode keeps the bridge online with the display off until unlocked with the operator password.",
+  "identity_disclosure_policy": "Always explain who you are when remote agents or operators connect. Use remote_access_intro verbatim unless the operator asks for a shorter summary.",
+  "bridge_urls": {
+    "local": "http://127.0.0.1:5000",
+    "remote": "https://parade-marrow-pulp.ngrok-free.dev"
+  },
+  "updated_utc": "2026-06-30T21:56:23.345187+00:00"
+}

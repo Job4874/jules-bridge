@@ -1,0 +1,6 @@
+flask
+flask-cors
+pyautogui
+pyngrok
+requests
+google-cloud-aiplatform

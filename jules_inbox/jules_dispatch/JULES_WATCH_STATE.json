@@ -1,0 +1,282 @@
+{
+  "generated_at_utc": "2026-06-29T19:25:09.905188+00:00",
+  "status": "dry_run",
+  "stop_reason": "dry_run",
+  "dry_run": true,
+  "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+  "repo_path": "",
+  "max_wait_s": 300,
+  "poll_interval_s": 30,
+  "timeout_s": 120,
+  "jules_command": "jules",
+  "require_remote_ready": true,
+  "iterations": [
+    {
+      "iteration": 1,
+      "timestamp_utc": "2026-06-29T19:25:23.997328+00:00",
+      "cycle_status": "pending",
+      "pull_count": 0,
+      "pulled_sessions": [],
+      "cot_completed": 0,
+      "cot_pending": 4,
+      "cot_status_counts": {
+        "not_launched": 4
+      },
+      "remote_status_counts": {}
+    }
+  ],
+  "latest_remote_statuses": [],
+  "final_cycle": {
+    "generated_at_utc": "2026-06-29T19:25:09.905188+00:00",
+    "status": "pending",
+    "dry_run": true,
+    "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+    "repo_path": "",
+    "launch_requested": false,
+    "launch_dry_run": true,
+    "pull_requested": true,
+    "check_remote": true,
+    "require_remote_ready": true,
+    "blockers": [],
+    "dispatch": {
+      "source": "existing_packets",
+      "generated_at_utc": "2026-06-29T19:25:09.905188+00:00",
+      "task_count": 0,
+      "selected_count": 4,
+      "status_counts": {},
+      "include_statuses": [
+        "failed",
+        "needs_review",
+        "ready_for_review",
+        "unknown"
+      ],
+      "max_instances": 4,
+      "write_packets": false,
+      "output_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+      "repo_path": "",
+      "selected_tasks": [],
+      "packet_files": [
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+        "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md"
+      ],
+      "launch_commands": [],
+      "note": "No task dump supplied; using existing packet files."
+    },
+    "sessions": {
+      "dry_run": true,
+      "command": [
+        "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+        "remote",
+        "list",
+        "--session"
+      ],
+      "status": "dry_run",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "session_ids": [],
+      "jules_command": "jules",
+      "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe"
+    },
+    "launch_result": {
+      "generated_at_utc": "2026-06-29T19:25:09.914745+00:00",
+      "dry_run": true,
+      "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+      "selected_count": 4,
+      "launched_count": 0,
+      "timeout_count": 0,
+      "jules_command": "jules",
+      "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+      "repo_path": "",
+      "results": [
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+            "new"
+          ],
+          "repo_path": "",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+            "new"
+          ],
+          "repo_path": "",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+            "new"
+          ],
+          "repo_path": "",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+            "new"
+          ],
+          "repo_path": "",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        }
+      ],
+      "attempt_results": [
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+            "new"
+          ],
+          "repo_path": "",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+            "new"
+          ],
+          "repo_path": "",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+            "new"
+          ],
+          "repo_path": "",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+          "command": [
+            "C:\\Users\\abdul\\AppData\\Roaming\\npm\\bin\\jules.exe",
+            "new"
+          ],
+          "repo_path": "",
+          "status": "dry_run",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "",
+          "timed_out": false,
+          "session_ids": []
+        }
+      ],
+      "state_path": "",
+      "attempted_count": 4,
+      "skipped_launched_count": 0,
+      "force_packet_count": 0,
+      "preserve_existing_session_ids": false,
+      "note": "Dry run only; no remote Jules sessions were started."
+    },
+    "pull_results": [],
+    "cot": {
+      "generated_at_utc": "2026-06-29T19:25:11.155433+00:00",
+      "packet_dir": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch",
+      "launch_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
+      "report_dir": "",
+      "selected_count": 4,
+      "completed_count": 0,
+      "blocked_count": 0,
+      "pending_count": 4,
+      "all_complete": false,
+      "status_counts": {
+        "not_launched": 4
+      },
+      "rows": [
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+          "packet_id": "JT-002-6b1194",
+          "launch_status": "dry_run",
+          "session_ids": [],
+          "timed_out": false,
+          "exit_code": null,
+          "cot_status": "not_launched",
+          "report_files": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+          "packet_id": "JT-003-aab6ea",
+          "launch_status": "dry_run",
+          "session_ids": [],
+          "timed_out": false,
+          "exit_code": null,
+          "cot_status": "not_launched",
+          "report_files": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+          "packet_id": "JT-004-1e0abd",
+          "launch_status": "dry_run",
+          "session_ids": [],
+          "timed_out": false,
+          "exit_code": null,
+          "cot_status": "not_launched",
+          "report_files": []
+        },
+        {
+          "packet": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+          "packet_id": "JT-001-59ae6d",
+          "launch_status": "dry_run",
+          "session_ids": [],
+          "timed_out": false,
+          "exit_code": null,
+          "cot_status": "not_launched",
+          "report_files": []
+        }
+      ],
+      "ledger_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.md",
+      "ledger_json_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_COT_LEDGER.json",
+      "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+    },
+    "cycle_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_CYCLE_STATE.json",
+    "note": "COT means completion-of-task evidence summaries, not private chain-of-thought."
+  },
+  "watch_state_path": "C:\\Users\\abdul\\.jules\\jules_inbox\\jules_dispatch\\JULES_WATCH_STATE.json",
+  "note": "COT means completion-of-task evidence summaries. Awaiting plan/user states require operator action because the Jules CLI exposes no plan approval command."
+}
