@@ -14,15 +14,9 @@ from typing import Iterable
 
 
 def load_env():
-    env_path = Path(__file__).with_name(".env")
-    if not env_path.exists():
-        return
-    for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+    from modules.jules_env import load_env as load_jules_env
+
+    load_jules_env()
 
 
 def _attachment_paths(attachments: Iterable[str] | None) -> list[Path]:

@@ -44,7 +44,11 @@ function Invoke-BridgeGet {
 
 if (-not $Token) {
     $Token = Get-EnvToken
-    if (-not $Token) { $Token = "JULES-SECURE-999" }
+    if (-not $Token) {
+        Write-Host "[ERROR] BRIDGE_TOKEN missing from $EnvPath" -ForegroundColor Red
+        Write-Host "Run: .\scripts\Ensure-JulesSecrets.ps1" -ForegroundColor Yellow
+        exit 1
+    }
 }
 
 try {

@@ -6,6 +6,6 @@
 :: 1. Boot GCP offload worker in a minimized background window
 start "GCP-Worker-Boot" /MIN powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0vm_scripts\Boot-GCP-Worker.ps1"
 
-:: 2. Launch the bridge in its own visible window
+:: 2. Launch the bridge + ngrok tunnel in its own visible window
 set JULES_VM_SCRIPT_DIR=%~dp0vm_scripts
-start "Jules-Bridge" /D "%~dp0" cmd /k "python bridge.py"
+start "Jules-Bridge" /D "%~dp0" cmd /k "Run-JulesBridge.cmd"

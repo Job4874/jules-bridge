@@ -40,10 +40,11 @@ if (-not $SkipBridge) {
     if (Test-BridgeAlive) {
         Write-Host "`n[BRIDGE] Already running at $BridgeUrl" -ForegroundColor Green
     } else {
-        Write-Host "`n[BRIDGE] Not detected — launching..." -ForegroundColor Yellow
+        Write-Host "`n[BRIDGE] Not detected — launching with ngrok..." -ForegroundColor Yellow
         $env:JULES_VM_SCRIPT_DIR = Join-Path $Root "vm_scripts"
+        $launcher = Join-Path $Root "Run-JulesBridge.cmd"
         Start-Process -FilePath "cmd.exe" `
-            -ArgumentList "/k `"cd /d $Root && python bridge.py`"" `
+            -ArgumentList "/k `"$launcher`"" `
             -WindowStyle Normal `
             -Verb RunAs 2>$null
 

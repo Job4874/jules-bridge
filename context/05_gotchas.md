@@ -362,7 +362,7 @@
 
 - Always verify tunnel health BEFORE launching remote Jules sessions: `GET /ping` on `https://parade-marrow-pulp.ngrok-free.dev`.
 
-- Ngrok auth token is stored in ngrok's own config, not in `.env`. If auth fails, run `ngrok config add-authtoken <token>`.
+- Ngrok auth token is stored in repo `.env` as `NGROK_AUTHTOKEN`, mirrored to `~/.jules/.env`, and applied to ngrok CLI by `scripts/Ensure-JulesSecrets.ps1` before every `Run-JulesBridge.cmd` launch. If auth fails, run `.\scripts\Ensure-JulesSecrets.ps1 -PromptForNgrok`.
 
 - Zombie ngrok processes (WorkingSet64=0) can persist after crashes; kill them before restarting.
 

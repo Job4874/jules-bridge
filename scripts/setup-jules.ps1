@@ -399,13 +399,13 @@ function Ensure-Bridge {
         return
     }
 
-    $bridgePy = Join-Path $RepoRoot "bridge.py"
-    if (-not (Test-Path $bridgePy)) {
-        throw "bridge.py not found at $bridgePy"
+    $launcher = Join-Path $RepoRoot "Run-JulesBridge.cmd"
+    if (-not (Test-Path $launcher)) {
+        throw "Run-JulesBridge.cmd not found at $launcher"
     }
 
     Start-Process -FilePath "cmd.exe" `
-        -ArgumentList @("/k", "python bridge.py") `
+        -ArgumentList @("/k", $launcher) `
         -WorkingDirectory $RepoRoot `
         -WindowStyle Normal
 

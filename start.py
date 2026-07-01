@@ -5,6 +5,7 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
@@ -13,15 +14,20 @@ from pathlib import Path
 from pyngrok import ngrok
 from pyngrok.exception import PyngrokError
 
+from modules.jules_env import configure_ngrok_auth, ensure_persistent_secrets, load_env
+
 ROOT = Path(__file__).resolve().parent
 LOG_PATH = ROOT / "bridge.log"
 NGROK_DOMAIN = "parade-marrow-pulp.ngrok-free.dev"
+NGROK_PUBLIC_URL = f"https://{NGROK_DOMAIN}"
+NGROK_REQUEST_HEADERS = {"ngrok-skip-browser-warning": "true"}
 
 
 class _BridgeState:
     """Mutable launcher state shared by startup and shutdown hooks."""
 
     flask_process: subprocess.Popen | None = None
+    last_ngrok_error: str = ""
 
 
 STATE = _BridgeState()
@@ -69,6 +75,23 @@ def ping_local() -> bool:
         return False
 
 
+def ping_public() -> tuple[bool, str]:
+    """Return public tunnel health and any error detail."""
+    request = urllib.request.Request(
+        f"{NGROK_PUBLIC_URL}/ping",
+        headers=NGROK_REQUEST_HEADERS,
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=8) as resp:
+            if resp.status == 200:
+                return True, ""
+            return False, f"HTTP {resp.status}"
+    except urllib.error.HTTPError as exc:
+        return False, f"HTTP {exc.code}"
+    except OSError as exc:
+        return False, str(exc)
+
+
 def stop_flask() -> None:
     """Terminate the bridge subprocess if it is still running."""
     if STATE.flask_process and STATE.flask_process.poll() is None:
@@ -88,7 +111,40 @@ def start_flask() -> subprocess.Popen:
     return STATE.flask_process
 
 
+def clear_tunnel_blocker(inbox_dir: Path) -> None:
+    blocker_file = inbox_dir / "TUNNEL_BLOCKER.md"
+    if blocker_file.is_file():
+        blocker_file.unlink()
+
+
+def connect_ngrok() -> str:
+    """Configure auth and bind the reserved ngrok domain."""
+    ngrok_ok, ngrok_detail = configure_ngrok_auth()
+    if not ngrok_ok:
+        STATE.last_ngrok_error = ngrok_detail
+        raise PyngrokError(ngrok_detail)
+
+    public_url = ngrok.connect(5000, domain=NGROK_DOMAIN)
+    public_ping_ok, public_ping_detail = ping_public()
+    if not public_ping_ok:
+        STATE.last_ngrok_error = public_ping_detail or "public /ping check failed"
+        raise PyngrokError(STATE.last_ngrok_error)
+
+    clear_tunnel_blocker(ROOT / "jules_inbox")
+    STATE.last_ngrok_error = ""
+    return public_url.public_url
+
+
 def main():
+    load_env()
+    secret_status = ensure_persistent_secrets()
+    log(f"Persistent secrets ready (mirror={secret_status['mirror_path']})")
+    if not secret_status["ngrok_configured"]:
+        log(f"ERROR: {secret_status['ngrok_detail']}")
+        log("Run: .\\scripts\\Ensure-JulesSecrets.ps1 -NgrokAuthtoken <token>")
+        log("Get token: https://dashboard.ngrok.com/get-started/your-authtoken")
+        sys.exit(1)
+
     log("Starting Jules Bridge locally...")
     start_flask()
 
@@ -105,19 +161,17 @@ def main():
 
     log("Opening ngrok tunnel...")
     try:
-        public_url = ngrok.connect(5000, domain=NGROK_DOMAIN)
+        public_url = connect_ngrok()
         log("========================================")
-        log(f"NGROK URL: {public_url.public_url}")
+        log(f"NGROK URL: {public_url}")
         log("========================================")
     except PyngrokError as exc:
-        if ping_local():
-            log(f"ngrok connect failed ({exc}) but local bridge is UP.")
-            log("Try reopening tunnel or use: http://127.0.0.1:5000")
-            log(f"Expected public URL: https://{NGROK_DOMAIN}")
-        else:
-            log(f"FATAL: ngrok and local bridge both unavailable: {exc}")
-            stop_flask()
-            sys.exit(1)
+        STATE.last_ngrok_error = str(exc)
+        log(f"FATAL: ngrok connect failed ({exc})")
+        log("Fix auth with: .\\scripts\\Ensure-JulesSecrets.ps1 -NgrokAuthtoken <token>")
+        stop_flask()
+        sys.exit(1)
+
 
 class TunnelWatchdog:
     def __init__(self, inbox_dir=ROOT / "jules_inbox"):
@@ -126,6 +180,7 @@ class TunnelWatchdog:
         self.reconnect_failures = 0
         self.last_reconnect_utc = None
         self.last_success_utc = datetime.now(timezone.utc)
+        self.last_error = ""
 
     def run_loop(self):
         while True:
@@ -133,16 +188,15 @@ class TunnelWatchdog:
             self.check_tunnel()
 
     def check_tunnel(self):
-        try:
-            with urllib.request.urlopen(f"https://{NGROK_DOMAIN}/ping", timeout=5) as resp:
-                if resp.status == 200:
-                    self.consecutive_failures = 0
-                    self.reconnect_failures = 0
-                    self.last_success_utc = datetime.now(timezone.utc)
-                else:
-                    self.consecutive_failures += 1
-        except OSError:
+        public_ok, public_detail = ping_public()
+        if public_ok:
+            self.consecutive_failures = 0
+            self.reconnect_failures = 0
+            self.last_success_utc = datetime.now(timezone.utc)
+            self.last_error = ""
+        else:
             self.consecutive_failures += 1
+            self.last_error = public_detail or STATE.last_ngrok_error or "public ping failed"
 
         uptime_s = (datetime.now(timezone.utc) - self.last_success_utc).total_seconds()
         status = "healthy" if self.consecutive_failures == 0 else "reconnecting" if self.consecutive_failures >= 3 else "degraded"
@@ -153,6 +207,7 @@ class TunnelWatchdog:
             "last_check_utc": datetime.now(timezone.utc).isoformat(),
             "consecutive_failures": self.consecutive_failures,
             "last_reconnect_utc": self.last_reconnect_utc.isoformat() if self.last_reconnect_utc else None,
+            "last_error": self.last_error,
             "uptime_s": uptime_s,
         }
         health_file.write_text(json.dumps(health_data, indent=2), encoding="utf-8")
@@ -162,12 +217,15 @@ class TunnelWatchdog:
             try:
                 ngrok.kill()
                 time.sleep(1)
-                ngrok.connect(5000, domain=NGROK_DOMAIN)
+                connect_ngrok()
                 self.last_reconnect_utc = datetime.now(timezone.utc)
                 self.consecutive_failures = 0
-            except Exception as e:
+                self.reconnect_failures = 0
+                self.last_error = ""
+            except Exception as exc:
                 self.reconnect_failures += 1
-                log(f"Watchdog reconnect failed: {e}")
+                self.last_error = str(exc)
+                log(f"Watchdog reconnect failed: {exc}")
 
             if self.reconnect_failures == 3:
                 self.escalate_offline()
@@ -175,17 +233,31 @@ class TunnelWatchdog:
     def escalate_offline(self):
         log("FATAL: Tunnel cannot self-heal. Triggering Git offline escalation.")
         blocker_file = self.inbox_dir / "TUNNEL_BLOCKER.md"
-        blocker_file.write_text("NGROK TUNNEL IS DEAD AND CANNOT SELF-HEAL.", encoding="utf-8")
+        blocker_file.write_text(
+            "\n".join(
+                [
+                    "NGROK TUNNEL IS DEAD AND CANNOT SELF-HEAL.",
+                    "",
+                    f"Last error: {self.last_error or STATE.last_ngrok_error or 'unknown'}",
+                    "",
+                    "Fix:",
+                    "  .\\scripts\\Ensure-JulesSecrets.ps1 -NgrokAuthtoken <token>",
+                    "  .\\Run-JulesBridge.cmd",
+                ]
+            ),
+            encoding="utf-8",
+        )
         response_file = self.inbox_dir / "JULES_RESPONSE.md"
-        with response_file.open("a", encoding="utf-8") as f:
-            f.write("\n[TUNNEL_DEAD] Ngrok tunnel cannot self-heal.\n")
+        with response_file.open("a", encoding="utf-8") as handle:
+            handle.write("\n[TUNNEL_DEAD] Ngrok tunnel cannot self-heal.\n")
 
         try:
             subprocess.run(["git", "add", str(blocker_file), str(response_file), str(self.inbox_dir / "TUNNEL_HEALTH.json")], cwd=str(ROOT), check=True)
             subprocess.run(["git", "commit", "-m", "[TUNNEL_DEAD] Ngrok tunnel cannot self-heal"], cwd=str(ROOT), check=True)
             subprocess.run(["git", "push"], cwd=str(ROOT), check=True)
-        except subprocess.CalledProcessError as e:
-            log(f"Failed to push offline escalation: {e}")
+        except subprocess.CalledProcessError as exc:
+            log(f"Failed to push offline escalation: {exc}")
+
 
 if __name__ == "__main__":
     main()
