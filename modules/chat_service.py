@@ -24,6 +24,15 @@ class ChatResult(dict):
     """Keys: response, model_used, elapsed_ms, errors."""
 
 
+_VM_FAILURE_MARKERS = (
+    "No LLM available",
+    "Browser model loop failed",
+    "No browser model loop configured",
+    "GEMINI_API_KEY is rate-limited",
+    "OpenRouter free models failed",
+)
+
+
 def _default_system_prompt() -> str:
     return (
         "You are Jules - a powerful AI engineering agent built on Jules Bridge. "
@@ -49,6 +58,31 @@ def _elapsed_ms(start: float, clock: Any) -> int:
     return int((clock() - start) * 1000)
 
 
+def _latest_vm_chat_result(vm_status: Mapping[str, Any]) -> str:
+    """Return the most recent completed VM chat result, if the status exposes one."""
+    recent = vm_status.get("recent", [])
+    if not isinstance(recent, Sequence) or isinstance(recent, (str, bytes)):
+        return ""
+
+    for task_entry in reversed(recent):
+        if not isinstance(task_entry, Mapping):
+            continue
+        task = str(task_entry.get("task", ""))
+        if "chat-fallback-" not in task or task_entry.get("status") != "done":
+            continue
+        return str(task_entry.get("result", ""))
+    return ""
+
+
+def _vm_failure_detail(result: str) -> str:
+    """Return a bounded failure detail when a VM chat result is provider exhaustion."""
+    if not result:
+        return ""
+    if any(marker in result for marker in _VM_FAILURE_MARKERS):
+        return result[:240]
+    return ""
+
+
 def test_chat_providers(
     env: Mapping[str, str] | None = None,
     requests_client: Any | None = None,
@@ -67,7 +101,18 @@ def test_chat_providers(
             from modules import vm_relay  # pylint: disable=import-outside-toplevel
             vm_status = vm_relay.get_vm_status()
             if vm_status.get("online"):
-                results["vm"] = {"status": "ok", "model": "jules-worker", "ms": _elapsed_ms(start, clock)}
+                elapsed = _elapsed_ms(start, clock)
+                latest_result = _latest_vm_chat_result(vm_status)
+                failure_detail = _vm_failure_detail(latest_result)
+                if failure_detail:
+                    results["vm"] = {
+                        "status": "degraded",
+                        "model": "jules-worker",
+                        "ms": elapsed,
+                        "detail": failure_detail,
+                    }
+                else:
+                    results["vm"] = {"status": "ok", "model": "jules-worker", "ms": elapsed}
             else:
                 results["vm"] = {"status": "offline"}
         except Exception:  # pylint: disable=broad-exception-caught

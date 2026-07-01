@@ -65,5 +65,33 @@ class TestChatProviderPro(unittest.TestCase):
         self.assertTrue(result["healthy"])
         self.assertEqual(result["providers"]["vm"]["status"], "ok")
 
+    @patch("modules.vm_relay.get_vm_status")
+    def test_health_marks_vm_degraded_when_recent_chat_exhausted(self, mock_status):
+        client = FakeRequests([])
+        exhausted = (
+            "No LLM available - GEMINI_API_KEY is rate-limited and all "
+            "OpenRouter free models failed. Check ~/.jules_worker.env"
+        )
+        mock_status.return_value = {
+            "online": True,
+            "recent": [
+                {
+                    "task": "[chat-fallback-deadbeef] flash fast",
+                    "status": "done",
+                    "result": exhausted,
+                }
+            ],
+        }
+
+        result = chat_service.test_chat_providers(
+            env={},
+            requests_client=client,
+            clock=clock_from([1.0, 1.1]),
+        )
+
+        self.assertFalse(result["healthy"])
+        self.assertEqual(result["providers"]["vm"]["status"], "degraded")
+        self.assertIn("No LLM available", result["providers"]["vm"]["detail"])
+
 if __name__ == "__main__":
     unittest.main()

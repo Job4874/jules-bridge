@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-30T17:56:07.883252+00:00",
+  "generated_at_utc": "2026-07-01T18:48:10.461450+00:00",
   "ready": true,
   "likely_blocker": "",
   "jules_command": "jules",
@@ -11,7 +11,7 @@
     "note": "JULES_USE_REST_API=1; CLI version probe skipped."
   },
   "remote": {
-    "generated_at_utc": "2026-06-30T17:56:07.883252+00:00",
+    "generated_at_utc": "2026-07-01T18:48:10.462449+00:00",
     "status": "ok",
     "ready": true,
     "likely_blocker": "",
@@ -19,15 +19,16 @@
     "source": "sources/github/Job4874/jules-bridge",
     "base_url": "https://jules.googleapis.com/v1alpha",
     "sources": {
-      "generated_at_utc": "2026-06-30T17:56:09.199487+00:00",
+      "generated_at_utc": "2026-07-01T18:48:12.324512+00:00",
       "operation": "sources.list",
       "status": "ok",
       "http_status": 200,
       "api_key_present": true,
       "error": "",
       "likely_blocker": "",
-      "source_count": 15,
+      "source_count": 16,
       "source_names": [
+        "sources/github/Job4874/.academic-command-center",
         "sources/github/Job4874/All-project-files-End-folders-Plus-Project-context",
         "sources/github/Job4874/FinancialAnalyst_Swing",
         "sources/github/Job4874/OracleV5",
