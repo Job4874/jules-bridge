@@ -147,9 +147,10 @@ function Export-PublicKey {
 }
 
 try {
-    Write-Host "`n$("=" * 60)" -ForegroundColor Cyan
+    $divider = "=" * 60
+    Write-Host "`n$divider" -ForegroundColor Cyan
     Write-Host "  GitHub GPG setup (Jules / Job4874)" -ForegroundColor Cyan
-    Write-Host "$("=" * 60)" -ForegroundColor Cyan
+    Write-Host $divider -ForegroundColor Cyan
 
     $GitRoot = Get-GitRoot
     $GpgExe = Get-GpgExe -GitRoot $GitRoot
@@ -167,7 +168,7 @@ try {
     Write-Step "Checking for existing secret key"
     $keyId = Get-SecretKeyId -GpgExe $GpgExe
     if (-not $keyId) {
-        Write-Warn "No key found for $Email — generating one..."
+        Write-Warn "No key found for $Email - generating one..."
         $batchPath = Join-Path $env:TEMP "jules-gpg-batch.txt"
         New-GpgKey -GpgExe $GpgExe -BatchPath $batchPath
         Remove-Item -LiteralPath $batchPath -Force -ErrorAction SilentlyContinue
@@ -192,15 +193,15 @@ try {
     $armor = Export-PublicKey -GpgExe $GpgExe -KeyId $keyId -Path $ExportPath
     Write-Ok "Exported to $ExportPath"
 
-    Write-Host "`n$("=" * 60)" -ForegroundColor Green
+    Write-Host "`n$divider" -ForegroundColor Green
     Write-Host "  GPG ready" -ForegroundColor Green
-    Write-Host "$("=" * 60)" -ForegroundColor Green
+    Write-Host $divider -ForegroundColor Green
     Write-Host "  Key ID : $keyId"
     Write-Host "  Email  : $Email"
     Write-Host "  Title  : $KeyTitle (for GitHub)"
     Write-Host ""
     Write-Host "  Next: double-click Copy-GithubGpg.cmd" -ForegroundColor Cyan
-    Write-Host "        (copies key + opens GitHub — just paste)" -ForegroundColor Gray
+    Write-Host "        (copies key + opens GitHub - just paste)" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  Email must be verified on GitHub:" -ForegroundColor Yellow
     Write-Host "  https://github.com/settings/emails" -ForegroundColor Gray

@@ -1,5 +1,6 @@
 param(
-    [string]$LocalBridgeToken = ""
+    [string]$LocalBridgeToken = "",
+    [string]$BrowserModelLoopUrl = ""
 )
 
 # Generate SSH key and push to GCP VM via gcloud OS Login / metadata
@@ -67,21 +68,22 @@ if (-not (Test-Path $agentSrc)) {
     --zone=$VM_ZONE --project=$VM_PROJECT 2>&1
 
 # Push env file
-
-# Simpler env extraction
-$envRaw = Get-Content "C:\Users\abdul\.jules\.env" -Raw
-$geminiKey = ($envRaw | Select-String "GEMINI_API_KEY=(.+)").Matches[0].Groups[1].Value.Trim()
-$orKey = ($envRaw | Select-String "OPENROUTER_API_KEY=([^`r`n]+)").Matches[0].Groups[1].Value.Trim()
 $localIP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.*" } | Select-Object -First 1).IPAddress
+$envFile = "C:\Users\abdul\.jules\.env"
+$envRaw = ""
+if (Test-Path $envFile) {
+    $envRaw = Get-Content $envFile -Raw
+}
 
 # Determine LOCAL_BRIDGE_TOKEN
 $bridgeToken = $LocalBridgeToken
 if (-not $bridgeToken) {
     if ($env:LOCAL_BRIDGE_TOKEN) {
         $bridgeToken = $env:LOCAL_BRIDGE_TOKEN
-    } elseif (Test-Path "C:\Users\abdul\.jules\.env") {
-        $envRaw = Get-Content "C:\Users\abdul\.jules\.env" -Raw
+    } elseif ($envRaw) {
         if ($envRaw -match "LOCAL_BRIDGE_TOKEN=([^`r`n]+)") {
+            $bridgeToken = $matches[1].Trim()
+        } elseif ($envRaw -match "BRIDGE_TOKEN=([^`r`n]+)") {
             $bridgeToken = $matches[1].Trim()
         }
     }
@@ -90,9 +92,20 @@ if (-not $bridgeToken) {
     Write-Host "[WARNING] LOCAL_BRIDGE_TOKEN not found. Remote communication may fail." -ForegroundColor Red
 }
 
+$modelLoopUrl = $BrowserModelLoopUrl
+if (-not $modelLoopUrl) {
+    if ($env:BROWSER_MODEL_LOOP_URL) {
+        $modelLoopUrl = $env:BROWSER_MODEL_LOOP_URL
+    } elseif ($envRaw -and $envRaw -match "BROWSER_MODEL_LOOP_URL=([^`r`n]+)") {
+        $modelLoopUrl = $matches[1].Trim()
+    }
+}
+if (-not $modelLoopUrl -or $modelLoopUrl -match "127\.0\.0\.1|localhost") {
+    $modelLoopUrl = "http://${localIP}:8765/model-loop"
+}
+
 $envContent = @"
-GEMINI_API_KEY=$geminiKey
-OPENROUTER_API_KEY=$orKey
+BROWSER_MODEL_LOOP_URL=$modelLoopUrl
 LOCAL_BRIDGE_URL=http://${localIP}:5000
 LOCAL_BRIDGE_TOKEN=$bridgeToken
 "@
@@ -104,7 +117,7 @@ $envContent | Out-File -FilePath "$env:TEMP\vm_jules.env" -Encoding UTF8 -NoNewl
 Write-Host "[DEPS] Installing Python dependencies on VM..." -ForegroundColor Yellow
 & gcloud compute ssh "julesadmin@$VM_NAME" `
     --zone=$VM_ZONE --project=$VM_PROJECT `
-    --command="sudo apt-get install -y -qq python3-pip && pip3 install flask requests google-generativeai --quiet 2>&1 | tail -3" 2>&1
+    --command="sudo apt-get install -y -qq python3-pip && pip3 install flask requests --quiet 2>&1 | tail -3" 2>&1
 
 Write-Host "[START] Starting jules-worker-agent on VM..." -ForegroundColor Yellow
 & gcloud compute ssh "julesadmin@$VM_NAME" `

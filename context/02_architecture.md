@@ -13,7 +13,7 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 │   ├── ui_automation.py    ← Screenshot/click/type, guarded secrets, UI state detection
 │   ├── human_mimic_driver.py ← H/L/ACT UI driver loops built from ui_automation primitives
 │   ├── vm_manager.py      ← CPU/memory pressure and dry-run-first VM boot gating
-│   ├── chat_service.py    ← Gemini/OpenRouter chat provider routing and diagnostics
+│   ├── chat_service.py    ← VM/browser model-loop chat routing and diagnostics
 │   ├── inbox_service.py    ← Message files in jules_inbox/ dir
 │   ├── oracle_session.py   ← Oracle V5 + Quantower health/build/deploy
 │   ├── reasoning_module.py ← HRM-inspired H/L/ACT hierarchical reasoning
@@ -61,12 +61,12 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/jules/` | jules_orchestrator | Jules task dispatch, worker packets, launch state, and remote session checks |
 | `/jules/api/` | jules_api | Jules REST API source/session/message helpers behind the local bridge |
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |
-| `/reasoning/` | reasoning_module | H/L/ACT reasoning (Gemini or stub) |
+| `/reasoning/` | reasoning_module | H/L/ACT reasoning (stub or VM/browser model loop) |
 | `/retrospective/` | retrospective_module | Log analysis + memory + pruning |
 | `/akc/` | akc_module | Agent Knowledge Context source inventory, checkpoint loading, and readiness gating |
 | `/repo/` | repo_context_guard | Protected Git repo inventory, provenance labels, and collision guardrails |
 | `/notify/` | notify_email | Email notifications |
-| `/chat` | chat_service | Multi-provider chat and provider diagnostics |
+| `/chat` | chat_service | VM/browser model-loop chat and diagnostics |
 
 ## Key Design Patterns
 
@@ -81,7 +81,7 @@ Every module has a **simple typed interface** hiding complex implementation:
 - `check_akc_readiness()` → one call verifies the checkpoint exists, is `ready`, and contains required operating rules before session start
 - `build_repo_context_guard()` → one call scans bounded roots for Git repos, ports, node refs, and local dependency coupling without returning secret values
 - `boot_secondary_vm(script_name)` → one call validates allowlisted VM boot scripts and defaults to dry-run
-- `chat(message)` → one call handles provider payloads, Gemini/OpenRouter fallback, timing, and secret-redacted errors
+- `chat(message)` → one call routes prompts through the VM/browser model loop with timing and stable offline responses
 
 ### Evidence-Based Verification (Nick Ni)
 

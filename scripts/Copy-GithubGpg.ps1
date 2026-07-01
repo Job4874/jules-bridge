@@ -94,31 +94,32 @@ function Show-InstructionsPopup {
     param([string]$Title)
     try {
         Add-Type -AssemblyName System.Windows.Forms
-        [void][System.Windows.Forms.MessageBox]::Show(
-            @"
+        $message = @"
 GitHub GPG page opened in your browser.
 
 Title:  $Title   (type this in the Title box)
 
-Key:    already copied — click the Key box and press Ctrl+V
+Key:    already copied - click the Key box and press Ctrl+V
 
 Then click "Add GPG key".
-"@,
-            "Jules GPG — paste and done",
+"@
+        [void][System.Windows.Forms.MessageBox]::Show(
+            $message,
+            "Jules GPG - paste and done",
             [System.Windows.Forms.MessageBoxButtons]::OK,
             [System.Windows.Forms.MessageBoxIcon]::Information
         )
     } catch {
         Write-Host ""
         Write-Host "  Title: $Title  (type in GitHub Title box)" -ForegroundColor Yellow
-        Write-Host "  Key:   already in clipboard — press Ctrl+V in Key box" -ForegroundColor Yellow
+        Write-Host "  Key:   already in clipboard - press Ctrl+V in Key box" -ForegroundColor Yellow
         Write-Host ""
     }
 }
 
 try {
     if (-not (Test-Path $KeyFile)) {
-        Write-Host "No key yet — running Setup-GitHubGpg.ps1 ..." -ForegroundColor Yellow
+        Write-Host "No key yet - running Setup-GitHubGpg.ps1 ..." -ForegroundColor Yellow
         if (-not (Test-Path $SetupScript)) {
             throw "Setup script not found: $SetupScript"
         }

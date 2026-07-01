@@ -84,6 +84,30 @@ def _threshold_value(thresholds: dict | None, key: str, default: float) -> float
 
 
 def _read_host_metrics() -> tuple[float | None, float | None, str | None]:
+    """Read CPU and memory pressure using the fastest available local reader."""
+    cpu, memory, error = _read_psutil_metrics()
+    if cpu is not None and memory is not None:
+        return cpu, memory, None
+    if error != "psutil unavailable":
+        return None, None, error
+    return _read_powershell_metrics()
+
+
+def _read_psutil_metrics() -> tuple[float | None, float | None, str | None]:
+    """Read host metrics through psutil when bundled in the runtime."""
+    try:
+        import psutil  # pylint: disable=import-outside-toplevel
+
+        cpu = psutil.cpu_percent(interval=0.1)
+        memory = psutil.virtual_memory().percent
+        return _as_percent(cpu, "cpu_percent"), _as_percent(memory, "memory_percent"), None
+    except ImportError:
+        return None, None, "psutil unavailable"
+    except Exception:
+        return None, None, "host metric reader failed"
+
+
+def _read_powershell_metrics() -> tuple[float | None, float | None, str | None]:
     """Read Windows CPU and memory pressure using built-in PowerShell/CIM."""
     command = (
         "$cpu = (Get-CimInstance Win32_Processor | "

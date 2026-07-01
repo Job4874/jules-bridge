@@ -239,8 +239,12 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
                 "cache_age_s": repo_context.get("cache_age_s", 0),
             },
             "recent_logs": logs,
+            "model_loop": {
+                "mode": "vm_browser",
+                "requires_provider_api_keys": False,
+            },
             "env_keys_present": [
-                k for k in ["GEMINI_API_KEY", "GCE_WORKER_IP", "OPENROUTER_API_KEY", "GMAIL_USER"]
+                k for k in ["BROWSER_MODEL_LOOP_URL", "GCE_WORKER_IP", "GMAIL_USER"]
                 if env.get(k)
             ],
         }

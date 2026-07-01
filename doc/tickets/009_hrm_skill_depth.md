@@ -1,6 +1,6 @@
 # Ticket 009 — HRE Reasoning Depth & Skill Auto-Discovery
 
-Status: OPEN
+Status: DONE
 
 ## Priority: HIGH
 

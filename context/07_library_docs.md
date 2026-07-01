@@ -59,17 +59,20 @@ Always return `jsonify(dict(result))` where `result` is a typed dict/dataclass f
 
 ---
 
-## google-generativeai (Gemini API)
+## VM/browser model loop
 
-Used exclusively by `modules/reasoning_module.py` for H-module and L-module LLM calls.
+Used by `modules/chat_service.py` and by non-stub `modules/reasoning_module.py`
+calls for H-module and L-module model work. The bridge does not call provider
+chat APIs directly.
 
 ### Configuration
 
-- **Env var required**: `GEMINI_API_KEY` must be set before the bridge starts
+- **Env var optional**: `BROWSER_MODEL_LOOP_URL` points VM workers at the local
+  browser-loop service when that service is available.
 
-- **Package**: `google-generativeai` — install with `pip install google-generativeai`
-
-- **Lazy import**: imported inside `_gemini_chat()` — never at module level. This keeps tests working without the package installed.
+- **No provider SDK dependency**: do not add direct provider clients to the
+  bridge for chat or reasoning. Keep browser-loop integration behind
+  `chat_service.chat(...)`.
 
 ### Model Alias System
 
@@ -77,24 +80,29 @@ Never pass raw model strings to reasoning routes. Use aliases:
 
 ```python
 # In route body:
-{"problem": "...", "model": "fast"}    # → gemini-2.0-flash  (cheap, low latency)
-{"problem": "...", "model": "smart"}   # → gemini-2.5-pro    (high quality)
-{"problem": "...", "model": "stub"}    # → deterministic stub (unit tests, offline)
+{"problem": "...", "model": "fast"}     # VM/browser model loop
+{"problem": "...", "model": "smart"}    # VM/browser model loop
+{"problem": "...", "model": "stub"}     # deterministic stub (unit tests, offline)
 
 ```
 
-Alias mapping lives in `_MODEL_ALIASES` at the top of `reasoning_module.py`. Change the right-hand value there to update the model, not the call sites.
+Alias mapping lives in `_MODEL_ALIASES` at the top of `reasoning_module.py`.
+`fast` and `smart` intentionally point at the same loop boundary so call sites
+do not depend on provider names.
 
 ### Fallback Behavior
 
-If Gemini call fails for any reason (missing key, network error, quota, non-JSON response), the module **silently falls back to stub output** and logs a `WARNING` to `jules_bridge.reasoning`. It does NOT raise. This is intentional — the bridge must never crash due to LLM failure.
+If the VM/browser loop fails, times out, or returns non-JSON for a structured
+reasoning call, the module silently falls back to stub output and logs a
+`WARNING` to `jules_bridge.reasoning`. It does NOT raise. This is intentional
+because the bridge must never crash due to model-loop failure.
 
 ### Usage Pattern
 
 ```python
 # Direct module call (for testing):
-from modules.reasoning_module import _h_gemini_call
-result = _h_gemini_call("My problem", context="", model_name="gemini-2.0-flash")
+from modules.reasoning_module import plan_only
+result = plan_only("My problem", context="", model="fast")
 
 # Via bridge route:
 POST /reasoning/solve
@@ -108,12 +116,11 @@ POST /reasoning/plan
 
 ### Rules
 
-- Never call `genai.configure()` outside of `_gemini_chat()` — it's a global side effect
+- Use `model="stub"` in unit tests unless explicitly patching
+  `modules.reasoning_module._model_loop_chat`.
 
-- Always use `response_mime_type="application/json"` and `temperature=0.2` for structured outputs
-
-- Never pass `model="fast"` or `model="smart"` in unit tests — use `model="stub"` to avoid network calls
-
+- Do not make provider API key presence a health signal. `/health/deep` should
+  report `model_loop` readiness instead.
 ---
 
 ## pyautogui

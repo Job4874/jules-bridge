@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   Sets AC power plan to never sleep and never hibernate. Does NOT turn off
-  the display via software — use the monitor's physical power button so
+  the display via software - use the monitor's physical power button so
   the PC keeps running while the screen stays dark.
 
 .USAGE
