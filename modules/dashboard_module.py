@@ -244,9 +244,15 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
                 "requires_provider_api_keys": False,
             },
             "env_keys_present": [
-                k for k in ["BROWSER_MODEL_LOOP_URL", "GCE_WORKER_IP", "GMAIL_USER"]
+                k for k in ["BROWSER_MODEL_LOOP_URL", "GCE_WORKER_IP", "GMAIL_USER", "GMAIL_APP_PASSWORD", "EMAIL_TO"]
                 if env.get(k)
             ],
+            "email_configured": bool(
+                env.get("GMAIL_USER")
+                and env.get("GMAIL_APP_PASSWORD")
+                and env.get("GMAIL_USER") not in ("your@gmail.com", "")
+                and env.get("GMAIL_APP_PASSWORD") not in ("your-16-char-app-password", "")
+            ),
         }
         _dashboard_status_cache['last'] = (now_ts, result)
         return result

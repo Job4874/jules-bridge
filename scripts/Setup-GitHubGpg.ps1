@@ -51,21 +51,18 @@ function Write-Err([string]$Message) {
     Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
-function Get-GitRoot {
+function Get-GitInstallRoot {
     $gitCmd = Get-Command git -ErrorAction SilentlyContinue
     if (-not $gitCmd) {
         throw "git is not on PATH. Install Git for Windows first."
     }
-    $root = (& git -C $RepoRoot rev-parse --show-toplevel 2>$null)
-    if (-not $root) {
-        $root = Split-Path -Parent $gitCmd.Source
-        while ($root -and -not (Test-Path (Join-Path $root "usr\bin\gpg.exe"))) {
-            $parent = Split-Path -Parent $root
-            if ($parent -eq $root) { break }
-            $root = $parent
-        }
+    $root = Split-Path -Parent $gitCmd.Source
+    while ($root -and -not (Test-Path (Join-Path $root "usr\bin\gpg.exe"))) {
+        $parent = Split-Path -Parent $root
+        if ($parent -eq $root) { break }
+        $root = $parent
     }
-    if (-not $root) {
+    if (-not $root -or -not (Test-Path (Join-Path $root "usr\bin\gpg.exe"))) {
         throw "Could not locate Git for Windows installation (need usr\bin\gpg.exe)."
     }
     return $root.Trim()
@@ -139,7 +136,8 @@ function Export-PublicKey {
         [string]$Path
     )
     $armor = Invoke-Gpg $GpgExe --armor --export $KeyId
-    Set-Content -Path $Path -Value $armor -Encoding ASCII -NoNewline
+    $header = "# Jules-Key-ID: $KeyId"
+    Set-Content -Path $Path -Value ($header + "`n" + $armor) -Encoding ASCII -NoNewline
     if (-not $armor.EndsWith("`n")) {
         Add-Content -Path $Path -Value "" -Encoding ASCII
     }
@@ -152,7 +150,7 @@ try {
     Write-Host "  GitHub GPG setup (Jules / Job4874)" -ForegroundColor Cyan
     Write-Host $divider -ForegroundColor Cyan
 
-    $GitRoot = Get-GitRoot
+    $GitRoot = Get-GitInstallRoot
     $GpgExe = Get-GpgExe -GitRoot $GitRoot
     $gpgHomeWin = Join-Path $env:USERPROFILE ".gnupg"
     $gpgHomeMsys = Get-GpgHomeMsys

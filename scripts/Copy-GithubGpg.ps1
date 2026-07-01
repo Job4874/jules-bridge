@@ -34,18 +34,19 @@ function Write-Err([string]$Message) {
     Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
-function Get-GitRoot {
+function Get-GitInstallRoot {
     $gitCmd = Get-Command git -ErrorAction SilentlyContinue
     if (-not $gitCmd) { return $null }
-    $root = (& git -C $RepoRoot rev-parse --show-toplevel 2>$null)
-    if ($root) { return $root.Trim() }
-    $probe = Split-Path -Parent $gitCmd.Source
-    while ($probe -and -not (Test-Path (Join-Path $probe "usr\bin\gpg.exe"))) {
-        $parent = Split-Path -Parent $probe
-        if ($parent -eq $probe) { break }
-        $probe = $parent
+    $root = Split-Path -Parent $gitCmd.Source
+    while ($root -and -not (Test-Path (Join-Path $root "usr\bin\gpg.exe"))) {
+        $parent = Split-Path -Parent $root
+        if ($parent -eq $root) { break }
+        $root = $parent
     }
-    return $probe
+    if ($root -and (Test-Path (Join-Path $root "usr\bin\gpg.exe"))) {
+        return $root
+    }
+    return $null
 }
 
 function Get-KeyIdFromFile {
@@ -60,7 +61,7 @@ function Get-KeyIdFromFile {
 
 function Refresh-PublicKeyFile {
     param([string]$Path)
-    $gitRoot = Get-GitRoot
+    $gitRoot = Get-GitInstallRoot
     if (-not $gitRoot) { return }
     $gpgExe = Join-Path $gitRoot "usr\bin\gpg.exe"
     if (-not (Test-Path $gpgExe)) { return }

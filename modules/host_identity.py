@@ -15,7 +15,7 @@ from typing import Any
 _ROOT = Path(__file__).resolve().parent.parent
 _SYSTEM_ID_PATH = _ROOT / "SYSTEM_ID.txt"
 _GPG_PUBLIC_PATH = _ROOT / "jules-gpg-public.asc"
-_KEY_ID_RE = re.compile(r"/([0-9A-Fa-f]{16})")
+_KEY_ID_RE = re.compile(r"(?:/|Jules-Key-ID:\s*)([0-9A-Fa-f]{16})")
 
 
 def _read_system_id_file() -> str:

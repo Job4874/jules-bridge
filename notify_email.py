@@ -69,7 +69,8 @@ def send_email(subject, body, mail_to=None, attachments=None):
 
     if not gmail_user or not gmail_pass:
         raise RuntimeError(
-            "Missing GMAIL_USER or GMAIL_APP_PASSWORD in c:\\Users\\abdul\\.jules\\.env"
+            "Missing GMAIL_USER or GMAIL_APP_PASSWORD in "
+            f"{Path(__file__).with_name('.env')}"
         )
 
     attachment_paths = _attachment_paths(attachments)
