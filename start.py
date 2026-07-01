@@ -125,7 +125,15 @@ def connect_ngrok() -> str:
         raise PyngrokError(ngrok_detail)
 
     public_url = ngrok.connect(5000, domain=NGROK_DOMAIN)
-    public_ping_ok, public_ping_detail = ping_public()
+
+    public_ping_ok = False
+    public_ping_detail = ""
+    for attempt in range(1, 11):
+        public_ping_ok, public_ping_detail = ping_public()
+        if public_ping_ok:
+            break
+        time.sleep(min(attempt, 3))
+
     if not public_ping_ok:
         STATE.last_ngrok_error = public_ping_detail or "public /ping check failed"
         raise PyngrokError(STATE.last_ngrok_error)
