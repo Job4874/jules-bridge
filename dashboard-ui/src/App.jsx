@@ -14,10 +14,14 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   DEFAULT_STATUS,
+  allianceTone,
+  buildAllianceLanes,
   buildEventRows,
   buildOpsChecklist,
   buildTopology,
   clampPercent,
+  cloudSyncLabel,
+  cloudSyncTone,
   collisionKey,
   formatTimestamp,
   gateTone,
@@ -46,6 +50,9 @@ const TOKEN = import.meta.env.VITE_BRIDGE_TOKEN || '';
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Overview', icon: 'overview' },
+  { id: 'tiu', label: 'TIU', icon: 'tiu' },
+  { id: 'alliance', label: 'Alliance', icon: 'alliance' },
+  { id: 'sync', label: 'Sync', icon: 'sync' },
   { id: 'fleet', label: 'Fleet', icon: 'fleet' },
   { id: 'repo', label: 'Repo', icon: 'repo' },
   { id: 'workers', label: 'Workers', icon: 'workers' },
@@ -60,6 +67,32 @@ const ICONS = {
       <path d="M4 5h16" />
       <path d="M4 12h10" />
       <path d="M4 19h16" />
+    </>
+  ),
+  tiu: (
+    <>
+      <path d="M5 5h14v5H5z" />
+      <path d="M5 14h6v5H5z" />
+      <path d="M15 14h4v5h-4z" />
+      <path d="M8 10v4" />
+      <path d="M17 10v4" />
+    </>
+  ),
+  alliance: (
+    <>
+      <path d="M7 6h4v4H7z" />
+      <path d="M13 14h4v4h-4z" />
+      <path d="M11 8h3.5a2.5 2.5 0 0 1 0 5H10a2.5 2.5 0 0 0 0 5h3" />
+      <path d="M17 9l2-2-2-2" />
+      <path d="M7 19l-2-2 2-2" />
+    </>
+  ),
+  sync: (
+    <>
+      <path d="M20 7h-8a4 4 0 0 0-4 4v1" />
+      <path d="m17 4 3 3-3 3" />
+      <path d="M4 17h8a4 4 0 0 0 4-4v-1" />
+      <path d="m7 20-3-3 3-3" />
     </>
   ),
   fleet: (
@@ -133,6 +166,29 @@ const trendOptions = {
   plugins: { legend: { display: false }, tooltip: { enabled: false } },
   elements: { point: { radius: 0 }, line: { tension: 0.36, borderWidth: 2 } }
 };
+
+const ALLIANCE_FILTERS = ['ALL', 'READY', 'ATTENTION'];
+
+const TIU_SCOPES = [
+  { value: 'dashboard', label: 'Dashboard' },
+  { value: 'model_bridge', label: 'Model Bridge' },
+  { value: 'cloud_sync', label: 'Cloud Sync' },
+  { value: 'full_bridge', label: 'Full Bridge' }
+];
+
+const TIU_LANES = [
+  { value: 'alliance', label: 'Alliance' },
+  { value: 'antigravity_cli', label: 'Antigravity' },
+  { value: 'gemini_cli', label: 'Gemini CLI' },
+  { value: 'jules_only', label: 'Jules Only' }
+];
+
+const TIU_MODES = [
+  { value: 'design_review', label: 'Design Review' },
+  { value: 'implementation', label: 'Implementation' },
+  { value: 'verification', label: 'Verification' },
+  { value: 'publish_gate', label: 'Publish Gate' }
+];
 
 const ringOptions = {
   responsive: true,
@@ -358,6 +414,414 @@ function OpsChecklist({ items, activeFocus }) {
   );
 }
 
+function TiuWorkbench({ sysStatus, activeFocus, onStagePacket }) {
+  const [objective, setObjective] = useState('Build the next polished dashboard and model-bridge UI slice.');
+  const [scope, setScope] = useState('dashboard');
+  const [modelLane, setModelLane] = useState('alliance');
+  const [mode, setMode] = useState('design_review');
+  const [requireCloudSync, setRequireCloudSync] = useState(true);
+  const [includeLiveChecks, setIncludeLiveChecks] = useState(false);
+  const [writePacket, setWritePacket] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const sync = sysStatus.cloudSync || DEFAULT_STATUS.cloudSync;
+  const codebaseSummary = sysStatus.codebase?.summary || {};
+  const resultTone = result?.status === 'ready' ? 'success' : result?.status === 'blocked' ? 'warn' : result?.status === 'error' ? 'danger' : 'info';
+  const blockers = Array.isArray(result?.blockers) ? result.blockers : [];
+  const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+
+  const runWorkbench = async () => {
+    const cleanObjective = objective.trim();
+    if (!cleanObjective) return;
+    setIsRunning(true);
+    try {
+      if (!TOKEN) {
+        throw new Error('protected route token is not configured for this dashboard session');
+      }
+      const response = await fetch(`${BRIDGE}/tiu/workbench`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+        body: JSON.stringify({
+          objective: cleanObjective,
+          scope,
+          model_lane: modelLane,
+          mode,
+          require_cloud_sync: requireCloudSync,
+          include_live_checks: includeLiveChecks,
+          write_packet: writePacket,
+          timeout_s: includeLiveChecks ? 18 : 8
+        })
+      });
+      const data = await response.json();
+      if (!response.ok && !data.status) {
+        throw new Error(data.message || data.error || `status ${response.status}`);
+      }
+      setResult(data);
+    } catch (error) {
+      setResult({
+        status: 'error',
+        plan_state: 'error',
+        blockers: ['tiu_route_unreachable'],
+        warnings: [],
+        packet: '',
+        error: error.message,
+        artifacts: { packet_written: false, packet_path: '' }
+      });
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  return (
+    <Panel
+      title="TIU Workbench"
+      meta={`${scope} - ${modelLane}`}
+      tone={result ? resultTone : 'info'}
+      focus="tiu"
+      activeFocus={activeFocus}
+      className="tiu-panel"
+      actions={
+        <button className="primary-action" type="button" onClick={runWorkbench} disabled={isRunning}>
+          {isRunning ? 'Building' : 'Generate Packet'}
+        </button>
+      }
+    >
+      <div className="tiu-readiness-grid">
+        <div>
+          <span>Alliance</span>
+          <strong>{sysStatus.alliance?.ready_to_execute_alliance ? 'Ready' : sysStatus.alliance?.status || 'Unknown'}</strong>
+        </div>
+        <div>
+          <span>Codebase</span>
+          <strong>{codebaseSummary.route_count || 0} routes</strong>
+        </div>
+        <div>
+          <span>Sync Gate</span>
+          <strong>{cloudSyncLabel(sync)}</strong>
+        </div>
+        <div>
+          <span>Mode</span>
+          <strong>{mode.replaceAll('_', ' ')}</strong>
+        </div>
+      </div>
+      <div className="tiu-controls">
+        <label className="tiu-objective">
+          <span>Objective</span>
+          <textarea value={objective} onChange={event => setObjective(event.target.value)} rows={3} />
+        </label>
+        <label>
+          <span>Scope</span>
+          <select value={scope} onChange={event => setScope(event.target.value)}>
+            {TIU_SCOPES.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>Lane</span>
+          <select value={modelLane} onChange={event => setModelLane(event.target.value)}>
+            {TIU_LANES.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>Mode</span>
+          <select value={mode} onChange={event => setMode(event.target.value)}>
+            {TIU_MODES.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="tiu-switches">
+        {[
+          ['Cloud gate', requireCloudSync, setRequireCloudSync],
+          ['Live checks', includeLiveChecks, setIncludeLiveChecks],
+          ['Save packet', writePacket, setWritePacket]
+        ].map(([label, checked, setter]) => (
+          <label className="switch-row" key={label}>
+            <input type="checkbox" checked={checked} onChange={event => setter(event.target.checked)} />
+            <span>{label}</span>
+          </label>
+        ))}
+      </div>
+      {result && (
+        <div className={`tiu-result ${resultTone}`}>
+          <div className="tiu-result-head">
+            <StatusPill tone={resultTone}>{result.plan_state || result.status}</StatusPill>
+            <span>{result.artifacts?.packet_written ? 'Saved locally' : result.error || 'Packet staged in dashboard'}</span>
+          </div>
+          {(blockers.length > 0 || warnings.length > 0) && (
+            <div className="tiu-issues">
+              {[...blockers.map(item => ['danger', item]), ...warnings.map(item => ['warn', item])].slice(0, 6).map(([tone, item]) => (
+                <span className={tone} key={`${tone}-${item}`}>{String(item).replaceAll('_', ' ')}</span>
+              ))}
+            </div>
+          )}
+          {result.packet && <pre>{result.packet}</pre>}
+          {result.packet && (
+            <button className="secondary-action" type="button" onClick={() => onStagePacket(result.packet)}>
+              Stage To Comms
+            </button>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function AllianceControl({ sysStatus, activeFocus }) {
+  const [filter, setFilter] = useState('ALL');
+  const [selectedLaneId, setSelectedLaneId] = useState('jules');
+  const alliance = sysStatus.alliance || DEFAULT_STATUS.alliance;
+  const lanes = useMemo(() => buildAllianceLanes(sysStatus), [sysStatus]);
+  const visibleLanes = lanes.filter(lane => {
+    if (filter === 'READY') return lane.tone === 'success';
+    if (filter === 'ATTENTION') return lane.tone !== 'success';
+    return true;
+  });
+  const selectedLane = lanes.find(lane => lane.id === selectedLaneId) || visibleLanes[0] || lanes[0];
+  const tone = allianceTone(alliance);
+
+  useEffect(() => {
+    if (lanes.length > 0 && !lanes.some(lane => lane.id === selectedLaneId)) {
+      setSelectedLaneId(lanes[0].id);
+    }
+  }, [lanes, selectedLaneId]);
+
+  return (
+    <Panel
+      title="Alliance Control"
+      meta={`${alliance.mode || 'unconfigured'} - ${alliance.packet_count || 0} packets`}
+      tone={tone}
+      focus="alliance"
+      activeFocus={activeFocus}
+      className="alliance-panel"
+      actions={
+        <div className="filter-cluster alliance-filters">
+          {ALLIANCE_FILTERS.map(item => (
+            <button
+              className={filter === item ? 'active' : ''}
+              type="button"
+              key={item}
+              onClick={() => setFilter(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      }
+    >
+      <div className="alliance-summary-grid">
+        <div>
+          <span>Creator</span>
+          <strong>{alliance.creator || 'jules'}</strong>
+        </div>
+        <div>
+          <span>Implementer</span>
+          <strong>{alliance.implementer || 'unassigned'}</strong>
+        </div>
+        <div>
+          <span>Gates</span>
+          <strong>{alliance.gate_pass_count || 0}/{alliance.gate_total_count || 0}</strong>
+        </div>
+        <div>
+          <span>Live Work</span>
+          <strong>{alliance.safe_to_launch_live_work ? 'Open' : 'Gated'}</strong>
+        </div>
+      </div>
+      <div className="alliance-ribbon">
+        <StatusPill tone={tone}>
+          {alliance.ready_to_execute_alliance ? 'ALLIANCE READY' : alliance.status === 'missing' ? 'ALLIANCE MISSING' : 'ALLIANCE PARTIAL'}
+        </StatusPill>
+        <span>{alliance.summary || 'Switchboard snapshot unavailable.'}</span>
+      </div>
+      <div className="alliance-lanes">
+        {visibleLanes.map(lane => (
+          <button
+            className={`alliance-lane ${lane.tone} ${selectedLane?.id === lane.id ? 'selected' : ''}`}
+            type="button"
+            key={lane.id}
+            onClick={() => setSelectedLaneId(lane.id)}
+          >
+            <span className={`worker-light ${lane.tone}`} />
+            <div>
+              <strong>{lane.label}</strong>
+              <em>{lane.role}</em>
+            </div>
+            <b>{lane.state}</b>
+          </button>
+        ))}
+      </div>
+      {selectedLane && (
+        <div className={`alliance-detail ${selectedLane.tone}`}>
+          <div>
+            <span>{selectedLane.label}</span>
+            <strong>{selectedLane.state}</strong>
+          </div>
+          <p>{selectedLane.detail}</p>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function CloudSyncPanel({ cloudSync, activeFocus, onStagePacket }) {
+  const sync = cloudSync || DEFAULT_STATUS.cloudSync;
+  const [writePacket, setWritePacket] = useState(true);
+  const [isBuilding, setIsBuilding] = useState(false);
+  const [publishPacket, setPublishPacket] = useState(null);
+  const blockers = Array.isArray(sync.blockers) ? sync.blockers : [];
+  const warnings = Array.isArray(sync.warnings) ? sync.warnings : [];
+  const tone = cloudSyncTone(sync);
+  const packetTone = publishPacket?.status === 'ready' ? 'success' : publishPacket?.status === 'blocked' ? 'warn' : publishPacket?.status === 'error' ? 'danger' : 'info';
+  const packetFamilies = Array.isArray(publishPacket?.change_families) ? publishPacket.change_families : [];
+  const packetCommands = Array.isArray(publishPacket?.commands) ? publishPacket.commands : [];
+
+  const buildPublishPacket = async () => {
+    setIsBuilding(true);
+    try {
+      if (!TOKEN) {
+        throw new Error('protected route token is not configured for this dashboard session');
+      }
+      const response = await fetch(`${BRIDGE}/sync/publish-packet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+        body: JSON.stringify({
+          objective: 'Publish and synchronize the current Jules Bridge dashboard/model-agent work.',
+          timeout_s: 8,
+          use_cache: false,
+          write_packet: writePacket
+        })
+      });
+      const data = await response.json();
+      if (!response.ok && !data.status) {
+        throw new Error(data.message || data.error || `status ${response.status}`);
+      }
+      setPublishPacket(data);
+    } catch (error) {
+      setPublishPacket({
+        status: 'error',
+        state: 'error',
+        blockers: ['sync_publish_packet_unreachable'],
+        warnings: [],
+        change_families: [],
+        commands: [],
+        packet: '',
+        error: error.message,
+        artifacts: { packet_written: false, packet_path: '' }
+      });
+    } finally {
+      setIsBuilding(false);
+    }
+  };
+
+  return (
+    <Panel
+      title="Cloud Sync"
+      meta={`${sync.remote_host || 'remote'} - ${sync.cache_age_s || 0}s cache`}
+      tone={tone}
+      focus="sync"
+      activeFocus={activeFocus}
+      className="cloud-sync-panel"
+      actions={
+        <button className="primary-action" type="button" onClick={buildPublishPacket} disabled={isBuilding}>
+          {isBuilding ? 'Reviewing' : 'Build Publish Packet'}
+        </button>
+      }
+    >
+      <div className="sync-summary-grid">
+        <div>
+          <span>Branch</span>
+          <strong>{sync.branch || 'unknown'}</strong>
+        </div>
+        <div>
+          <span>Upstream</span>
+          <strong>{sync.upstream || 'not set'}</strong>
+        </div>
+        <div>
+          <span>Ahead / Behind</span>
+          <strong>{sync.ahead || 0} / {sync.behind || 0}</strong>
+        </div>
+        <div>
+          <span>Worktree</span>
+          <strong>{sync.dirty_count || 0} dirty</strong>
+        </div>
+      </div>
+      <div className="sync-ribbon">
+        <StatusPill tone={tone}>{cloudSyncLabel(sync)}</StatusPill>
+        <span>
+          {sync.github_authenticated ? `GitHub ready${sync.github_account ? ` as ${sync.github_account}` : ''}` : 'GitHub auth not proven'}
+        </span>
+      </div>
+      <div className="sync-meter-grid">
+        {[
+          ['Staged', sync.staged_count || 0, 'info'],
+          ['Unstaged', sync.unstaged_count || 0, (sync.unstaged_count || 0) > 0 ? 'warn' : 'success'],
+          ['Untracked', sync.untracked_count || 0, (sync.untracked_count || 0) > 0 ? 'warn' : 'success']
+        ].map(([label, count, itemTone]) => (
+          <div className="sync-meter" key={label}>
+            <div>
+              <span>{label}</span>
+              <strong>{count}</strong>
+            </div>
+            <div className="meter-track">
+              <span className={itemTone} style={{ width: `${Math.min(Number(count) * 14, 100)}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="sync-issue-list">
+        {blockers.length === 0 && warnings.length === 0 ? (
+          <div className="finding-row success">
+            <strong>{sync.publish_ready ? 'Publish ready' : 'Cloud clean'}</strong>
+            <span>{sync.publish_ready ? 'Local commits can be pushed intentionally.' : 'Local branch matches the tracked remote.'}</span>
+          </div>
+        ) : (
+          [...blockers.map(item => ['danger', item]), ...warnings.map(item => ['warn', item])].slice(0, 5).map(([itemTone, item]) => (
+            <div className={`finding-row ${itemTone}`} key={`${itemTone}-${item}`}>
+              <strong>{String(item).replaceAll('_', ' ')}</strong>
+              <span>{item === 'dirty_worktree' ? 'Review, stage, and commit intended changes before cloud publish.' : 'Resolve this sync gate before marking cloud sync complete.'}</span>
+            </div>
+          ))
+        )}
+      </div>
+      <label className="sync-save-row">
+        <input type="checkbox" checked={writePacket} onChange={event => setWritePacket(event.target.checked)} />
+        <span>Save publish packet locally</span>
+      </label>
+      {publishPacket && (
+        <div className={`publish-review ${packetTone}`}>
+          <div className="publish-review-head">
+            <StatusPill tone={packetTone}>{publishPacket.state || publishPacket.status}</StatusPill>
+            <span>
+              {publishPacket.artifacts?.packet_written ? 'Saved locally' : publishPacket.error || `${publishPacket.include_candidate_count || 0} publish candidates`}
+            </span>
+          </div>
+          {packetFamilies.length > 0 && (
+            <div className="publish-family-grid">
+              {packetFamilies.slice(0, 8).map(row => (
+                <div key={row.family}>
+                  <span>{row.label || row.family}</span>
+                  <strong>{row.count}</strong>
+                </div>
+              ))}
+            </div>
+          )}
+          {packetCommands.length > 0 && (
+            <div className="publish-command-list">
+              {packetCommands.slice(0, 5).map(row => (
+                <code key={`${row.label}-${row.command}`}>{row.cwd ? `${row.cwd}> ` : ''}{row.command}</code>
+              ))}
+            </div>
+          )}
+          {publishPacket.packet && (
+            <button className="secondary-action" type="button" onClick={() => onStagePacket(publishPacket.packet)}>
+              Stage To Comms
+            </button>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 function FleetPanel({ fleet, activeFocus }) {
   const launched = Number(fleet.launched || 0);
   const completed = Number(fleet.completed || 0);
@@ -519,6 +983,61 @@ function RepoGuard({ repoContext, selectedCollisionKey, setSelectedCollisionKey,
               </button>
             );
           })
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+function CodebaseIntelligence({ codebase, activeFocus }) {
+  const summary = codebase?.summary || {};
+  const integrations = Array.isArray(codebase?.integrations) ? codebase.integrations : [];
+  const findings = Array.isArray(codebase?.findings) ? codebase.findings : [];
+  const tone = toneForStatus(codebase?.status);
+  return (
+    <Panel
+      title="Codebase Intelligence"
+      meta={`${codebase?.root_name || 'bridge root'} local snapshot`}
+      tone={tone}
+      focus="repo"
+      activeFocus={activeFocus}
+      className="codebase-panel"
+    >
+      <div className="codebase-metrics">
+        {[
+          ['Files', summary.file_count || 0],
+          ['Routes', summary.route_count || 0],
+          ['Modules', summary.module_count || 0],
+          ['Tests', summary.test_count || 0]
+        ].map(([label, value]) => (
+          <div key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </div>
+      <div className="integration-grid">
+        {integrations.length === 0 ? (
+          <span className="empty-state">No integration snapshot reported.</span>
+        ) : (
+          integrations.slice(0, 8).map(item => (
+            <span className={`integration-chip ${item.ready ? 'success' : 'warn'}`} key={item.id || item.label}>
+              <i className={`worker-light ${item.ready ? 'success' : 'warn'}`} />
+              {item.label || item.id}
+            </span>
+          ))
+        )}
+      </div>
+      <div className="finding-list">
+        {findings.length === 0 ? (
+          <div className="empty-state">Analyzer has not emitted findings.</div>
+        ) : (
+          findings.slice(0, 4).map(item => (
+            <div className={`finding-row ${item.tone || 'info'}`} key={`${item.title}-${item.detail}`}>
+              <strong>{item.title}</strong>
+              <span>{item.detail}</span>
+            </div>
+          ))
         )}
       </div>
     </Panel>
@@ -793,6 +1312,7 @@ function App() {
   const cloud = sysStatus.cloud || DEFAULT_STATUS.cloud;
   const workers = useMemo(() => (Array.isArray(cloud.vms) ? cloud.vms : []), [cloud]);
   const repoContext = sysStatus.repoContext || DEFAULT_STATUS.repoContext;
+  const codebase = sysStatus.codebase || DEFAULT_STATUS.codebase;
   const collisions = useMemo(
     () => (Array.isArray(repoContext.collisions) ? repoContext.collisions : []),
     [repoContext]
@@ -876,6 +1396,11 @@ function App() {
     }
   };
 
+  const stagePacketForComms = packet => {
+    setInputValue(packet);
+    setActiveFocus('comms');
+  };
+
   return (
     <div className="dashboard-shell" data-focus={activeFocus}>
       <header className="command-bar">
@@ -889,6 +1414,18 @@ function App() {
         <div className="command-status">
           <StatusPill tone={sysStatus.online ? 'success' : 'danger'}>{sysStatus.online ? 'LIVE' : 'OFFLINE'}</StatusPill>
           <StatusPill tone={sysStatus.tunnel ? 'success' : 'warn'}>{sysStatus.tunnel ? 'TUNNEL' : 'LOCAL'}</StatusPill>
+          <StatusPill tone={sysStatus.geminiCli?.ready ? 'success' : sysStatus.geminiCli?.installed ? 'warn' : 'danger'}>
+            {sysStatus.geminiCli?.ready ? 'GEMINI READY' : sysStatus.geminiCli?.installed ? 'GEMINI INSTALLED' : 'GEMINI MISSING'}
+          </StatusPill>
+          <StatusPill tone={sysStatus.antigravityCli?.ready ? 'success' : sysStatus.antigravityCli?.installed ? 'warn' : 'danger'}>
+            {sysStatus.antigravityCli?.ready ? 'AGY READY' : sysStatus.antigravityCli?.installed ? 'AGY INSTALLED' : 'AGY MISSING'}
+          </StatusPill>
+          <StatusPill tone={allianceTone(sysStatus.alliance)}>
+            {sysStatus.alliance?.ready_to_execute_alliance ? 'ALLIANCE READY' : 'ALLIANCE WATCH'}
+          </StatusPill>
+          <StatusPill tone={cloudSyncTone(sysStatus.cloudSync)}>
+            {cloudSyncLabel(sysStatus.cloudSync)}
+          </StatusPill>
           <StatusPill tone={gateTone(sysStatus)}>{sysStatus.executionContext}</StatusPill>
           <StatusPill tone={sysStatus.quantAllowed ? 'success' : 'warn'}>{sysStatus.quantAllowed ? 'QUANT ON' : 'QUANT LOCKED'}</StatusPill>
         </div>
@@ -898,6 +1435,13 @@ function App() {
 
       <main className="operations-grid">
         <MissionSummary sysStatus={sysStatus} topology={topology} />
+        <TiuWorkbench sysStatus={sysStatus} activeFocus={activeFocus} onStagePacket={stagePacketForComms} />
+        <AllianceControl sysStatus={sysStatus} activeFocus={activeFocus} />
+        <CloudSyncPanel
+          cloudSync={sysStatus.cloudSync || DEFAULT_STATUS.cloudSync}
+          activeFocus={activeFocus}
+          onStagePacket={stagePacketForComms}
+        />
         <TelemetryPanel sysStatus={sysStatus} cpuHistory={cpuHistory} memHistory={memHistory} activeFocus={activeFocus} />
         <OpsChecklist items={opsItems} activeFocus={activeFocus} />
         <FleetPanel fleet={sysStatus.fleet || DEFAULT_STATUS.fleet} activeFocus={activeFocus} />
@@ -914,6 +1458,7 @@ function App() {
           setSelectedCollisionKey={setSelectedCollisionKey}
           activeFocus={activeFocus}
         />
+        <CodebaseIntelligence codebase={codebase} activeFocus={activeFocus} />
         <EventConsole
           rows={eventRows}
           filter={eventFilter}

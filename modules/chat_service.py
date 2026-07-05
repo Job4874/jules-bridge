@@ -11,6 +11,7 @@ Public interface:
 from __future__ import annotations
 
 import os
+import json
 import time
 import uuid
 from typing import Any, Mapping, Sequence
@@ -30,6 +31,16 @@ _VM_FAILURE_MARKERS = (
     "No browser model loop configured",
     "GEMINI_API_KEY is rate-limited",
     "OpenRouter free models failed",
+)
+_DEFAULT_VM_CHAT_TIMEOUT_S = 30.0
+_DEFAULT_VM_CHAT_POLL_INTERVAL_S = 2.0
+_CODEBASE_CONTEXT_KEYWORDS = (
+    "codebase",
+    "code base",
+    "local repo",
+    "local repository",
+    "analyze your own code",
+    "analyze my code",
 )
 
 
@@ -58,6 +69,22 @@ def _elapsed_ms(start: float, clock: Any) -> int:
     return int((clock() - start) * 1000)
 
 
+def _float_env(
+    env: Mapping[str, str] | None,
+    key: str,
+    default: float,
+    min_value: float,
+    max_value: float,
+) -> float:
+    """Read a bounded float from supplied env or process env."""
+    source = env if env is not None else os.environ
+    try:
+        value = float(source.get(key, default))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return default
+    return max(min_value, min(max_value, value))
+
+
 def _latest_vm_chat_result(vm_status: Mapping[str, Any]) -> str:
     """Return the most recent completed VM chat result, if the status exposes one."""
     recent = vm_status.get("recent", [])
@@ -81,6 +108,38 @@ def _vm_failure_detail(result: str) -> str:
     if any(marker in result for marker in _VM_FAILURE_MARKERS):
         return result[:240]
     return ""
+
+
+def _should_attach_codebase_context(message: str) -> bool:
+    text = str(message or "").lower()
+    return any(keyword in text for keyword in _CODEBASE_CONTEXT_KEYWORDS)
+
+
+def _codebase_context_block() -> str:
+    """Return a compact local codebase snapshot for VM prompts."""
+    try:
+        from modules.codebase_analyzer import analyze_codebase  # pylint: disable=import-outside-toplevel
+
+        analysis = analyze_codebase(max_files=1200, include_files=False)
+        if not analysis.get("ok"):
+            return ""
+        compact = {
+            "status": analysis.get("status"),
+            "summary": analysis.get("summary", {}),
+            "routes": {
+                "count": analysis.get("routes", {}).get("count", 0),
+                "items": analysis.get("routes", {}).get("items", [])[:30],
+            },
+            "modules": analysis.get("modules", {}),
+            "tests": analysis.get("tests", {}),
+            "frontend": analysis.get("frontend", {}),
+            "integrations": analysis.get("integrations", []),
+            "findings": analysis.get("findings", [])[:8],
+            "handoff": analysis.get("handoff", {}),
+        }
+        return json.dumps(compact, ensure_ascii=True, separators=(",", ":"))[:14000]
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
 
 
 def test_chat_providers(
@@ -153,11 +212,27 @@ def chat(
             if vm_status.get("online"):
                 marker = f"chat-fallback-{uuid.uuid4().hex[:8]}"
                 task_payload = f"[{marker}] {message}"
+                if _should_attach_codebase_context(message):
+                    codebase_context = _codebase_context_block()
+                    if codebase_context:
+                        system = (
+                            f"{system}\n\nLOCAL_CODEBASE_ANALYSIS_JSON:\n{codebase_context}\n\n"
+                            "When the user asks about the local codebase, base your answer on "
+                            "LOCAL_CODEBASE_ANALYSIS_JSON instead of the VM's /home/jules checkout."
+                        )
                 vm_relay.send_task_to_vm(task_payload, task_type="chat", context=system)
 
-                # Brief polling
-                for _ in range(5):
-                    time.sleep(2)
+                timeout_s = _float_env(env, "VM_CHAT_TIMEOUT_S", _DEFAULT_VM_CHAT_TIMEOUT_S, 1.0, 120.0)
+                poll_interval_s = _float_env(
+                    env,
+                    "VM_CHAT_POLL_INTERVAL_S",
+                    _DEFAULT_VM_CHAT_POLL_INTERVAL_S,
+                    0.1,
+                    10.0,
+                )
+                attempts = max(1, int(timeout_s / poll_interval_s))
+                for _ in range(attempts):
+                    time.sleep(poll_interval_s)
                     status = vm_relay.get_vm_status()
                     recent = status.get("recent", [])
                     for task_entry in reversed(recent):
@@ -167,6 +242,8 @@ def chat(
                             break
                     if response_text:
                         break
+                if not response_text:
+                    errors.append(f"VM worker did not finish within {timeout_s:.1f}s")
         except Exception as exc:  # pylint: disable=broad-exception-caught
             errors.append(f"VM relay exception: {str(exc)[:100]}")
     else:

@@ -1,0 +1,144 @@
+{
+  "generated_at_utc": "2026-07-05T20:24:32.688280+00:00",
+  "ready": false,
+  "installed": true,
+  "likely_blocker": "auth_required",
+  "gemini_command": "gemini",
+  "resolved_gemini_command": "C:\\Program Files\\nodejs\\node.EXE C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
+  "preferred_gemini_command": "C:\\Program Files\\nodejs\\node.EXE C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
+  "candidate_commands": [
+    {
+      "label": "requested",
+      "requested": "gemini",
+      "resolved": "C:\\Users\\abdul\\.npm-packages\\gemini.CMD",
+      "exists": true
+    },
+    {
+      "label": "npm_bundle_js",
+      "requested": "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
+      "resolved": "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
+      "exists": true
+    },
+    {
+      "label": "npm_script",
+      "requested": "C:\\Users\\abdul\\.npm-packages\\gemini",
+      "resolved": "C:\\Users\\abdul\\.npm-packages\\gemini",
+      "exists": true
+    },
+    {
+      "label": "npm_bundle_js",
+      "requested": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
+      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
+      "exists": false
+    },
+    {
+      "label": "npm_cmd",
+      "requested": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\gemini.cmd",
+      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\gemini.cmd",
+      "exists": false
+    },
+    {
+      "label": "npm_script",
+      "requested": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\gemini",
+      "resolved": "C:\\Users\\abdul\\AppData\\Roaming\\npm\\gemini",
+      "exists": false
+    }
+  ],
+  "version": {
+    "exit_code": 0,
+    "stdout": "0.49.0\n",
+    "stderr": "",
+    "timed_out": false,
+    "elapsed_ms": 2871.26
+  },
+  "capabilities": {
+    "headless_mode": "-p/--prompt",
+    "approval_modes": [
+      "auto_edit",
+      "default",
+      "plan",
+      "yolo"
+    ],
+    "output_formats": [
+      "json",
+      "stream-json",
+      "text"
+    ],
+    "mcp": {
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "No MCP servers configured.\n",
+      "timed_out": false,
+      "elapsed_ms": 5100.23
+    },
+    "extensions": {
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "No extensions installed.\n",
+      "timed_out": false,
+      "elapsed_ms": 5382.27
+    },
+    "skills": {
+      "exit_code": 0,
+      "stdout": "Discovered Agent Skills:\n\nantigravity-support [Enabled] [Built-in]\n  Description: Use when the user asks questions, seeks help, or requests instructions related to installing, setting up, or migrating to Antigravity CLI. This skill provides the latest up to date details, requirements, and commands sourced from the official Antigravity CLI documentation.\n  Location:    C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\builtin\\antigravity-support\\SKILL.md\n\nskill-creator [Enabled] [Built-in]\n  Description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Gemini CLI's capabilities with specialized knowledge, workflows, or tool integrations.\n  Location:    C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\builtin\\skill-creator\\SKILL.md\n\n",
+      "stderr": "Skipping project agents due to untrusted folder. To enable, ensure that the project root is trusted.\nRipgrep is not available. Falling back to GrepTool.\nProject hooks disabled because the folder is not trusted.\n",
+      "timed_out": false,
+      "elapsed_ms": 4445.04
+    }
+  },
+  "auth_indicators": {
+    "gemini_api_key_present": true,
+    "google_api_key_present": false,
+    "known_config_paths": [
+      {
+        "path": "C:\\Users\\abdul\\.gemini",
+        "exists": true,
+        "item_count": 17
+      },
+      {
+        "path": "C:\\Users\\abdul\\.config\\gemini",
+        "exists": false,
+        "item_count": 0
+      },
+      {
+        "path": "C:\\Users\\abdul\\AppData\\Roaming\\gemini",
+        "exists": false,
+        "item_count": 0
+      },
+      {
+        "path": "C:\\Users\\abdul\\AppData\\Local\\gemini",
+        "exists": false,
+        "item_count": 0
+      }
+    ],
+    "any_known_config_path_exists": true
+  },
+  "smoke": {
+    "status": "failed",
+    "dry_run": false,
+    "command_preview": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
+      "-p",
+      "[prompt:36 chars]",
+      "--approval-mode",
+      "plan",
+      "--output-format",
+      "text",
+      "--skip-trust"
+    ],
+    "cwd": "C:\\Users\\abdul\\jules-bridge",
+    "approval_mode": "plan",
+    "output_format": "text",
+    "model": "",
+    "exit_code": 1,
+    "timed_out": false,
+    "stdout": "",
+    "stderr": "Warning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.\nError authenticating: IneligibleTierError: This client is no longer supported for Gemini Code Assist for individuals. To continue using Gemini, please migrate to the Antigravity suite of products: https://antigravity.google\n    at throwIneligibleOrProjectIdError (file:///C:/Users/abdul/.npm-packages/node_modules/@google/gemini-cli/bundle/chunk-VLV2BYPM.js:300912:11)\n    at _doSetupUser (file:///C:/Users/abdul/.npm-packages/node_modules/@google/gemini-cli/bundle/chunk-VLV2BYPM.js:300901:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {\n  ineligibleTiers: [\n    {\n      reasonCode: 'UNSUPPORTED_CLIENT',\n      reasonMessage: 'This client is no longer supported for Gemini Code Assist for individuals. To continue using Gemini, please migrate to the Antigravity suite of products: https://antigravity.google',\n      tierId: 'free-tier',\n      tierName: 'Gemini Code Assist for individuals'\n    }\n  ]\n}\nRipgrep is not available. Falling back to GrepTool.\nAn unexpected critical error occurred:IneligibleTierError: This client is no longer supported for Gemini Code Assist for individuals. To continue using Gemini, please migrate to the Antigravity suite of products: https://antigravity.google\n    at throwIneligibleOrProjectIdError (file:///C:/Users/abdul/.npm-packages/node_modules/@google/gemini-cli/bundle/chunk-VLV2BYPM.js:300912:11)\n    at _doSetupUser (file:///C:/Users/abdul/.npm-packages/node_modules/@google/gemini-cli/bundle/chunk-VLV2BYPM.js:300901:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n",
+    "elapsed_ms": 6510.35,
+    "likely_blocker": "auth_required",
+    "state_path": ""
+  },
+  "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\gemini\\GEMINI_PREFLIGHT.json",
+  "note": "Preflight checks install/headless capability. Authenticated model execution is only checked when run_smoke=true."
+}

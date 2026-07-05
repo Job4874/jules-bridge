@@ -14,7 +14,9 @@ jules_inbox/screenshots/
 jules_inbox/JULES_AUTOMATION_GITHUB_DASHBOARD_HANDOFF_*.md
 *.log
 bridge.log
+bridge.log.*
 .env
 .env.*
 !.env.example
 scratch/vm.env
+scratch/screenshots/

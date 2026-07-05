@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T18:48:10.461450+00:00",
+  "generated_at_utc": "2026-07-05T16:09:51.906718+00:00",
   "ready": true,
   "likely_blocker": "",
   "jules_command": "jules",
@@ -11,7 +11,7 @@
     "note": "JULES_USE_REST_API=1; CLI version probe skipped."
   },
   "remote": {
-    "generated_at_utc": "2026-07-01T18:48:10.462449+00:00",
+    "generated_at_utc": "2026-07-05T16:09:51.906718+00:00",
     "status": "ok",
     "ready": true,
     "likely_blocker": "",
@@ -19,7 +19,7 @@
     "source": "sources/github/Job4874/jules-bridge",
     "base_url": "https://jules.googleapis.com/v1alpha",
     "sources": {
-      "generated_at_utc": "2026-07-01T18:48:12.324512+00:00",
+      "generated_at_utc": "2026-07-05T16:09:53.270191+00:00",
       "operation": "sources.list",
       "status": "ok",
       "http_status": 200,

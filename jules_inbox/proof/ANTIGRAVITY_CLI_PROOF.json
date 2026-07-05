@@ -1,0 +1,18 @@
+﻿{
+    "generated_at_utc":  "2026-07-05T15:52:10.6982287Z",
+    "antigravity_version":  "1.0.16",
+    "models":  [
+                   "Gemini 3.5 Flash (Medium)",
+                   "Gemini 3.5 Flash (High)",
+                   "Gemini 3.5 Flash (Low)",
+                   "Gemini 3.1 Pro (Low)",
+                   "Gemini 3.1 Pro (High)",
+                   "Claude Sonnet 4.6 (Thinking)",
+                   "Claude Opus 4.6 (Thinking)",
+                   "GPT-OSS 120B (Medium)"
+               ],
+    "plugin_list":  "No imported plugins.",
+    "smoke_prompt":  "ANTIGRAVITY_BRIDGE_SMOKE_OK",
+    "smoke_stdout":  "ANTIGRAVITY_BRIDGE_SMOKE_OK",
+    "installed_path":  "C:\\Users\\abdul\\AppData\\Local\\agy\\bin\\agy.exe"
+}

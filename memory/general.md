@@ -448,3 +448,98 @@ has gone wrong before and what to avoid.
 - Closed stale draft PRs #64 and #67-#77 with comments after live merge-tree checks showed all conflicted against current master and were superseded or incompatible with the keyless model-loop contract.
 - Verification: `gh pr list --state open` returned `[]`, `python -m pytest tests/ -q` passed 436 tests in 22.36s, PowerShell parser checks passed, and `git rev-list --left-right --count origin/master...master` returned `0 0`.
 
+## Session 20260705T150000 - Gemini CLI Bridge And 6001 Dashboard
+
+- Installed global `@google/gemini-cli` v0.49.0 and added bridge resolution that prefers the Node bundle path over Windows PowerShell shims.
+- Added `modules/gemini_cli.py`, `/gemini/preflight`, `/gemini/prompt`, dashboard `gemini_cli` status, frontend Gemini readiness pill, docs, and route tests.
+- Safe default: `/gemini/prompt` is dry-run unless explicitly live; live prompts use `--approval-mode plan` and redact prompt text from command previews.
+- Runtime note: `http://127.0.0.1:5173/` is Academic Command Center. Chromium blocks port 6000 as unsafe, so the Jules dashboard preview for this run uses `http://127.0.0.1:6001/`.
+- Current blocker: Gemini is installed and detectable, but authenticated headless smoke fails with `UNSUPPORTED_CLIENT` / `IneligibleTierError`; the CLI asks for migration to Antigravity or another supported auth path.
+- Verification: `python -m pytest tests/ -q` passed 451 tests; `npm run lint`, `npm run build`, and Browser QA on `127.0.0.1:6001` passed. Evidence hash `638d2e621771009486e7420e86f90d9b5ef09d5409bbdb809dcacc6a9f850110`.
+
+## Session 20260705T154200 - Collaboration Proof Harness
+
+- Added `modules/collaboration_proof.py` and protected `POST /proof/collaboration` as the canonical proof surface for the combined Jules + Gemini objective.
+- Proof gates: Jules reachability, Gemini CLI reachability, optional Gemini model execution, skills framework, AKC/context handling, HRM reasoning, architecture guardrails, bridge collaboration routes, and latest local test evidence.
+- Safety boundary: the proof route never creates Jules sessions, approves plans, or lets Gemini edit files. `include_live_checks=true` is read-only; `run_gemini_smoke=true` is the only authenticated Gemini model gate.
+- Live proof after bridge restart wrote `jules_inbox/proof/COLLABORATION_PROOF.json`: 8/9 gates passed. The only blocked gate is `gemini_model_execution` with blocker `auth_required`; do not call the full goal complete until that external auth/tier issue is resolved and the smoke gate passes.
+- Verification: `python -m pytest tests/ -q` passed 457 tests; evidence hash `cb974cad47478b1736df435142d53b93fda854fe50d64b2d2c5b75f7f4de2fa2`; `git diff --check` had only expected CRLF warnings.
+
+## Session 20260705T154700 - Requirement Audit Proof Hardening
+
+- Strengthened `modules/collaboration_proof.py` with `requirement_audit`, `completion_assessment`, `collaboration_workflow`, and a distinct `actual_code_changes` proof gate.
+- The proof artifact now maps broad objective requirements to gate evidence. Latest live proof reports 9/10 gates passing, but `safe_to_mark_goal_complete=false`.
+- Blocked requirements are `REQ-003` Gemini authenticated model execution through the bridge and `REQ-009` end-to-end Jules+Gemini collaboration. The blocker remains `auth_required`.
+- Verification: focused proof/Gemini route tests passed 14 tests; `python -m pytest tests/ -q` passed 457 tests. Evidence hash `c858669d3cabadfad1674f85c2c729ee8c43d0d3d64579b7dba0f84afe17a685`.
+
+## Session 20260705T160230 - Antigravity Google Terminal Agent Proof
+
+- Google Antigravity CLI `agy` is now installed at `C:\Users\abdul\AppData\Local\agy\bin\agy.exe` and verified with version `1.0.16`, `agy models` returning 8 models, and a live smoke output of `ANTIGRAVITY_BRIDGE_SMOKE_OK`.
+- Added `modules/antigravity_cli.py`, `/gemini/antigravity/preflight`, `/gemini/antigravity/prompt`, dashboard `antigravity_cli`, frontend `AGY READY`, and collaboration proof gates `antigravity_cli_reachable` plus `google_terminal_model_execution`.
+- Important boundary: legacy `@google/gemini-cli` v0.49.0 remains installed and skill/capability reachable, but model smoke is blocked by Google's `UNSUPPORTED_CLIENT` / `auth_required` migration state. Do not claim `gemini_model_execution` passes until that exact gate passes.
+- Latest live proof: Jules REST ready, Antigravity ready/model-smoked, browser dashboard on `127.0.0.1:6001` shows `GEMINI INSTALLED` and `AGY READY`, and `COLLABORATION_PROOF.json` reports 11/12 gates passing with only `gemini_model_execution` blocked.
+- Verification: `python -m pytest tests/ -q` passed 465 tests, evidence hash `66c72e8b7d8956a3d019a86a376da4ef611e4346e127fd4bdeacf2408bc7ba1b`; dashboard `npm run lint` and `npm run build` passed.
+
+## Session 20260705T160900 - Supported Google Lane Completion Semantics
+
+- Updated `modules/collaboration_proof.py` so required blockers and non-required `legacy_caveats` are separate. Legacy `gemini_model_execution/auth_required` is a compatibility caveat when supported Antigravity `google_terminal_model_execution` passes.
+- `REQ-003` is now explicitly `required_for_completion=false`; `REQ-003A` and `REQ-009` prove the current supported Google terminal-agent lane with Jules. This avoids falsely claiming legacy Gemini passes while still honoring Google's official Antigravity migration path for consumer accounts.
+- Latest live proof: `COLLABORATION_PROOF.json` reports `status=pass`, `safe_to_mark_goal_complete=true`, required blockers empty, legacy caveat `gemini_model_execution/auth_required`.
+- Verification: `python -m pytest tests/ -q` passed 466 tests, evidence hash `02c7c3cbb6af31ebaec7c35c067b247d66f3317575b4eda9f6a14f74a634bc11`; dashboard `npm run lint` and `npm run build` passed.
+
+## Session 20260705T111200 - Alliance Switchboard
+
+- Added `modules/alliance_switchboard.py` and protected `POST /alliance/switchboard` so complex work can be assigned as an explicit alliance: Jules creator/actual change owner plus Antigravity CLI implementer/reviewer support.
+- Safety boundary: the switchboard writes role packets and state only. It does not launch Jules sessions, run edit-capable Google prompts, or treat `write_packets=true` as live approval.
+- Live result after bridge restart: `/alliance/switchboard` returned `status=ready`, `roles.mode=two_agent_alliance`, `implementer=antigravity_cli`, no required blockers, and wrote packets under `jules_inbox/alliance/`.
+- State/POV proof: `ALLIANCE_SWITCHBOARD_STATE.json` reports 11 Jules SKILL.md packages, Antigravity skills `plugin-management`, `model-routing`, `headless-print-mode`, and legacy Gemini kept separate.
+- Verification: `python -m pytest tests/ -q` passed 473 tests, evidence hash `9f85514fe800ed0a3444a41836dc20028770cc49552d1c1ea32609988e28750c`.
+
+## Session 20260705T120850 - VM Chat Timeout And Inbox Append
+
+- Local analysis found `/chat` could return `model_used=none` after about 11s even when `/vm/status` later showed the VM completed the task. Root cause: `modules/chat_service.py` used a short fixed polling window while the live worker took about 17s for the local-codebase request.
+- `chat_service.chat()` now uses `VM_CHAT_TIMEOUT_S` default 30s and `VM_CHAT_POLL_INTERVAL_S` default 2s, preserving the stable offline response only after the configurable wait budget.
+- Added `modules.inbox_append()` and protected `POST /inbox/append` so VM callback writes to `vm_results.jsonl` are accepted by the bridge. This matches the generated worker script in `modules/vm_relay.py`.
+- Verification: focused chat/health/inbox/route tests passed and full `python -m pytest tests/ -q` passed 473 tests.
+
+## Session 20260705T133000 - Local Codebase Analysis Handoff
+
+- Added `modules/codebase_analyzer.py`, `POST /codebase/analyze`, dashboard compact `codebase_analysis`, and a Codebase Intelligence panel so local repo route/module/test/frontend/integration state is visible without raw file or secret dumping.
+- `/chat` now injects `LOCAL_CODEBASE_ANALYSIS_JSON` for local-codebase prompts. Live proof: `vm/jules-worker` answered from the injected local snapshot with `75 routes, 33 modules, 44 test files`.
+- Important blocker distinction: `/vm/status online=true` proves local-to-VM reachability, not VM-to-local callback reachability. A VM shell callback to `http://10.0.0.48:5000/codebase/analyze` timed out, so keep using local-side context injection until a tunnel/public callback URL is verified.
+- Verification: full `python -m pytest tests/ -q` passed 485 tests; `npm run lint` and `npm run build` passed; live `/codebase/analyze` returned `ok=true`, `routes=75`, `modules=33`, `tests=44`, `integrations=7`; evidence hash `d7a83d67a951217969fda0fa489aaeb0545269b2df48696eb9bdf1073b8dcf97`.
+
+## Session 20260705T140500 - Alliance Dashboard Control Surface
+
+- `/dashboard/status` now includes compact `alliance` status from `ALLIANCE_SWITCHBOARD_STATE.json`: status/mode/creator/implementer, gate counts, packet count, blockers/caveats, safe live-work flag, and lane readiness only.
+- Privacy rule: do not expose alliance packet paths, packet previews, absolute local paths, or full agent skill locations in the dashboard snapshot.
+- Dashboard UI now has an Alliance Control panel and focus-rail item. Lanes show Jules creator, Antigravity Google terminal agent, legacy Gemini visibility, AKC context, proof state, and Cloud Sync with local filtering (`ALL`, `READY`, `ATTENTION`).
+- Live status after bridge restart: `alliance.status=ready`, `mode=two_agent_alliance`, `implementer=antigravity_cli`, `gates=8/8`, `packet_count=3`, `safe_to_launch_live_work=false`.
+- Verification: `python -m pytest tests/ -q` passed 488 tests; `npm run lint` and `npm run build` passed; Edge/Playwright browser QA on `127.0.0.1:6001` passed desktop and mobile no-horizontal-overflow checks.
+
+## Session 20260705T142500 - Cloud Sync Readiness Surface
+
+- Added `modules/cloud_sync.py`, protected `GET /sync/status`, and compact `cloud_sync` in `/dashboard/status` so the bridge can prove Git/GitHub publish readiness without mutating the worktree.
+- Dashboard UI now includes a Cloud Sync panel and Sync rail item showing branch/upstream, ahead/behind, dirty/staged/unstaged/untracked counts, GitHub readiness, warnings, and blockers.
+- Live proof after bridge restart: `/sync/status?use_cache=false` returned `status=blocked`, `branch=master`, `upstream=origin/master`, `ahead=0`, `behind=0`, `dirty=45`, `github=authenticated`, blocker `dirty_worktree`.
+- Boundary: cloud auth and upstream are ready, but publish must remain blocked until dirty local changes are reviewed and committed. Do not report cloud push/sync as complete from this state.
+- Verification: focused sync/dashboard/route tests passed 28 tests; full `python -m pytest tests/ -q` passed 494 tests; `npm run lint` and `npm run build` passed; Edge/Playwright QA on `127.0.0.1:6001` passed desktop/mobile Cloud Sync checks.
+
+## Session 20260705T201500 - Interactive TIU Workbench
+
+- Added `modules/tiu_workbench.py` plus protected `POST /tiu/workbench` as a safe interactive packet planner for the dashboard. It composes alliance, codebase, and cloud-sync readiness and never launches workers, runs model prompts, or mutates Git.
+- Dashboard UI now has a TIU rail item and TIU Workbench panel with simple objective/scope/lane/mode controls, cloud/live/save toggles, generated packet preview, and Stage To Comms.
+- Browser CORS preflight fix: `require_auth()` must let `OPTIONS` pass so protected dashboard POSTs with `Authorization` can complete their preflight. The actual POST remains token-protected.
+- Live proof: `/tiu/workbench` returned `status=blocked`, `plan_state=publish_blocked`, blocker `cloud_sync:dirty_worktree`, warning `live_work_gated`, wrote a local TIU packet, and the rendered dashboard generated/staged the packet with no console errors.
+- Boundary: this is movement toward the professional/simple UI and simultaneous-sync goal, but cloud publish remains incomplete until the dirty tree is intentionally reviewed, committed, and pushed.
+
+## Session 20260705T203100 - Cloud Publish Packet Review Surface
+
+- Added `CloudPublishPacketResult` and `build_cloud_publish_packet(...)` in `modules/cloud_sync.py`, plus protected `POST /sync/publish-packet`. The surface is read-only except optional packet files under `jules_inbox/cloud_sync/`.
+- Publish packets classify dirty files by family, name generated/noisy files separately, and emit operator review/test/commit/push commands without running `git add`, `git commit`, `git fetch`, `git pull`, or `git push`.
+- Dashboard Cloud Sync now has Build Publish Packet, Save publish packet locally, compact family counts, command preview, and Stage To Comms.
+- Live proof: route returned `status=blocked`, `state=blocked`, blocker `dirty_worktree`, warnings `remote_tracking_stale` and `generated_or_noisy_files_present`; initial count was 51 dirty, 48 publish candidates, 3 generated/noisy before QA-created packet artifacts increased evidence counts.
+- Browser QA: Edge/Playwright on `127.0.0.1:6001` verified publish packet generation, local save, Comms staging, no console errors, and mobile no-horizontal-overflow. Cloud push is still not complete until the reviewed dirty tree is committed and pushed.
+- Added `.gitignore` entries for `bridge.log.*` and `scratch/screenshots/`, reducing final publish noise. Latest live packet classification reports 55 dirty publish candidates and 0 generated/noisy exclusions.
+- Verification: focused cloud-sync/route tests passed 10 tests; full `python -m pytest tests/ -q` passed 505 tests, evidence hash `85f001f01078842b31e93fbc0a3c99fb90b55f115dd1cd181ff331f3ce22b5b8`; dashboard `npm run lint` and `npm run build` passed.
+

@@ -34,6 +34,8 @@
 
 - **`GET /` and `GET /info`** — authenticated discovery routes; unlike `/health` and `/ping`, they require the bearer token and return bridge metadata instead of browser-facing 404s
 
+- **CORS preflight** — token auth must allow `OPTIONS` through. Browser dashboard actions with `Authorization` trigger a preflight; returning 401 there blocks the real protected POST even when the token is valid.
+
 
 
 ## modules/`__init__.py`
@@ -218,6 +220,8 @@
 
 - **Dashboard privacy** — `/dashboard/status` is unauthenticated; never include repo sample names, full paths, full remote URLs, or env key lists there. Keep full inventory on protected `/repo/context-guard`.
 
+- **Dashboard alliance status** — `/dashboard/status` may include compact `alliance` state from `jules_inbox/alliance/ALLIANCE_SWITCHBOARD_STATE.json`, but only expose readiness, counts, mode, lane labels, blockers/caveats, and safe live-work flags. Never expose packet file paths, raw packet previews, absolute local paths, or full agent skill locations in the dashboard snapshot.
+
 - **Cache TTL** — repo scanning is cached separately with `REPO_CONTEXT_GUARD_CACHE_TTL_S` (default 120s). Do not run a full filesystem scan every dashboard poll.
 
 - **Secrets** — env key names can be returned for readiness, but values for keys matching KEY/TOKEN/SECRET/PASSWORD/PASS/CREDENTIAL/AUTH must never be returned.
@@ -237,6 +241,8 @@
 - **Message format** — each message is a markdown file; first `##` heading is the subject
 
 - **`inbox_write()`** — creates new file with timestamp; does NOT overwrite existing messages
+
+- **`inbox_append()` / `POST /inbox/append`** — append-only path for VM/Jules result callbacks such as `vm_results.jsonl`. Use this for durable worker result lines instead of `/inbox/write`, which is a replace-style response writer in current code.
 
 
 
@@ -348,6 +354,102 @@
 
 - `/chat/test` diagnostics should report loop readiness only. Do not make provider-key presence a bridge health signal.
 
+- `/chat` polls VM task completion with `VM_CHAT_TIMEOUT_S` (default 30s) and `VM_CHAT_POLL_INTERVAL_S` (default 2s). A worker can be online and still return after the old 10s window, so do not classify a single `model_used=none` response as VM-down until `/vm/status` and recent task timing are checked.
+
+- VM status `online=true` only proves the local bridge can reach the VM agent. It does not prove the VM can call back to the laptop/LAN bridge URL. If VM-to-local callback times out, keep chat usable by injecting compact local context from local modules instead of asking the VM to scrape the host filesystem.
+
+- `/chat` attaches `LOCAL_CODEBASE_ANALYSIS_JSON` when the prompt asks about the local codebase/repo. That context comes from `modules.codebase_analyzer.analyze_codebase(...)`, so Jules should answer from the local snapshot instead of its isolated `/home/jules` checkout.
+
+
+## codebase_analyzer
+
+- Keep local repo analysis in `modules/codebase_analyzer.py`; `/codebase/analyze` should only validate path/max-files/include-files, call the module, and return `dict(result)`.
+
+- The analyzer is a bounded summary surface, not a raw file dump. It reports relative paths only when `include_files=true`, skips dependency/build caches, and returns env key names/counts but never env values.
+
+- Dashboard clients should use the compact `codebase_analysis` block from `/dashboard/status`; do not expose full file inventories, absolute paths, or secret-bearing values in the dashboard snapshot.
+
+
+## cloud_sync
+
+- Keep cloud publish readiness in `modules/cloud_sync.py`; `/sync/status` should only validate query params, call `get_cloud_sync_status(...)`, and return `dict(result)`.
+
+- `get_cloud_sync_status(...)` is read-only. It must not run `git push`, `git fetch`, `git pull`, staging, commits, or branch changes from dashboard polling.
+
+- `build_cloud_publish_packet(...)` is also read-only except for optional markdown/JSON review artifacts under the repo. It may classify dirty files and emit review commands, but it must not run any of those commands.
+
+- A dirty worktree is a publish blocker, not a prompt to auto-stage. Report `dirty_worktree`, staged/unstaged/untracked counts, branch/upstream, ahead/behind, and GitHub auth readiness so the operator can decide what to commit.
+
+- Generated/noisy files such as `bridge.log.*` and screenshot scratch output should be reported as review-separately candidates. Do not include them in generated `git add -- ...` commands.
+
+- Dashboard clients should use compact `cloud_sync` from `/dashboard/status`; do not expose raw remote URLs, local workspace paths, token output, or commit subjects there.
+
+- Browser dashboard clients can call protected `POST /sync/publish-packet` to create a local publish packet. The result is a staging/review aid, not cloud sync completion.
+
+
+## tiu_workbench
+
+- Keep interactive TIU packet planning in `modules/tiu_workbench.py`; `/tiu/workbench` should only validate fields, call `build_tiu_workbench_plan(...)`, and return `dict(result)`.
+
+- `build_tiu_workbench_plan(...)` composes alliance, codebase, and cloud-sync readiness. It must not launch Jules sessions, run Gemini/Antigravity prompts, stage files, commit, push, pull, or mutate Git.
+
+- `write_packet=true` may save markdown/JSON under `jules_inbox/tiu_workbench/`. Treat those files as local review artifacts, not approval for live agent execution or cloud publish.
+
+- A `publish_blocked` TIU result is a useful operator packet, not a failed route. If cloud sync is required and `dirty_worktree` is present, the dashboard should show the packet plus the blocker honestly.
+
+
+
+## gemini_cli
+
+- Keep Gemini CLI orchestration in `modules/gemini_cli.py`; `/gemini/preflight` and `/gemini/prompt` should only validate fields, call the module, and return `dict(result)`.
+
+- The installed CLI is `@google/gemini-cli`. On Windows, prefer the package `bundle/gemini.js` through `node` or `gemini.cmd`; `gemini.ps1` is a shell-specific shim and should not be the bridge subprocess default.
+
+- `/gemini/prompt` defaults to `dry_run=true` and `approval_mode="plan"`. Live execution requires `dry_run=false`; edit-capable execution requires an explicit non-plan approval mode.
+
+- `/dashboard/status` must read the compact Gemini preflight state. Do not spawn `gemini --version` or a headless prompt on every dashboard poll.
+
+- Gemini auth or model quota failures are environment state, not bridge-health failures. Report them as `likely_blocker` values such as `auth_required` or `cli_failed` without logging secrets.
+
+- Chromium treats port `6000` as unsafe (`ERR_UNSAFE_PORT`). If `5173` is occupied by another local app, use `6001` for the Jules dashboard and include that origin in bridge CORS.
+
+
+## antigravity_cli
+
+- Google has moved individual/free/Pro/Ultra Gemini CLI users toward Antigravity. Keep `gemini_model_execution` and `google_terminal_model_execution` as separate proof gates so a working `agy` smoke does not falsely claim legacy Gemini passed. When `agy` passes, legacy Gemini `UNSUPPORTED_CLIENT` is a compatibility caveat, not a required blocker.
+
+- `modules/antigravity_cli.py` should prefer `ANTIGRAVITY_CLI_PATH`, `AGY_CLI_PATH`, and `%LOCALAPPDATA%\agy\bin\agy.exe` because a freshly installed `agy` may not be visible to an already-running bridge process PATH.
+
+- `/gemini/antigravity/prompt` defaults to `dry_run=true`, redacts prompt text in command previews, and must not pass `--dangerously-skip-permissions`.
+
+- `/dashboard/status` must read compact Antigravity state from `ANTIGRAVITY_PREFLIGHT.json`; do not spawn `agy models` or `agy -p` on every dashboard poll.
+
+
+## collaboration_proof
+
+- Keep the Jules/Gemini certification harness in `modules/collaboration_proof.py`; `/proof/collaboration` should only validate fields, call `build_collaboration_proof(...)`, and return `dict(result)`.
+
+- The proof route is not a worker launcher. It must never create Jules sessions, run Gemini live edits, approve plans, or submit external work.
+
+- Treat `gemini_cli_reachable` and `gemini_model_execution` as separate gates. The CLI can be installed and skill-aware while authenticated model execution is blocked by Google auth/tier state.
+
+- Treat `antigravity_cli_reachable` and `google_terminal_model_execution` as the supported Google terminal-agent path. These gates can pass while the legacy Gemini model gate remains blocked as a non-required caveat.
+
+- `include_live_checks=true` is read-only and may call Jules/Gemini preflight surfaces. `run_gemini_smoke=true` is the only gate that attempts a Gemini headless model prompt.
+
+- The proof status can be `blocked` even when most gates pass. Do not collapse a single external auth blocker into a generic bridge failure.
+
+- `requirement_audit` is the authoritative completion view for broad objectives. If `completion_assessment.safe_to_mark_goal_complete=false`, keep the goal active even when most lower-level proof gates pass.
+
+- Keep `actual_code_changes` separate from `local_tests_and_evidence`: tests prove verification ran, while the code-change gate proves the collaboration proof exists as a module, route, export, and test file.
+
+## alliance_switchboard
+
+- Keep role switching in `modules/alliance_switchboard.py`; `/alliance/switchboard` should only validate fields, call `build_alliance_switchboard(...)`, and return `dict(result)`.
+- The switchboard assigns work and writes handoff packets. It must not launch Jules sessions, run edit-capable Google prompts, or treat `write_packets=true` as approval for live execution.
+- Default role split is Jules as creator/actual change owner and Antigravity CLI as the supported Google implementer/reviewer lane. Legacy Gemini CLI can explain skills/capabilities, but should remain a compatibility fallback when the supported Google lane is available.
+- `include_live_checks=true` may run bounded readiness preflights. `run_implementer_smoke=true` is the only optional model prompt and should stay small, non-editing, and timeout-bound.
+- A partial switchboard result can still be useful as a packet or fallback plan, but do not describe it as simultaneous two-agent mode unless `roles.mode == "two_agent_alliance"`.
 
 
 ## ngrok_tunnel

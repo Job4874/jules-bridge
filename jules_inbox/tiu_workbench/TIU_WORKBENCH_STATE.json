@@ -1,0 +1,77 @@
+{
+  "status": "blocked",
+  "plan_state": "publish_blocked",
+  "generated_at_utc": "2026-07-05T20:18:06.979668+00:00",
+  "objective": "Build and verify a polished interactive TIU workbench with safe cloud sync gates.",
+  "controls": {
+    "scope": "dashboard",
+    "model_lane": "alliance",
+    "mode": "design_review",
+    "require_cloud_sync": true,
+    "include_live_checks": false,
+    "write_packet": true
+  },
+  "target_files": [
+    "dashboard-ui/src/App.jsx",
+    "dashboard-ui/src/dashboardModel.js",
+    "dashboard-ui/src/index.css",
+    "modules/dashboard_module.py",
+    "tests/test_dashboard_module.py"
+  ],
+  "readiness": {
+    "alliance": {
+      "status": "ready",
+      "summary": "8/8 switchboard gates passed; Jules creator and antigravity_cli implementer are assigned.",
+      "mode": "two_agent_alliance",
+      "implementer": "antigravity_cli",
+      "ready": true,
+      "safe_to_launch_live_work": false
+    },
+    "codebase": {
+      "status": "ready",
+      "route_count": 77,
+      "module_count": 35,
+      "test_count": 46,
+      "integration_ready_count": 7
+    },
+    "cloud_sync": {
+      "status": "blocked",
+      "state": "blocked",
+      "branch": "master",
+      "upstream": "origin/master",
+      "remote_host": "github.com",
+      "ahead": 0,
+      "behind": 0,
+      "dirty_count": 50,
+      "github_authenticated": true,
+      "publish_ready": false,
+      "synced": false,
+      "blockers": [
+        "dirty_worktree"
+      ],
+      "warnings": [
+        "remote_tracking_stale"
+      ]
+    }
+  },
+  "blockers": [
+    "cloud_sync:dirty_worktree"
+  ],
+  "warnings": [
+    "live_work_gated",
+    "cloud_sync:remote_tracking_stale"
+  ],
+  "packet": "# TIU Workbench Packet\n\n- objective: Build and verify a polished interactive TIU workbench with safe cloud sync gates.\n- scope: dashboard\n- mode: design_review\n- model_lane: alliance\n- cloud_sync_required: true\n\n## Lanes\n\n- Jules: creator and actual-change owner\n- Google terminal agent: antigravity_cli implementer/reviewer support\n- Codex: local dependency, route, test, and browser verification owner\n\n## Target Files\n\n- dashboard-ui/src/App.jsx\n- dashboard-ui/src/dashboardModel.js\n- dashboard-ui/src/index.css\n- modules/dashboard_module.py\n- tests/test_dashboard_module.py\n\n## Readiness\n\n- alliance: ready (8/8 switchboard gates passed; Jules creator and antigravity_cli implementer are assigned.)\n- codebase: 77 routes, 35 modules, 46 tests\n- cloud_sync: blocked on master -> origin/master; 50 dirty\n\n## Operator Gates\n\n- BLOCKED: cloud_sync:dirty_worktree\n- WARNING: live_work_gated\n- WARNING: cloud_sync:remote_tracking_stale\n\n## Next Actions\n\n1. Review this packet and target scope.\n2. Keep live Jules launch and Google edit prompts disabled unless explicitly approved.\n3. Implement locally, run focused tests, then browser QA on the Jules dashboard.\n4. Resolve cloud sync blockers before claiming push/simultaneous sync complete.",
+  "safety_policy": {
+    "dry_run_first": true,
+    "jules_sessions_created": false,
+    "google_prompts_run": false,
+    "git_mutations": false,
+    "secret_values_returned": false
+  },
+  "artifacts": {
+    "packet_written": false,
+    "packet_path": "",
+    "state_path": ""
+  }
+}

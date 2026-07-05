@@ -50,6 +50,19 @@ class TestInboxRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "Invalid input")
 
+    @patch("modules.inbox_append")
+    def test_inbox_append_delegates_to_module(self, mock_append):
+        mock_append.return_value = {"status": "success", "file": "vm_results.jsonl", "mode": "append"}
+
+        response = self.client.post(
+            "/inbox/append",
+            json={"file": "vm_results.jsonl", "content": "{\"status\":\"done\"}"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["mode"], "append")
+        mock_append.assert_called_once_with(content="{\"status\":\"done\"}", file="vm_results.jsonl")
+
 
 class TestJulesDispatchRoute(unittest.TestCase):
     def setUp(self):
@@ -498,6 +511,34 @@ class TestFsRoutes(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             with open(path, "r", encoding="utf-8") as handle:
                 self.assertEqual(handle.read(), "ok")
+
+    @patch("modules.analyze_codebase")
+    def test_codebase_analyze_route_is_thin(self, mock_analyze):
+        mock_analyze.return_value = {
+            "ok": True,
+            "status": "ready",
+            "summary": {"file_count": 10},
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            response = self.client.post(
+                "/codebase/analyze",
+                json={"path": tmp_dir, "max_files": 120, "include_files": True},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["summary"]["file_count"], 10)
+        mock_analyze.assert_called_once_with(
+            root_path=tmp_dir,
+            max_files=120,
+            include_files=True,
+        )
+
+    def test_codebase_analyze_rejects_missing_root(self):
+        response = self.client.post("/codebase/analyze", json={"path": r"C:\definitely\missing-repo"})
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["error"], "Resource not found")
 
 
 class TestShellRoute(unittest.TestCase):
@@ -1051,6 +1092,142 @@ class TestRepoContextGuardRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()["error"], "Invalid input")
 
 
+class TestSyncStatusRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.get_cloud_sync_status")
+    def test_sync_status_delegates_to_module(self, mock_sync):
+        mock_sync.return_value = {
+            "status": "blocked",
+            "state": "blocked",
+            "blockers": ["dirty_worktree"],
+        }
+
+        response = self.client.get("/sync/status?root=C:/repos/jules-bridge&timeout_s=6&use_cache=false")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["state"], "blocked")
+        mock_sync.assert_called_once_with(
+            root="C:/repos/jules-bridge",
+            timeout_s=6,
+            use_cache=False,
+        )
+
+    def test_sync_status_rejects_bad_query(self):
+        response = self.client.get("/sync/status?timeout_s=slow")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    @patch("modules.build_cloud_publish_packet")
+    def test_sync_publish_packet_delegates_to_module(self, mock_packet):
+        mock_packet.return_value = {
+            "status": "blocked",
+            "state": "blocked",
+            "blockers": ["dirty_worktree"],
+            "packet": "# Cloud Publish Packet\n",
+        }
+
+        response = self.client.post(
+            "/sync/publish-packet",
+            json={
+                "root": "C:/repos/jules-bridge",
+                "objective": "Publish dashboard work",
+                "timeout_s": 9,
+                "use_cache": False,
+                "write_packet": True,
+                "output_dir": "jules_inbox/cloud_sync",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["state"], "blocked")
+        mock_packet.assert_called_once_with(
+            root="C:/repos/jules-bridge",
+            objective="Publish dashboard work",
+            timeout_s=9,
+            use_cache=False,
+            write_packet=True,
+            output_dir="jules_inbox/cloud_sync",
+        )
+
+    def test_sync_publish_packet_rejects_bad_timeout(self):
+        response = self.client.post("/sync/publish-packet", json={"timeout_s": "slow"})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+
+class TestTIUWorkbenchRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.build_tiu_workbench_plan")
+    def test_tiu_workbench_delegates_to_module(self, mock_tiu):
+        mock_tiu.return_value = {
+            "status": "blocked",
+            "plan_state": "publish_blocked",
+            "blockers": ["cloud_sync:dirty_worktree"],
+        }
+
+        response = self.client.post(
+            "/tiu/workbench",
+            json={
+                "objective": "Improve the dashboard TIU",
+                "scope": "dashboard",
+                "model_lane": "alliance",
+                "mode": "design_review",
+                "target_files": ["dashboard-ui/src/App.jsx"],
+                "require_cloud_sync": True,
+                "include_live_checks": False,
+                "write_packet": True,
+                "timeout_s": 7,
+                "output_dir": "jules_inbox/tiu_workbench",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["plan_state"], "publish_blocked")
+        mock_tiu.assert_called_once_with(
+            objective="Improve the dashboard TIU",
+            scope="dashboard",
+            model_lane="alliance",
+            mode="design_review",
+            target_files=["dashboard-ui/src/App.jsx"],
+            require_cloud_sync=True,
+            include_live_checks=False,
+            write_packet=True,
+            timeout_s=7,
+            output_dir="jules_inbox/tiu_workbench",
+        )
+
+    def test_tiu_workbench_requires_objective(self):
+        response = self.client.post("/tiu/workbench", json={"scope": "dashboard"})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    def test_tiu_workbench_allows_cors_preflight_without_token(self):
+        raw_client = bridge.app.test_client()
+
+        response = raw_client.open(
+            "/tiu/workbench",
+            method="OPTIONS",
+            headers={
+                "Origin": "http://127.0.0.1:6001",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), "http://127.0.0.1:6001")
+        self.assertIn("POST", response.headers.get("Allow", ""))
+
+
 class TestVMRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
@@ -1227,6 +1404,226 @@ class TestBridgeTokenAuth(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json()["error"], "Resource not found")
         mock_send.assert_not_called()
+
+
+class TestGeminiRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.gemini_preflight")
+    def test_gemini_preflight_delegates_to_module(self, mock_preflight):
+        mock_preflight.return_value = {"ready": True, "installed": True, "version": {"stdout": "0.49.0\n"}}
+
+        response = self.client.post(
+            "/gemini/preflight",
+            json={
+                "gemini_command": "gemini",
+                "timeout_s": 4,
+                "run_smoke": True,
+                "smoke_prompt": "ready?",
+                "model": "gemini-3-pro",
+                "cwd": r"C:\repo",
+                "write_state": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["ready"])
+        mock_preflight.assert_called_once_with(
+            gemini_command="gemini",
+            timeout_s=4,
+            run_smoke=True,
+            smoke_prompt="ready?",
+            model="gemini-3-pro",
+            cwd=r"C:\repo",
+            write_state=False,
+            state_path="",
+        )
+
+    @patch("modules.run_gemini_prompt")
+    def test_gemini_prompt_defaults_to_dry_run_plan_mode(self, mock_prompt):
+        mock_prompt.return_value = {"status": "dry_run", "dry_run": True}
+
+        response = self.client.post(
+            "/gemini/prompt",
+            json={"prompt": "Inspect the repo"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "dry_run")
+        mock_prompt.assert_called_once_with(
+            prompt="Inspect the repo",
+            cwd="",
+            model="",
+            approval_mode="plan",
+            output_format="text",
+            timeout_s=120,
+            gemini_command="gemini",
+            dry_run=True,
+            trust_workspace=True,
+            write_state=True,
+            state_path="",
+        )
+
+    def test_gemini_prompt_rejects_missing_prompt(self):
+        response = self.client.post("/gemini/prompt", json={})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    @patch("modules.antigravity_preflight")
+    def test_antigravity_preflight_delegates_to_module(self, mock_preflight):
+        mock_preflight.return_value = {"ready": True, "installed": True, "version": {"stdout": "1.0.16\n"}}
+
+        response = self.client.post(
+            "/gemini/antigravity/preflight",
+            json={
+                "agy_command": "agy",
+                "timeout_s": 4,
+                "run_smoke": True,
+                "smoke_prompt": "ready?",
+                "model": "Gemini 3.5 Flash (High)",
+                "cwd": r"C:\repo",
+                "write_state": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["ready"])
+        mock_preflight.assert_called_once_with(
+            agy_command="agy",
+            timeout_s=4,
+            run_smoke=True,
+            smoke_prompt="ready?",
+            model="Gemini 3.5 Flash (High)",
+            cwd=r"C:\repo",
+            write_state=False,
+            state_path="",
+        )
+
+    @patch("modules.run_antigravity_prompt")
+    def test_antigravity_prompt_defaults_to_dry_run(self, mock_prompt):
+        mock_prompt.return_value = {"status": "dry_run", "dry_run": True}
+
+        response = self.client.post(
+            "/gemini/antigravity/prompt",
+            json={"prompt": "Inspect the repo"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "dry_run")
+        mock_prompt.assert_called_once_with(
+            prompt="Inspect the repo",
+            cwd="",
+            model="",
+            timeout_s=120,
+            agy_command="agy",
+            dry_run=True,
+            write_state=True,
+            state_path="",
+        )
+
+    def test_antigravity_prompt_rejects_missing_prompt(self):
+        response = self.client.post("/gemini/antigravity/prompt", json={})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+
+class TestCollaborationProofRoute(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.build_collaboration_proof")
+    def test_collaboration_proof_delegates_to_module(self, mock_proof):
+        mock_proof.return_value = {"status": "partial", "gates": []}
+
+        response = self.client.post(
+            "/proof/collaboration",
+            json={
+                "include_live_checks": True,
+                "run_gemini_smoke": True,
+                "timeout_s": 15,
+                "write_state": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "partial")
+        mock_proof.assert_called_once_with(
+            include_live_checks=True,
+            run_gemini_smoke=True,
+            timeout_s=15,
+            write_state=False,
+            state_path="",
+        )
+
+    def test_collaboration_proof_validates_boolean_fields(self):
+        response = self.client.post(
+            "/proof/collaboration",
+            json={"run_gemini_smoke": "yes"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+
+class TestAllianceSwitchboardRoute(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.build_alliance_switchboard")
+    def test_alliance_switchboard_delegates_to_module(self, mock_switchboard):
+        mock_switchboard.return_value = {"status": "ready", "roles": {}}
+
+        response = self.client.post(
+            "/alliance/switchboard",
+            json={
+                "objective": "Create the real thing with Jules and Google CLI",
+                "target_files": ["bridge.py", "modules/alliance_switchboard.py"],
+                "complexity": "complex",
+                "preferred_creator": "jules",
+                "preferred_implementer": "antigravity_cli",
+                "include_live_checks": True,
+                "run_implementer_smoke": True,
+                "write_packets": True,
+                "state_path": r"C:\tmp\alliance",
+                "timeout_s": 20,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "ready")
+        mock_switchboard.assert_called_once_with(
+            objective="Create the real thing with Jules and Google CLI",
+            target_files=["bridge.py", "modules/alliance_switchboard.py"],
+            complexity="complex",
+            preferred_creator="jules",
+            preferred_implementer="antigravity_cli",
+            include_live_checks=True,
+            run_implementer_smoke=True,
+            write_packets=True,
+            state_path=r"C:\tmp\alliance",
+            timeout_s=20,
+        )
+
+    def test_alliance_switchboard_requires_objective(self):
+        response = self.client.post("/alliance/switchboard", json={})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+    def test_alliance_switchboard_validates_target_files(self):
+        response = self.client.post(
+            "/alliance/switchboard",
+            json={"objective": "x", "target_files": "bridge.py"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
 
 
 class TestChatRoutes(unittest.TestCase):

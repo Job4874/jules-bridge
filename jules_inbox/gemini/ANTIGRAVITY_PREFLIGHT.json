@@ -1,0 +1,94 @@
+{
+  "generated_at_utc": "2026-07-05T20:25:06.369439+00:00",
+  "ready": true,
+  "installed": true,
+  "likely_blocker": "",
+  "agy_command": "agy",
+  "resolved_antigravity_command": "C:\\Users\\abdul\\AppData\\Local\\agy\\bin\\agy.exe",
+  "preferred_antigravity_command": "C:\\Users\\abdul\\AppData\\Local\\agy\\bin\\agy.exe",
+  "candidate_commands": [
+    {
+      "label": "requested",
+      "requested": "agy",
+      "resolved": "agy",
+      "exists": false
+    },
+    {
+      "label": "localappdata_agy",
+      "requested": "C:\\Users\\abdul\\AppData\\Local\\agy\\bin\\agy.exe",
+      "resolved": "C:\\Users\\abdul\\AppData\\Local\\agy\\bin\\agy.exe",
+      "exists": true
+    },
+    {
+      "label": "home_agy",
+      "requested": "C:\\Users\\abdul\\.antigravity\\bin\\agy.exe",
+      "resolved": "C:\\Users\\abdul\\.antigravity\\bin\\agy.exe",
+      "exists": false
+    }
+  ],
+  "version": {
+    "exit_code": 0,
+    "stdout": "1.0.16\n",
+    "stderr": "",
+    "timed_out": false,
+    "elapsed_ms": 194.12
+  },
+  "capabilities": {
+    "headless_mode": "-p/--print",
+    "plugin_management": "plugin list/install/uninstall/enable/disable",
+    "subcommands": [
+      "changelog",
+      "help",
+      "install",
+      "models",
+      "plugin",
+      "plugins",
+      "update"
+    ],
+    "models": {
+      "exit_code": 0,
+      "stdout": "Gemini 3.5 Flash (Medium)\nGemini 3.5 Flash (High)\nGemini 3.5 Flash (Low)\nGemini 3.1 Pro (Low)\nGemini 3.1 Pro (High)\nClaude Sonnet 4.6 (Thinking)\nClaude Opus 4.6 (Thinking)\nGPT-OSS 120B (Medium)\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ms": 2048.16
+    },
+    "plugin_list": {
+      "exit_code": 0,
+      "stdout": "No imported plugins.\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ms": 327.37
+    }
+  },
+  "auth_indicators": {
+    "known_config_paths": [
+      {
+        "path": "C:\\Users\\abdul\\AppData\\Local\\agy",
+        "exists": true,
+        "item_count": 1
+      },
+      {
+        "path": "C:\\Users\\abdul\\AppData\\Local\\antigravity",
+        "exists": true,
+        "item_count": 1
+      },
+      {
+        "path": "C:\\Users\\abdul\\.gemini\\antigravity-cli",
+        "exists": true,
+        "item_count": 17
+      },
+      {
+        "path": "C:\\Users\\abdul\\.gemini\\antigravity-ide",
+        "exists": true,
+        "item_count": 11
+      }
+    ],
+    "any_known_config_path_exists": true
+  },
+  "smoke": {
+    "status": "skipped",
+    "note": "Set run_smoke=true to verify noninteractive model execution."
+  },
+  "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\gemini\\ANTIGRAVITY_PREFLIGHT.json",
+  "note": "Antigravity is Google's supported terminal-agent CLI successor for individual Gemini CLI users; model execution is only checked when run_smoke=true."
+}

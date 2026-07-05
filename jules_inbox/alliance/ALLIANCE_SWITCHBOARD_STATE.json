@@ -1,0 +1,482 @@
+{
+  "generated_at_utc": "2026-07-05T17:11:21.633201+00:00",
+  "status": "ready",
+  "summary": "8/8 switchboard gates passed; Jules creator and antigravity_cli implementer are assigned.",
+  "objective": "Create a complex codebase alliance where Jules owns actual change creation and the supported Google terminal agent implements/reviews with dry-run-first controls.",
+  "complexity": "complex",
+  "target_files": [
+    "bridge.py",
+    "modules/alliance_switchboard.py",
+    "modules/__init__.py",
+    "tests/test_alliance_switchboard.py",
+    "tests/test_bridge_routes.py"
+  ],
+  "roles": {
+    "switch_controller": {
+      "agent": "jules_bridge_codex",
+      "owns": [
+        "classify task complexity",
+        "keep live execution gated",
+        "route work to creator and implementer lanes",
+        "collect proof before completion"
+      ],
+      "code_surfaces": [
+        "POST /alliance/switchboard",
+        "POST /proof/collaboration"
+      ]
+    },
+    "creator": {
+      "agent": "jules",
+      "preferred_agent": "jules",
+      "owns": [
+        "actual change plan",
+        "patch or worker packet creation",
+        "repo-specific context application",
+        "completion ledger back to the bridge"
+      ],
+      "code_surfaces": [
+        "modules/jules_orchestrator.py",
+        "POST /jules/dispatch",
+        "POST /jules/cycle",
+        "POST /jules/fleet-watch",
+        "POST /jules/api/sessions"
+      ],
+      "objective": "Create a complex codebase alliance where Jules owns actual change creation and the supported Google terminal agent implements/reviews with dry-run-first controls.",
+      "target_files": [
+        "bridge.py",
+        "modules/alliance_switchboard.py",
+        "modules/__init__.py",
+        "tests/test_alliance_switchboard.py",
+        "tests/test_bridge_routes.py"
+      ]
+    },
+    "implementer": {
+      "agent": "antigravity_cli",
+      "preferred_agent": "antigravity_cli",
+      "selection": "preferred",
+      "owns": [
+        "implementation critique and local-code suggestions",
+        "model/plugin capability explanation",
+        "bounded prompt response for complex codebase questions",
+        "second-opinion review before live launch"
+      ],
+      "code_surfaces": [
+        "modules/antigravity_cli.py",
+        "POST /gemini/antigravity/preflight",
+        "POST /gemini/antigravity/prompt"
+      ]
+    },
+    "verifier": {
+      "agent": "jules_bridge_tests",
+      "owns": [
+        "py_compile",
+        "focused pytest",
+        "full pytest when the touched surface is broad",
+        "recorded evidence hash"
+      ],
+      "code_surfaces": [
+        "tests/",
+        "POST /retrospective/record_evidence"
+      ]
+    },
+    "mode": "two_agent_alliance",
+    "complexity": "complex"
+  },
+  "active_implementer": {
+    "name": "antigravity_cli",
+    "selection": "preferred",
+    "separate_agent": true,
+    "reason": "Supported Google terminal agent is ready."
+  },
+  "switching_policy": {
+    "preferred": {
+      "creator": "jules",
+      "implementer": "antigravity_cli"
+    },
+    "active": {
+      "creator": "jules",
+      "implementer": "antigravity_cli",
+      "selection": "preferred"
+    },
+    "decision_table": [
+      {
+        "condition": "complex task and Jules ready and Antigravity ready",
+        "route": "Jules creates the patch/worker packet; Antigravity implements/reviews through dry-run prompt support."
+      },
+      {
+        "condition": "Jules ready but Antigravity unavailable",
+        "route": "Jules owns creation and implementation; bridge marks alliance as partial until the Google lane is restored."
+      },
+      {
+        "condition": "Antigravity ready but Jules unavailable",
+        "route": "Antigravity can analyze, but actual change creation is blocked until Jules or Codex owns the patch."
+      },
+      {
+        "condition": "legacy Gemini installed but model smoke blocked",
+        "route": "Use it only for capability/skill visibility; prefer Antigravity for supported model execution."
+      },
+      {
+        "condition": "any live execution requested",
+        "route": "Require explicit route-specific live flags, bounded timeout, proof capture, and no secret printing."
+      }
+    ],
+    "handoff_contract": [
+      "creator returns changed files, tests run, blockers, and next action",
+      "implementer returns reasoning, suggested patch scope, and risk list",
+      "switch controller records proof before calling the goal complete"
+    ]
+  },
+  "workflow": [
+    {
+      "step": "classify",
+      "owner": "switch_controller",
+      "action": "Treat this as complex; choose two_agent_alliance."
+    },
+    {
+      "step": "context",
+      "owner": "switch_controller",
+      "action": "Load AKC/context and target file inventory before any implementation prompt."
+    },
+    {
+      "step": "creator_plan",
+      "owner": "jules",
+      "action": "Produce the concrete change plan, affected files, test plan, and blocker list."
+    },
+    {
+      "step": "implementer_review",
+      "owner": "antigravity_cli",
+      "action": "Review or draft implementation details through dry-run-first terminal-agent prompts."
+    },
+    {
+      "step": "apply_change",
+      "owner": "jules_or_codex_operator",
+      "action": "Apply code only after the plan is bounded and live flags are explicit."
+    },
+    {
+      "step": "verify",
+      "owner": "verifier",
+      "action": "Run focused tests, full tests when needed, and record evidence hash."
+    }
+  ],
+  "agent_views": {
+    "jules": {
+      "point_of_view": "I am Jules in this bridge: I own asynchronous creation work, worker packets, patches, completion ledgers, and repo-specific execution.",
+      "skills_framework": "My skills are SKILL.md packages under .agents/skills plus the operating contract in .agents/AGENTS.md, AKC checkpoints, gotchas, and memory.",
+      "code_surfaces": [
+        "modules/jules_orchestrator.py",
+        "modules/jules_api.py",
+        "POST /jules/preflight",
+        "POST /jules/dispatch",
+        "POST /jules/cycle",
+        "POST /jules/fleet-watch"
+      ],
+      "readiness": {
+        "ready": true,
+        "installed": true,
+        "source": "live_preflight",
+        "likely_blocker": "",
+        "state_path": "",
+        "version": ""
+      },
+      "skill_count": 11,
+      "skills": [
+        {
+          "name": "architect",
+          "description": "Run before starting any complex feature, new module, or major change. Reads the project context files, interviews the user one question at a time to resolve design decisions, and produces a clear, structured implementation plan.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\architect\\SKILL.md"
+        },
+        {
+          "name": "grill-me",
+          "description": "Interview the user relentlessly to reach a shared design concept before any planning or coding begins. Use this at the very start of any new feature, project, or non-trivial task. Prevents misalignment. Never eagerly jump to producing a plan \u2014 keep asking until full alignment is achieved.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\grill-me\\SKILL.md"
+        },
+        {
+          "name": "imprint",
+          "description": "Run after creating or modifying API routes or module layouts. Captures coding patterns, route structures, and middleware registration to maintain system-wide consistency.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\imprint\\SKILL.md"
+        },
+        {
+          "name": "improve-codebase-architecture",
+          "description": "Identify shallow modules in a codebase and refactor them into deep modules (from John Ousterhout's \"A Philosophy of Software Design\"). Use when the AI keeps getting confused navigating the codebase, tests are hard to write, or you feel cognitive overload from too many small files with tangled concerns. Produces a clean module boundary map and executes the refactor incrementally.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\improve-codebase-architecture\\SKILL.md"
+        },
+        {
+          "name": "prd-to-issues",
+          "description": "Break a PRD into independently grabbable implementation tickets using vertical slices (tracer bullets). Creates a kanban board of issues with dependency/blocking relationships and AFK vs human-in-loop classification. CRITICAL: Issues must be vertical slices, NOT horizontal layers.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\prd-to-issues\\SKILL.md"
+        },
+        {
+          "name": "ralph-loop",
+          "description": "Implements a Ralph Loop \u2014 a self-correcting, ticket-driven agentic loop that picks the next most important ticket, implements it with TDD principles, commits, and repeats. Named after Ralph Wiggum (The Simpsons) who just keeps trying the same thing until it works. Run this skill when you want to autonomously work through a backlog of tickets in doc/tickets/.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\ralph-loop\\SKILL.md"
+        },
+        {
+          "name": "recover",
+          "description": "Run when a session is stuck, tests are failing repeatedly, or the agent is in a doom loop. Diagnoses the current failure mode and provides the correct remediation steps.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\recover\\SKILL.md"
+        },
+        {
+          "name": "remember",
+          "description": "Run at the end of every coding session. Synthesizes decisions made, patterns established, and progress completed during the session, and compresses them into a memory file in the `memory/` directory.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\remember\\SKILL.md"
+        },
+        {
+          "name": "review",
+          "description": "Run after completing any feature or file modification. Checks the implementation against the plan, verifies code standards, and surfaces potential bugs.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\review\\SKILL.md"
+        },
+        {
+          "name": "ubiquitous-language",
+          "description": "Scan the codebase to extract domain terminology and create a Ubiquitous Language document (from Domain-Driven Design). Use this to reduce AI verbosity, improve alignment between planning and implementation, and give the AI a shared vocabulary with the codebase. Run this at the start of any project or when the AI seems to be \"talking across purposes\".",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\ubiquitous-language\\SKILL.md"
+        },
+        {
+          "name": "write-prd",
+          "description": "Distill the current conversation (ideally a completed grill-me session) into a Product Requirements Document. The PRD is the \"destination document\" \u2014 it defines WHERE you're going, not HOW you'll get there. Use after a grill-me session, or with a detailed problem description as input.",
+          "location": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\write-prd\\SKILL.md"
+        }
+      ],
+      "akc_ready": true
+    },
+    "google_terminal_agent": {
+      "point_of_view": "I am the supported Google terminal-agent lane, exposed here through Antigravity CLI after the Gemini CLI migration.",
+      "skills_framework": "My capability framework is command-discovered: agy models for model routing, agy plugin list for plugin/skill packages, and agy -p for bounded noninteractive prompts.",
+      "code_surfaces": [
+        "modules/antigravity_cli.py",
+        "POST /gemini/antigravity/preflight",
+        "POST /gemini/antigravity/prompt"
+      ],
+      "readiness": {
+        "ready": true,
+        "installed": true,
+        "source": "live_preflight",
+        "likely_blocker": "",
+        "state_path": "",
+        "version": ""
+      },
+      "skills": [
+        {
+          "name": "plugin-management",
+          "description": "Manage Antigravity plugins that package skills and workflows.",
+          "location": "agy plugin"
+        },
+        {
+          "name": "model-routing",
+          "description": "Route terminal prompts across 8 available models.",
+          "location": "agy models"
+        },
+        {
+          "name": "headless-print-mode",
+          "description": "Run noninteractive terminal-agent prompts with bounded print timeouts.",
+          "location": "agy -p"
+        }
+      ]
+    },
+    "legacy_gemini_cli": {
+      "point_of_view": "I am the legacy @google/gemini-cli lane. I can still expose install, MCP, extension, and skill surfaces, but model execution may be blocked by Google consumer-tier migration state.",
+      "skills_framework": "My skills are discovered with gemini skills list --all, alongside MCP and extension listings. The bridge keeps this lane visible as a caveat instead of treating it as the supported model-execution path.",
+      "code_surfaces": [
+        "modules/gemini_cli.py",
+        "POST /gemini/preflight",
+        "POST /gemini/prompt"
+      ],
+      "readiness": {
+        "ready": true,
+        "installed": true,
+        "source": "live_preflight",
+        "likely_blocker": "",
+        "state_path": "",
+        "version": ""
+      },
+      "skills": [
+        {
+          "name": "antigravity-support",
+          "description": "Use when the user asks questions, seeks help, or requests instructions related to installing, setting up, or migrating to Antigravity CLI. This skill provides the latest up to date details, requirements, and commands sourced from the official Antigravity CLI documentation.",
+          "location": "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\builtin\\antigravity-support\\SKILL.md"
+        },
+        {
+          "name": "skill-creator",
+          "description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Gemini CLI's capabilities with specialized knowledge, workflows, or tool integrations.",
+          "location": "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\builtin\\skill-creator\\SKILL.md"
+        }
+      ]
+    }
+  },
+  "gates": [
+    {
+      "name": "objective_present",
+      "status": "pass",
+      "required": true,
+      "summary": "Objective is present.",
+      "evidence": {},
+      "blocker": ""
+    },
+    {
+      "name": "creator_jules_reachable",
+      "status": "pass",
+      "required": true,
+      "summary": "Jules is ready to own creation.",
+      "evidence": {
+        "ready": true,
+        "installed": true,
+        "source": "live_preflight",
+        "likely_blocker": "",
+        "state_path": "",
+        "version": ""
+      },
+      "blocker": ""
+    },
+    {
+      "name": "preferred_implementer_reachable",
+      "status": "pass",
+      "required": true,
+      "summary": "Preferred implementer lane is ready.",
+      "evidence": {
+        "preferred": "antigravity_cli",
+        "active": {
+          "name": "antigravity_cli",
+          "selection": "preferred",
+          "separate_agent": true,
+          "reason": "Supported Google terminal agent is ready."
+        },
+        "antigravity": {
+          "ready": true,
+          "installed": true,
+          "source": "live_preflight",
+          "likely_blocker": "",
+          "state_path": "",
+          "version": ""
+        },
+        "legacy_gemini": {
+          "ready": true,
+          "installed": true,
+          "source": "live_preflight",
+          "likely_blocker": "",
+          "state_path": "",
+          "version": ""
+        }
+      },
+      "blocker": ""
+    },
+    {
+      "name": "simultaneous_alliance_ready",
+      "status": "pass",
+      "required": false,
+      "summary": "Creator and separate implementer lanes are both ready.",
+      "evidence": {
+        "mode": "two_agent_alliance",
+        "active_implementer": {
+          "name": "antigravity_cli",
+          "selection": "preferred",
+          "separate_agent": true,
+          "reason": "Supported Google terminal agent is ready."
+        }
+      },
+      "blocker": ""
+    },
+    {
+      "name": "context_checkpoint_ready",
+      "status": "pass",
+      "required": false,
+      "summary": "AKC checkpoint is ready.",
+      "evidence": {
+        "checkpoint_path": "path-ref:601cde0476a2",
+        "missing_required_rules": []
+      },
+      "blocker": ""
+    },
+    {
+      "name": "switching_policy_defined",
+      "status": "pass",
+      "required": true,
+      "summary": "Decision table and handoff contract are defined.",
+      "evidence": {},
+      "blocker": ""
+    },
+    {
+      "name": "dry_run_safety_enforced",
+      "status": "pass",
+      "required": true,
+      "summary": "Switchboard prepares packets only; live agent execution remains behind explicit route flags.",
+      "evidence": {},
+      "blocker": ""
+    },
+    {
+      "name": "collaboration_proof_state_available",
+      "status": "pass",
+      "required": false,
+      "summary": "Prior collaboration proof state is available.",
+      "evidence": {
+        "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\proof\\COLLABORATION_PROOF.json",
+        "status": "pass"
+      },
+      "blocker": ""
+    }
+  ],
+  "packets": {
+    "written": true,
+    "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\alliance\\ALLIANCE_SWITCHBOARD_STATE.json",
+    "packet_paths": {
+      "creator_jules": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\alliance\\ALLIANCE_CREATOR_JULES.md",
+      "implementer_google": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\alliance\\ALLIANCE_IMPLEMENTER_GOOGLE_TERMINAL.md",
+      "switching_policy": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\alliance\\ALLIANCE_SWITCHING_POLICY.md"
+    },
+    "previews": {
+      "creator_jules": "# Alliance Creator Packet: Jules\n\nObjective: Create a complex codebase alliance where Jules owns actual change creation and the supported Google terminal agent implements/reviews with dry-run-first controls.\n\nRole: Create the actual change plan and own the patch or Jules worker packet.\n\nTarget Files:\n- bridge.py\n- modules/alliance_switchboard.py\n- modules/__init__.py\n- tests/test_alliance_switchboard.py\n- tests/test_bridge_routes.py\n\nResponsibilities:\n- Read AKC/context and current repo state before editing.\n- Return affected files, tests, blockers, and exact next action.\n- Do not create remote sessions or apply live changes unless the operator sends explicit live flags.\n- Preserve dry-run-first behavior and keep secrets redacted.\n\nBridge Surfaces:\n- POST /jules/preflight\n- POST /jules/dispatch\n- POST /jules/cycle\n- POST /jules/fleet-watch\n\nCurrent Mode: two_agent_alliance\n",
+      "implementer_google": "# Alliance Implementer Packet: Google Terminal Agent\n\nObjective: Create a complex codebase alliance where Jules owns actual change creation and the supported Google terminal agent implements/reviews with dry-run-first controls.\n\nActive Implementer: antigravity_cli\n\nRole: Support implementation with bounded codebase reasoning, model/plugin capability checks, and review notes.\n\nTarget Files:\n- bridge.py\n- modules/alliance_switchboard.py\n- modules/__init__.py\n- tests/test_alliance_switchboard.py\n- tests/test_bridge_routes.py\n\nResponsibilities:\n- Use Antigravity CLI as the supported Google terminal-agent path when ready.\n- Keep prompts dry-run-first; do not request edit-capable execution without explicit approval.\n- Explain skill/plugin/model capability from the CLI point of view.\n- Return risks, suggested patch scope, and verification ideas to Jules/the bridge.\n\nBridge Surfaces:\n- POST /gemini/antigravity/preflight\n- POST /gemini/antigravity/prompt\n- POST /gemini/preflight\n- POST /gemini/prompt\n",
+      "switching_policy": "# Alliance Switching Policy\n\nPreferred Creator: jules\nPreferred Implementer: antigravity_cli\nActive Implementer: antigravity_cli\n\nDecision Table:\n- If complex task and Jules ready and Antigravity ready: Jules creates the patch/worker packet; Antigravity implements/reviews through dry-run prompt support.\n- If Jules ready but Antigravity unavailable: Jules owns creation and implementation; bridge marks alliance as partial until the Google lane is restored.\n- If Antigravity ready but Jules unavailable: Antigravity can analyze, but actual change creation is blocked until Jules or Codex owns the patch.\n- If legacy Gemini installed but model smoke blocked: Use it only for capability/skill visibility; prefer Antigravity for supported model execution.\n- If any live execution requested: Require explicit route-specific live flags, bounded timeout, proof capture, and no secret printing.\n\nHandoff Contract:\n- creator returns changed files, tests run, blockers, and next action\n- implementer returns reasoning, suggested patch scope, and risk list\n- switch controller records proof before calling the goal complete\n"
+    }
+  },
+  "safety_policy": {
+    "default_mode": "dry_run",
+    "live_side_effects": "none",
+    "jules_sessions_created": false,
+    "google_cli_prompts_run": true,
+    "workspace_edits": false,
+    "note": "This switchboard only assigns roles and prepares packets. Execution still requires explicit route calls and live flags."
+  },
+  "readiness": {
+    "jules": {
+      "ready": true,
+      "installed": true,
+      "source": "live_preflight",
+      "likely_blocker": "",
+      "state_path": "",
+      "version": ""
+    },
+    "antigravity_cli": {
+      "ready": true,
+      "installed": true,
+      "source": "live_preflight",
+      "likely_blocker": "",
+      "state_path": "",
+      "version": ""
+    },
+    "legacy_gemini_cli": {
+      "ready": true,
+      "installed": true,
+      "source": "live_preflight",
+      "likely_blocker": "",
+      "state_path": "",
+      "version": ""
+    },
+    "akc": {
+      "ready": true,
+      "status": "ready",
+      "checkpoint_path": "path-ref:601cde0476a2"
+    },
+    "collaboration_proof_state": {
+      "available": true,
+      "status": "pass",
+      "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\proof\\COLLABORATION_PROOF.json"
+    }
+  },
+  "completion_assessment": {
+    "ready_to_execute_alliance": true,
+    "simultaneous_two_agent_mode": true,
+    "required_blockers": [],
+    "partial_caveats": [],
+    "safe_to_launch_live_work": false,
+    "launch_note": "This result is a plan/packet proof only; live work still needs explicit live route calls."
+  }
+}

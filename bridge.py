@@ -71,7 +71,7 @@ LOGGER = logging.getLogger("jules_bridge")
 app = Flask(__name__)
 ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5000,http://127.0.0.1:5000"
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:6000,http://127.0.0.1:6000,http://localhost:6001,http://127.0.0.1:6001,http://localhost:5000,http://127.0.0.1:5000"
 ).split(",")
 
 CORS(app, origins=ALLOWED_ORIGINS)
@@ -83,6 +83,8 @@ if not BRIDGE_TOKEN:
 
 @app.before_request
 def require_auth():
+    if request.method == "OPTIONS":
+        return None
     if request.path in (
         "/health",
         "/ping",
@@ -432,6 +434,9 @@ TENTACLES = [
     {"name": "list",         "route": "POST /fs/list",           "reach": "List a directory like Codex file tree"},
     {"name": "tail",         "route": "POST /fs/tail",           "reach": "Tail log/CSV files"},
     {"name": "grep",         "route": "POST /fs/grep",           "reach": "Search file contents for gate/log strings"},
+    {"name": "codebase_analyze", "route": "POST /codebase/analyze", "reach": "Bounded secret-safe local repo analysis for VM/Jules handoff"},  # pylint: disable=line-too-long
+    {"name": "sync_status",   "route": "GET /sync/status",       "reach": "Read-only Git/GitHub cloud sync readiness and blockers"},  # pylint: disable=line-too-long
+    {"name": "sync_publish_packet", "route": "POST /sync/publish-packet", "reach": "Build a read-only cloud publish review packet and commands"},  # pylint: disable=line-too-long
     {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},  # pylint: disable=line-too-long
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
@@ -446,10 +451,18 @@ TENTACLES = [
     {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},  # pylint: disable=line-too-long
     {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},  # pylint: disable=line-too-long
     {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
+    {"name": "inbox_append",    "route": "POST /inbox/append",             "reach": "Append VM/Jules result lines into inbox files"},
     {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},  # pylint: disable=line-too-long
     {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},  # pylint: disable=line-too-long
     {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},  # pylint: disable=line-too-long
     {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},  # pylint: disable=line-too-long
+    {"name": "gemini_preflight", "route": "POST /gemini/preflight",        "reach": "Diagnose Gemini CLI install/headless readiness without modifying workspace"},  # pylint: disable=line-too-long
+    {"name": "gemini_prompt",    "route": "POST /gemini/prompt",           "reach": "Run Gemini CLI headless prompts; dry-run and plan mode by default"},  # pylint: disable=line-too-long
+    {"name": "antigravity_preflight", "route": "POST /gemini/antigravity/preflight", "reach": "Diagnose Antigravity CLI install/plugin/model readiness"},  # pylint: disable=line-too-long
+    {"name": "antigravity_prompt", "route": "POST /gemini/antigravity/prompt", "reach": "Run Antigravity CLI prompts; dry-run by default"},  # pylint: disable=line-too-long
+    {"name": "collaboration_proof", "route": "POST /proof/collaboration",  "reach": "Rerunnable proof gates for Jules, Gemini, skills, context, HRM, and tests"},  # pylint: disable=line-too-long
+    {"name": "alliance_switchboard", "route": "POST /alliance/switchboard", "reach": "Assign dry-run-first Jules creator and Google terminal implementer roles"},  # pylint: disable=line-too-long
+    {"name": "tiu_workbench", "route": "POST /tiu/workbench", "reach": "Build a safe interactive TIU operator packet from dashboard controls"},  # pylint: disable=line-too-long
     {"name": "jules_api_sources", "route": "POST /jules/api/sources",       "reach": "List Jules REST API sources connected to this account"},  # pylint: disable=line-too-long
     {"name": "jules_api_sessions_list", "route": "POST /jules/api/sessions/list", "reach": "List Jules REST API sessions"},  # pylint: disable=line-too-long
     {"name": "jules_api_sessions_create", "route": "POST /jules/api/sessions", "reach": "Create a Jules REST API session from a prompt and source"},  # pylint: disable=line-too-long
@@ -642,6 +655,16 @@ def inbox_write():
     name = inbox_name_field(data, "JULES_RESPONSE.md")
     content = content_field(data)
     result = modules.inbox_write(content=content, file=name)
+    return jsonify(result)
+
+
+@app.route("/inbox/append", methods=["POST"])
+@route_errors
+def inbox_append():
+    data = json_payload()
+    name = inbox_name_field(data, "JULES_RESPONSE.md")
+    content = content_field(data)
+    result = modules.inbox_append(content=content, file=name)
     return jsonify(result)
 
 
@@ -880,6 +903,234 @@ def jules_preflight_route():
         check_remote=bool_field(data, "check_remote", default=True),
         write_state=bool_field(data, "write_state", default=True),
         state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/gemini/preflight", methods=["POST"])
+@route_errors
+def gemini_preflight_route():
+    """POST /gemini/preflight - Diagnose Gemini CLI readiness.
+
+    Body (JSON):
+        gemini_command (str, optional, default="gemini"): CLI path/name
+        timeout_s      (int, optional, default=8): Probe timeout
+        run_smoke      (bool, optional, default=false): Run a live headless prompt
+        smoke_prompt   (str, optional): Prompt for the live smoke check
+        model          (str, optional): Gemini model for the optional smoke
+        cwd            (str, optional): Working directory for the optional smoke
+        write_state    (bool, optional, default=true): Persist preflight JSON
+        state_path     (str, optional): Explicit state file path
+    """
+    data = json_payload()
+    result = modules.gemini_preflight(
+        gemini_command=string_field(data, "gemini_command", default="gemini"),
+        timeout_s=int_field(data, "timeout_s", default=8, min_value=1, max_value=300),
+        run_smoke=bool_field(data, "run_smoke", default=False),
+        smoke_prompt=string_field(
+            data,
+            "smoke_prompt",
+            default="Reply with GEMINI_BRIDGE_READY only.",
+            allow_empty=False,
+        ),
+        model=string_field(data, "model", default="", allow_empty=True),
+        cwd=string_field(data, "cwd", default="", allow_empty=True, control_safe=True),
+        write_state=bool_field(data, "write_state", default=True),
+        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/gemini/prompt", methods=["POST"])
+@route_errors
+def gemini_prompt_route():
+    """POST /gemini/prompt - Run one Gemini CLI headless prompt.
+
+    Body (JSON):
+        prompt         (str, required): Prompt passed to `gemini -p`
+        cwd            (str, optional): Working directory, defaults to repo root
+        model          (str, optional): Gemini model override
+        approval_mode  (str, optional, default="plan"): default|auto_edit|yolo|plan
+        output_format  (str, optional, default="text"): text|json|stream-json
+        timeout_s      (int, optional, default=120): CLI timeout
+        gemini_command (str, optional, default="gemini"): CLI path/name
+        dry_run        (bool, optional, default=true): False invokes Gemini CLI
+        trust_workspace (bool, optional, default=true): Pass --skip-trust
+        write_state    (bool, optional, default=true): Persist prompt result JSON
+        state_path     (str, optional): Explicit state file path
+    """
+    data = json_payload()
+    result = modules.run_gemini_prompt(
+        prompt=string_field(data, "prompt", allow_empty=False),
+        cwd=string_field(data, "cwd", default="", allow_empty=True, control_safe=True),
+        model=string_field(data, "model", default="", allow_empty=True),
+        approval_mode=string_field(data, "approval_mode", default="plan", allow_empty=False),
+        output_format=string_field(data, "output_format", default="text", allow_empty=False),
+        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
+        gemini_command=string_field(data, "gemini_command", default="gemini"),
+        dry_run=bool_field(data, "dry_run", default=True),
+        trust_workspace=bool_field(data, "trust_workspace", default=True),
+        write_state=bool_field(data, "write_state", default=True),
+        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/gemini/antigravity/preflight", methods=["POST"])
+@route_errors
+def antigravity_preflight_route():
+    """POST /gemini/antigravity/preflight - Diagnose Antigravity CLI readiness.
+
+    Body (JSON):
+        agy_command  (str, optional, default="agy"): CLI path/name
+        timeout_s    (int, optional, default=8): Probe timeout
+        run_smoke    (bool, optional, default=false): Run a live headless prompt
+        smoke_prompt (str, optional): Prompt for the live smoke check
+        model        (str, optional): Model override for the optional smoke
+        cwd          (str, optional): Working directory for the optional smoke
+        write_state  (bool, optional, default=true): Persist preflight JSON
+        state_path   (str, optional): Explicit state file path
+    """
+    data = json_payload()
+    result = modules.antigravity_preflight(
+        agy_command=string_field(data, "agy_command", default="agy"),
+        timeout_s=int_field(data, "timeout_s", default=8, min_value=1, max_value=300),
+        run_smoke=bool_field(data, "run_smoke", default=False),
+        smoke_prompt=string_field(
+            data,
+            "smoke_prompt",
+            default="Reply with ANTIGRAVITY_BRIDGE_READY only.",
+            allow_empty=False,
+        ),
+        model=string_field(data, "model", default="", allow_empty=True),
+        cwd=string_field(data, "cwd", default="", allow_empty=True, control_safe=True),
+        write_state=bool_field(data, "write_state", default=True),
+        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/gemini/antigravity/prompt", methods=["POST"])
+@route_errors
+def antigravity_prompt_route():
+    """POST /gemini/antigravity/prompt - Run one Antigravity CLI prompt.
+
+    Body (JSON):
+        prompt      (str, required): Prompt passed to `agy -p`
+        cwd         (str, optional): Working directory, defaults to repo root
+        model       (str, optional): Model override
+        timeout_s   (int, optional, default=120): CLI timeout
+        agy_command (str, optional, default="agy"): CLI path/name
+        dry_run     (bool, optional, default=true): False invokes Antigravity CLI
+        write_state (bool, optional, default=true): Persist prompt result JSON
+        state_path  (str, optional): Explicit state file path
+    """
+    data = json_payload()
+    result = modules.run_antigravity_prompt(
+        prompt=string_field(data, "prompt", allow_empty=False),
+        cwd=string_field(data, "cwd", default="", allow_empty=True, control_safe=True),
+        model=string_field(data, "model", default="", allow_empty=True),
+        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
+        agy_command=string_field(data, "agy_command", default="agy"),
+        dry_run=bool_field(data, "dry_run", default=True),
+        write_state=bool_field(data, "write_state", default=True),
+        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/proof/collaboration", methods=["POST"])
+@route_errors
+def collaboration_proof_route():
+    """POST /proof/collaboration - Prove Jules/Gemini collaboration gates.
+
+    Body (JSON):
+        include_live_checks (bool, optional, default=false): Read-only live probes
+        run_gemini_smoke    (bool, optional, default=false): Authenticated Gemini smoke
+        timeout_s           (int, optional, default=12): CLI/API probe timeout
+        write_state         (bool, optional, default=true): Persist proof JSON
+        state_path          (str, optional): Explicit proof state path
+    """
+    data = json_payload()
+    result = modules.build_collaboration_proof(
+        include_live_checks=bool_field(data, "include_live_checks", default=False),
+        run_gemini_smoke=bool_field(data, "run_gemini_smoke", default=False),
+        timeout_s=int_field(data, "timeout_s", default=12, min_value=1, max_value=300),
+        write_state=bool_field(data, "write_state", default=True),
+        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/alliance/switchboard", methods=["POST"])
+@route_errors
+def alliance_switchboard_route():
+    """POST /alliance/switchboard - Assign Jules/Google terminal roles.
+
+    Body (JSON):
+        objective               (str, required): Complex-codebase objective
+        target_files            (list[str], optional): Files/dirs that bound scope
+        complexity              (str, optional, default="complex")
+        preferred_creator       (str, optional, default="jules")
+        preferred_implementer   (str, optional, default="antigravity_cli")
+        include_live_checks     (bool, optional, default=false): Bounded preflights
+        run_implementer_smoke   (bool, optional, default=false): Optional agy smoke
+        write_packets           (bool, optional, default=false): Persist role packets
+        state_path              (str, optional): State JSON path or packet directory
+        timeout_s               (int, optional, default=12): Probe timeout
+    """
+    data = json_payload()
+    result = modules.build_alliance_switchboard(
+        objective=string_field(data, "objective", allow_empty=False),
+        target_files=string_list_field(data, "target_files", default=[], control_safe=True),
+        complexity=string_field(data, "complexity", default="complex", allow_empty=False),
+        preferred_creator=string_field(data, "preferred_creator", default="jules", allow_empty=False),
+        preferred_implementer=string_field(data, "preferred_implementer", default="antigravity_cli", allow_empty=False),
+        include_live_checks=bool_field(data, "include_live_checks", default=False),
+        run_implementer_smoke=bool_field(data, "run_implementer_smoke", default=False),
+        write_packets=bool_field(data, "write_packets", default=False),
+        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
+        timeout_s=int_field(data, "timeout_s", default=12, min_value=1, max_value=300),
+    )
+    status = 400 if result.get("error") else 200
+    return jsonify(dict(result)), status
+
+
+@app.route("/tiu/workbench", methods=["POST"])
+@route_errors
+def tiu_workbench_route():
+    """POST /tiu/workbench - Build a safe interactive TIU packet.
+
+    Body (JSON):
+        objective           (str, required): Operator objective
+        scope               (str, optional, default="dashboard")
+        model_lane          (str, optional, default="alliance")
+        mode                (str, optional, default="design_review")
+        target_files        (list[str], optional): Explicit relative scope
+        require_cloud_sync  (bool, optional, default=true): Gate publish status
+        include_live_checks (bool, optional, default=false): Bounded preflights
+        write_packet        (bool, optional, default=false): Persist local packet
+        output_dir          (str, optional): Repo-local packet directory
+        timeout_s           (int, optional, default=12): Probe timeout
+    """
+    data = json_payload()
+    result = modules.build_tiu_workbench_plan(
+        objective=string_field(data, "objective", allow_empty=False),
+        scope=string_field(data, "scope", default="dashboard", allow_empty=False),
+        model_lane=string_field(data, "model_lane", default="alliance", allow_empty=False),
+        mode=string_field(data, "mode", default="design_review", allow_empty=False),
+        target_files=string_list_field(data, "target_files", default=[], control_safe=True),
+        require_cloud_sync=bool_field(data, "require_cloud_sync", default=True),
+        include_live_checks=bool_field(data, "include_live_checks", default=False),
+        write_packet=bool_field(data, "write_packet", default=False),
+        timeout_s=int_field(data, "timeout_s", default=12, min_value=1, max_value=300),
+        output_dir=string_field(data, "output_dir", default="", allow_empty=True, control_safe=True),
     )
     status = 400 if result.get("error") else 200
     return jsonify(dict(result)), status
@@ -1240,6 +1491,28 @@ def grep_file():
     pattern = string_field(data, "pattern", default="", allow_empty=True)
     max_matches = int_field(data, "max_matches", default=50, min_value=1)
     result = modules.grep(path, pattern=pattern, max_matches=max_matches)
+    return jsonify(dict(result))
+
+
+@app.route("/codebase/analyze", methods=["POST"])
+@route_errors
+def codebase_analyze_route():
+    """POST /codebase/analyze - Build a bounded local repository snapshot.
+
+    Body (JSON):
+        path          (str, optional): Directory to analyze; defaults to bridge root
+        max_files     (int, optional): Bounded source-file scan limit
+        include_files (bool, optional): Include a capped relative file inventory
+    """
+    data = json_payload()
+    root_path = existing_path(path_field(data, "path", default=ROOT_DIR), kind="directory")
+    max_files = int_field(data, "max_files", default=2500, min_value=50, max_value=10000)
+    include_files = bool_field(data, "include_files", default=False)
+    result = modules.analyze_codebase(
+        root_path=root_path,
+        max_files=max_files,
+        include_files=include_files,
+    )
     return jsonify(dict(result))
 
 
@@ -1943,6 +2216,43 @@ def repo_context_guard():
         max_repos=query_int_field("max_repos", 100, min_value=1, max_value=500),
         include_repos=query_bool_field("include_repos", True),
         use_cache=query_bool_field("use_cache", True),
+    )
+    return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
+
+
+@app.route("/sync/status", methods=["GET"])
+@route_errors
+def sync_status():
+    """GET /sync/status - Read-only Git/GitHub cloud sync readiness."""
+    result = modules.get_cloud_sync_status(
+        root=request.args.get("root", ""),
+        timeout_s=query_int_field("timeout_s", 4, min_value=1, max_value=30),
+        use_cache=query_bool_field("use_cache", True),
+    )
+    return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
+
+
+@app.route("/sync/publish-packet", methods=["POST"])
+@route_errors
+def sync_publish_packet():
+    """POST /sync/publish-packet - Build a read-only cloud publish packet.
+
+    Body (JSON):
+        root         (str, optional): Git repository root
+        objective    (str, optional): Publish objective/reason
+        timeout_s    (int, optional): Per-command timeout
+        use_cache    (bool, optional): Reuse cached sync status
+        write_packet (bool, optional): Save markdown/JSON under repo
+        output_dir   (str, optional): Repo-local packet directory
+    """
+    data = json_payload()
+    result = modules.build_cloud_publish_packet(
+        root=path_field(data, "root", default=""),
+        objective=string_field(data, "objective", default="", allow_empty=True),
+        timeout_s=int_field(data, "timeout_s", default=4, min_value=1, max_value=30),
+        use_cache=bool_field(data, "use_cache", default=False),
+        write_packet=bool_field(data, "write_packet", default=False),
+        output_dir=path_field(data, "output_dir", default=""),
     )
     return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
 

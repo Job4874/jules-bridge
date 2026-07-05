@@ -5,7 +5,66 @@ export const EMPTY_REPO_CONTEXT = {
   guardrails: []
 };
 
+export const EMPTY_CODEBASE_ANALYSIS = {
+  status: 'unknown',
+  root_name: '',
+  summary: {
+    file_count: 0,
+    route_count: 0,
+    module_count: 0,
+    test_count: 0,
+    frontend_dependency_count: 0,
+    integration_ready_count: 0,
+    truncated: false
+  },
+  frontend: { present: false, package_name: '', app_entry_present: false },
+  integrations: [],
+  findings: []
+};
+
 export const EMPTY_CLOUD = { total: 0, online: 0, vms: [] };
+
+export const EMPTY_CLOUD_SYNC = {
+  status: 'unknown',
+  state: 'unknown',
+  branch: '',
+  upstream: '',
+  remote_host: '',
+  remote_label: '',
+  ahead: 0,
+  behind: 0,
+  dirty_count: 0,
+  staged_count: 0,
+  unstaged_count: 0,
+  untracked_count: 0,
+  github_authenticated: false,
+  github_account: '',
+  publish_ready: false,
+  synced: false,
+  blockers: [],
+  warnings: [],
+  cache_age_s: 0
+};
+
+export const EMPTY_ALLIANCE = {
+  status: 'unknown',
+  summary: '',
+  mode: 'unconfigured',
+  creator: 'jules',
+  implementer: 'unassigned',
+  implementer_selection: '',
+  ready_to_execute_alliance: false,
+  simultaneous_two_agent_mode: false,
+  safe_to_launch_live_work: false,
+  required_blocker_count: 0,
+  partial_caveat_count: 0,
+  gate_pass_count: 0,
+  gate_total_count: 0,
+  packet_count: 0,
+  workflow_step_count: 0,
+  state_age_s: null,
+  lanes: []
+};
 
 export const DEFAULT_STATUS = {
   uptime: '--',
@@ -27,8 +86,26 @@ export const DEFAULT_STATUS = {
     all_complete: false,
     sessions_tracked: 0
   },
+  geminiCli: {
+    installed: false,
+    ready: false,
+    version: '',
+    headless_mode: '-p/--prompt',
+    last_blocker: ''
+  },
+  antigravityCli: {
+    installed: false,
+    ready: false,
+    version: '',
+    headless_mode: '-p/--print',
+    model_count: 0,
+    last_blocker: ''
+  },
+  alliance: EMPTY_ALLIANCE,
   cloud: EMPTY_CLOUD,
+  cloudSync: EMPTY_CLOUD_SYNC,
   repoContext: EMPTY_REPO_CONTEXT,
+  codebase: EMPTY_CODEBASE_ANALYSIS,
   secretCount: 0,
   statusTimestamp: '',
   cacheAge: 0,
@@ -98,6 +175,9 @@ export const formatTimestamp = value => {
 export const normalizeDashboardPayload = payload => {
   const pressure = payload.resource_pressure || {};
   const repoContext = payload.repo_context || EMPTY_REPO_CONTEXT;
+  const codebase = payload.codebase_analysis || EMPTY_CODEBASE_ANALYSIS;
+  const alliance = payload.alliance || EMPTY_ALLIANCE;
+  const cloudSync = payload.cloud_sync || EMPTY_CLOUD_SYNC;
   const bridge = payload.bridge || {};
   return {
     uptime: bridge.uptime_human || '--',
@@ -111,8 +191,13 @@ export const normalizeDashboardPayload = payload => {
     cpu: clampPercent(pressure.cpu_percent ?? 0),
     mem: clampPercent(pressure.memory_percent ?? 0),
     fleet: payload.jules_fleet || DEFAULT_STATUS.fleet,
+    geminiCli: payload.gemini_cli || DEFAULT_STATUS.geminiCli,
+    antigravityCli: payload.antigravity_cli || DEFAULT_STATUS.antigravityCli,
+    alliance,
     cloud: payload.cloud || EMPTY_CLOUD,
+    cloudSync,
     repoContext,
+    codebase,
     secretCount: Array.isArray(payload.env_keys_present) ? payload.env_keys_present.length : 0,
     statusTimestamp: payload.timestamp || '',
     cacheAge: payload.cache_age_s ?? 0,
@@ -145,16 +230,123 @@ export const parseLogLine = (line, index = 0) => {
 
 export const buildEventRows = logs => logs.map((line, index) => parseLogLine(line, index));
 
+export const allianceTone = alliance => {
+  if (!alliance || alliance.status === 'missing') return 'danger';
+  if (Number(alliance.required_blocker_count || 0) > 0) return 'danger';
+  if (Number(alliance.partial_caveat_count || 0) > 0 || !alliance.simultaneous_two_agent_mode) return 'warn';
+  if (alliance.ready_to_execute_alliance) return 'success';
+  return toneForStatus(alliance.status);
+};
+
+export const cloudSyncTone = cloudSync => {
+  const sync = cloudSync || EMPTY_CLOUD_SYNC;
+  if (sync.state === 'synced' || sync.publish_ready) return 'success';
+  if (sync.status === 'blocked' || Number(sync.behind || 0) > 0) return 'danger';
+  if (Number(sync.dirty_count || 0) > 0 || Number(sync.warnings?.length || 0) > 0) return 'warn';
+  return toneForStatus(sync.status);
+};
+
+export const cloudSyncLabel = cloudSync => {
+  const sync = cloudSync || EMPTY_CLOUD_SYNC;
+  if (sync.publish_ready) return 'Push ready';
+  if (sync.state === 'synced') return 'Synced';
+  if (sync.state === 'blocked') return 'Blocked';
+  if (Number(sync.behind || 0) > 0) return 'Pull needed';
+  return sync.state || 'Unknown';
+};
+
+export const buildAllianceLanes = status => {
+  const alliance = status.alliance || EMPTY_ALLIANCE;
+  const laneRows = Array.isArray(alliance.lanes) ? alliance.lanes : [];
+  const byId = new Map(laneRows.map(row => [row.id, row]));
+  const cloud = status.cloud || EMPTY_CLOUD;
+  const cloudSync = status.cloudSync || EMPTY_CLOUD_SYNC;
+  const cloudOnline = Number(cloud.online || 0);
+  const cloudTotal = Number(cloud.total || 0);
+
+  const fromReadiness = (id, fallback) => {
+    const row = byId.get(id) || {};
+    const ready = !!row.ready;
+    const installed = !!row.installed;
+    const blocker = row.blocker || '';
+    return {
+      ...fallback,
+      ready,
+      state: ready ? 'Ready' : installed ? 'Installed' : 'Blocked',
+      detail: blocker || fallback.detail,
+      tone: ready ? 'success' : installed ? 'warn' : 'danger'
+    };
+  };
+
+  return [
+    fromReadiness('jules', {
+      id: 'jules',
+      label: 'Jules',
+      role: 'creator',
+      detail: 'Packets, patches, and ledgers ready.'
+    }),
+    fromReadiness('antigravity_cli', {
+      id: 'antigravity_cli',
+      label: 'Antigravity',
+      role: 'google terminal agent',
+      detail: 'Bounded implementation review ready.'
+    }),
+    fromReadiness('legacy_gemini_cli', {
+      id: 'legacy_gemini_cli',
+      label: 'Gemini CLI',
+      role: 'legacy visibility',
+      detail: 'Legacy skill surface visible.'
+    }),
+    fromReadiness('akc', {
+      id: 'akc',
+      label: 'AKC Context',
+      role: 'checkpoint',
+      detail: `${alliance.workflow_step_count || 0} workflow steps indexed.`
+    }),
+    fromReadiness('collaboration_proof_state', {
+      id: 'collaboration_proof_state',
+      label: 'Proof State',
+      role: 'evidence',
+      detail: `${alliance.gate_pass_count || 0}/${alliance.gate_total_count || 0} gates passing.`
+    }),
+    {
+      id: 'sync',
+      label: 'Cloud Sync',
+      role: 'bridge relay',
+      ready: status.online && cloudOnline > 0 && cloudSync.status !== 'blocked',
+      state: cloudSyncLabel(cloudSync),
+      detail: `${cloudOnline}/${cloudTotal} workers; git ${cloudSync.dirty_count || 0} dirty; ${cloudSync.ahead || 0} ahead.`,
+      tone: cloudSyncTone(cloudSync)
+    }
+  ];
+};
+
 export const buildOpsChecklist = status => {
   const fleet = status.fleet || DEFAULT_STATUS.fleet;
+  const gemini = status.geminiCli || DEFAULT_STATUS.geminiCli;
+  const antigravity = status.antigravityCli || DEFAULT_STATUS.antigravityCli;
+  const alliance = status.alliance || EMPTY_ALLIANCE;
   const cloud = status.cloud || EMPTY_CLOUD;
+  const cloudSync = status.cloudSync || EMPTY_CLOUD_SYNC;
   const repoSummary = status.repoContext?.summary || EMPTY_REPO_CONTEXT.summary;
+  const codebaseSummary = status.codebase?.summary || EMPTY_CODEBASE_ANALYSIS.summary;
   const failures = Number(fleet.failed || 0);
   const pending = Number(fleet.pending || 0);
   const inProgress = Number(fleet.in_progress || 0);
   const collisions = Number(repoSummary.collision_count || 0);
+  const routeCount = Number(codebaseSummary.route_count || 0);
+  const moduleCount = Number(codebaseSummary.module_count || 0);
+  const testCount = Number(codebaseSummary.test_count || 0);
+  const integrationReady = Number(codebaseSummary.integration_ready_count || 0);
   const workerTotal = Number(cloud.total || 0);
   const workerOnline = Number(cloud.online || 0);
+  const geminiInstalled = !!gemini.installed;
+  const geminiReady = !!gemini.ready;
+  const agyInstalled = !!antigravity.installed;
+  const agyReady = !!antigravity.ready;
+  const allianceBlockers = Number(alliance.required_blocker_count || 0);
+  const allianceCaveats = Number(alliance.partial_caveat_count || 0);
+  const syncDirty = Number(cloudSync.dirty_count || 0);
 
   return [
     {
@@ -166,9 +358,41 @@ export const buildOpsChecklist = status => {
       progress: status.online ? 100 : 0
     },
     {
+      id: 'gemini',
+      label: 'Gemini CLI',
+      state: geminiReady ? 'Ready' : geminiInstalled ? 'Installed' : 'Missing',
+      detail: gemini.version ? `v${gemini.version}; ${gemini.headless_mode || 'headless'}` : (gemini.last_blocker || 'preflight pending'),
+      tone: geminiReady ? 'success' : geminiInstalled ? 'warn' : 'danger',
+      progress: geminiReady ? 100 : geminiInstalled ? 65 : 0
+    },
+    {
+      id: 'antigravity',
+      label: 'Antigravity CLI',
+      state: agyReady ? 'Ready' : agyInstalled ? 'Installed' : 'Missing',
+      detail: antigravity.version ? `v${antigravity.version}; ${antigravity.model_count || 0} models` : (antigravity.last_blocker || 'preflight pending'),
+      tone: agyReady ? 'success' : agyInstalled ? 'warn' : 'danger',
+      progress: agyReady ? 100 : agyInstalled ? 70 : 0
+    },
+    {
+      id: 'alliance',
+      label: 'Alliance switchboard',
+      state: alliance.ready_to_execute_alliance ? 'Ready' : alliance.status === 'missing' ? 'Missing' : 'Partial',
+      detail: `${alliance.creator || 'jules'} -> ${alliance.implementer || 'unassigned'}; ${alliance.packet_count || 0} packets; live ${alliance.safe_to_launch_live_work ? 'open' : 'gated'}`,
+      tone: allianceTone(alliance),
+      progress: alliance.gate_total_count > 0 ? clampPercent((Number(alliance.gate_pass_count || 0) / Number(alliance.gate_total_count || 1)) * 100) : (allianceBlockers > 0 ? 0 : 55)
+    },
+    {
+      id: 'cloud-sync',
+      label: 'Cloud sync',
+      state: cloudSyncLabel(cloudSync),
+      detail: `${cloudSync.branch || 'branch'} -> ${cloudSync.upstream || 'no upstream'}; ${syncDirty} dirty; GitHub ${cloudSync.github_authenticated ? 'ready' : 'needs auth'}`,
+      tone: cloudSyncTone(cloudSync),
+      progress: cloudSync.publish_ready || cloudSync.synced ? 100 : cloudSync.status === 'blocked' ? 35 : 70
+    },
+    {
       id: 'context',
       label: 'Context gate',
-      state: status.quantAllowed ? 'Quant allowed' : 'Quant locked',
+      state: allianceCaveats > 0 ? `${allianceCaveats} caveats` : status.quantAllowed ? 'Quant allowed' : 'Quant locked',
       detail: `${status.executionContext} on ${status.hostname}`,
       tone: gateTone(status),
       progress: 100
@@ -196,14 +420,27 @@ export const buildOpsChecklist = status => {
       detail: `${repoSummary.repo_count || 0} repos scanned; names hidden`,
       tone: collisions > 0 ? 'warn' : toneForStatus(status.repoContext?.status),
       progress: collisions > 0 ? 55 : 100
+    },
+    {
+      id: 'codebase',
+      label: 'Codebase map',
+      state: `${routeCount} routes`,
+      detail: `${moduleCount} modules; ${testCount} tests; ${integrationReady} integrations`,
+      tone: toneForStatus(status.codebase?.status),
+      progress: routeCount > 0 ? 100 : 0
     }
   ];
 };
 
 export const buildTopology = status => {
   const fleet = status.fleet || DEFAULT_STATUS.fleet;
+  const gemini = status.geminiCli || DEFAULT_STATUS.geminiCli;
+  const antigravity = status.antigravityCli || DEFAULT_STATUS.antigravityCli;
+  const alliance = status.alliance || EMPTY_ALLIANCE;
+  const cloudSync = status.cloudSync || EMPTY_CLOUD_SYNC;
   const cloud = status.cloud || EMPTY_CLOUD;
   const repoSummary = status.repoContext?.summary || EMPTY_REPO_CONTEXT.summary;
+  const codebaseSummary = status.codebase?.summary || EMPTY_CODEBASE_ANALYSIS.summary;
   const failures = Number(fleet.failed || 0);
   const collisions = Number(repoSummary.collision_count || 0);
   return [
@@ -220,6 +457,34 @@ export const buildTopology = status => {
       detail: status.executionContext,
       tone: gateTone(status),
       metric: status.quantAllowed ? 'quant enabled' : 'quant locked'
+    },
+    {
+      id: 'gemini',
+      label: 'Gemini CLI',
+      detail: gemini.ready ? 'ready' : gemini.installed ? 'installed' : 'missing',
+      tone: gemini.ready ? 'success' : gemini.installed ? 'warn' : 'danger',
+      metric: gemini.version || gemini.last_blocker || 'preflight'
+    },
+    {
+      id: 'antigravity',
+      label: 'Antigravity CLI',
+      detail: antigravity.ready ? 'ready' : antigravity.installed ? 'installed' : 'missing',
+      tone: antigravity.ready ? 'success' : antigravity.installed ? 'warn' : 'danger',
+      metric: antigravity.version || antigravity.last_blocker || 'preflight'
+    },
+    {
+      id: 'alliance',
+      label: 'Alliance',
+      detail: alliance.mode || 'unconfigured',
+      tone: allianceTone(alliance),
+      metric: `${alliance.creator || 'jules'} -> ${alliance.implementer || 'agent'}`
+    },
+    {
+      id: 'sync',
+      label: 'Cloud Sync',
+      detail: cloudSyncLabel(cloudSync),
+      tone: cloudSyncTone(cloudSync),
+      metric: `${cloudSync.ahead || 0} ahead / ${cloudSync.dirty_count || 0} dirty`
     },
     {
       id: 'fleet',
@@ -241,6 +506,13 @@ export const buildTopology = status => {
       detail: `${collisions}`,
       tone: collisions > 0 ? 'warn' : toneForStatus(status.repoContext?.status),
       metric: 'collision watch'
+    },
+    {
+      id: 'codebase',
+      label: 'Codebase',
+      detail: `${codebaseSummary.route_count || 0} routes`,
+      tone: toneForStatus(status.codebase?.status),
+      metric: `${codebaseSummary.module_count || 0} modules`
     },
     {
       id: 'comms',
