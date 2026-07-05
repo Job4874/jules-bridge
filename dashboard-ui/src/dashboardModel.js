@@ -69,6 +69,10 @@ export const EMPTY_ALLIANCE = {
 export const DEFAULT_STATUS = {
   uptime: '--',
   online: false,
+  contract: { name: '', version: 0, transport: 'poll', sequence: 0 },
+  contractOk: false,
+  updateMode: 'connecting',
+  streamSequence: 0,
   tunnel: false,
   hostname: '--',
   executionContext: '[SCHOOL_COMPUTE]',
@@ -173,37 +177,52 @@ export const formatTimestamp = value => {
 };
 
 export const normalizeDashboardPayload = payload => {
-  const pressure = payload.resource_pressure || {};
-  const repoContext = payload.repo_context || EMPTY_REPO_CONTEXT;
-  const codebase = payload.codebase_analysis || EMPTY_CODEBASE_ANALYSIS;
-  const alliance = payload.alliance || EMPTY_ALLIANCE;
-  const cloudSync = payload.cloud_sync || EMPTY_CLOUD_SYNC;
-  const bridge = payload.bridge || {};
+  const safePayload = payload || {};
+  const pressure = safePayload.resource_pressure || {};
+  const repoContext = safePayload.repo_context || EMPTY_REPO_CONTEXT;
+  const codebase = safePayload.codebase_analysis || EMPTY_CODEBASE_ANALYSIS;
+  const alliance = safePayload.alliance || EMPTY_ALLIANCE;
+  const cloudSync = safePayload.cloud_sync || EMPTY_CLOUD_SYNC;
+  const bridge = safePayload.bridge || {};
+  const contract = safePayload.contract || {};
+  const delivery = safePayload.delivery || {};
+  const sequence = Number(delivery.sequence ?? contract.sequence ?? 0);
+  const transport = delivery.transport || contract.transport || 'poll';
+  const contractOk = contract.name === 'jules_dashboard_status' && Number(contract.version || 0) >= 2;
   return {
     uptime: bridge.uptime_human || '--',
-    online: payload.ok !== false,
+    online: safePayload.ok !== false,
+    contract: {
+      name: contract.name || '',
+      version: Number(contract.version || 0),
+      transport,
+      sequence
+    },
+    contractOk,
+    updateMode: transport,
+    streamSequence: sequence,
     tunnel: !!bridge.ngrok_url,
-    hostname: payload.hostname || '--',
-    executionContext: payload.execution_context || '[SCHOOL_COMPUTE]',
-    quantAllowed: !!payload.quant_allowed,
+    hostname: safePayload.hostname || '--',
+    executionContext: safePayload.execution_context || '[SCHOOL_COMPUTE]',
+    quantAllowed: !!safePayload.quant_allowed,
     resourceStatus: pressure.status || 'unknown',
     pressureReasons: Array.isArray(pressure.reasons) ? pressure.reasons : [],
     cpu: clampPercent(pressure.cpu_percent ?? 0),
     mem: clampPercent(pressure.memory_percent ?? 0),
-    fleet: payload.jules_fleet || DEFAULT_STATUS.fleet,
-    geminiCli: payload.gemini_cli || DEFAULT_STATUS.geminiCli,
-    antigravityCli: payload.antigravity_cli || DEFAULT_STATUS.antigravityCli,
+    fleet: safePayload.jules_fleet || DEFAULT_STATUS.fleet,
+    geminiCli: safePayload.gemini_cli || DEFAULT_STATUS.geminiCli,
+    antigravityCli: safePayload.antigravity_cli || DEFAULT_STATUS.antigravityCli,
     alliance,
-    cloud: payload.cloud || EMPTY_CLOUD,
+    cloud: safePayload.cloud || EMPTY_CLOUD,
     cloudSync,
     repoContext,
     codebase,
-    secretCount: Array.isArray(payload.env_keys_present) ? payload.env_keys_present.length : 0,
-    statusTimestamp: payload.timestamp || '',
-    cacheAge: payload.cache_age_s ?? 0,
+    secretCount: Array.isArray(safePayload.env_keys_present) ? safePayload.env_keys_present.length : 0,
+    statusTimestamp: safePayload.timestamp || '',
+    cacheAge: safePayload.cache_age_s ?? 0,
     bridgeStatus: bridge.status || 'unknown',
     localUrl: bridge.local_url || '',
-    logs: Array.isArray(payload.recent_logs) ? payload.recent_logs : []
+    logs: Array.isArray(safePayload.recent_logs) ? safePayload.recent_logs : []
   };
 };
 

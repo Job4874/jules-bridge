@@ -427,3 +427,11 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Updated `modules/chat_service.py` so VM chat polling is configurable with `VM_CHAT_TIMEOUT_S` (default 30s) and `VM_CHAT_POLL_INTERVAL_S` (default 2s). Added a regression test where the VM result arrives after the old 10s window.
 - Added `inbox_append()` plus protected `POST /inbox/append` so the generated VM worker callback to `vm_results.jsonl` has a real local bridge endpoint instead of being silently swallowed.
 - Verification: chat/health/inbox/route focused tests passed; full `python -m pytest tests/ -q` passed 473 tests.
+
+## Session 20260705T211000 - Streaming Dashboard Status Contract
+
+- Added a v2 public dashboard status contract shared by JSON polling and SSE streaming: `/dashboard/status` reports `delivery.transport=poll`, while `/dashboard/status?stream=1&interval_s=1` emits `event: dashboard-status` with `delivery.transport=sse` and increasing sequences.
+- Updated the React dashboard to prefer EventSource, render `STREAM <sequence>` and `CONTRACT V2`, and fall back to polling if the stream is unavailable. The codebase counts shown in the UI now come from the same contract payload as the backend.
+- Sanitized public dashboard status output by masking local paths in recent logs and reducing Gemini/Antigravity snapshots to compact frontend fields.
+- Local codebase analysis proof still uses `modules.codebase_analyzer.analyze_codebase(...)` directly when the protected `/codebase/analyze` route rejects unauthenticated callers.
+- Verification: live curl SSE received two v2 events; Edge/Playwright on `127.0.0.1:6001` passed desktop and mobile checks with `STREAM 2`, `CONTRACT V2`, one SSE request, no console/page errors, no horizontal overflow, and codebase counts visible. Full `python -m pytest tests -q` passed 512 tests; `npm run lint`, `npm run build`, and Python compile checks passed.

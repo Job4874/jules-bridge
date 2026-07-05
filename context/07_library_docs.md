@@ -129,6 +129,32 @@ POST /reasoning/plan
   the Windows bridge repo.
 ---
 
+## Dashboard Status Contract
+
+Used by `modules/dashboard_module.py`, public route `GET /dashboard/status`,
+and the React dashboard at `dashboard-ui/src/App.jsx`.
+
+### Usage
+
+```text
+GET /dashboard/status
+GET /dashboard/status?stream=1&interval_s=1
+```
+
+### Rules
+
+- JSON responses use `delivery.transport="poll"`; SSE events use
+  `delivery.transport="sse"`.
+- Every public payload must include `contract.name="jules_dashboard_status"`
+  and `contract.version=2`.
+- SSE frames use `event: dashboard-status` and an increasing `id`/sequence.
+- The frontend should prefer EventSource, show the stream sequence and
+  `CONTRACT V2`, and fall back to polling only when the stream is unavailable.
+- Keep this route compact and sanitized: no raw local paths, packet previews,
+  full file inventories, env values, or secret-bearing route output.
+
+---
+
 ## Codebase Analyzer
 
 Used by `modules/codebase_analyzer.py`, the protected `POST /codebase/analyze`

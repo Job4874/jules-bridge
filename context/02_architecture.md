@@ -159,6 +159,21 @@ Every module has a **simple typed interface** hiding complex implementation:
   project mixing by making collisions visible before dispatching agents or
   reusing ports/nodes/dependencies.
 
+### Dashboard Status Contract
+
+- `GET /dashboard/status` is the public browser snapshot route. JSON responses
+  carry `contract.name="jules_dashboard_status"`, `contract.version=2`, and
+  `delivery.transport="poll"`.
+- `GET /dashboard/status?stream=1&interval_s=1` uses the same route for
+  Server-Sent Events. Each `event: dashboard-status` payload carries the same
+  v2 contract with `delivery.transport="sse"` and an increasing sequence.
+- The React dashboard must prefer the SSE stream, display the stream sequence
+  and `CONTRACT V2`, then fall back to polling if EventSource fails or no first
+  event arrives promptly.
+- Dashboard snapshots are unauthenticated, so logs and CLI status blocks must
+  stay compact and sanitized. Keep full inventories and action routes behind
+  protected endpoints.
+
 ### Jules Dispatch
 
 - `modules/jules_orchestrator.py` parses pasted Jules task dumps, classifies task

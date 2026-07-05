@@ -222,6 +222,12 @@
 
 - **Dashboard alliance status** — `/dashboard/status` may include compact `alliance` state from `jules_inbox/alliance/ALLIANCE_SWITCHBOARD_STATE.json`, but only expose readiness, counts, mode, lane labels, blockers/caveats, and safe live-work flags. Never expose packet file paths, raw packet previews, absolute local paths, or full agent skill locations in the dashboard snapshot.
 
+- **Dashboard status contract** — `/dashboard/status` JSON and `/dashboard/status?stream=1` SSE must both include `contract.name="jules_dashboard_status"` and `contract.version=2`. The frontend should show `CONTRACT V2` only after this gate passes.
+
+- **Dashboard stream fallback** — Browser clients should open EventSource against the existing public `/dashboard/status?stream=1&interval_s=1` route, not a new route. If the stream errors or misses its first event, fall back to polling `/dashboard/status` and label the mode honestly.
+
+- **Dashboard public sanitization** — `/dashboard/status` is unauthenticated. Recent logs must mask local Windows paths, and Gemini/Antigravity snapshots must expose only compact fields such as install/readiness/version/blocker/model count.
+
 - **Cache TTL** — repo scanning is cached separately with `REPO_CONTEXT_GUARD_CACHE_TTL_S` (default 120s). Do not run a full filesystem scan every dashboard poll.
 
 - **Secrets** — env key names can be returned for readiness, but values for keys matching KEY/TOKEN/SECRET/PASSWORD/PASS/CREDENTIAL/AUTH must never be returned.

@@ -543,3 +543,11 @@ has gone wrong before and what to avoid.
 - Added `.gitignore` entries for `bridge.log.*` and `scratch/screenshots/`, reducing final publish noise. Latest live packet classification reports 55 dirty publish candidates and 0 generated/noisy exclusions.
 - Verification: focused cloud-sync/route tests passed 10 tests; full `python -m pytest tests/ -q` passed 505 tests, evidence hash `85f001f01078842b31e93fbc0a3c99fb90b55f115dd1cd181ff331f3ce22b5b8`; dashboard `npm run lint` and `npm run build` passed.
 
+## Session 20260705T211000 - Streaming Dashboard Status Contract
+
+- `/dashboard/status` now has a v2 shared contract for frontend/backend correlation: JSON polling stamps `contract.name=jules_dashboard_status`, `contract.version=2`, `delivery.transport=poll`; `?stream=1` emits SSE `dashboard-status` events with `delivery.transport=sse` and increasing sequence ids.
+- `dashboard-ui/src/App.jsx` opens EventSource first, shows `STREAM <sequence>` and `CONTRACT V2`, and falls back to polling only when the stream fails or misses startup. `dashboardModel.js` rejects contract drift instead of blindly trusting payload shape.
+- Public dashboard status payloads are compact/sanitized: recent logs mask local Windows paths, and Gemini/Antigravity snapshots expose only install/readiness/version/headless/blocker/model-count fields.
+- Local analyzer proof for codebase prompts can run through `modules.codebase_analyzer.analyze_codebase(...)` even when protected `/codebase/analyze` rejects unauthenticated HTTP calls.
+- Verification: live curl SSE received two v2 events; Edge/Playwright on `127.0.0.1:6001` passed desktop/mobile with `STREAM 2`, `CONTRACT V2`, one SSE request, visible codebase counts, no console/page errors, and no horizontal overflow. Full `python -m pytest tests -q` passed 512 tests; dashboard lint/build and Python compile checks passed.
+

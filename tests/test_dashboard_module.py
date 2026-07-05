@@ -8,6 +8,7 @@ import modules.dashboard_module
 from pathlib import Path
 
 from modules.dashboard_module import (
+    dashboard_status_event_stream,
     get_dashboard_status,
     _dashboard_status_cache,
     _env_vars,
@@ -17,6 +18,8 @@ from modules.dashboard_module import (
     _fleet_status,
     _vm_info,
     _runtime_context,
+    _safe_log_lines,
+    _cli_status_summary,
     _codebase_analysis_summary,
     _alliance_status_summary,
     _cloud_sync_status_summary,
@@ -69,6 +72,8 @@ def test_get_dashboard_status_happy_path():
             "ready": True,
             "version": "0.49.0",
             "headless_mode": "-p/--prompt",
+            "state_path": r"C:\Users\abdul\jules-bridge\jules_inbox\gemini\GEMINI_PREFLIGHT.json",
+            "preferred_gemini_command": r"C:\Users\abdul\.npm-packages\gemini.cmd",
         }
         mock_antigravity.return_value = {
             "installed": True,
@@ -76,6 +81,8 @@ def test_get_dashboard_status_happy_path():
             "version": "1.0.16",
             "headless_mode": "-p/--print",
             "model_count": 8,
+            "state_path": r"C:\Users\abdul\jules-bridge\jules_inbox\gemini\ANTIGRAVITY_PREFLIGHT.json",
+            "preferred_antigravity_command": r"C:\Users\abdul\AppData\Local\agy\bin\agy.exe",
         }
         mock_vm.return_value = {
             "vms": [{"provider": "GCP", "name": "jules-offload-worker", "ip": "10.0.0.1"}],
@@ -157,6 +164,11 @@ def test_get_dashboard_status_happy_path():
         # Assertions
         assert result["ok"] is True
         assert "timestamp" in result
+        assert result["contract"]["name"] == "jules_dashboard_status"
+        assert result["contract"]["version"] == 2
+        assert result["contract"]["transport"] == "poll"
+        assert result["delivery"]["transport"] == "poll"
+        assert result["delivery"]["streaming"] is False
         assert result["cache_age_s"] == 0
         assert result["execution_context"] == "[SCHOOL_COMPUTE]"
         assert result["quant_allowed"] is False
@@ -174,8 +186,12 @@ def test_get_dashboard_status_happy_path():
         assert result["jules_fleet"]["launched"] == 1
         assert result["gemini_cli"]["ready"] is True
         assert result["gemini_cli"]["version"] == "0.49.0"
+        assert "state_path" not in result["gemini_cli"]
+        assert "preferred_gemini_command" not in result["gemini_cli"]
         assert result["antigravity_cli"]["ready"] is True
         assert result["antigravity_cli"]["model_count"] == 8
+        assert "state_path" not in result["antigravity_cli"]
+        assert "preferred_antigravity_command" not in result["antigravity_cli"]
         assert result["codebase_analysis"]["summary"]["route_count"] == 42
         assert result["codebase_analysis"]["integrations"][0]["id"] == "codebase_analyzer"
         assert result["alliance"]["mode"] == "two_agent_alliance"
@@ -206,6 +222,44 @@ def test_get_dashboard_status_cache():
         assert result["ok"] is True
         assert result["cached_key"] == "cached_val"
         assert "cache_age_s" in result
+        assert result["contract"]["transport"] == "poll"
+
+def test_dashboard_status_event_stream_emits_contract_events():
+    snapshots = [
+        {
+            "ok": True,
+            "timestamp": "2026-07-05T20:00:00+00:00",
+            "bridge": {"status": "running"},
+        },
+        {
+            "ok": True,
+            "timestamp": "2026-07-05T20:00:01+00:00",
+            "bridge": {"status": "running"},
+        },
+    ]
+
+    with patch('modules.dashboard_module._build_dashboard_status', side_effect=snapshots):
+        events = list(dashboard_status_event_stream(max_events=2, sleep_fn=lambda _seconds: None))
+
+    assert events[0] == "retry: 3000\n\n"
+    assert events[1].startswith("id: 1\nevent: dashboard-status\ndata: ")
+    assert events[2].startswith("id: 2\nevent: dashboard-status\ndata: ")
+
+    payload = json.loads(events[1].split("data:", 1)[1])
+    assert payload["contract"]["name"] == "jules_dashboard_status"
+    assert payload["contract"]["version"] == 2
+    assert payload["contract"]["transport"] == "sse"
+    assert payload["contract"]["sequence"] == 1
+    assert payload["delivery"]["streaming"] is True
+
+def test_dashboard_status_event_stream_returns_error_event_on_snapshot_failure():
+    with patch('modules.dashboard_module._build_dashboard_status', side_effect=RuntimeError("boom")):
+        events = list(dashboard_status_event_stream(max_events=1, sleep_fn=lambda _seconds: None))
+
+    payload = json.loads(events[1].split("data:", 1)[1])
+    assert payload["ok"] is False
+    assert payload["error"] == "stream_error"
+    assert payload["contract"]["transport"] == "sse"
 
 def test_get_dashboard_status_exception():
     with patch('modules.dashboard_module._env_vars') as mock_env_vars:
@@ -277,6 +331,36 @@ def test_tail_log():
 def test_tail_log_exception():
     with patch('pathlib.Path.read_text', side_effect=Exception("Read error")):
         assert _tail_log() == []
+
+def test_safe_log_lines_masks_local_paths():
+    lines = [
+        r"Log path: C:\Users\abdul\jules-bridge\bridge.log",
+        r"Tool path: C:\Users\abdul\AppData\Local\agy\bin\agy.exe",
+    ]
+
+    result = _safe_log_lines(lines)
+
+    assert "[repo-root]" in result[0]
+    assert "[user-home]" in result[1]
+    assert r"C:\Users" not in "\n".join(result)
+
+def test_cli_status_summary_is_frontend_compact():
+    payload = {
+        "installed": True,
+        "ready": True,
+        "version": "1.0.16",
+        "headless_mode": "-p/--print",
+        "model_count": 8,
+        "state_path": r"C:\Users\abdul\secret.json",
+        "preferred_antigravity_command": r"C:\Users\abdul\AppData\Local\agy\bin\agy.exe",
+    }
+
+    result = _cli_status_summary(payload, include_model_count=True)
+
+    assert result["ready"] is True
+    assert result["model_count"] == 8
+    assert "state_path" not in result
+    assert "preferred_antigravity_command" not in result
 
 def test_read_json():
     json_content = '{"key": "value"}'

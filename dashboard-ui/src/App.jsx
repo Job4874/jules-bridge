@@ -1256,28 +1256,101 @@ function App() {
 
   useEffect(() => {
     let mounted = true;
-    const fetchStatus = async () => {
+    let pollTimer = null;
+    let startupTimer = null;
+    let eventSource = null;
+    let streamReceived = false;
+
+    const applyStatusPayload = (payload, fallbackMode) => {
+      if (!mounted) return;
+      const nextStatus = normalizeDashboardPayload(payload);
+      const mode = nextStatus.contractOk ? (nextStatus.updateMode || fallbackMode) : 'contract-drift';
+      setSysStatus({ ...nextStatus, updateMode: mode });
+      setCpuHistory(previous => [...previous.slice(1), nextStatus.cpu]);
+      setMemHistory(previous => [...previous.slice(1), nextStatus.mem]);
+    };
+
+    const markOffline = () => {
+      if (mounted) {
+        setSysStatus(previous => ({
+          ...previous,
+          online: false,
+          uptime: 'OFFLINE',
+          bridgeStatus: 'offline',
+          updateMode: 'offline'
+        }));
+      }
+    };
+
+    const stopPolling = () => {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    };
+
+    const fetchStatus = async (mode = 'poll') => {
       try {
         const response = await fetch(`${BRIDGE}/dashboard/status`, { cache: 'no-store' });
         if (!response.ok) throw new Error(`status ${response.status}`);
         const payload = await response.json();
-        if (!mounted) return;
-        const nextStatus = normalizeDashboardPayload(payload);
-        setSysStatus(nextStatus);
-        setCpuHistory(previous => [...previous.slice(1), nextStatus.cpu]);
-        setMemHistory(previous => [...previous.slice(1), nextStatus.mem]);
+        applyStatusPayload(payload, mode);
       } catch {
-        if (mounted) {
-          setSysStatus(previous => ({ ...previous, online: false, uptime: 'OFFLINE', bridgeStatus: 'offline' }));
-        }
+        markOffline();
       }
     };
 
-    fetchStatus();
-    const timer = setInterval(fetchStatus, 2000);
+    const startPolling = (mode = 'poll') => {
+      stopPolling();
+      fetchStatus(mode);
+      pollTimer = setInterval(() => fetchStatus(mode), 2000);
+    };
+
+    if (typeof window !== 'undefined' && 'EventSource' in window) {
+      eventSource = new EventSource(`${BRIDGE}/dashboard/status?stream=1&interval_s=1`);
+      setSysStatus(previous => ({ ...previous, updateMode: 'connecting' }));
+
+      const handleStreamMessage = event => {
+        try {
+          streamReceived = true;
+          if (startupTimer) {
+            clearTimeout(startupTimer);
+            startupTimer = null;
+          }
+          applyStatusPayload(JSON.parse(event.data), 'sse');
+        } catch {
+          setSysStatus(previous => ({ ...previous, updateMode: 'contract-drift' }));
+        }
+      };
+
+      eventSource.addEventListener('dashboard-status', handleStreamMessage);
+      eventSource.onmessage = handleStreamMessage;
+      eventSource.onerror = () => {
+        if (!mounted) return;
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+        startPolling(streamReceived ? 'poll-fallback' : 'poll');
+      };
+      startupTimer = setTimeout(() => {
+        if (!streamReceived) {
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          startPolling('poll');
+        }
+      }, 5000);
+    } else {
+      startPolling('poll');
+    }
+
     return () => {
       mounted = false;
-      clearInterval(timer);
+      stopPolling();
+      if (startupTimer) clearTimeout(startupTimer);
+      if (eventSource) eventSource.close();
     };
   }, []);
 
@@ -1400,6 +1473,19 @@ function App() {
     setInputValue(packet);
     setActiveFocus('comms');
   };
+  let streamTone = 'warn';
+  if (sysStatus.updateMode === 'sse') {
+    streamTone = 'success';
+  } else if (sysStatus.updateMode === 'offline' || sysStatus.updateMode === 'contract-drift') {
+    streamTone = 'danger';
+  }
+  const streamLabel = {
+    sse: `STREAM ${sysStatus.streamSequence || 0}`,
+    connecting: 'STREAM ...',
+    'poll-fallback': 'POLL FALLBACK',
+    'contract-drift': 'CONTRACT DRIFT',
+    offline: 'OFFLINE'
+  }[sysStatus.updateMode] || 'POLLING';
 
   return (
     <div className="dashboard-shell" data-focus={activeFocus}>
@@ -1413,6 +1499,10 @@ function App() {
         </div>
         <div className="command-status">
           <StatusPill tone={sysStatus.online ? 'success' : 'danger'}>{sysStatus.online ? 'LIVE' : 'OFFLINE'}</StatusPill>
+          <StatusPill tone={streamTone}>{streamLabel}</StatusPill>
+          <StatusPill tone={sysStatus.contractOk ? 'success' : 'danger'}>
+            {sysStatus.contractOk ? `CONTRACT V${sysStatus.contract.version}` : 'CONTRACT WAIT'}
+          </StatusPill>
           <StatusPill tone={sysStatus.tunnel ? 'success' : 'warn'}>{sysStatus.tunnel ? 'TUNNEL' : 'LOCAL'}</StatusPill>
           <StatusPill tone={sysStatus.geminiCli?.ready ? 'success' : sysStatus.geminiCli?.installed ? 'warn' : 'danger'}>
             {sysStatus.geminiCli?.ready ? 'GEMINI READY' : sysStatus.geminiCli?.installed ? 'GEMINI INSTALLED' : 'GEMINI MISSING'}

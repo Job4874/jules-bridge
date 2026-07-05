@@ -1626,6 +1626,50 @@ class TestAllianceSwitchboardRoute(unittest.TestCase):
         self.assertEqual(response.get_json()["error"], "Invalid input")
 
 
+class TestDashboardRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    @patch("modules.dashboard_module.get_dashboard_status")
+    def test_dashboard_status_json_delegates_to_module(self, mock_status):
+        mock_status.return_value = {
+            "ok": True,
+            "contract": {"name": "jules_dashboard_status", "version": 2, "transport": "poll"},
+        }
+
+        response = self.client.get("/dashboard/status")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["contract"]["transport"], "poll")
+        mock_status.assert_called_once_with(bridge_start_utc=bridge._BRIDGE_START_UTC)
+
+    @patch("modules.dashboard_module.dashboard_status_event_stream")
+    def test_dashboard_status_stream_delegates_to_module(self, mock_stream):
+        mock_stream.return_value = iter([
+            "retry: 3000\n\n",
+            'id: 1\nevent: dashboard-status\ndata: {"ok":true}\n\n',
+        ])
+
+        response = self.client.get("/dashboard/status?stream=1&events=1&interval_s=1")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "text/event-stream")
+        body = response.get_data(as_text=True)
+        self.assertIn("event: dashboard-status", body)
+        mock_stream.assert_called_once_with(
+            bridge_start_utc=bridge._BRIDGE_START_UTC,
+            interval_s=1,
+            max_events=1,
+        )
+
+    def test_dashboard_status_stream_rejects_bad_interval(self):
+        response = self.client.get("/dashboard/status?stream=1&interval_s=fast")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+
+
 class TestChatRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True

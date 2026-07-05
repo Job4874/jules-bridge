@@ -5,6 +5,7 @@ state, and recent log lines into a single snapshot dict.
 
 Public interface:
     get_dashboard_status() -> dict
+    dashboard_status_event_stream() -> iterator[str]
 """
 
 from __future__ import annotations
@@ -34,6 +35,12 @@ _ALLIANCE_STATE = _ROOT / "jules_inbox" / "alliance" / "ALLIANCE_SWITCHBOARD_STA
 _ENV_PATH = _ROOT / ".env"
 
 _LOG_TAIL_LINES = 40
+_DASHBOARD_CONTRACT_NAME = "jules_dashboard_status"
+_DASHBOARD_CONTRACT_VERSION = 2
+_DEFAULT_STREAM_INTERVAL_S = 1.0
+_MAX_STREAM_INTERVAL_S = 30.0
+_STREAM_RETRY_MS = 3000
+_dashboard_sequence = 0
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -70,9 +77,25 @@ def _tail_log(n: int = _LOG_TAIL_LINES) -> list[str]:
     try:
         text = _LOG_PATH.read_text(encoding="utf-8", errors="replace")
         lines = text.splitlines()
-        return lines[-n:] if len(lines) >= n else lines
+        return _safe_log_lines(lines[-n:] if len(lines) >= n else lines)
     except Exception:  # pylint: disable=broad-exception-caught
         return []
+
+
+def _safe_log_lines(lines: list[str]) -> list[str]:
+    """Mask local Windows paths before returning dashboard-visible logs."""
+    masked = []
+    home = str(Path.home())
+    root = str(_ROOT)
+    for line in lines:
+        safe = str(line)
+        if root:
+            safe = safe.replace(root, "[repo-root]")
+        if home:
+            safe = safe.replace(home, "[user-home]")
+        safe = re.sub(r"[A-Za-z]:\\Users\\[^\\\s]+", "[user-home]", safe)
+        masked.append(safe)
+    return masked
 
 
 def _read_json(path: Path) -> dict | None:
@@ -361,10 +384,133 @@ def _cloud_sync_status_summary() -> dict[str, Any]:
     }
 
 
+def _cli_status_summary(status: dict[str, Any] | None, *, include_model_count: bool = False) -> dict[str, Any]:
+    """Return only frontend-used terminal-agent status fields."""
+    row = status if isinstance(status, dict) else {}
+    compact = {
+        "installed": bool(row.get("installed", False)),
+        "ready": bool(row.get("ready", False)),
+        "version": row.get("version", ""),
+        "headless_mode": row.get("headless_mode", ""),
+        "last_blocker": row.get("last_blocker") or row.get("likely_blocker") or row.get("blocker") or "",
+    }
+    if include_model_count:
+        compact["model_count"] = row.get("model_count", 0)
+    return compact
+
+
 _dashboard_status_cache: dict = {}
 # ---------------------------------------------------------------------------
 # Public interface
 # ---------------------------------------------------------------------------
+
+
+def _next_sequence() -> int:
+    global _dashboard_sequence  # pylint: disable=global-statement
+    _dashboard_sequence += 1
+    return _dashboard_sequence
+
+
+def _stamp_contract(result: dict[str, Any], *, transport: str, sequence: int | None = None) -> dict[str, Any]:
+    """Attach the frontend/backend contract metadata expected by dashboard clients."""
+    seq = _next_sequence() if sequence is None else max(0, int(sequence))
+    timestamp = result.get("timestamp") or datetime.now(timezone.utc).isoformat()
+    result["contract"] = {
+        "name": _DASHBOARD_CONTRACT_NAME,
+        "version": _DASHBOARD_CONTRACT_VERSION,
+        "transport": transport,
+        "sequence": seq,
+        "generated_at_utc": timestamp,
+    }
+    result["delivery"] = {
+        "transport": transport,
+        "sequence": seq,
+        "streaming": transport == "sse",
+    }
+    return result
+
+
+def _build_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, Any]:
+    """Build a fresh dashboard snapshot without using the dashboard cache."""
+    now = datetime.now(timezone.utc)
+    uptime_s = int((now - bridge_start_utc).total_seconds()) if bridge_start_utc else 0
+
+    env = _env_vars()
+    runtime = _runtime_context(env)
+    pressure = detect_resource_pressure()
+    fleet = _fleet_status()
+    raw_gemini_cli = gemini_status_snapshot()
+    raw_antigravity_cli = antigravity_status_snapshot()
+    gemini_cli = _cli_status_summary(raw_gemini_cli)
+    antigravity_cli = _cli_status_summary(raw_antigravity_cli, include_model_count=True)
+    cloud = _vm_info(env)
+    logs = _tail_log()
+    repo_context = build_repo_context_guard(include_repos=False)
+    codebase_analysis = _codebase_analysis_summary()
+    alliance = _alliance_status_summary(gemini_cli=gemini_cli, antigravity_cli=antigravity_cli)
+    cloud_sync = _cloud_sync_status_summary()
+    repo_summary = dict(repo_context.get("summary", {}))
+    repo_summary.pop("sample_repos", None)
+
+    ngrok_url = ""
+    for line in reversed(logs):
+        if "ngrok-free.dev" in line or "ngrok.io" in line:
+            match = re.search(r"https://[a-z0-9\-]+\.ngrok[a-z.\-]*/", line)
+            if match:
+                ngrok_url = match.group(0).rstrip("/")
+                break
+
+    return {
+        "ok": True,
+        "timestamp": now.isoformat(),
+        "cache_age_s": 0,
+        **runtime,
+        "bridge": {
+            "status": "running",
+            "uptime_s": uptime_s,
+            "uptime_human": _fmt_uptime(uptime_s),
+            "ngrok_url": ngrok_url,
+            "local_url": "http://127.0.0.1:5000",
+        },
+        "resource_pressure": {
+            "status": pressure.get("status", "unknown"),
+            "cpu_percent": pressure.get("cpu_percent"),
+            "memory_percent": pressure.get("memory_percent"),
+            "maxed_out": pressure.get("maxed_out", False),
+            "reasons": pressure.get("reasons", []),
+        },
+        "cloud": cloud,
+        "jules_fleet": fleet,
+        "gemini_cli": gemini_cli,
+        "antigravity_cli": antigravity_cli,
+        "alliance": alliance,
+        "cloud_sync": cloud_sync,
+        "codebase_analysis": codebase_analysis,
+        "repo_context": {
+            "status": repo_context.get("status", "unknown"),
+            "summary": repo_summary,
+            "collisions": repo_context.get("collisions", [])[:12],
+            "guardrails": repo_context.get("guardrails", []),
+            "cache_age_s": repo_context.get("cache_age_s", 0),
+        },
+        "recent_logs": logs,
+        "model_loop": {
+            "mode": "vm_browser",
+            "requires_provider_api_keys": False,
+        },
+        "env_keys_present": [
+            k for k in [
+                "BROWSER_MODEL_LOOP_URL",
+                "GCE_WORKER_IP",
+                "GMAIL_USER",
+                "GEMINI_CLI_PATH",
+                "ANTIGRAVITY_CLI_PATH",
+                "AGY_CLI_PATH",
+            ]
+            if env.get(k)
+        ],
+    }
+
 
 def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, Any]:
     """Aggregate full dashboard status. Never raises."""
@@ -375,90 +521,47 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         if _dashboard_status_cache:
             ts, cached_res = _dashboard_status_cache.get('last', (0, {}))
             if now_ts - ts < cache_ttl:
-                cached_res['cache_age_s'] = int(now_ts - ts)
-                return cached_res
+                result = dict(cached_res)
+                result['cache_age_s'] = int(now_ts - ts)
+                return _stamp_contract(result, transport="poll")
 
-        now = datetime.now(timezone.utc)
-        uptime_s = int((now - bridge_start_utc).total_seconds()) if bridge_start_utc else 0
-
-        env = _env_vars()
-        runtime = _runtime_context(env)
-        pressure = detect_resource_pressure()
-        fleet = _fleet_status()
-        gemini_cli = gemini_status_snapshot()
-        antigravity_cli = antigravity_status_snapshot()
-        cloud = _vm_info(env)
-        logs = _tail_log()
-        repo_context = build_repo_context_guard(include_repos=False)
-        codebase_analysis = _codebase_analysis_summary()
-        alliance = _alliance_status_summary(gemini_cli=gemini_cli, antigravity_cli=antigravity_cli)
-        cloud_sync = _cloud_sync_status_summary()
-        repo_summary = dict(repo_context.get("summary", {}))
-        repo_summary.pop("sample_repos", None)
-
-        ngrok_url = ""
-        # Try to extract ngrok URL from recent logs
-        for line in reversed(logs):
-            if "ngrok-free.dev" in line or "ngrok.io" in line:
-                match = re.search(r"https://[a-z0-9\-]+\.ngrok[a-z.\-]*/", line)
-                if match:
-                    ngrok_url = match.group(0).rstrip("/")
-                    break
-
-        result = {
-            "ok": True,
-            "timestamp": now.isoformat(),
-            "cache_age_s": 0,
-            **runtime,
-            "bridge": {
-                "status": "running",
-                "uptime_s": uptime_s,
-                "uptime_human": _fmt_uptime(uptime_s),
-                "ngrok_url": ngrok_url,
-                "local_url": "http://127.0.0.1:5000",
-            },
-            "resource_pressure": {
-                "status": pressure.get("status", "unknown"),
-                "cpu_percent": pressure.get("cpu_percent"),
-                "memory_percent": pressure.get("memory_percent"),
-                "maxed_out": pressure.get("maxed_out", False),
-                "reasons": pressure.get("reasons", []),
-            },
-            "cloud": cloud,
-            "jules_fleet": fleet,
-            "gemini_cli": gemini_cli,
-            "antigravity_cli": antigravity_cli,
-            "alliance": alliance,
-            "cloud_sync": cloud_sync,
-            "codebase_analysis": codebase_analysis,
-            "repo_context": {
-                "status": repo_context.get("status", "unknown"),
-                "summary": repo_summary,
-                "collisions": repo_context.get("collisions", [])[:12],
-                "guardrails": repo_context.get("guardrails", []),
-                "cache_age_s": repo_context.get("cache_age_s", 0),
-            },
-            "recent_logs": logs,
-            "model_loop": {
-                "mode": "vm_browser",
-                "requires_provider_api_keys": False,
-            },
-            "env_keys_present": [
-                k for k in [
-                    "BROWSER_MODEL_LOOP_URL",
-                    "GCE_WORKER_IP",
-                    "GMAIL_USER",
-                    "GEMINI_CLI_PATH",
-                    "ANTIGRAVITY_CLI_PATH",
-                    "AGY_CLI_PATH",
-                ]
-                if env.get(k)
-            ],
-        }
+        result = _stamp_contract(_build_dashboard_status(bridge_start_utc), transport="poll")
         _dashboard_status_cache['last'] = (now_ts, result)
         return result
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        return {"ok": False, "error": str(exc)}
+        return _stamp_contract({"ok": False, "error": str(exc)}, transport="poll")
+
+
+def dashboard_status_event_stream(
+    bridge_start_utc: datetime | None = None,
+    *,
+    interval_s: float = _DEFAULT_STREAM_INTERVAL_S,
+    max_events: int = 0,
+    sleep_fn: Any = time.sleep,
+) -> Any:
+    """Yield Server-Sent Events carrying fresh dashboard status snapshots."""
+    try:
+        interval = max(0.2, min(float(interval_s or _DEFAULT_STREAM_INTERVAL_S), _MAX_STREAM_INTERVAL_S))
+    except (TypeError, ValueError):
+        interval = _DEFAULT_STREAM_INTERVAL_S
+    limit = max(0, int(max_events or 0))
+
+    yield f"retry: {_STREAM_RETRY_MS}\n\n"
+    sent = 0
+    while limit == 0 or sent < limit:
+        sent += 1
+        try:
+            result = _stamp_contract(_build_dashboard_status(bridge_start_utc), transport="sse", sequence=sent)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            result = _stamp_contract(
+                {"ok": False, "error": "stream_error", "details": str(exc)[:160]},
+                transport="sse",
+                sequence=sent,
+            )
+        payload = json.dumps(result, ensure_ascii=True, separators=(",", ":"))
+        yield f"id: {sent}\nevent: dashboard-status\ndata: {payload}\n\n"
+        if limit == 0 or sent < limit:
+            sleep_fn(interval)
 
 
 def _fmt_uptime(seconds: int) -> str:

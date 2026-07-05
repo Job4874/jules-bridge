@@ -53,6 +53,8 @@
 | **Cloud sync readiness** | Read-only Git/GitHub publish gate showing branch/upstream, ahead/behind, dirty counts, GitHub auth, warnings, and blockers | `modules/cloud_sync.py` | "push done", "cloud saved", "sync complete" |
 | **Cloud publish packet** | Read-only operator review artifact that classifies dirty worktree families and suggests review/test/commit/push commands without running them | `modules/cloud_sync.py` | "auto-push", "sync complete", "dashboard commit" |
 | **TIU workbench** | Interactive dashboard surface that converts scope/lane/mode controls into a safe operator packet with alliance, codebase, and cloud-sync gates | `modules/tiu_workbench.py` | "auto-runner", "silent launcher", "push button" |
+| **Dashboard status contract** | Public v2 payload contract shared by JSON polling and SSE streaming for the React dashboard | `modules/dashboard_module.py` | "status blob", "dashboard vibes", "UI-only state" |
+| **Dashboard status stream** | Server-Sent Events mode for `GET /dashboard/status?stream=1`, emitting `dashboard-status` events with increasing sequences | `modules/dashboard_module.py` | "websocket", "poll loop", "live-ish refresh" |
 
 ---
 

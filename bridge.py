@@ -2264,8 +2264,31 @@ def sync_publish_packet():
 @app.route("/dashboard/status", methods=["GET"])
 @route_errors
 def dashboard_status():
-    """GET /dashboard/status — real-time multi-cloud mission control snapshot."""
-    from modules.dashboard_module import get_dashboard_status  # pylint: disable=import-outside-toplevel
+    """GET /dashboard/status — real-time dashboard snapshot or SSE stream."""
+    from modules.dashboard_module import (  # pylint: disable=import-outside-toplevel
+        dashboard_status_event_stream,
+        get_dashboard_status,
+    )
+
+    if query_bool_field("stream", False):
+        from flask import Response, stream_with_context  # pylint: disable=import-outside-toplevel
+
+        interval_s = query_int_field("interval_s", 1, min_value=1, max_value=30)
+        events = query_int_field("events", 0, min_value=0, max_value=500)
+        stream = dashboard_status_event_stream(
+            bridge_start_utc=_BRIDGE_START_UTC,
+            interval_s=interval_s,
+            max_events=events,
+        )
+        return Response(
+            stream_with_context(stream),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
     result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
     return jsonify(result), 200 if result.get("ok") else 500
 
