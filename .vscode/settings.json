@@ -1,0 +1,7 @@
+{
+  "python.analysis.extraPaths": ["${workspaceFolder}"],
+  "pylint.cwd": "${workspaceFolder}",
+  "pylint.args": [
+    "--init-hook=import os, sys; sys.path.insert(0, os.getcwd())"
+  ]
+}
