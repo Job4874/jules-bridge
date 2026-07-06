@@ -1122,6 +1122,52 @@ class TestSyncStatusRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()["error"], "Invalid input")
 
     @patch("modules.build_cloud_publish_packet")
+    def test_sync_publish_preview_is_authenticated_read_only(self, mock_packet):
+        mock_packet.return_value = {
+            "status": "blocked",
+            "state": "blocked",
+            "blockers": ["dirty_worktree"],
+            "artifacts": {"packet_written": False, "packet_path": ""},
+            "packet": "# Cloud Publish Packet\n",
+        }
+
+        response = self.client.get(
+            "/sync/publish-preview?objective=Preview%20dashboard%20work"
+            "&timeout_s=9&use_cache=false&write_packet=true"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["state"], "blocked")
+        self.assertFalse(response.get_json()["artifacts"]["packet_written"])
+        mock_packet.assert_called_once_with(
+            root="",
+            objective="Preview dashboard work",
+            timeout_s=9,
+            use_cache=False,
+            write_packet=False,
+            output_dir="",
+        )
+
+    @patch("modules.build_cloud_publish_packet")
+    def test_sync_publish_preview_requires_auth(self, mock_packet):
+        raw_client = bridge.app.test_client()
+
+        response = raw_client.get("/sync/publish-preview")
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.get_json()["error"], "Unauthorized")
+        mock_packet.assert_not_called()
+
+    @patch("modules.build_cloud_publish_packet")
+    def test_sync_publish_preview_rejects_root(self, mock_packet):
+        response = self.client.get("/sync/publish-preview?root=C:/repos/private")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "Invalid input")
+        self.assertIn("authenticated publish-packet", response.get_json()["details"])
+        mock_packet.assert_not_called()
+
+    @patch("modules.build_cloud_publish_packet")
     def test_sync_publish_packet_delegates_to_module(self, mock_packet):
         mock_packet.return_value = {
             "status": "blocked",
@@ -1709,6 +1755,29 @@ class TestChatRoutes(unittest.TestCase):
             image_base64="abc",
             history=[{"role": "user", "content": "prior"}],
         )
+
+
+class TestReasoningSolveRoute(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    def test_reasoning_solve_mcq_returns_parsed_answer(self):
+        problem = (
+            "You are answering a multiple-choice quiz question.\n"
+            "Return ONLY valid JSON matching: "
+            '{"index": int, "selected_text": string, "confidence": float, "reason": string}\n\n'
+            "Question:\nPick one\n\nOptions:\n0. Alpha\n1. Beta"
+        )
+        response = self.client.post(
+            "/reasoning/solve",
+            json={"problem": problem, "halt_budget": 8, "model": "stub"},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertIn("parsed_answer", payload)
+        self.assertEqual(payload["parsed_answer"]["selected_text"], "Alpha")
+        self.assertNotIn("Executed action for step", str(payload.get("answer") or ""))
 
 
 if __name__ == "__main__":

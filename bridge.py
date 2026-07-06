@@ -436,7 +436,8 @@ TENTACLES = [
     {"name": "grep",         "route": "POST /fs/grep",           "reach": "Search file contents for gate/log strings"},
     {"name": "codebase_analyze", "route": "POST /codebase/analyze", "reach": "Bounded secret-safe local repo analysis for VM/Jules handoff"},  # pylint: disable=line-too-long
     {"name": "sync_status",   "route": "GET /sync/status",       "reach": "Read-only Git/GitHub cloud sync readiness and blockers"},  # pylint: disable=line-too-long
-    {"name": "sync_publish_packet", "route": "POST /sync/publish-packet", "reach": "Build a read-only cloud publish review packet and commands"},  # pylint: disable=line-too-long
+    {"name": "sync_publish_preview", "route": "GET /sync/publish-preview", "reach": "Authenticated read-only cloud publish preview; never writes packet artifacts"},  # pylint: disable=line-too-long
+    {"name": "sync_publish_packet", "route": "POST /sync/publish-packet", "reach": "Authenticated cloud publish review packet builder; can write packet artifacts"},  # pylint: disable=line-too-long
     {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},  # pylint: disable=line-too-long
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
@@ -1802,7 +1803,7 @@ def reasoning_solve():
 
     trace = modules.reason(problem, context=context, halt_budget=halt_budget, model=model)
 
-    return jsonify({
+    payload: dict[str, Any] = {
         "problem": trace.problem,
         "answer": trace.answer,
         "succeeded": trace.succeeded,
@@ -1831,7 +1832,12 @@ def reasoning_solve():
             "halted_early": trace.halt.halted_early,
         },
         "feedback": trace.feedback,
-    })
+    }
+    if trace.parsed_answer is not None:
+        payload["parsed_answer"] = trace.parsed_answer
+        if not trace.parsed_answer.get("abstain"):
+            payload["result"] = trace.parsed_answer
+    return jsonify(payload)
 
 
 @app.route("/reasoning/plan", methods=["POST"])
@@ -2253,6 +2259,32 @@ def sync_publish_packet():
         use_cache=bool_field(data, "use_cache", default=False),
         write_packet=bool_field(data, "write_packet", default=False),
         output_dir=path_field(data, "output_dir", default=""),
+    )
+    return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
+
+
+@app.route("/sync/publish-preview", methods=["GET"])
+@route_errors
+def sync_publish_preview():
+    """GET /sync/publish-preview - Authenticated read-only cloud publish preview.
+
+    This route intentionally never writes packet artifacts. It lets the local
+    dashboard build a current repo-relative review packet without enabling the
+    write-capable publish-packet route.
+    """
+    if request.args.get("root"):
+        raise BridgeHTTPError(
+            400,
+            "Invalid input",
+            details="root is only supported by the authenticated publish-packet route",
+        )
+    result = modules.build_cloud_publish_packet(
+        root="",
+        objective=request.args.get("objective", ""),
+        timeout_s=query_int_field("timeout_s", 4, min_value=1, max_value=30),
+        use_cache=query_bool_field("use_cache", False),
+        write_packet=False,
+        output_dir="",
     )
     return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
 

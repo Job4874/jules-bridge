@@ -7,6 +7,7 @@ To run:
     python -m pytest tests/test_reasoning_module.py -v
 """
 import pytest
+import json
 from unittest.mock import patch
 from modules.reasoning_module import (
     HLevelPlan,
@@ -229,3 +230,84 @@ class TestReason:
             context="Quantower running, DLL hash abc123, telemetry active"
         )
         assert isinstance(trace, ReasoningTrace)
+
+
+# ---------------------------------------------------------------------------
+# MCQ quiz fast-path
+# ---------------------------------------------------------------------------
+
+_SAMPLE_MCQ_PROBLEM = (
+    "You are answering a multiple-choice quiz question.\n"
+    "Return ONLY valid JSON matching: "
+    '{"index": int, "selected_text": string, "confidence": float, "reason": string}\n\n'
+    "Question:\nWhich option is correct?\n\n"
+    "Options:\n"
+    "0. Alpha\n"
+    "1. Beta\n"
+    "2. Gamma"
+)
+
+
+class TestMcqQuizReasoning:
+    def test_mcq_stub_returns_strict_json_answer(self):
+        trace = reason(_SAMPLE_MCQ_PROBLEM, model="stub")
+        assert trace.parsed_answer is not None
+        assert trace.parsed_answer.get("abstain") is not True
+        assert trace.parsed_answer["index"] == 0
+        assert trace.parsed_answer["selected_text"] == "Alpha"
+        assert 0.0 <= trace.parsed_answer["confidence"] <= 1.0
+        assert trace.parsed_answer["reason"]
+
+    def test_mcq_stub_never_returns_generic_step_text(self):
+        trace = reason(_SAMPLE_MCQ_PROBLEM, model="stub")
+        assert trace.answer is not None
+        assert "Executed action for step" not in trace.answer
+        assert "Executed action for step" not in trace.parsed_answer["selected_text"]
+
+    def test_mcq_abstains_when_options_missing(self):
+        problem = (
+            "You are answering a multiple-choice quiz question.\n"
+            "Return ONLY valid JSON matching: "
+            '{"index": int, "selected_text": string, "confidence": float, "reason": string}\n\n'
+            "Question:\nWhich option is correct?\n"
+        )
+        trace = reason(problem, model="stub")
+        assert trace.parsed_answer is not None
+        assert trace.parsed_answer.get("abstain") is True
+        assert trace.answer is None
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_mcq_model_loop_validates_selected_text(self, mock_model_loop):
+        mock_model_loop.return_value = json.dumps(
+            {
+                "index": 1,
+                "selected_text": "Beta",
+                "confidence": 0.93,
+                "reason": "Beta is the best match.",
+            }
+        )
+        trace = reason(_SAMPLE_MCQ_PROBLEM, model="smart")
+        assert trace.parsed_answer["index"] == 1
+        assert trace.parsed_answer["selected_text"] == "Beta"
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_mcq_model_loop_rejects_guessed_option_text(self, mock_model_loop):
+        mock_model_loop.return_value = json.dumps(
+            {
+                "index": 1,
+                "selected_text": "Not in options",
+                "confidence": 0.93,
+                "reason": "Guess.",
+            }
+        )
+        trace = reason(_SAMPLE_MCQ_PROBLEM, model="smart")
+        assert trace.parsed_answer.get("abstain") is True
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_mcq_model_loop_abstain_passthrough(self, mock_model_loop):
+        mock_model_loop.return_value = json.dumps(
+            {"abstain": True, "reason": "missing or ambiguous context"}
+        )
+        trace = reason(_SAMPLE_MCQ_PROBLEM, model="smart")
+        assert trace.parsed_answer.get("abstain") is True
+        assert trace.answer is None

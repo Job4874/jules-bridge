@@ -27,6 +27,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import time
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
@@ -114,6 +115,7 @@ class ReasoningTrace:
     halt: HaltDecision
     answer: Optional[str]
     elapsed_ms: float
+    parsed_answer: Optional[Dict[str, Any]] = None
 
     # CDLC Observe: structured feedback for improving future context
     feedback: Dict[str, Any] = field(default_factory=dict)
@@ -167,14 +169,198 @@ def _h_stub(problem: str, model: str) -> Dict[str, Any]:
     }
 
 
+_GENERIC_STEP_RE = re.compile(r"^Executed action for step \d+\.?$", re.IGNORECASE)
+
+_MCQ_SYSTEM_PROMPT = """\
+You are answering a multiple-choice quiz question for Jules Bridge.
+Return ONLY valid JSON — no markdown, no prose, no follow-up questions.
+
+If you can select an answer from the provided options, return:
+{"index": <int>, "selected_text": "<exact option text>", "confidence": <0.0-1.0>, "reason": "<brief explanation>"}
+
+Rules:
+- index is zero-based and must match one of the numbered options.
+- selected_text must exactly match one provided answer choice.
+- confidence must be between 0.0 and 1.0.
+
+If the question is incomplete or the answer cannot be determined, return:
+{"abstain": true, "reason": "missing or ambiguous context"}
+"""
+
+
 def _l_stub(_step: str, step_index: int, _model: str) -> Dict[str, Any]:
-    """Deterministic L-module stub for unit tests."""
+    """Deterministic L-module stub for unit tests (non-quiz H→L paths only)."""
     return {
         "action_type": "answer",
         "payload": {"text": f"Executed action for step {step_index}"},
         "confidence": 0.7,
         "reasoning": "[L module stub — replace with real LLM call]",
     }
+
+
+def _is_mcq_quiz_problem(problem: str) -> bool:
+    text = str(problem or "").lower()
+    return (
+        "multiple-choice quiz" in text
+        or ("selected_text" in text and "return only valid json" in text)
+    )
+
+
+def _parse_options_from_text(*parts: str) -> List[str]:
+    options: List[str] = []
+    in_options = False
+    for part in parts:
+        for line in str(part or "").splitlines():
+            stripped = line.strip()
+            if stripped.lower().startswith("options:"):
+                in_options = True
+                continue
+            if in_options:
+                match = re.match(r"^\d+\.\s*(.+)$", stripped)
+                if match:
+                    options.append(match.group(1).strip())
+                elif stripped and not re.match(r"^\d+\.", stripped):
+                    in_options = False
+    return options
+
+
+def _normalize_option_text(text: str) -> str:
+    return re.sub(r"\s+", " ", str(text or "").strip().lower())
+
+
+def _option_index_for_text(options: List[str], selected_text: str) -> Optional[int]:
+    target = _normalize_option_text(selected_text)
+    for index, option in enumerate(options):
+        if _normalize_option_text(option) == target:
+            return index
+    return None
+
+
+def _validate_mcq_payload(data: Dict[str, Any], options: List[str]) -> Optional[Dict[str, Any]]:
+    if data.get("abstain") is True:
+        reason = str(data.get("reason") or "missing or ambiguous context").strip()
+        return {"abstain": True, "reason": reason or "missing or ambiguous context"}
+
+    if len(options) < 2:
+        return {"abstain": True, "reason": "missing or ambiguous context"}
+
+    index_raw = data.get("index", data.get("selected_index"))
+    selected_text = str(data.get("selected_text") or data.get("text") or "").strip()
+    reason = str(data.get("reason") or data.get("explanation") or "").strip()
+    try:
+        confidence = float(data.get("confidence", 0.0))
+    except (TypeError, ValueError):
+        return None
+
+    if index_raw is None or not selected_text or not reason:
+        return None
+    if confidence < 0.0 or confidence > 1.0:
+        return None
+
+    try:
+        index = int(index_raw)
+    except (TypeError, ValueError):
+        return None
+    if index < 0 or index >= len(options):
+        return None
+
+    matched_index = _option_index_for_text(options, selected_text)
+    if matched_index is None or matched_index != index:
+        return None
+    if _GENERIC_STEP_RE.match(selected_text):
+        return None
+
+    return {
+        "index": index,
+        "selected_text": options[index],
+        "confidence": confidence,
+        "reason": reason,
+    }
+
+
+def _mcq_stub(problem: str, context: str) -> Dict[str, Any]:
+    options = _parse_options_from_text(problem, context)
+    if len(options) < 2:
+        return {"abstain": True, "reason": "missing or ambiguous context"}
+    return {
+        "index": 0,
+        "selected_text": options[0],
+        "confidence": 0.85,
+        "reason": "Stub MCQ answer for offline tests.",
+    }
+
+
+def _mcq_model_loop_call(problem: str, context: str, model_alias: str) -> Dict[str, Any]:
+    user_prompt = problem
+    if context:
+        user_prompt = f"{problem}\n\nContext:\n{context}"
+    raw = _model_loop_chat(_MCQ_SYSTEM_PROMPT, user_prompt, model_alias)
+    try:
+        data = _parse_llm_json(raw)
+    except json.JSONDecodeError:
+        _LOGGER.warning("MCQ model-loop returned non-JSON")
+        return {"abstain": True, "reason": "model returned non-JSON output"}
+    if "error" in data:
+        _LOGGER.warning("MCQ model-loop error: %s", data["error"])
+        return {"abstain": True, "reason": str(data["error"])}
+    return data
+
+
+def _reason_mcq_quiz(problem: str, context: str = "", model: str = "stub") -> ReasoningTrace:
+    """Single-shot MCQ reasoning — bypasses H→L stub loop that emits step executor text."""
+    t0 = time.perf_counter()
+    options = _parse_options_from_text(problem, context)
+    resolved = _MODEL_ALIASES.get(model, model)
+
+    if resolved is None:
+        raw_answer = _mcq_stub(problem, context)
+    else:
+        raw_answer = _mcq_model_loop_call(problem, context, model_alias=model)
+
+    parsed = _validate_mcq_payload(raw_answer, options)
+    if parsed is None:
+        parsed = {"abstain": True, "reason": "invalid or unmatched MCQ answer"}
+
+    if parsed.get("abstain"):
+        answer_text: Optional[str] = None
+        succeeded = False
+        halt_reason = "abstain"
+    else:
+        answer_text = json.dumps(parsed)
+        succeeded = True
+        halt_reason = "confident"
+
+    elapsed_ms = (time.perf_counter() - t0) * 1000.0
+    plan = HLevelPlan(
+        steps=["Select the best multiple-choice answer"],
+        goal_statement="Return strict JSON MCQ answer",
+        confidence=float(parsed.get("confidence", 0.0)) if not parsed.get("abstain") else 0.0,
+        reasoning="MCQ fast-path",
+        model=resolved or model,
+    )
+    return ReasoningTrace(
+        problem=problem,
+        plan=plan,
+        actions=[],
+        halt=HaltDecision(
+            should_halt=True,
+            reason=halt_reason,
+            steps_used=1,
+            steps_budget=1,
+        ),
+        answer=answer_text,
+        parsed_answer=parsed,
+        elapsed_ms=elapsed_ms,
+        feedback={
+            "plan_confidence": plan.confidence,
+            "steps_planned": 1,
+            "steps_executed": 0 if parsed.get("abstain") else 1,
+            "halt_reason": halt_reason,
+            "halted_early": True,
+            "mean_action_confidence": float(parsed.get("confidence", 0.0)) if not parsed.get("abstain") else 0.0,
+            "mcq_fast_path": True,
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -446,7 +632,10 @@ def _extract_answer(actions: List[LLevelAction], _plan: HLevelPlan) -> Optional[
         return None
     # Take the last answer action (most refined)
     last = answer_actions[-1]
-    return last.payload.get("text")
+    text = last.payload.get("text")
+    if text and _GENERIC_STEP_RE.match(str(text).strip()):
+        return None
+    return text
 
 
 # ---------------------------------------------------------------------------
@@ -479,6 +668,9 @@ def reason(
     Never raises — all sub-operations are defensive and return partial data.
     This matches oracle_session.py's contract: "Never raises".
     """
+    if _is_mcq_quiz_problem(problem):
+        return _reason_mcq_quiz(problem, context=context, model=model)
+
     t0 = time.perf_counter()
     actions: List[LLevelAction] = []
 
