@@ -95,6 +95,7 @@ def require_auth():
         "/dashboard/workflows",
         "/dashboard/projection",
         "/dashboard/worker/status",
+        "/dashboard/evidence",
         "/vm/status",
         "/chat",
         "/chat/test",
@@ -108,6 +109,8 @@ def require_auth():
         if request.method == "GET":
             return None
     if path == "/dashboard/worker/tick" and request.method == "POST":
+        return None
+    if path.startswith("/dashboard/evidence/") and request.method == "GET":
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -517,6 +520,8 @@ TENTACLES = [
     {"name": "dashboard_command_cancel", "route": "POST /dashboard/commands/<commandId>/cancel", "reach": "Cancel an in-flight dashboard command"},  # pylint: disable=line-too-long
     {"name": "dashboard_worker_tick", "route": "POST /dashboard/worker/tick", "reach": "Process admitted dashboard commands once for deterministic tests"},  # pylint: disable=line-too-long
     {"name": "dashboard_worker_status", "route": "GET /dashboard/worker/status", "reach": "Read dashboard command worker mode, counts, and last tick metadata"},  # pylint: disable=line-too-long
+    {"name": "dashboard_evidence", "route": "GET /dashboard/evidence", "reach": "Read recent redacted dashboard command evidence summaries"},  # pylint: disable=line-too-long
+    {"name": "dashboard_evidence_get", "route": "GET /dashboard/evidence/<evidenceId>", "reach": "Fetch one redacted dashboard evidence object by id"},  # pylint: disable=line-too-long
     {"name": "dashboard_workflows", "route": "GET /dashboard/workflows",     "reach": "Read recent Jules dashboard workflow lanes"},  # pylint: disable=line-too-long
     {"name": "dashboard_projection", "route": "GET /dashboard/projection",   "reach": "Aggregate bridge health, commands, workflows, sync, and blockers"},  # pylint: disable=line-too-long
     {"name": "chat",             "route": "POST /chat",                      "reach": "Conversational endpoint routed through the VM/browser model loop"},  # pylint: disable=line-too-long
@@ -2435,6 +2440,20 @@ def dashboard_worker_status():
     from modules.dashboard_command_worker import worker_status  # pylint: disable=import-outside-toplevel
 
     result = worker_status()
+    return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/dashboard/evidence", methods=["GET"])
+@app.route("/dashboard/evidence/<evidence_id>", methods=["GET"])
+@route_errors
+def dashboard_evidence(evidence_id=None):
+    """GET /dashboard/evidence — list or fetch redacted command evidence summaries."""
+    from modules.dashboard_evidence import get_evidence, list_evidence  # pylint: disable=import-outside-toplevel
+
+    if evidence_id:
+        result = get_evidence(evidence_id)
+        return jsonify(result), 200 if result.get("ok") else 404
+    result = list_evidence(limit=query_int_field("limit", 20, min_value=1, max_value=200))
     return jsonify(result), 200 if result.get("ok") else 500
 
 

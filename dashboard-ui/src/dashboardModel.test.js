@@ -30,6 +30,7 @@ import {
   commandReceiptDetail,
   dashboardCommandToJournalRow,
   normalizeDashboardProjection,
+  normalizeDashboardEvidenceSummary,
   normalizeDashboardWorkflow,
   toneForCommandStatus,
   summarizeCloudSyncGate,
@@ -949,6 +950,51 @@ test('command worker status normalizes into projection payload', () => {
   assert.equal(payload.commandWorker.lastCommandId, 'cmd-1');
 });
 
+test('latestEvidence and evidenceRefs normalize into projection payload', () => {
+  const payload = normalizeDashboardProjection({
+    ok: true,
+    contract: { name: 'jules_dashboard_projection', version: 1, generated_at_utc: '2026-07-07T00:00:00Z' },
+    commands: [{
+      commandId: 'cmd-1',
+      workflowId: 'wf-1',
+      traceId: 'trace-1',
+      type: 'route_probe',
+      status: 'succeeded',
+      route: '/ping',
+      evidenceRefs: ['ev-abc123']
+    }],
+    workflows: [],
+    latestEvidence: [{
+      evidenceId: 'ev-abc123',
+      commandId: 'cmd-1',
+      workflowId: 'wf-1',
+      traceId: 'trace-1',
+      type: 'route_probe',
+      status: 'succeeded',
+      summary: 'GET /ping returned 200',
+      createdAt: '2026-07-07T00:00:00Z',
+      redactionStatus: 'redacted'
+    }]
+  });
+
+  assert.equal(payload.commands[0].evidenceRefs[0], 'ev-abc123');
+  assert.equal(payload.latestEvidence[0].evidenceId, 'ev-abc123');
+  assert.equal(payload.latestEvidence[0].redactionStatus, 'redacted');
+});
+
+test('evidence summary normalizer keeps redaction status', () => {
+  const summary = normalizeDashboardEvidenceSummary({
+    evidenceId: 'ev-test',
+    status: 'blocked',
+    summary: '/not-allowed is not allowlisted for route_probe.',
+    redactionStatus: 'redacted'
+  });
+
+  assert.equal(summary.evidenceId, 'ev-test');
+  assert.equal(summary.status, 'blocked');
+  assert.equal(summary.redactionStatus, 'redacted');
+});
+
 test('blocked command renders blockReason in journal row', () => {
   const row = dashboardCommandToJournalRow({
     commandId: 'cmd-blocked',
@@ -1016,4 +1062,6 @@ test('command workflow panel and backend admission are wired in App', () => {
   assert.match(source, /commandType: 'break_test'/);
   assert.match(source, /commandType: 'chat_send'/);
   assert.match(source, /normalizeDashboardProjection/);
+  assert.match(source, /latestEvidence/);
+  assert.match(source, /evidenceRefs\.length/);
 });

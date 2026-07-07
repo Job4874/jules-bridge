@@ -746,7 +746,8 @@ button.action-receipt-blocker.selected {
 
 .command-workflow-grid,
 .command-workflow-row-meta,
-.command-worker-status {
+.command-worker-status,
+.command-evidence-status {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
@@ -754,7 +755,8 @@ button.action-receipt-blocker.selected {
 
 .command-workflow-grid span,
 .command-workflow-row-meta span,
-.command-worker-status span {
+.command-worker-status span,
+.command-evidence-status span {
   padding: 8px 10px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);

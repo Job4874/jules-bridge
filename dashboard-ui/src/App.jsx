@@ -8073,6 +8073,7 @@ function CommandWorkflowPanel({
   const commands = projection?.commands?.slice(0, 6) || [];
   const blockers = projection?.blockers?.slice(0, 3) || [];
   const worker = projection?.commandWorker || null;
+  const latestEvidence = projection?.latestEvidence?.[0] || null;
   const tone = projection?.ok ? (blockers.length > 0 ? 'warn' : 'success') : 'danger';
   const headline = workflow?.title || 'Command / workflow lane';
   const summary = workflow?.summary
@@ -8120,6 +8121,14 @@ function CommandWorkflowPanel({
             <span><strong>{worker.lastTickAt || 'never'}</strong> lastTick</span>
           </div>
         ) : null}
+        {latestEvidence ? (
+          <div className="command-evidence-status">
+            <span><strong>{latestEvidence.evidenceId || '--'}</strong> evidenceId</span>
+            <span><strong>{latestEvidence.status || '--'}</strong> evidence</span>
+            <span><strong>{latestEvidence.redactionStatus || 'redacted'}</strong> redaction</span>
+            <span><strong>{latestEvidence.summary || '--'}</strong> summary</span>
+          </div>
+        ) : null}
         {workflow?.nextSafeAction ? (
           <p className="command-workflow-next">{workflow.nextSafeAction}</p>
         ) : null}
@@ -8145,6 +8154,7 @@ function CommandWorkflowPanel({
                 <span>{command.type}</span>
                 <span>{command.route || 'local_preview'}</span>
                 <span>{command.traceId}</span>
+                <span>{Array.isArray(command.evidenceRefs) ? command.evidenceRefs.length : 0} evidence</span>
               </div>
               {command.blockReason ? (
                 <p className="command-workflow-block-reason">{command.blockReason}</p>

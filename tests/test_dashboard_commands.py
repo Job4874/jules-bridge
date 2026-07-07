@@ -222,6 +222,8 @@ def test_route_probe_ping_succeeds(command_store, monkeypatch):
     assert command["result"]["statusCode"] == 200
     assert command["result"]["route"] == "/ping"
     assert command["summary"] == "GET /ping returned 200"
+    assert command["evidenceRefs"]
+    assert str(command["evidenceRefs"][0]).startswith("ev-")
 
 
 def test_route_probe_dashboard_status_succeeds(command_store, monkeypatch):
@@ -317,3 +319,4 @@ def test_projection_shows_succeeded_route_probe_terminal_state(command_store, mo
     assert latest["type"] == "route_probe"
     assert latest["route"] == "/ping"
     assert latest["result"]["statusCode"] == 200
+    assert latest["evidenceRefs"]

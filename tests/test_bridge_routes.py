@@ -1811,6 +1811,35 @@ class TestDashboardRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()["mode"], "manual_tick")
         mock_status.assert_called_once_with()
 
+    @patch("modules.dashboard_evidence.list_evidence")
+    def test_dashboard_evidence_list_delegates_to_module(self, mock_list):
+        mock_list.return_value = {
+            "ok": True,
+            "evidence": [{"evidenceId": "ev-1", "status": "succeeded", "redactionStatus": "redacted"}],
+            "count": 1,
+        }
+
+        response = self.client.get("/dashboard/evidence?limit=5")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["count"], 1)
+        mock_list.assert_called_once()
+
+    @patch("modules.dashboard_evidence.get_evidence")
+    def test_dashboard_evidence_get_delegates_to_module(self, mock_get):
+        mock_get.return_value = {
+            "ok": True,
+            "evidence": {"evidenceId": "ev-abc", "status": "succeeded", "redactionStatus": "redacted"},
+            "resultHash": "sha256:abc",
+            "safePayload": {"status": "succeeded"},
+        }
+
+        response = self.client.get("/dashboard/evidence/ev-abc")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["evidence"]["evidenceId"], "ev-abc")
+        mock_get.assert_called_once_with("ev-abc")
+
 
 class TestChatRoutes(unittest.TestCase):
     def setUp(self):
