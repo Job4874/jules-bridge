@@ -745,14 +745,16 @@ button.action-receipt-blocker.selected {
 }
 
 .command-workflow-grid,
-.command-workflow-row-meta {
+.command-workflow-row-meta,
+.command-worker-status {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .command-workflow-grid span,
-.command-workflow-row-meta span {
+.command-workflow-row-meta span,
+.command-worker-status span {
   padding: 8px 10px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);

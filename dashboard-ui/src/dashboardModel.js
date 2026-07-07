@@ -1803,7 +1803,20 @@ export const EMPTY_DASHBOARD_PROJECTION = {
   collaborationProof: {},
   blockers: [],
   nextSafeAction: '',
-  currentWorkflowId: ''
+  currentWorkflowId: '',
+  commandWorker: {
+    ok: false,
+    workerId: '',
+    enabled: false,
+    mode: 'manual_tick',
+    pendingCount: 0,
+    runningCount: 0,
+    terminalCount: 0,
+    lastTickAt: null,
+    lastCommandId: null,
+    running: false,
+    poll_interval_s: 1
+  }
 };
 
 const COMMAND_STATUS_TONES = {
@@ -1866,6 +1879,24 @@ export const normalizeDashboardCommandsPayload = payload => {
   };
 };
 
+export const normalizeDashboardCommandWorker = worker => {
+  const source = worker && typeof worker === 'object' ? worker : {};
+  return {
+    ...EMPTY_DASHBOARD_PROJECTION.commandWorker,
+    ...source,
+    workerId: source.workerId || '',
+    enabled: Boolean(source.enabled),
+    mode: source.mode === 'background' ? 'background' : 'manual_tick',
+    pendingCount: Number(source.pendingCount || 0),
+    runningCount: Number(source.runningCount || 0),
+    terminalCount: Number(source.terminalCount || 0),
+    lastTickAt: source.lastTickAt || null,
+    lastCommandId: source.lastCommandId || null,
+    running: Boolean(source.running),
+    poll_interval_s: Number(source.poll_interval_s || 1)
+  };
+};
+
 export const normalizeDashboardProjection = payload => {
   const source = payload && typeof payload === 'object' ? payload : {};
   const contract = source.contract && typeof source.contract === 'object' ? source.contract : {};
@@ -1890,7 +1921,8 @@ export const normalizeDashboardProjection = payload => {
     collaborationProof: source.collaborationProof && typeof source.collaborationProof === 'object' ? source.collaborationProof : {},
     blockers: Array.isArray(source.blockers) ? source.blockers : [],
     nextSafeAction: source.nextSafeAction || '',
-    currentWorkflowId: source.currentWorkflowId || ''
+    currentWorkflowId: source.currentWorkflowId || '',
+    commandWorker: normalizeDashboardCommandWorker(source.commandWorker)
   };
 };
 

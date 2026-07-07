@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import uuid
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,6 +19,14 @@ _ROOT = Path(__file__).parent.parent
 _DASHBOARD_ROOT = _ROOT / ".jules-dashboard"
 _COMMANDS_DIR = _DASHBOARD_ROOT / "commands"
 _WORKFLOWS_DIR = _DASHBOARD_ROOT / "workflows"
+
+_TERMINAL_STATUSES = frozenset({
+    "succeeded",
+    "failed",
+    "blocked",
+    "not_implemented",
+    "cancelled",
+})
 
 _CONTRACT_NAME = "jules_dashboard_projection"
 _CONTRACT_VERSION = 1
@@ -51,6 +62,22 @@ WORKFLOW_STATUSES = frozenset({
 })
 
 FRONTEND_ONLY_TYPES = frozenset({"button_sweep", "proof_replay"})
+
+ROUTE_PROBE_ALLOWLIST = frozenset({
+    "/ping",
+    "/dashboard/status",
+    "/dashboard/projection",
+    "/sync/status",
+    "/sync/publish-preview",
+})
+
+_ROUTE_PROBE_AUTHENTICATED_PATHS = frozenset({
+    "/sync/status",
+    "/sync/publish-preview",
+})
+
+_EXTERNAL_ROUTE_RE = re.compile(r"^https?://|^//", re.IGNORECASE)
+_ROUTE_METHOD_PREFIX_RE = re.compile(r"^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+", re.IGNORECASE)
 
 SENSITIVE_KEY_PARTS = (
     "authorization",
@@ -276,6 +303,159 @@ def _next_safe_action(command: dict[str, Any]) -> str:
     return "Wait for the command lifecycle to finish."
 
 
+def _normalize_route_probe_path(route: str) -> str:
+    raw = str(route or "").strip()
+    raw = _ROUTE_METHOD_PREFIX_RE.sub("", raw)
+    if not raw.startswith("/"):
+        raw = f"/{raw}"
+    path = raw.split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    return path or "/"
+
+
+def _route_probe_method(route: str) -> str | None:
+    match = _ROUTE_METHOD_PREFIX_RE.match(str(route or "").strip())
+    return match.group(1).upper() if match else None
+
+
+def _bridge_base_url() -> str:
+    return os.environ.get("LOCAL_BRIDGE_URL", "http://127.0.0.1:5000").rstrip("/")
+
+
+def _http_probe_get_route(path: str) -> tuple[int, dict[str, Any]]:
+    """Issue a local GET request against the bridge for public probe routes."""
+    url = f"{_bridge_base_url()}{path}"
+    headers = {"Accept": "application/json"}
+    token = os.environ.get("BRIDGE_TOKEN", "").strip()
+    if token and path in _ROUTE_PROBE_AUTHENTICATED_PATHS:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(request, timeout=5) as response:
+            status_code = int(response.getcode() or 200)
+            body = response.read().decode("utf-8", errors="replace")
+            try:
+                payload = json.loads(body) if body else {}
+            except json.JSONDecodeError:
+                payload = {"body": body[:500]}
+            if not isinstance(payload, dict):
+                payload = {"body": payload}
+            return status_code, sanitize_projection_value(payload)
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        try:
+            payload = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            payload = {"body": body[:500]}
+        if not isinstance(payload, dict):
+            payload = {"body": payload}
+        return int(exc.code), sanitize_projection_value(payload)
+    except urllib.error.URLError as exc:
+        return 503, sanitize_projection_value({"error": str(exc.reason or exc)})
+
+
+def _execute_allowlisted_route_probe(
+    path: str,
+    *,
+    bridge_start_utc: datetime | None = None,
+) -> tuple[int, dict[str, Any]]:
+    """Execute one allowlisted GET route and return HTTP-like status plus sanitized payload."""
+    if path == "/dashboard/status":
+        status = get_dashboard_status(bridge_start_utc=bridge_start_utc)
+        status_code = 200 if status.get("ok") else 500
+        payload = sanitize_projection_value({
+            "ok": status.get("ok"),
+            "contract": status.get("contract"),
+        })
+        return status_code, payload
+
+    if path == "/dashboard/projection":
+        projection = get_dashboard_projection(bridge_start_utc=bridge_start_utc, limit=5)
+        status_code = 200 if projection.get("ok") else 500
+        payload = sanitize_projection_value({
+            "ok": projection.get("ok"),
+            "contract": projection.get("contract"),
+        })
+        return status_code, payload
+
+    if path == "/sync/status":
+        sync = get_cloud_sync_status(root="", timeout_s=4, use_cache=True)
+        status_code = 200 if sync.get("status") != "error" else 500
+        payload = sanitize_projection_value({
+            "status": sync.get("status"),
+            "state": sync.get("state"),
+        })
+        return status_code, payload
+
+    if path == "/sync/publish-preview":
+        preview = build_cloud_publish_packet(
+            root="",
+            objective="",
+            timeout_s=4,
+            use_cache=False,
+            write_packet=False,
+            output_dir="",
+        )
+        preview = sanitize_projection_value(preview)
+        status_code = 200 if preview.get("status") != "error" and not preview.get("blocked") else 500
+        payload = sanitize_projection_value({
+            "status": preview.get("status"),
+            "state": preview.get("state"),
+        })
+        return status_code, payload
+
+    return _http_probe_get_route(path)
+
+
+def _execute_route_probe_command(
+    command: dict[str, Any],
+    *,
+    bridge_start_utc: datetime | None = None,
+) -> dict[str, Any]:
+    route_raw = str(command.get("route") or "/ping").strip()
+    command["route"] = route_raw
+
+    if _EXTERNAL_ROUTE_RE.match(route_raw):
+        command["status"] = "blocked"
+        command["blockReason"] = "route_not_allowed"
+        command["summary"] = "External URLs cannot be probed from the command store."
+        return command
+
+    method = _route_probe_method(route_raw)
+    if method and method != "GET":
+        command["status"] = "blocked"
+        command["blockReason"] = "route_not_allowed"
+        command["summary"] = f"{method} routes cannot be probed; only GET is supported."
+        command["route"] = _normalize_route_probe_path(route_raw)
+        return command
+
+    path = _normalize_route_probe_path(route_raw)
+    command["route"] = path
+
+    if path.endswith("/chat") or "publish-packet" in path:
+        command["status"] = "blocked"
+        command["blockReason"] = "route_not_allowed"
+        command["summary"] = f"{path} is protected and cannot be probed from the command store."
+        return command
+
+    if path not in ROUTE_PROBE_ALLOWLIST:
+        command["status"] = "blocked"
+        command["blockReason"] = "route_not_allowed"
+        command["summary"] = f"{path} is not allowlisted for route_probe."
+        return command
+
+    status_code, payload = _execute_allowlisted_route_probe(path, bridge_start_utc=bridge_start_utc)
+    command["result"] = sanitize_projection_value({
+        "statusCode": status_code,
+        "route": path,
+        **payload,
+    })
+    command["summary"] = f"GET {path} returned {status_code}"
+    command["status"] = "succeeded" if 200 <= status_code < 300 else "failed"
+    if command["status"] == "failed" and not command.get("blockReason"):
+        command["blockReason"] = command["summary"]
+    return command
+
+
 def _touch_workflow(command: dict[str, Any]) -> dict[str, Any]:
     workflow_id = command["workflowId"]
     existing = _read_json(_workflow_path(workflow_id)) or {}
@@ -300,9 +480,8 @@ def _touch_workflow(command: dict[str, Any]) -> dict[str, Any]:
 
 
 def _execute_command(command: dict[str, Any], *, bridge_start_utc: datetime | None = None) -> dict[str, Any]:
+    """Run command logic and return the command with a terminal (or blocked) status."""
     command = dict(command)
-    command["status"] = "running"
-    command["updatedAt"] = _now_iso()
     command_type = command["type"]
 
     if command_type in FRONTEND_ONLY_TYPES:
@@ -343,23 +522,7 @@ def _execute_command(command: dict[str, Any], *, bridge_start_utc: datetime | No
             return command
 
         if command_type == "route_probe":
-            route = str(command.get("route") or "GET /ping").strip()
-            command["route"] = route
-            if route.endswith("/chat") or "publish-packet" in route:
-                command["status"] = "blocked"
-                command["blockReason"] = f"{route} is protected and cannot be probed from the command store."
-                command["summary"] = command["blockReason"]
-                return command
-            if route.startswith("GET /dashboard/status"):
-                status = get_dashboard_status(bridge_start_utc=bridge_start_utc)
-                command["result"] = sanitize_projection_value({"ok": status.get("ok"), "contract": status.get("contract")})
-                command["status"] = "succeeded" if status.get("ok") else "failed"
-                command["summary"] = command.get("summary") or f"Route probe {route} completed."
-                return command
-            command["status"] = "not_implemented"
-            command["blockReason"] = f"{route} is not executed by the dashboard command store."
-            command["summary"] = command["blockReason"]
-            return command
+            return _execute_route_probe_command(command, bridge_start_utc=bridge_start_utc)
 
         if command_type == "publish_preview":
             command["route"] = "GET /sync/publish-preview"
@@ -424,7 +587,136 @@ def get_command(command_id: str) -> dict[str, Any]:
     return {"ok": True, "command": sanitize_projection_value(_normalize_command(data))}
 
 
+def update_command_status(
+    command_id: str,
+    status: str,
+    *,
+    result: dict[str, Any] | None = None,
+    block_reason: str | None = None,
+    summary: str | None = None,
+    evidence_refs: list[Any] | None = None,
+    route: str | None = None,
+) -> dict[str, Any]:
+    """Update a persisted command status and mirror the workflow lane."""
+    data = _read_json(_command_path(command_id))
+    if not data:
+        return {"ok": False, "error": "command_not_found", "commandId": command_id}
+    command = _normalize_command(data)
+    if status not in COMMAND_STATUSES:
+        return {"ok": False, "error": "unsupported_command_status", "commandId": command_id}
+    command["status"] = status
+    if result is not None:
+        command["result"] = result if isinstance(result, dict) else {}
+    if block_reason is not None:
+        command["blockReason"] = block_reason
+    if summary is not None:
+        command["summary"] = summary
+    if evidence_refs is not None:
+        command["evidenceRefs"] = evidence_refs if isinstance(evidence_refs, list) else []
+    if route is not None:
+        command["route"] = route
+    command = _persist_command(command)
+    workflow = _touch_workflow(command)
+    return {
+        "ok": True,
+        "command": sanitize_projection_value(command),
+        "workflow": sanitize_projection_value(workflow),
+    }
+
+
+def get_command_status_counts(*, limit: int = 200) -> dict[str, int]:
+    """Return aggregate command counts for worker status and projection."""
+    commands = _load_commands(limit=limit)
+    return {
+        "pendingCount": sum(1 for command in commands if command.get("status") == "admitted"),
+        "runningCount": sum(1 for command in commands if command.get("status") == "running"),
+        "terminalCount": sum(1 for command in commands if command.get("status") in _TERMINAL_STATUSES),
+    }
+
+
+def list_pending_commands(limit: int = 20) -> list[dict[str, Any]]:
+    """Return admitted commands oldest-first for worker pickup."""
+    limit = max(1, min(int(limit or 20), 200))
+    pending = [
+        command
+        for command in _load_commands(limit=200)
+        if command.get("status") == "admitted"
+    ]
+    pending.sort(key=lambda item: item.get("createdAt") or "")
+    return pending[:limit]
+
+
+def process_command(command_id: str, *, bridge_start_utc: datetime | None = None) -> dict[str, Any]:
+    """Advance one command through running to a terminal status."""
+    data = _read_json(_command_path(command_id))
+    if not data:
+        return {"ok": False, "error": "command_not_found", "commandId": command_id}
+    command = _normalize_command(data)
+    if command["status"] == "cancelled":
+        return {"ok": False, "error": "command_cancelled", "commandId": command_id}
+    if command["status"] not in {"admitted", "running"}:
+        return {
+            "ok": True,
+            "command": sanitize_projection_value(command),
+            "skipped": True,
+            "commandId": command_id,
+        }
+
+    command["status"] = "running"
+    command = _persist_command(command)
+    _touch_workflow(command)
+
+    command = _execute_command(command, bridge_start_utc=bridge_start_utc)
+    command = _persist_command(command)
+    workflow = _touch_workflow(command)
+    return {
+        "ok": True,
+        "command": sanitize_projection_value(command),
+        "workflow": sanitize_projection_value(workflow),
+    }
+
+
+def process_pending_commands(*, bridge_start_utc: datetime | None = None, limit: int = 5) -> dict[str, Any]:
+    """Process admitted commands synchronously (worker tick or tests)."""
+    processed: list[dict[str, Any]] = []
+    skipped = 0
+    succeeded = 0
+    failed = 0
+    blocked = 0
+    not_implemented = 0
+
+    for command in list_pending_commands(limit=limit):
+        result = process_command(command["commandId"], bridge_start_utc=bridge_start_utc)
+        if not result.get("ok") or result.get("skipped"):
+            skipped += 1
+            continue
+        terminal = result["command"]
+        processed.append(terminal)
+        status = str(terminal.get("status") or "")
+        if status == "succeeded":
+            succeeded += 1
+        elif status == "failed":
+            failed += 1
+        elif status == "blocked":
+            blocked += 1
+        elif status == "not_implemented":
+            not_implemented += 1
+
+    return {
+        "ok": True,
+        "processed": sanitize_projection_value(processed),
+        "count": len(processed),
+        "processedCount": len(processed),
+        "skipped": skipped,
+        "succeeded": succeeded,
+        "failed": failed,
+        "blocked": blocked,
+        "not_implemented": not_implemented,
+    }
+
+
 def admit_command(payload: dict[str, Any] | None, *, bridge_start_utc: datetime | None = None) -> dict[str, Any]:
+    del bridge_start_utc  # admission is async; worker executes after persist
     body = payload if isinstance(payload, dict) else {}
     command_type = str(body.get("type") or "").strip()
     if command_type not in COMMAND_TYPES:
@@ -447,8 +739,6 @@ def admit_command(payload: dict[str, Any] | None, *, bridge_start_utc: datetime 
         "result": body.get("result") if isinstance(body.get("result"), dict) else {},
         "evidenceRefs": body.get("evidenceRefs") if isinstance(body.get("evidenceRefs"), list) else [],
     })
-    command = _persist_command(command)
-    command = _execute_command(command, bridge_start_utc=bridge_start_utc)
     command = _persist_command(command)
     workflow = _touch_workflow(command)
     return {
@@ -528,6 +818,8 @@ def _collect_blockers(
 
 
 def get_dashboard_projection(*, bridge_start_utc: datetime | None = None, limit: int = 20) -> dict[str, Any]:
+    from modules.dashboard_command_worker import worker_status  # pylint: disable=import-outside-toplevel
+
     bridge_health = get_dashboard_status(bridge_start_utc=bridge_start_utc)
     cache_age_s = int(bridge_health.get("cache_age_s") or 0)
     cloud_sync = sanitize_projection_value(bridge_health.get("cloud_sync") or get_cloud_sync_status(root="", timeout_s=4))
@@ -568,5 +860,6 @@ def get_dashboard_projection(*, bridge_start_utc: datetime | None = None, limit:
             else (latest_workflow or {}).get("nextSafeAction") or "Continue with the next safe dashboard control."
         ),
         "currentWorkflowId": (latest_workflow or {}).get("workflowId"),
+        "commandWorker": worker_status(),
     }
     return sanitize_projection_value(projection)

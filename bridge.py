@@ -71,7 +71,7 @@ LOGGER = logging.getLogger("jules_bridge")
 app = Flask(__name__)
 ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:6000,http://127.0.0.1:6000,http://localhost:6001,http://127.0.0.1:6001,http://localhost:5000,http://127.0.0.1:5000"
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:6000,http://127.0.0.1:6000,http://localhost:6001,http://127.0.0.1:6001,http://localhost:6003,http://127.0.0.1:6003,http://localhost:5000,http://127.0.0.1:5000"
 ).split(",")
 
 CORS(app, origins=ALLOWED_ORIGINS)
@@ -94,6 +94,7 @@ def require_auth():
         "/dashboard/commands",
         "/dashboard/workflows",
         "/dashboard/projection",
+        "/dashboard/worker/status",
         "/vm/status",
         "/chat",
         "/chat/test",
@@ -101,7 +102,12 @@ def require_auth():
         return None
     if path.startswith("/dashboard/workflows/"):
         return None
-    if path.startswith("/dashboard/commands/") and path.endswith("/cancel"):
+    if path.startswith("/dashboard/commands/"):
+        if path.endswith("/cancel"):
+            return None
+        if request.method == "GET":
+            return None
+    if path == "/dashboard/worker/tick" and request.method == "POST":
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -507,7 +513,10 @@ TENTACLES = [
     {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
     {"name": "dashboard_commands", "route": "GET /dashboard/commands",       "reach": "Read recent Jules dashboard command admissions"},  # pylint: disable=line-too-long
     {"name": "dashboard_commands_post", "route": "POST /dashboard/commands", "reach": "Admit a dashboard command/workflow event without external mutation"},  # pylint: disable=line-too-long
+    {"name": "dashboard_command_get", "route": "GET /dashboard/commands/<commandId>", "reach": "Fetch one dashboard command by id"},  # pylint: disable=line-too-long
     {"name": "dashboard_command_cancel", "route": "POST /dashboard/commands/<commandId>/cancel", "reach": "Cancel an in-flight dashboard command"},  # pylint: disable=line-too-long
+    {"name": "dashboard_worker_tick", "route": "POST /dashboard/worker/tick", "reach": "Process admitted dashboard commands once for deterministic tests"},  # pylint: disable=line-too-long
+    {"name": "dashboard_worker_status", "route": "GET /dashboard/worker/status", "reach": "Read dashboard command worker mode, counts, and last tick metadata"},  # pylint: disable=line-too-long
     {"name": "dashboard_workflows", "route": "GET /dashboard/workflows",     "reach": "Read recent Jules dashboard workflow lanes"},  # pylint: disable=line-too-long
     {"name": "dashboard_projection", "route": "GET /dashboard/projection",   "reach": "Aggregate bridge health, commands, workflows, sync, and blockers"},  # pylint: disable=line-too-long
     {"name": "chat",             "route": "POST /chat",                      "reach": "Conversational endpoint routed through the VM/browser model loop"},  # pylint: disable=line-too-long
@@ -2356,6 +2365,16 @@ def dashboard_commands():
     return jsonify(result), 200 if result.get("ok") else 400
 
 
+@app.route("/dashboard/commands/<command_id>", methods=["GET"])
+@route_errors
+def dashboard_command_get(command_id):
+    """GET /dashboard/commands/<commandId> — fetch one dashboard command."""
+    from modules.dashboard_commands import get_command  # pylint: disable=import-outside-toplevel
+
+    result = get_command(command_id)
+    return jsonify(result), 200 if result.get("ok") else 404
+
+
 @app.route("/dashboard/commands/<command_id>/cancel", methods=["POST"])
 @route_errors
 def dashboard_command_cancel(command_id):
@@ -2393,6 +2412,29 @@ def dashboard_projection():
         bridge_start_utc=_BRIDGE_START_UTC,
         limit=query_int_field("limit", 20, min_value=1, max_value=200),
     )
+    return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/dashboard/worker/tick", methods=["POST"])
+@route_errors
+def dashboard_worker_tick():
+    """POST /dashboard/worker/tick — process admitted dashboard commands once."""
+    from modules.dashboard_command_worker import tick_command_worker  # pylint: disable=import-outside-toplevel
+
+    result = tick_command_worker(
+        bridge_start_utc=_BRIDGE_START_UTC,
+        limit=query_int_field("limit", 5, min_value=1, max_value=50),
+    )
+    return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/dashboard/worker/status", methods=["GET"])
+@route_errors
+def dashboard_worker_status():
+    """GET /dashboard/worker/status — read dashboard command worker state."""
+    from modules.dashboard_command_worker import worker_status  # pylint: disable=import-outside-toplevel
+
+    result = worker_status()
     return jsonify(result), 200 if result.get("ok") else 500
 
 
@@ -2483,6 +2525,12 @@ def chat() -> Any:
 # Entry point
 # ---------------------------------------------------------------------------
 
+def _ensure_command_worker_started() -> None:
+    from modules.dashboard_command_worker import start_command_worker  # pylint: disable=import-outside-toplevel
+
+    start_command_worker(bridge_start_utc=_BRIDGE_START_UTC)
+
+
 if __name__ == "__main__":
     LOGGER.info("========================================")
     LOGGER.info("JULES GOD-MODE BRIDGE ACTIVATED")
@@ -2490,4 +2538,5 @@ if __name__ == "__main__":
     LOGGER.info("Log path: %s", LOG_PATH)
     LOGGER.info("Token auth: ENABLED")
     LOGGER.info("========================================")
+    _ensure_command_worker_started()
     app.run(port=5000, host="0.0.0.0")
