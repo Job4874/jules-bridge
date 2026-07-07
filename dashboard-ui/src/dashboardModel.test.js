@@ -922,6 +922,33 @@ test('command projection normalizes bridge-backed commands and workflows', () =>
   assert.equal(payload.contract.name, 'jules_dashboard_projection');
 });
 
+test('command worker status normalizes into projection payload', () => {
+  const payload = normalizeDashboardProjection({
+    ok: true,
+    contract: { name: 'jules_dashboard_projection', version: 1, generated_at_utc: '2026-07-07T00:00:00Z' },
+    commands: [],
+    workflows: [],
+    commandWorker: {
+      ok: true,
+      workerId: 'dashboard-worker-abc',
+      enabled: false,
+      mode: 'manual_tick',
+      pendingCount: 2,
+      runningCount: 0,
+      terminalCount: 1,
+      lastTickAt: '2026-07-07T00:00:00Z',
+      lastCommandId: 'cmd-1',
+      running: false,
+      poll_interval_s: 1
+    }
+  });
+
+  assert.equal(payload.commandWorker.workerId, 'dashboard-worker-abc');
+  assert.equal(payload.commandWorker.mode, 'manual_tick');
+  assert.equal(payload.commandWorker.pendingCount, 2);
+  assert.equal(payload.commandWorker.lastCommandId, 'cmd-1');
+});
+
 test('blocked command renders blockReason in journal row', () => {
   const row = dashboardCommandToJournalRow({
     commandId: 'cmd-blocked',

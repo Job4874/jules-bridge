@@ -1747,6 +1747,70 @@ class TestDashboardRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()["contract"]["name"], "jules_dashboard_projection")
         mock_projection.assert_called_once()
 
+    @patch("modules.dashboard_commands.get_command")
+    def test_dashboard_command_get_delegates_to_module(self, mock_get):
+        mock_get.return_value = {
+            "ok": True,
+            "command": {"commandId": "cmd-abc", "status": "succeeded", "type": "break_test"},
+        }
+
+        response = self.client.get("/dashboard/commands/cmd-abc")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["command"]["commandId"], "cmd-abc")
+        mock_get.assert_called_once_with("cmd-abc")
+
+    @patch("modules.dashboard_commands.get_command")
+    def test_dashboard_command_get_not_found(self, mock_get):
+        mock_get.return_value = {"ok": False, "error": "command_not_found", "commandId": "cmd-missing"}
+
+        response = self.client.get("/dashboard/commands/cmd-missing")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["error"], "command_not_found")
+
+    @patch("modules.dashboard_command_worker.tick_command_worker")
+    def test_dashboard_worker_tick_delegates_to_module(self, mock_tick):
+        mock_tick.return_value = {
+            "ok": True,
+            "processed": 1,
+            "skipped": 0,
+            "succeeded": 1,
+            "failed": 0,
+            "blocked": 0,
+            "not_implemented": 0,
+            "lastTickAt": "2026-07-07T00:00:00+00:00",
+            "lastCommandId": "cmd-1",
+        }
+
+        response = self.client.post("/dashboard/worker/tick?limit=3")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["processed"], 1)
+        mock_tick.assert_called_once()
+
+    @patch("modules.dashboard_command_worker.worker_status")
+    def test_dashboard_worker_status_delegates_to_module(self, mock_status):
+        mock_status.return_value = {
+            "ok": True,
+            "workerId": "dashboard-worker-abc",
+            "enabled": False,
+            "mode": "manual_tick",
+            "pendingCount": 2,
+            "runningCount": 0,
+            "terminalCount": 1,
+            "lastTickAt": None,
+            "lastCommandId": None,
+            "running": False,
+            "poll_interval_s": 1.0,
+        }
+
+        response = self.client.get("/dashboard/worker/status")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["mode"], "manual_tick")
+        mock_status.assert_called_once_with()
+
 
 class TestChatRoutes(unittest.TestCase):
     def setUp(self):

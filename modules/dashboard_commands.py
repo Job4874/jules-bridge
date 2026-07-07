@@ -17,6 +17,14 @@ _DASHBOARD_ROOT = _ROOT / ".jules-dashboard"
 _COMMANDS_DIR = _DASHBOARD_ROOT / "commands"
 _WORKFLOWS_DIR = _DASHBOARD_ROOT / "workflows"
 
+_TERMINAL_STATUSES = frozenset({
+    "succeeded",
+    "failed",
+    "blocked",
+    "not_implemented",
+    "cancelled",
+})
+
 _CONTRACT_NAME = "jules_dashboard_projection"
 _CONTRACT_VERSION = 1
 
@@ -300,9 +308,8 @@ def _touch_workflow(command: dict[str, Any]) -> dict[str, Any]:
 
 
 def _execute_command(command: dict[str, Any], *, bridge_start_utc: datetime | None = None) -> dict[str, Any]:
+    """Run command logic and return the command with a terminal (or blocked) status."""
     command = dict(command)
-    command["status"] = "running"
-    command["updatedAt"] = _now_iso()
     command_type = command["type"]
 
     if command_type in FRONTEND_ONLY_TYPES:
@@ -424,7 +431,136 @@ def get_command(command_id: str) -> dict[str, Any]:
     return {"ok": True, "command": sanitize_projection_value(_normalize_command(data))}
 
 
+def update_command_status(
+    command_id: str,
+    status: str,
+    *,
+    result: dict[str, Any] | None = None,
+    block_reason: str | None = None,
+    summary: str | None = None,
+    evidence_refs: list[Any] | None = None,
+    route: str | None = None,
+) -> dict[str, Any]:
+    """Update a persisted command status and mirror the workflow lane."""
+    data = _read_json(_command_path(command_id))
+    if not data:
+        return {"ok": False, "error": "command_not_found", "commandId": command_id}
+    command = _normalize_command(data)
+    if status not in COMMAND_STATUSES:
+        return {"ok": False, "error": "unsupported_command_status", "commandId": command_id}
+    command["status"] = status
+    if result is not None:
+        command["result"] = result if isinstance(result, dict) else {}
+    if block_reason is not None:
+        command["blockReason"] = block_reason
+    if summary is not None:
+        command["summary"] = summary
+    if evidence_refs is not None:
+        command["evidenceRefs"] = evidence_refs if isinstance(evidence_refs, list) else []
+    if route is not None:
+        command["route"] = route
+    command = _persist_command(command)
+    workflow = _touch_workflow(command)
+    return {
+        "ok": True,
+        "command": sanitize_projection_value(command),
+        "workflow": sanitize_projection_value(workflow),
+    }
+
+
+def get_command_status_counts(*, limit: int = 200) -> dict[str, int]:
+    """Return aggregate command counts for worker status and projection."""
+    commands = _load_commands(limit=limit)
+    return {
+        "pendingCount": sum(1 for command in commands if command.get("status") == "admitted"),
+        "runningCount": sum(1 for command in commands if command.get("status") == "running"),
+        "terminalCount": sum(1 for command in commands if command.get("status") in _TERMINAL_STATUSES),
+    }
+
+
+def list_pending_commands(limit: int = 20) -> list[dict[str, Any]]:
+    """Return admitted commands oldest-first for worker pickup."""
+    limit = max(1, min(int(limit or 20), 200))
+    pending = [
+        command
+        for command in _load_commands(limit=200)
+        if command.get("status") == "admitted"
+    ]
+    pending.sort(key=lambda item: item.get("createdAt") or "")
+    return pending[:limit]
+
+
+def process_command(command_id: str, *, bridge_start_utc: datetime | None = None) -> dict[str, Any]:
+    """Advance one command through running to a terminal status."""
+    data = _read_json(_command_path(command_id))
+    if not data:
+        return {"ok": False, "error": "command_not_found", "commandId": command_id}
+    command = _normalize_command(data)
+    if command["status"] == "cancelled":
+        return {"ok": False, "error": "command_cancelled", "commandId": command_id}
+    if command["status"] not in {"admitted", "running"}:
+        return {
+            "ok": True,
+            "command": sanitize_projection_value(command),
+            "skipped": True,
+            "commandId": command_id,
+        }
+
+    command["status"] = "running"
+    command = _persist_command(command)
+    _touch_workflow(command)
+
+    command = _execute_command(command, bridge_start_utc=bridge_start_utc)
+    command = _persist_command(command)
+    workflow = _touch_workflow(command)
+    return {
+        "ok": True,
+        "command": sanitize_projection_value(command),
+        "workflow": sanitize_projection_value(workflow),
+    }
+
+
+def process_pending_commands(*, bridge_start_utc: datetime | None = None, limit: int = 5) -> dict[str, Any]:
+    """Process admitted commands synchronously (worker tick or tests)."""
+    processed: list[dict[str, Any]] = []
+    skipped = 0
+    succeeded = 0
+    failed = 0
+    blocked = 0
+    not_implemented = 0
+
+    for command in list_pending_commands(limit=limit):
+        result = process_command(command["commandId"], bridge_start_utc=bridge_start_utc)
+        if not result.get("ok") or result.get("skipped"):
+            skipped += 1
+            continue
+        terminal = result["command"]
+        processed.append(terminal)
+        status = str(terminal.get("status") or "")
+        if status == "succeeded":
+            succeeded += 1
+        elif status == "failed":
+            failed += 1
+        elif status == "blocked":
+            blocked += 1
+        elif status == "not_implemented":
+            not_implemented += 1
+
+    return {
+        "ok": True,
+        "processed": sanitize_projection_value(processed),
+        "count": len(processed),
+        "processedCount": len(processed),
+        "skipped": skipped,
+        "succeeded": succeeded,
+        "failed": failed,
+        "blocked": blocked,
+        "not_implemented": not_implemented,
+    }
+
+
 def admit_command(payload: dict[str, Any] | None, *, bridge_start_utc: datetime | None = None) -> dict[str, Any]:
+    del bridge_start_utc  # admission is async; worker executes after persist
     body = payload if isinstance(payload, dict) else {}
     command_type = str(body.get("type") or "").strip()
     if command_type not in COMMAND_TYPES:
@@ -447,8 +583,6 @@ def admit_command(payload: dict[str, Any] | None, *, bridge_start_utc: datetime 
         "result": body.get("result") if isinstance(body.get("result"), dict) else {},
         "evidenceRefs": body.get("evidenceRefs") if isinstance(body.get("evidenceRefs"), list) else [],
     })
-    command = _persist_command(command)
-    command = _execute_command(command, bridge_start_utc=bridge_start_utc)
     command = _persist_command(command)
     workflow = _touch_workflow(command)
     return {
@@ -528,6 +662,8 @@ def _collect_blockers(
 
 
 def get_dashboard_projection(*, bridge_start_utc: datetime | None = None, limit: int = 20) -> dict[str, Any]:
+    from modules.dashboard_command_worker import worker_status  # pylint: disable=import-outside-toplevel
+
     bridge_health = get_dashboard_status(bridge_start_utc=bridge_start_utc)
     cache_age_s = int(bridge_health.get("cache_age_s") or 0)
     cloud_sync = sanitize_projection_value(bridge_health.get("cloud_sync") or get_cloud_sync_status(root="", timeout_s=4))
@@ -568,5 +704,6 @@ def get_dashboard_projection(*, bridge_start_utc: datetime | None = None, limit:
             else (latest_workflow or {}).get("nextSafeAction") or "Continue with the next safe dashboard control."
         ),
         "currentWorkflowId": (latest_workflow or {}).get("workflowId"),
+        "commandWorker": worker_status(),
     }
     return sanitize_projection_value(projection)

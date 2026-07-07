@@ -8072,6 +8072,7 @@ function CommandWorkflowPanel({
   const workflow = projection?.workflows?.[0] || null;
   const commands = projection?.commands?.slice(0, 6) || [];
   const blockers = projection?.blockers?.slice(0, 3) || [];
+  const worker = projection?.commandWorker || null;
   const tone = projection?.ok ? (blockers.length > 0 ? 'warn' : 'success') : 'danger';
   const headline = workflow?.title || 'Command / workflow lane';
   const summary = workflow?.summary
@@ -8108,7 +8109,17 @@ function CommandWorkflowPanel({
           <span><strong>{workflow?.latestCommandId || '--'}</strong> latestCommand</span>
           <span><strong>{projection?.dashboardCache?.transport || 'poll'}</strong> transport</span>
           <span><strong>{projection?.bridgeHealth?.ok ? 'online' : 'offline'}</strong> bridge</span>
+          <span><strong>{worker?.mode || 'manual_tick'}</strong> worker</span>
+          <span><strong>{worker?.pendingCount ?? 0}</strong> pending</span>
         </div>
+        {worker ? (
+          <div className="command-worker-status">
+            <span><strong>{worker.workerId || '--'}</strong> workerId</span>
+            <span><strong>{worker.enabled ? 'enabled' : 'off'}</strong> daemon</span>
+            <span><strong>{worker.lastCommandId || '--'}</strong> lastCommand</span>
+            <span><strong>{worker.lastTickAt || 'never'}</strong> lastTick</span>
+          </div>
+        ) : null}
         {workflow?.nextSafeAction ? (
           <p className="command-workflow-next">{workflow.nextSafeAction}</p>
         ) : null}
