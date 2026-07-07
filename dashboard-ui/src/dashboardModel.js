@@ -601,6 +601,59 @@ export const toneForActionStatus = (statusOrResult, resultDetails = {}) => {
   return toneForStatus(status || state);
 };
 
+export const evaluateCommsSendGate = ({
+  draftText = '',
+  hasImage = false,
+  isThinking = false
+} = {}) => {
+  const hasDraft = String(draftText || '').trim().length > 0 || Boolean(hasImage);
+  if (isThinking) {
+    return {
+      allowed: false,
+      receiptTitle: 'Comms blocked',
+      reason: 'Wait for the current Comms response before sending.',
+      tone: 'warn',
+      chatMessage: ''
+    };
+  }
+  if (!hasDraft) {
+    return {
+      allowed: false,
+      receiptTitle: 'Comms blocked',
+      reason: 'Press Send blocked because there is no draft content to send.',
+      tone: 'warn',
+      chatMessage: 'COMM LINK WAIT: type a message or attach an image first.'
+    };
+  }
+  return {
+    allowed: true,
+    receiptTitle: '',
+    reason: '',
+    tone: 'success',
+    chatMessage: ''
+  };
+};
+
+export const buildBlockedControlReceipt = ({
+  reason = '',
+  label = 'Control blocked'
+} = {}) => ({
+  title: label,
+  detail: String(reason || 'This control cannot run right now.').trim(),
+  tone: 'warn'
+});
+
+export const buildRouteNotImplementedReceipt = ({
+  route = '',
+  label = 'Route not implemented'
+} = {}) => ({
+  title: label,
+  detail: route
+    ? `${route} is not wired on the bridge yet.`
+    : 'This control is not wired on the bridge yet.',
+  tone: 'warn'
+});
+
 const PACKET_BLOCKER_FIELD_RE = /(?:^|\n)\s*(?:[-*]\s*)?(?:sync_)?blockers?\s*:\s*([^\n]+)/gi;
 const PACKET_STATE_FIELD_RE = /(?:^|\n)\s*(?:[-*]\s*)?(?:status|state|plan_state)\s*:\s*([^\n]+)/gi;
 const PACKET_BLOCKED_ROW_RE = /(?:^|\n)\s*(?:[-*]\s*)?BLOCKED\s*:\s*([^\n]+)/gi;

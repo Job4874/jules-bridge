@@ -1510,8 +1510,14 @@ button.action-receipt-blocker.selected {
   opacity: 0.5;
 }
 
+.secondary-action[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .primary-action:disabled:hover,
-.secondary-action:disabled:hover {
+.secondary-action:disabled:hover,
+.secondary-action[aria-disabled="true"]:hover {
   border-color: rgba(97, 168, 255, 0.28);
   background: rgba(97, 168, 255, 0.12);
 }
@@ -6365,7 +6371,8 @@ button.action-receipt-blocker.selected {
   background: rgba(97, 168, 255, 0.16);
 }
 
-.icon-button:disabled {
+.icon-button:disabled,
+.icon-button[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.45;
 }
