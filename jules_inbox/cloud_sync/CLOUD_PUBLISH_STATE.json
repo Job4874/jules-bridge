@@ -1,12 +1,12 @@
 {
   "status": "blocked",
   "state": "blocked",
-  "generated_at_utc": "2026-07-06T20:00:12.533518+00:00",
+  "generated_at_utc": "2026-07-07T02:11:43.374611+00:00",
   "objective": "Publish and synchronize the current Jules Bridge dashboard/model-agent work.",
   "status_snapshot": {
     "status": "blocked",
     "state": "blocked",
-    "generated_at_utc": "2026-07-06T20:00:12.533518+00:00",
+    "generated_at_utc": "2026-07-07T02:11:43.374611+00:00",
     "cache_age_s": 0,
     "repo": {
       "name": "jules-bridge",
@@ -19,15 +19,15 @@
     "git": {
       "ahead": 0,
       "behind": 0,
-      "dirty_count": 40,
+      "dirty_count": 4,
       "staged_count": 0,
-      "unstaged_count": 19,
-      "untracked_count": 21,
+      "unstaged_count": 3,
+      "untracked_count": 1,
       "last_commit": {
-        "short_sha": "452951f",
-        "committed_at": "2026-07-05T15:11:14-06:00"
+        "short_sha": "6b8fa5e",
+        "committed_at": "2026-07-06T20:04:11-06:00"
       },
-      "fetch_age_s": 16266
+      "fetch_age_s": 448
     },
     "github": {
       "installed": true,
@@ -49,114 +49,37 @@
   },
   "change_families": [
     {
-      "family": "bridge_routes",
-      "label": "Bridge routes",
-      "count": 1,
-      "publish_candidate_count": 1,
-      "tracked_count": 1,
-      "untracked_count": 0,
-      "sample_paths": [
-        "bridge.py"
-      ]
-    },
-    {
-      "family": "backend_modules",
-      "label": "Backend modules",
-      "count": 1,
-      "publish_candidate_count": 1,
-      "tracked_count": 1,
-      "untracked_count": 0,
-      "sample_paths": [
-        "modules/cloud_sync.py"
-      ]
-    },
-    {
       "family": "dashboard_ui",
       "label": "Dashboard UI",
-      "count": 5,
-      "publish_candidate_count": 5,
-      "tracked_count": 5,
+      "count": 2,
+      "publish_candidate_count": 2,
+      "tracked_count": 2,
       "untracked_count": 0,
       "sample_paths": [
-        "dashboard-ui/package.json",
         "dashboard-ui/src/App.jsx",
-        "dashboard-ui/src/dashboardModel.js",
-        "dashboard-ui/src/dashboardModel.test.js",
-        "dashboard-ui/src/index.css"
-      ]
-    },
-    {
-      "family": "tests",
-      "label": "Tests",
-      "count": 3,
-      "publish_candidate_count": 3,
-      "tracked_count": 3,
-      "untracked_count": 0,
-      "sample_paths": [
-        "tests/test_bridge_routes.py",
-        "tests/test_cloud_sync.py",
-        "tests/test_dashboard_cache.py"
-      ]
-    },
-    {
-      "family": "context_docs",
-      "label": "Context and memory",
-      "count": 3,
-      "publish_candidate_count": 3,
-      "tracked_count": 3,
-      "untracked_count": 0,
-      "sample_paths": [
-        "context/06_progress_tracker.md",
-        "memory/general.md",
-        "memory/test_evidence.json"
+        "dashboard-ui/src/dashboardModel.test.js"
       ]
     },
     {
       "family": "evidence_packets",
       "label": "Evidence packets",
-      "count": 18,
-      "publish_candidate_count": 18,
-      "tracked_count": 6,
-      "untracked_count": 12,
+      "count": 2,
+      "publish_candidate_count": 2,
+      "tracked_count": 1,
+      "untracked_count": 1,
       "sample_paths": [
         "jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json",
-        "jules_inbox/jules_dispatch/JULES_COT_LEDGER.json",
-        "jules_inbox/jules_dispatch/JULES_COT_LEDGER.md",
-        "jules_inbox/jules_dispatch/JULES_CYCLE_STATE.json",
-        "jules_inbox/jules_dispatch/JULES_LAUNCH_STATE.json",
-        "jules_inbox/tiu_workbench/TIU_WORKBENCH_STATE.json",
-        "jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260705T231101.md",
-        "jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T064710.md"
-      ]
-    },
-    {
-      "family": "generated_noise",
-      "label": "Generated or noisy files",
-      "count": 9,
-      "publish_candidate_count": 0,
-      "tracked_count": 0,
-      "untracked_count": 9,
-      "sample_paths": [
-        ".codex/tmp_app_diff.txt",
-        ".codex/verification/dashboard-mobile-current-crop.png",
-        ".codex/verification/dashboard-mobile-current.png",
-        ".codex/verification/dashboard-tunnel-desktop-after.png",
-        ".codex/verification/dashboard-tunnel-desktop-before.png",
-        ".codex/verification/dashboard-tunnel-mobile.png",
-        "__tmp_App.diff",
-        "__tmp_Model.diff"
+        "jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260707T021144.md"
       ]
     }
   ],
-  "change_count": 40,
-  "include_candidate_count": 31,
-  "exclude_candidate_count": 9,
+  "change_count": 4,
+  "include_candidate_count": 4,
+  "exclude_candidate_count": 0,
   "blockers": [
     "dirty_worktree"
   ],
-  "warnings": [
-    "generated_or_noisy_files_present"
-  ],
+  "warnings": [],
   "commands": [
     {
       "label": "Review",
@@ -164,7 +87,7 @@
     },
     {
       "label": "Stage reviewed candidates",
-      "command": "git add -- \"bridge.py\" \"context/06_progress_tracker.md\" \"dashboard-ui/package.json\" \"dashboard-ui/src/App.jsx\" \"dashboard-ui/src/dashboardModel.js\" \"dashboard-ui/src/dashboardModel.test.js\" \"dashboard-ui/src/index.css\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json\" \"jules_inbox/jules_dispatch/JULES_COT_LEDGER.json\" \"jules_inbox/jules_dispatch/JULES_COT_LEDGER.md\" \"jules_inbox/jules_dispatch/JULES_CYCLE_STATE.json\" \"jules_inbox/jules_dispatch/JULES_LAUNCH_STATE.json\" \"jules_inbox/tiu_workbench/TIU_WORKBENCH_STATE.json\" \"memory/general.md\" \"memory/test_evidence.json\" \"modules/cloud_sync.py\" \"tests/test_bridge_routes.py\" \"tests/test_cloud_sync.py\" \"tests/test_dashboard_cache.py\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260705T231101.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T064710.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T064903.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T193951.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194139.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194226.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194307.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194537.md\" \"jules_inbox/tiu_workbench/TIU_WORKBENCH_PACKET_20260706T030534.md\" \"jules_inbox/tiu_workbench/TIU_WORKBENCH_PACKET_20260706T030612.md\" \"jules_inbox/tiu_workbench/TIU_WORKBENCH_PACKET_20260706T041408.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T200013.md\""
+      "command": "git add -- \"dashboard-ui/src/App.jsx\" \"dashboard-ui/src/dashboardModel.test.js\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260707T021144.md\""
     },
     {
       "label": "Commit",
@@ -189,10 +112,10 @@
       "command": "git push origin master"
     }
   ],
-  "packet": "# Cloud Publish Packet\n\n- generated_at_utc: 2026-07-06T20:00:12.533518+00:00\n- objective: Publish and synchronize the current Jules Bridge dashboard/model-agent work.\n- state: blocked\n- branch: master\n- upstream: origin/master\n- ahead_behind: 0 / 0\n- dirty_count: 40\n- blockers: dirty_worktree\n- warnings: none\n\n## Change Families\n- Bridge routes: 1 files (1 publish candidates)\n  - bridge.py\n- Backend modules: 1 files (1 publish candidates)\n  - modules/cloud_sync.py\n- Dashboard UI: 5 files (5 publish candidates)\n  - dashboard-ui/package.json\n  - dashboard-ui/src/App.jsx\n  - dashboard-ui/src/dashboardModel.js\n  - dashboard-ui/src/dashboardModel.test.js\n  - dashboard-ui/src/index.css\n- Tests: 3 files (3 publish candidates)\n  - tests/test_bridge_routes.py\n  - tests/test_cloud_sync.py\n  - tests/test_dashboard_cache.py\n- Context and memory: 3 files (3 publish candidates)\n  - context/06_progress_tracker.md\n  - memory/general.md\n  - memory/test_evidence.json\n- Evidence packets: 18 files (18 publish candidates)\n  - jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json\n  - jules_inbox/jules_dispatch/JULES_COT_LEDGER.json\n  - jules_inbox/jules_dispatch/JULES_COT_LEDGER.md\n  - jules_inbox/jules_dispatch/JULES_CYCLE_STATE.json\n  - jules_inbox/jules_dispatch/JULES_LAUNCH_STATE.json\n- Generated or noisy files: 9 files (0 publish candidates)\n  - .codex/tmp_app_diff.txt\n  - .codex/verification/dashboard-mobile-current-crop.png\n  - .codex/verification/dashboard-mobile-current.png\n  - .codex/verification/dashboard-tunnel-desktop-after.png\n  - .codex/verification/dashboard-tunnel-desktop-before.png\n\n## Publish Candidates\n- include: 31\n- exclude_or_review_separately: 9\n\n## Review Commands\n- Review: `git status --short`\n- Stage reviewed candidates: `git add -- \"bridge.py\" \"context/06_progress_tracker.md\" \"dashboard-ui/package.json\" \"dashboard-ui/src/App.jsx\" \"dashboard-ui/src/dashboardModel.js\" \"dashboard-ui/src/dashboardModel.test.js\" \"dashboard-ui/src/index.css\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json\" \"jules_inbox/jules_dispatch/JULES_COT_LEDGER.json\" \"jules_inbox/jules_dispatch/JULES_COT_LEDGER.md\" \"jules_inbox/jules_dispatch/JULES_CYCLE_STATE.json\" \"jules_inbox/jules_dispatch/JULES_LAUNCH_STATE.json\" \"jules_inbox/tiu_workbench/TIU_WORKBENCH_STATE.json\" \"memory/general.md\" \"memory/test_evidence.json\" \"modules/cloud_sync.py\" \"tests/test_bridge_routes.py\" \"tests/test_cloud_sync.py\" \"tests/test_dashboard_cache.py\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260705T231101.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T064710.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T064903.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T193951.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194139.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194226.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194307.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194537.md\" \"jules_inbox/tiu_workbench/TIU_WORKBENCH_PACKET_20260706T030534.md\" \"jules_inbox/tiu_workbench/TIU_WORKBENCH_PACKET_20260706T030612.md\" \"jules_inbox/tiu_workbench/TIU_WORKBENCH_PACKET_20260706T041408.md\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T200013.md\"`\n- Commit: `git commit -m \"feat: strengthen Jules Google bridge dashboard\"`\n- Verify: `python -m pytest tests/ -q`\n- Dashboard lint (cwd: dashboard-ui): `npm run lint`\n- Dashboard build (cwd: dashboard-ui): `npm run build`\n- Push after commit: `git push origin master`\n\n## Safety\n- This packet did not run git add, git commit, git fetch, git pull, or git push.\n- Generated/noisy files should be reviewed separately before staging.\n",
+  "packet": "# Cloud Publish Packet\n\n- generated_at_utc: 2026-07-07T02:11:43.374611+00:00\n- objective: Publish and synchronize the current Jules Bridge dashboard/model-agent work.\n- state: blocked\n- branch: master\n- upstream: origin/master\n- ahead_behind: 0 / 0\n- dirty_count: 4\n- blockers: dirty_worktree\n- warnings: none\n\n## Change Families\n- Dashboard UI: 2 files (2 publish candidates)\n  - dashboard-ui/src/App.jsx\n  - dashboard-ui/src/dashboardModel.test.js\n- Evidence packets: 2 files (2 publish candidates)\n  - jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json\n  - jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260707T021144.md\n\n## Publish Candidates\n- include: 4\n- exclude_or_review_separately: 0\n\n## Review Commands\n- Review: `git status --short`\n- Stage reviewed candidates: `git add -- \"dashboard-ui/src/App.jsx\" \"dashboard-ui/src/dashboardModel.test.js\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json\" \"jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260707T021144.md\"`\n- Commit: `git commit -m \"feat: strengthen Jules Google bridge dashboard\"`\n- Verify: `python -m pytest tests/ -q`\n- Dashboard lint (cwd: dashboard-ui): `npm run lint`\n- Dashboard build (cwd: dashboard-ui): `npm run build`\n- Push after commit: `git push origin master`\n\n## Safety\n- This packet did not run git add, git commit, git fetch, git pull, or git push.\n- Generated/noisy files should be reviewed separately before staging.\n",
   "artifacts": {
     "packet_written": true,
-    "packet_path": "jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T200013.md",
+    "packet_path": "jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260707T021144.md",
     "state_path": "jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json"
   },
   "privacy": {

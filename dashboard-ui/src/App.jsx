@@ -611,7 +611,7 @@ const buildLocalTiuPreview = ({
     plan_state: blocked ? 'publish_blocked' : 'local_preview',
     blockers: blocked ? syncGate.blockers.map(item => `cloud_sync:${item}`) : [],
     warnings: [...new Set([
-      'protected_route_token_missing',
+      'protected_route_not_called',
       ...syncGate.warnings.map(item => `cloud_sync:${item}`),
       localPreviewSaveWarning(writePacket)
     ])],
@@ -672,7 +672,7 @@ const buildLocalPublishPreview = (sync, writePacket) => {
     state: syncGate.state,
     blockers: syncGate.blockers,
     warnings: [...new Set([
-      'protected_route_token_missing',
+      'protected_route_not_called',
       ...syncGate.warnings,
       !syncGate.publishReady && !blocked ? 'publish_not_ready' : '',
       localPreviewSaveWarning(writePacket)

@@ -729,6 +729,8 @@ test('cloud sync build uses local preview when the dashboard has no bearer token
   assert.match(source, /const \[writePacket, setWritePacket\] = useState\(false\);/);
   assert.match(source, /if \(!TOKEN\) \{\s+const preview = buildLocalPublishPreview\(sync, writePacket\);/);
   assert.match(source, /onCommandEvent\('Publish local preview generated'/);
+  assert.match(source, /buildLocalPublishPreview[\s\S]*?'protected_route_not_called'/);
+  assert.match(source, /buildLocalTiuPreview[\s\S]*?'protected_route_not_called'/);
   assert.match(source, /const effectiveWritePacket = canWritePacket && writePacket/);
   assert.match(source, /disabled=\{!canWritePacket\}/);
   assert.match(source, /Save requires token; preview is read-only/);
