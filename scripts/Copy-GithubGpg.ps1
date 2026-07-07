@@ -15,10 +15,14 @@
   Double-click Copy-GithubGpg.cmd in repo root
 #>
 [CmdletBinding()]
-param()
+param(
+    [switch]$ExportOnly
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "GpgHome.ps1")
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $KeyFile = Join-Path $RepoRoot "jules-gpg-public.asc"
@@ -37,15 +41,16 @@ function Write-Err([string]$Message) {
 function Get-GitRoot {
     $gitCmd = Get-Command git -ErrorAction SilentlyContinue
     if (-not $gitCmd) { return $null }
-    $root = (& git -C $RepoRoot rev-parse --show-toplevel 2>$null)
-    if ($root) { return $root.Trim() }
     $probe = Split-Path -Parent $gitCmd.Source
     while ($probe -and -not (Test-Path (Join-Path $probe "usr\bin\gpg.exe"))) {
         $parent = Split-Path -Parent $probe
         if ($parent -eq $probe) { break }
         $probe = $parent
     }
-    return $probe
+    if (Test-Path (Join-Path $probe "usr\bin\gpg.exe")) {
+        return $probe
+    }
+    return $null
 }
 
 function Get-KeyIdFromFile {
@@ -65,9 +70,7 @@ function Update-PublicKeyFile {
     $gpgExe = Join-Path $gitRoot "usr\bin\gpg.exe"
     if (-not (Test-Path $gpgExe)) { return }
 
-    $user = $env:USERNAME
-    if (-not $user) { $user = Split-Path -Leaf $env:USERPROFILE }
-    $env:GNUPGHOME = "/c/Users/$user/.gnupg"
+    $env:GNUPGHOME = Resolve-GpgHomeMsys -GpgExe $gpgExe -RepoRoot $RepoRoot
 
     $keyId = Get-KeyIdFromFile -Path $Path
     if (-not $keyId) {
@@ -140,6 +143,11 @@ try {
         throw "Invalid public key file (missing BEGIN PGP PUBLIC KEY BLOCK): $KeyFile"
     }
 
+    if ($ExportOnly) {
+        Write-Ok "Public key exported to $KeyFile (ExportOnly; clipboard/browser skipped)"
+        exit 0
+    }
+
     Set-Clipboard -Value $keyText
     Write-Ok "Public key copied to clipboard"
 
@@ -156,7 +164,9 @@ try {
     exit 0
 } catch {
     Write-Err $_.Exception.Message
-    Write-Host "`nPress Enter to close..." -ForegroundColor Gray
-    Read-Host | Out-Null
+    if (-not $ExportOnly) {
+        Write-Host "`nPress Enter to close..." -ForegroundColor Gray
+        Read-Host | Out-Null
+    }
     exit 1
 }

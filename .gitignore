@@ -20,3 +20,10 @@ bridge.log.*
 !.env.example
 scratch/vm.env
 scratch/screenshots/
+*.key
+*.gpg
+jules-gpg-public.asc
+.gnupg-local/
+private-keys-v1.d/
+jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json
+jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_*.md
