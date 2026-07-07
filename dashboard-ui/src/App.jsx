@@ -17,6 +17,7 @@ import {
   allianceTone,
   buildAllianceLanes,
   buildBridgeProbeCommsReceipt,
+  buildBlockedControlReceipt,
   buildCommandIntelligence,
   buildEvidenceIssueWindow,
   buildEvidenceReviewSignature,
@@ -33,6 +34,7 @@ import {
   cloudSyncTone,
   collisionKey,
   ensureUniqueCommandIds,
+  evaluateCommsSendGate,
   formatTimestamp,
   gateTone,
   impactedReposLabel,
@@ -727,14 +729,35 @@ function StatusPill({ tone = 'info', children, onClick, title, controlId }) {
   return <span className={`status-pill ${tone}`} title={title}>{children}</span>;
 }
 
-function IconButton({ icon, label, onClick, disabled = false, pressed = false, disabledReason = '', controlId = '' }) {
+function IconButton({
+  icon,
+  label,
+  onClick,
+  disabled = false,
+  pressed = false,
+  disabledReason = '',
+  controlId = '',
+  interactiveWhenBlocked = false,
+  onBlockedClick
+}) {
   const inactiveReason = disabled && disabledReason ? disabledReason : undefined;
+  const useNativeDisabled = disabled && !interactiveWhenBlocked;
+  const handleClick = event => {
+    if (disabled) {
+      if (interactiveWhenBlocked) {
+        onBlockedClick?.(inactiveReason || label);
+      }
+      return;
+    }
+    onClick?.(event);
+  };
   return (
     <button
       className="icon-button"
       type="button"
-      onClick={onClick}
-      disabled={disabled}
+      onClick={handleClick}
+      disabled={useNativeDisabled}
+      aria-disabled={disabled || undefined}
       aria-label={label}
       aria-pressed={pressed}
       data-control-id={controlId || undefined}
@@ -742,6 +765,41 @@ function IconButton({ icon, label, onClick, disabled = false, pressed = false, d
       title={inactiveReason || label}
     >
       <Icon name={icon} />
+    </button>
+  );
+}
+
+function SecondaryAction({
+  children,
+  onClick,
+  blocked = false,
+  blockedReason = '',
+  onBlocked,
+  controlId = '',
+  className = 'secondary-action',
+  title = '',
+  ...rest
+}) {
+  const reason = blocked ? (blockedReason || title || 'This control is blocked right now.') : undefined;
+  const handleClick = () => {
+    if (blocked) {
+      onBlocked?.(reason);
+      return;
+    }
+    onClick?.();
+  };
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-disabled={blocked || undefined}
+      data-control-id={controlId || undefined}
+      data-disabled-reason={reason}
+      title={reason || title || undefined}
+      onClick={handleClick}
+      {...rest}
+    >
+      {children}
     </button>
   );
 }
@@ -7660,7 +7718,10 @@ function CommPanel({
   const blockerMatches = activePacketText.match(/\b(blocked|blocker|blockers|dirty_worktree|github_auth_required|no_upstream|no_remote|behind_remote)\b/gi) || [];
   const latestCommand = commandJournal?.[0];
   const hasPacket = !!activePacketText;
-  const canSendMessage = draftText.length > 0 || !!pendingImage;
+  const reportBlocked = reason => {
+    const receipt = buildBlockedControlReceipt({ reason });
+    onCommandEvent(receipt.title, receipt.detail, receipt.tone, { controlId: 'comms-actions' });
+  };
   const activePacketIntelligence = packetIntelligence?.source === activePacketText ? packetIntelligence : null;
   const modes = [
     ['compose', 'Chat'],
@@ -7680,7 +7741,10 @@ function CommPanel({
   };
 
   const preparePacketPrompt = intent => {
-    if (!activePacketText) return;
+    if (!activePacketText) {
+      reportBlocked('Stage a dashboard packet before preparing a Comms prompt.');
+      return;
+    }
     const promptMap = {
       review: 'Review this staged dashboard packet. Return blockers, contradictions, and the next safe operator action.',
       verify: 'Verify this staged dashboard packet against the current bridge state. Call out missing evidence before any publish or worker action.',
@@ -7692,14 +7756,20 @@ function CommPanel({
   };
 
   const runLocalPacketReview = () => {
-    if (!activePacketText) return;
+    if (!activePacketText) {
+      reportBlocked('Stage a dashboard packet before running local packet intelligence.');
+      return;
+    }
     const verdict = buildPacketIntelligence(activePacketText, packetTitle);
     setPacketIntelligence(verdict);
     onCommandEvent('Local packet intelligence', `${verdict.score}% / ${verdict.focus}`, verdict.tone, { controlId: 'comms-actions' });
   };
 
   const buildPacketVerdictPrompt = () => {
-    if (!activePacketText) return;
+    if (!activePacketText) {
+      reportBlocked('Stage a dashboard packet before building a packet-intelligence verdict.');
+      return;
+    }
     const verdict = activePacketIntelligence || buildPacketIntelligence(activePacketText, packetTitle);
     setPacketIntelligence(verdict);
     setInputValue([
@@ -7715,7 +7785,10 @@ function CommPanel({
   };
 
   const restorePacket = () => {
-    if (!stagedPacket?.content) return;
+    if (!stagedPacket?.content) {
+      reportBlocked('Stage a packet before restoring it into the draft editor.');
+      return;
+    }
     setInputValue(stagedPacket.content);
     setMode('packet');
     setPacketIntelligence(null);
@@ -7800,72 +7873,60 @@ function CommPanel({
               </em>
             </div>
             <div className="packet-action-grid">
-              <button
-                className="secondary-action"
-                type="button"
-                data-control-id="comms-actions"
+              <SecondaryAction
+                controlId="comms-actions"
+                blocked={!hasPacket}
+                blockedReason="Stage a dashboard packet before preparing a review prompt."
+                onBlocked={reportBlocked}
                 onClick={() => preparePacketPrompt('review')}
-                disabled={!hasPacket}
-                data-disabled-reason={!hasPacket ? 'Stage a dashboard packet before preparing a review prompt.' : undefined}
-                title={!hasPacket ? 'Stage a dashboard packet before preparing a review prompt.' : undefined}
               >
                 Ask Review
-              </button>
-              <button
-                className="secondary-action"
-                type="button"
-                data-control-id="comms-actions"
+              </SecondaryAction>
+              <SecondaryAction
+                controlId="comms-actions"
+                blocked={!hasPacket}
+                blockedReason="Stage a dashboard packet before preparing a verification prompt."
+                onBlocked={reportBlocked}
                 onClick={() => preparePacketPrompt('verify')}
-                disabled={!hasPacket}
-                data-disabled-reason={!hasPacket ? 'Stage a dashboard packet before preparing a verification prompt.' : undefined}
-                title={!hasPacket ? 'Stage a dashboard packet before preparing a verification prompt.' : undefined}
               >
                 Ask Verify
-              </button>
-              <button
-                className="secondary-action"
-                type="button"
-                data-control-id="comms-actions"
+              </SecondaryAction>
+              <SecondaryAction
+                controlId="comms-actions"
+                blocked={!hasPacket}
+                blockedReason="Stage a dashboard packet before building a handoff prompt."
+                onBlocked={reportBlocked}
                 onClick={() => preparePacketPrompt('handoff')}
-                disabled={!hasPacket}
-                data-disabled-reason={!hasPacket ? 'Stage a dashboard packet before building a handoff prompt.' : undefined}
-                title={!hasPacket ? 'Stage a dashboard packet before building a handoff prompt.' : undefined}
               >
                 Build Handoff
-              </button>
-              <button
-                className="secondary-action"
-                type="button"
-                data-control-id="comms-actions"
+              </SecondaryAction>
+              <SecondaryAction
+                controlId="comms-actions"
+                blocked={!hasPacket}
+                blockedReason="Stage a dashboard packet before running local packet intelligence."
+                onBlocked={reportBlocked}
                 onClick={runLocalPacketReview}
-                disabled={!hasPacket}
-                data-disabled-reason={!hasPacket ? 'Stage a dashboard packet before running local packet intelligence.' : undefined}
-                title={!hasPacket ? 'Stage a dashboard packet before running local packet intelligence.' : undefined}
               >
                 Local Review
-              </button>
-              <button
-                className="secondary-action"
-                type="button"
-                data-control-id="comms-actions"
+              </SecondaryAction>
+              <SecondaryAction
+                controlId="comms-actions"
+                blocked={!hasPacket}
+                blockedReason="Stage a dashboard packet before building a packet-intelligence verdict."
+                onBlocked={reportBlocked}
                 onClick={buildPacketVerdictPrompt}
-                disabled={!hasPacket}
-                data-disabled-reason={!hasPacket ? 'Stage a dashboard packet before building a packet-intelligence verdict.' : undefined}
-                title={!hasPacket ? 'Stage a dashboard packet before building a packet-intelligence verdict.' : undefined}
               >
                 Build Verdict
-              </button>
-              <button
-                className="secondary-action"
-                type="button"
-                data-control-id="comms-actions"
+              </SecondaryAction>
+              <SecondaryAction
+                controlId="comms-actions"
+                blocked={!stagedPacket?.content}
+                blockedReason="Stage a packet before restoring it into the draft editor."
+                onBlocked={reportBlocked}
                 onClick={restorePacket}
-                disabled={!stagedPacket?.content}
-                data-disabled-reason={!stagedPacket?.content ? 'Stage a packet before restoring it into the draft editor.' : undefined}
-                title={!stagedPacket?.content ? 'Stage a packet before restoring it into the draft editor.' : undefined}
               >
                 Restore Packet
-              </button>
+              </SecondaryAction>
             </div>
             {activePacketIntelligence && (
               <div className={`packet-intelligence ${activePacketIntelligence.tone}`}>
@@ -7928,51 +7989,41 @@ function CommPanel({
             icon="send"
             label="Send message"
             onClick={sendChat}
-            disabled={isThinking || !canSendMessage}
-            disabledReason={
-              isThinking
-                ? 'Wait for the current Comms response before sending another message.'
-                : !canSendMessage
-                  ? 'Type a message or attach an image before sending.'
-                  : undefined
-            }
+            disabled={isThinking}
+            interactiveWhenBlocked={isThinking}
+            disabledReason="Wait for the current Comms response before sending another message."
+            onBlockedClick={reason => onCommandEvent('Comms blocked', reason, 'warn', { controlId: 'comms-actions' })}
             controlId="comms-actions"
           />
         </div>
         <div className="comm-draft-actions">
-          <button
-            className="secondary-action"
-            type="button"
-            data-control-id="comms-actions"
+          <SecondaryAction
+            controlId="comms-actions"
+            blocked={isThinking}
+            blockedReason="Wait for the current Comms response before probing the model loop."
+            onBlocked={reportBlocked}
             onClick={probeModelLoop}
-            disabled={isThinking}
-            data-disabled-reason={isThinking ? 'Wait for the current Comms response before probing the model loop.' : undefined}
-            title={isThinking ? 'Wait for the current Comms response before probing the model loop.' : undefined}
           >
             Probe Model
-          </button>
-          <button
-            className="secondary-action"
-            type="button"
-            data-control-id="comms-actions"
+          </SecondaryAction>
+          <SecondaryAction
+            controlId="comms-actions"
+            blocked={!hasPacket}
+            blockedReason="Stage a packet before opening packet review."
+            onBlocked={reportBlocked}
             onClick={() => setMode('packet')}
-            disabled={!hasPacket}
-            data-disabled-reason={!hasPacket ? 'Stage a packet before opening packet review.' : undefined}
-            title={!hasPacket ? 'Stage a packet before opening packet review.' : undefined}
           >
             Review Draft
-          </button>
-          <button
-            className="secondary-action"
-            type="button"
-            data-control-id="comms-actions"
+          </SecondaryAction>
+          <SecondaryAction
+            controlId="comms-actions"
+            blocked={!draftText && !pendingImage && !stagedPacket}
+            blockedReason="Type, attach, or stage content before clearing the draft."
+            onBlocked={reportBlocked}
             onClick={clearDraft}
-            disabled={!draftText && !pendingImage && !stagedPacket}
-            data-disabled-reason={!draftText && !pendingImage && !stagedPacket ? 'Type, attach, or stage content before clearing the draft.' : undefined}
-            title={!draftText && !pendingImage && !stagedPacket ? 'Type, attach, or stage content before clearing the draft.' : undefined}
           >
             Clear
-          </button>
+          </SecondaryAction>
         </div>
       </div>
     </Panel>
@@ -8040,6 +8091,7 @@ function App() {
   };
 
   const traceControlClick = useCallback(event => {
+    // Bubble-phase tracing only; do not use capture handlers that can preempt child buttons.
     try {
       const button = event.target?.closest?.('button');
       if (!button || !event.currentTarget?.contains?.(button)) return;
@@ -8455,6 +8507,18 @@ function App() {
   };
 
   const sendChat = async () => {
+    const gate = evaluateCommsSendGate({
+      draftText: inputValue,
+      hasImage: !!pendingImage,
+      isThinking
+    });
+    if (!gate.allowed) {
+      if (gate.chatMessage) {
+        setChatHistory(previous => [...previous, { role: 'sys', content: gate.chatMessage }]);
+      }
+      pushCommand(gate.receiptTitle, gate.reason, gate.tone, { controlId: 'comms-actions' });
+      return;
+    }
     await sendCommsMessage({
       message: inputValue,
       image: pendingImage,
@@ -8473,25 +8537,19 @@ function App() {
   const onKey = event => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      if ((inputValue || '').trim() || pendingImage) {
-        if (isThinking) {
-          pushCommand(
-            'Comms blocked',
-            'Wait for the current Comms response before sending.',
-            'warn',
-            { controlId: 'comms-actions' }
-          );
-          return;
+      const gate = evaluateCommsSendGate({
+        draftText: inputValue,
+        hasImage: !!pendingImage,
+        isThinking
+      });
+      if (!gate.allowed) {
+        if (gate.chatMessage) {
+          setChatHistory(previous => [...previous, { role: 'sys', content: gate.chatMessage }]);
         }
-        sendChat();
-      } else {
-        pushCommand(
-          'Comms blocked',
-          'Press Send blocked because there is no draft content to send.',
-          'warn',
-          { controlId: 'comms-actions' }
-        );
+        pushCommand(gate.receiptTitle, gate.reason, gate.tone, { controlId: 'comms-actions' });
+        return;
       }
+      sendChat();
     }
   };
 

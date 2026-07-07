@@ -7,11 +7,13 @@ import {
   buildEvidenceReviewSignature,
   buildEventRows,
   buildBridgeProbeCommsReceipt,
+  buildBlockedControlReceipt,
   buildLiveBlockerQueue,
   buildLocalSyncGate,
   cloudSyncLabel,
   cloudSyncTone,
   ensureUniqueCommandIds,
+  evaluateCommsSendGate,
   isLocalPacketIntelligenceCommand,
   isSuccessfulControlProofCommand,
   mergeCommandJournalRows,
@@ -23,6 +25,7 @@ import {
   PROOF_JOURNAL_MAX_COMMANDS,
   restorePersistentCommandJournal,
   serializePersistentCommandJournal,
+  buildRouteNotImplementedReceipt,
   summarizeCloudSyncGate,
   summarizeControlAudit
 } from './dashboardModel.js';
@@ -720,6 +723,45 @@ test('action receipt dock runs the selected blocker instead of only the first bl
   assert.match(source, /const actionId = row\.safeActionId \|\| row\.controlId/);
   assert.match(source, /id: 'comms-model-probe'/);
   assert.match(source, /id: 'comms-local-review'/);
+});
+
+test('comms send gate blocks empty drafts and in-flight responses', () => {
+  assert.equal(evaluateCommsSendGate({ draftText: '   ', hasImage: false, isThinking: false }).allowed, false);
+  assert.match(
+    evaluateCommsSendGate({ draftText: '   ', hasImage: false, isThinking: false }).reason,
+    /no draft content/i
+  );
+  assert.equal(evaluateCommsSendGate({ draftText: 'hello', hasImage: false, isThinking: true }).allowed, false);
+  assert.match(
+    evaluateCommsSendGate({ draftText: 'hello', hasImage: false, isThinking: true }).reason,
+    /wait for the current comms response/i
+  );
+  assert.equal(evaluateCommsSendGate({ draftText: '', hasImage: true, isThinking: false }).allowed, true);
+  assert.equal(evaluateCommsSendGate({ draftText: 'ready', hasImage: false, isThinking: false }).allowed, true);
+});
+
+test('blocked control receipts stay visible and actionable', () => {
+  const blocked = buildBlockedControlReceipt({ reason: 'Stage a packet before review.' });
+  assert.equal(blocked.title, 'Control blocked');
+  assert.match(blocked.detail, /stage a packet/i);
+  assert.equal(blocked.tone, 'warn');
+
+  const route = buildRouteNotImplementedReceipt({ route: 'POST /example/route' });
+  assert.equal(route.title, 'Route not implemented');
+  assert.match(route.detail, /POST \/example\/route/);
+  assert.equal(route.tone, 'warn');
+});
+
+test('comms interactions expose blocked clicks and empty-send warnings', () => {
+  const source = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
+
+  assert.match(source, /function SecondaryAction\(/);
+  assert.match(source, /evaluateCommsSendGate\(/);
+  assert.match(source, /buildBlockedControlReceipt\(/);
+  assert.match(source, /interactiveWhenBlocked=\{isThinking\}/);
+  assert.match(source, /evaluateCommsSendGate\([\s\S]*pushCommand\(gate\.receiptTitle, gate\.reason/);
+  assert.match(source, /aria-disabled=\{blocked \|\| undefined\}/);
+  assert.doesNotMatch(source, /onClickCapture=\{traceControlClick\}/);
 });
 
 test('cloud sync build uses local preview when the dashboard has no bearer token', () => {
