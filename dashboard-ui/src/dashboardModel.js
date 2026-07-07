@@ -1763,3 +1763,194 @@ export const buildTopology = status => {
     }
   ];
 };
+
+export const EMPTY_DASHBOARD_COMMAND = {
+  commandId: '',
+  workflowId: '',
+  traceId: '',
+  type: 'route_probe',
+  status: 'admitted',
+  createdAt: '',
+  updatedAt: '',
+  requestedBy: 'dashboard',
+  route: '',
+  summary: '',
+  blockReason: null,
+  result: {},
+  evidenceRefs: []
+};
+
+export const EMPTY_DASHBOARD_WORKFLOW = {
+  workflowId: '',
+  title: '',
+  status: 'ready',
+  commandIds: [],
+  latestCommandId: '',
+  traceIds: [],
+  summary: '',
+  nextSafeAction: '',
+  requiredOperatorAction: null
+};
+
+export const EMPTY_DASHBOARD_PROJECTION = {
+  ok: false,
+  contract: { name: 'jules_dashboard_projection', version: 1, generated_at_utc: '' },
+  bridgeHealth: { ok: false, online: false },
+  commands: [],
+  workflows: [],
+  dashboardCache: { cache_age_s: 0, transport: 'poll' },
+  cloudSyncPreview: {},
+  collaborationProof: {},
+  blockers: [],
+  nextSafeAction: '',
+  currentWorkflowId: ''
+};
+
+const COMMAND_STATUS_TONES = {
+  succeeded: 'success',
+  failed: 'danger',
+  blocked: 'warn',
+  cancelled: 'warn',
+  not_implemented: 'warn',
+  running: 'info',
+  admitted: 'info'
+};
+
+export const toneForCommandStatus = status => COMMAND_STATUS_TONES[String(status || '').trim()] || 'info';
+
+export const normalizeDashboardCommand = command => {
+  const source = command && typeof command === 'object' ? command : {};
+  return {
+    ...EMPTY_DASHBOARD_COMMAND,
+    ...source,
+    commandId: source.commandId || EMPTY_DASHBOARD_COMMAND.commandId,
+    workflowId: source.workflowId || EMPTY_DASHBOARD_COMMAND.workflowId,
+    traceId: source.traceId || EMPTY_DASHBOARD_COMMAND.traceId,
+    type: source.type || EMPTY_DASHBOARD_COMMAND.type,
+    status: source.status || EMPTY_DASHBOARD_COMMAND.status,
+    route: source.route || '',
+    summary: source.summary || '',
+    blockReason: source.blockReason ?? null,
+    result: source.result && typeof source.result === 'object' ? source.result : {},
+    evidenceRefs: Array.isArray(source.evidenceRefs) ? source.evidenceRefs : []
+  };
+};
+
+export const normalizeDashboardWorkflow = workflow => {
+  const source = workflow && typeof workflow === 'object' ? workflow : {};
+  return {
+    ...EMPTY_DASHBOARD_WORKFLOW,
+    ...source,
+    workflowId: source.workflowId || EMPTY_DASHBOARD_WORKFLOW.workflowId,
+    title: source.title || EMPTY_DASHBOARD_WORKFLOW.title,
+    status: source.status || EMPTY_DASHBOARD_WORKFLOW.status,
+    commandIds: Array.isArray(source.commandIds) ? source.commandIds.map(String) : [],
+    latestCommandId: source.latestCommandId || '',
+    traceIds: Array.isArray(source.traceIds) ? source.traceIds.map(String) : [],
+    summary: source.summary || '',
+    nextSafeAction: source.nextSafeAction || '',
+    requiredOperatorAction: source.requiredOperatorAction ?? null
+  };
+};
+
+export const normalizeDashboardCommandsPayload = payload => {
+  const source = payload && typeof payload === 'object' ? payload : {};
+  const commands = Array.isArray(source.commands) ? source.commands.map(normalizeDashboardCommand) : [];
+  return {
+    ok: Boolean(source.ok),
+    commands,
+    count: Number(source.count || commands.length || 0),
+    command: source.command ? normalizeDashboardCommand(source.command) : null,
+    workflow: source.workflow ? normalizeDashboardWorkflow(source.workflow) : null,
+    error: source.error || ''
+  };
+};
+
+export const normalizeDashboardProjection = payload => {
+  const source = payload && typeof payload === 'object' ? payload : {};
+  const contract = source.contract && typeof source.contract === 'object' ? source.contract : {};
+  return {
+    ...EMPTY_DASHBOARD_PROJECTION,
+    ...source,
+    contract: {
+      ...EMPTY_DASHBOARD_PROJECTION.contract,
+      ...contract
+    },
+    bridgeHealth: {
+      ...EMPTY_DASHBOARD_PROJECTION.bridgeHealth,
+      ...(source.bridgeHealth && typeof source.bridgeHealth === 'object' ? source.bridgeHealth : {})
+    },
+    commands: Array.isArray(source.commands) ? source.commands.map(normalizeDashboardCommand) : [],
+    workflows: Array.isArray(source.workflows) ? source.workflows.map(normalizeDashboardWorkflow) : [],
+    dashboardCache: {
+      ...EMPTY_DASHBOARD_PROJECTION.dashboardCache,
+      ...(source.dashboardCache && typeof source.dashboardCache === 'object' ? source.dashboardCache : {})
+    },
+    cloudSyncPreview: source.cloudSyncPreview && typeof source.cloudSyncPreview === 'object' ? source.cloudSyncPreview : {},
+    collaborationProof: source.collaborationProof && typeof source.collaborationProof === 'object' ? source.collaborationProof : {},
+    blockers: Array.isArray(source.blockers) ? source.blockers : [],
+    nextSafeAction: source.nextSafeAction || '',
+    currentWorkflowId: source.currentWorkflowId || ''
+  };
+};
+
+export const commandReceiptTitle = command => {
+  const normalized = normalizeDashboardCommand(command);
+  if (normalized.status === 'blocked') return 'Command blocked';
+  if (normalized.status === 'not_implemented') return 'Route not implemented';
+  if (normalized.status === 'failed') return 'Command failed';
+  if (normalized.status === 'cancelled') return 'Command cancelled';
+  if (normalized.status === 'succeeded') return 'Command succeeded';
+  return 'Command admitted';
+};
+
+export const commandReceiptDetail = command => {
+  const normalized = normalizeDashboardCommand(command);
+  if (normalized.blockReason) return String(normalized.blockReason);
+  if (normalized.summary) return String(normalized.summary);
+  if (normalized.route) return normalized.route;
+  return normalized.type;
+};
+
+export const dashboardCommandToJournalRow = (command, meta = {}) => {
+  const normalized = normalizeDashboardCommand(command);
+  const controlIds = [
+    meta.controlId,
+    ...(Array.isArray(meta.controlIds) ? meta.controlIds : [])
+  ].filter(Boolean);
+  return {
+    id: normalized.commandId,
+    time: normalized.updatedAt || normalized.createdAt || new Date().toISOString(),
+    title: commandReceiptTitle(normalized),
+    detail: commandReceiptDetail(normalized),
+    tone: toneForCommandStatus(normalized.status),
+    ...(controlIds.length > 0 ? { controlId: controlIds[0], controlIds } : {}),
+    commandType: normalized.type,
+    commandStatus: normalized.status,
+    workflowId: normalized.workflowId,
+    traceId: normalized.traceId,
+    route: normalized.route,
+    blockReason: normalized.blockReason,
+    backendCommand: true
+  };
+};
+
+export const buildCommandAdmissionPayload = ({
+  type,
+  route = '',
+  summary = '',
+  blockReason = null,
+  result = {},
+  workflowId = '',
+  traceId = ''
+} = {}) => ({
+  type,
+  route,
+  summary,
+  blockReason,
+  result,
+  ...(workflowId ? { workflowId } : {}),
+  ...(traceId ? { traceId } : {}),
+  requestedBy: 'dashboard'
+});
+

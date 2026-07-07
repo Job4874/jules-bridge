@@ -85,15 +85,23 @@ if not BRIDGE_TOKEN:
 def require_auth():
     if request.method == "OPTIONS":
         return None
-    if request.path in (
+    path = request.path
+    if path in (
         "/health",
         "/ping",
         "/host/identity",
         "/dashboard/status",
+        "/dashboard/commands",
+        "/dashboard/workflows",
+        "/dashboard/projection",
         "/vm/status",
         "/chat",
         "/chat/test",
     ):
+        return None
+    if path.startswith("/dashboard/workflows/"):
+        return None
+    if path.startswith("/dashboard/commands/") and path.endswith("/cancel"):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -497,6 +505,11 @@ TENTACLES = [
     {"name": "repo_context_guard", "route": "GET /repo/context-guard",       "reach": "Protected Git repo inventory with port/node/dependency collision guardrails"},  # pylint: disable=line-too-long
     # Dashboard + Chat routes
     {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
+    {"name": "dashboard_commands", "route": "GET /dashboard/commands",       "reach": "Read recent Jules dashboard command admissions"},  # pylint: disable=line-too-long
+    {"name": "dashboard_commands_post", "route": "POST /dashboard/commands", "reach": "Admit a dashboard command/workflow event without external mutation"},  # pylint: disable=line-too-long
+    {"name": "dashboard_command_cancel", "route": "POST /dashboard/commands/<commandId>/cancel", "reach": "Cancel an in-flight dashboard command"},  # pylint: disable=line-too-long
+    {"name": "dashboard_workflows", "route": "GET /dashboard/workflows",     "reach": "Read recent Jules dashboard workflow lanes"},  # pylint: disable=line-too-long
+    {"name": "dashboard_projection", "route": "GET /dashboard/projection",   "reach": "Aggregate bridge health, commands, workflows, sync, and blockers"},  # pylint: disable=line-too-long
     {"name": "chat",             "route": "POST /chat",                      "reach": "Conversational endpoint routed through the VM/browser model loop"},  # pylint: disable=line-too-long
     {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test the configured VM/browser model loop"},  # pylint: disable=line-too-long
 ]
@@ -2322,6 +2335,64 @@ def dashboard_status():
         )
 
     result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
+    return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/dashboard/commands", methods=["GET", "POST"])
+@route_errors
+def dashboard_commands():
+    """GET/POST /dashboard/commands — admit or list dashboard command events."""
+    from modules.dashboard_commands import (  # pylint: disable=import-outside-toplevel
+        admit_command,
+        list_commands,
+    )
+
+    if request.method == "GET":
+        result = list_commands(limit=query_int_field("limit", 50, min_value=1, max_value=200))
+        return jsonify(result), 200 if result.get("ok") else 500
+
+    data = json_payload()
+    result = admit_command(data, bridge_start_utc=_BRIDGE_START_UTC)
+    return jsonify(result), 200 if result.get("ok") else 400
+
+
+@app.route("/dashboard/commands/<command_id>/cancel", methods=["POST"])
+@route_errors
+def dashboard_command_cancel(command_id):
+    """POST /dashboard/commands/<commandId>/cancel — cancel an in-flight command."""
+    from modules.dashboard_commands import cancel_command  # pylint: disable=import-outside-toplevel
+
+    result = cancel_command(command_id)
+    return jsonify(result), 200 if result.get("ok") else 400
+
+
+@app.route("/dashboard/workflows", methods=["GET"])
+@app.route("/dashboard/workflows/<workflow_id>", methods=["GET"])
+@route_errors
+def dashboard_workflows(workflow_id=None):
+    """GET /dashboard/workflows — list or fetch dashboard workflow lanes."""
+    from modules.dashboard_commands import (  # pylint: disable=import-outside-toplevel
+        get_workflow,
+        list_workflows,
+    )
+
+    if workflow_id:
+        result = get_workflow(workflow_id)
+        return jsonify(result), 200 if result.get("ok") else 404
+    result = list_workflows(limit=query_int_field("limit", 50, min_value=1, max_value=200))
+    return jsonify(result), 200 if result.get("ok") else 500
+
+
+@app.route("/dashboard/projection", methods=["GET"])
+@route_errors
+def dashboard_projection():
+    """GET /dashboard/projection — aggregate dashboard control-plane state."""
+    from modules.dashboard_commands import get_dashboard_projection  # pylint: disable=import-outside-toplevel
+
+    result = get_dashboard_projection(
+        bridge_start_utc=_BRIDGE_START_UTC,
+        limit=query_int_field("limit", 20, min_value=1, max_value=200),
+    )
     return jsonify(result), 200 if result.get("ok") else 500
 
 
