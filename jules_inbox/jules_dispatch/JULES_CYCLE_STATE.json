@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T02:02:45.078196+00:00",
+  "generated_at_utc": "2026-07-06T01:01:25.254637+00:00",
   "status": "pending",
   "dry_run": true,
   "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
@@ -11,9 +11,9 @@
   "require_remote_ready": true,
   "blockers": [],
   "dispatch": {
-    "source": "C:\\Users\\abdul\\.academic-command-center\\jules_dispatch\\acc-1782871365047-task-52646304.md",
-    "source_sha256": "4065e351d88a1b09efad87ed8a0594789bbe2a20666c5a37cb1c97860c569389",
-    "generated_at_utc": "2026-07-01T02:02:45.095525+00:00",
+    "source": "C:\\Users\\abdul\\.academic-command-center\\jules_dispatch\\acc-1783299685246-task-40b90707.md",
+    "source_sha256": "099ca6ebf80963132442ac227de535927c43b30ad8833083c78f3e8bba3dc922",
+    "generated_at_utc": "2026-07-06T01:01:25.271131+00:00",
     "task_count": 0,
     "selected_count": 0,
     "status_counts": {},
@@ -50,7 +50,7 @@
     "resolved_jules_command": "C:\\Users\\abdul\\AppData\\Local\\Temp\\jules_tmp\\jules.exe"
   },
   "launch_result": {
-    "generated_at_utc": "2026-07-01T02:02:45.125262+00:00",
+    "generated_at_utc": "2026-07-06T01:01:25.400676+00:00",
     "dry_run": true,
     "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
     "selected_count": 4,
@@ -186,7 +186,7 @@
   },
   "pull_results": [],
   "cot": {
-    "generated_at_utc": "2026-07-01T02:02:45.162302+00:00",
+    "generated_at_utc": "2026-07-06T01:01:25.487937+00:00",
     "packet_dir": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch",
     "launch_state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
     "report_dir": "",

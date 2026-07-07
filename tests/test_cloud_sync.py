@@ -76,6 +76,10 @@ def test_cloud_publish_packet_classifies_dirty_worktree(tmp_path, monkeypatch):
     (modules_dir / "cloud_sync.py").write_text("# sync\n", encoding="utf-8")
     (work / "bridge.py").write_text("# bridge\n", encoding="utf-8")
     (work / "bridge.log.1").write_text("rotated log\n", encoding="utf-8")
+    codex_dir = work / ".codex" / "verification"
+    codex_dir.mkdir(parents=True)
+    (codex_dir / "dashboard.png").write_text("not really an image\n", encoding="utf-8")
+    (work / "__tmp_Model.diff").write_text("scratch diff\n", encoding="utf-8")
 
     result = build_cloud_publish_packet(work, objective="Publish dashboard sync work", use_cache=False)
 
@@ -85,11 +89,17 @@ def test_cloud_publish_packet_classifies_dirty_worktree(tmp_path, monkeypatch):
     families = {row["family"]: row for row in result["change_families"]}
     assert families["backend_modules"]["count"] == 1
     assert families["bridge_routes"]["count"] == 1
-    assert families["generated_noise"]["count"] == 1
+    assert families["generated_noise"]["count"] == 3
     assert result["include_candidate_count"] == 2
-    assert result["exclude_candidate_count"] == 1
+    assert result["exclude_candidate_count"] == 3
     assert "git add --" in result["commands"][1]["command"]
-    assert "bridge.log.1" not in result["commands"][1]["command"]
+    stage_command = result["commands"][1]["command"]
+    assert "bridge.log.1" not in stage_command
+    assert ".codex/verification/dashboard.png" not in stage_command
+    assert "__tmp_Model.diff" not in stage_command
+    assert "generated_or_noisy_files_present" in result["warnings"]
+    warning_line = next(line for line in result["packet"].splitlines() if line.startswith("- warnings:"))
+    assert "generated_or_noisy_files_present" in warning_line
     assert "This packet did not run git add" in result["packet"]
 
 
@@ -108,11 +118,19 @@ def test_cloud_publish_packet_writes_repo_local_packet(tmp_path, monkeypatch):
     )
 
     assert result["artifacts"]["packet_written"] is True
+    assert result["status"] == "blocked"
+    assert result["state"] == "blocked"
+    assert result["status_snapshot"]["synced"] is False
+    assert result["status_snapshot"]["publish_ready"] is False
+    assert "dirty_worktree" in result["blockers"]
     packet_path = work / result["artifacts"]["packet_path"]
     state_path = work / result["artifacts"]["state_path"]
     assert packet_path.is_file()
     assert state_path.is_file()
     assert packet_path.read_text(encoding="utf-8").startswith("# Cloud Publish Packet")
+    stage_command = next(row["command"] for row in result["commands"] if row["label"] == "Stage reviewed candidates")
+    assert result["artifacts"]["packet_path"] in stage_command
+    assert result["artifacts"]["state_path"] in stage_command
 
 
 def test_cloud_publish_packet_rejects_output_dir_outside_repo(tmp_path, monkeypatch):

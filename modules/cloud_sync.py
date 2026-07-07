@@ -211,15 +211,51 @@ def build_cloud_publish_packet(
         if top["ok"] and top["stdout"].strip():
             repo_root = Path(top["stdout"].strip()).resolve()
 
+        planned_packet_path: Path | None = None
+        planned_state_path: Path | None = None
+        planned_artifact_error: dict[str, Any] = {}
+        if write_packet:
+            planned_packet_path, planned_state_path, planned_artifact_error = _plan_publish_artifacts(
+                repo_root,
+                output_dir,
+            )
+
         entries = _dirty_entries(repo_root, timeout)
+        planned_entries = _planned_publish_artifact_entries(
+            repo_root,
+            timeout,
+            entries,
+            planned_packet_path,
+            planned_state_path,
+        )
+        if planned_entries:
+            entries = [*entries, *planned_entries]
+            status = CloudSyncStatusResult(json.loads(json.dumps(status)))
+            git_status = status.setdefault("git", {})
+            git_status["dirty_count"] = int(git_status.get("dirty_count", 0)) + len(planned_entries)
+            git_status["untracked_count"] = int(git_status.get("untracked_count", 0)) + sum(
+                1 for entry in planned_entries if not entry.get("tracked")
+            )
+            git_status["unstaged_count"] = int(git_status.get("unstaged_count", 0)) + sum(
+                1 for entry in planned_entries if entry.get("tracked")
+            )
+            blockers = list(status.get("blockers", []))
+            if "dirty_worktree" not in blockers:
+                blockers.append("dirty_worktree")
+            status["blockers"] = blockers
+            status["status"] = "blocked"
+            status["state"] = "blocked"
+            status["publish_ready"] = False
+            status["synced"] = False
         families = _change_families(entries)
         include_candidates = [row["path"] for row in entries if row.get("publish_candidate")]
         exclude_candidates = [row["path"] for row in entries if not row.get("publish_candidate")]
         commands = _publish_commands(status, include_candidates)
         blockers = list(status.get("blockers", []))
-        warnings = list(status.get("warnings", []))
-        if exclude_candidates:
+        warnings = list(dict.fromkeys(status.get("warnings", [])))
+        if exclude_candidates and "generated_or_noisy_files_present" not in warnings:
             warnings.append("generated_or_noisy_files_present")
+        status["warnings"] = warnings
 
         if blockers:
             state = "blocked"
@@ -263,7 +299,14 @@ def build_cloud_publish_packet(
             },
         )
         if write_packet:
-            artifacts = _write_publish_packet(result, repo_root, output_dir)
+            artifacts = _write_publish_packet(
+                result,
+                repo_root,
+                output_dir,
+                packet_path=planned_packet_path,
+                state_path=planned_state_path,
+                planned_error=planned_artifact_error,
+            )
             result["artifacts"] = artifacts
         return result
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -506,12 +549,17 @@ def _change_family(path_text: str) -> str:
         or lower in ("ubiquitous_language.md", "implementation_plan.md")
     ):
         return "context_docs"
+    if (
+        name.startswith("bridge.log")
+        or lower.startswith(".codex/")
+        or lower.startswith("scratch/screenshots/")
+        or name.startswith("__tmp")
+    ):
+        return "generated_noise"
     if lower.startswith("jules_inbox/"):
         return "evidence_packets"
     if lower in (".env.example", "package.json", "package-lock.json") or lower.endswith(".toml"):
         return "config"
-    if name.startswith("bridge.log") or lower.startswith("scratch/screenshots/"):
-        return "generated_noise"
     return "other"
 
 
@@ -606,11 +654,10 @@ def _render_publish_packet(
     return "\n".join(lines).strip() + "\n"
 
 
-def _write_publish_packet(
-    result: CloudPublishPacketResult,
+def _plan_publish_artifacts(
     repo_root: Path,
     output_dir: str,
-) -> dict[str, Any]:
+) -> tuple[Path | None, Path | None, dict[str, Any]]:
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
     directory = Path(output_dir).expanduser() if output_dir else repo_root / "jules_inbox" / "cloud_sync"
     if not directory.is_absolute():
@@ -619,15 +666,60 @@ def _write_publish_packet(
     try:
         directory.relative_to(repo_root.resolve())
     except ValueError:
-        return {
+        return None, None, {
             "packet_written": False,
             "packet_path": "",
             "state_path": "",
             "error": "output_dir must stay inside the repository",
         }
+    return directory / f"CLOUD_PUBLISH_PACKET_{timestamp}.md", directory / "CLOUD_PUBLISH_STATE.json", {}
+
+
+def _planned_publish_artifact_entries(
+    repo_root: Path,
+    timeout_s: int,
+    existing_entries: list[dict[str, Any]],
+    packet_path: Path | None,
+    state_path: Path | None,
+) -> list[dict[str, Any]]:
+    existing_paths = {str(row.get("path", "")).replace("\\", "/") for row in existing_entries}
+    planned_entries: list[dict[str, Any]] = []
+    for path in (state_path, packet_path):
+        if path is None:
+            continue
+        path_text = path.relative_to(repo_root.resolve()).as_posix()
+        if path_text in existing_paths:
+            continue
+        family = _change_family(path_text)
+        tracked = _git(repo_root, ["ls-files", "--error-unmatch", "--", path_text], timeout_s)["ok"]
+        planned_entries.append({
+            "status": "modified" if tracked else "untracked",
+            "path": path_text,
+            "family": family,
+            "tracked": tracked,
+            "publish_candidate": family not in ("generated_noise",),
+        })
+        existing_paths.add(path_text)
+    return planned_entries
+
+
+def _write_publish_packet(
+    result: CloudPublishPacketResult,
+    repo_root: Path,
+    output_dir: str,
+    *,
+    packet_path: Path | None = None,
+    state_path: Path | None = None,
+    planned_error: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    if planned_error:
+        return planned_error
+    if packet_path is None or state_path is None:
+        packet_path, state_path, planned_error = _plan_publish_artifacts(repo_root, output_dir)
+        if planned_error:
+            return planned_error
+    directory = packet_path.parent
     directory.mkdir(parents=True, exist_ok=True)
-    packet_path = directory / f"CLOUD_PUBLISH_PACKET_{timestamp}.md"
-    state_path = directory / "CLOUD_PUBLISH_STATE.json"
     packet_path.write_text(str(result.get("packet", "")), encoding="utf-8")
     packet_label = packet_path.relative_to(repo_root.resolve()).as_posix()
     state_label = state_path.relative_to(repo_root.resolve()).as_posix()

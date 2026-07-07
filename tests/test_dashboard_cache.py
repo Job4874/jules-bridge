@@ -1,15 +1,23 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timezone
+from modules import dashboard_module
 from modules.dashboard_module import get_dashboard_status
 
 def test_dashboard_cache_logic(monkeypatch):
+    dashboard_module._dashboard_status_cache.clear()
+
     # Mocking dependencies of get_dashboard_status to avoid real IO
     with patch('modules.dashboard_module._env_vars', return_value={}), \
          patch('modules.dashboard_module.detect_resource_pressure', return_value={}), \
          patch('modules.dashboard_module._fleet_status', return_value={}), \
          patch('modules.dashboard_module._vm_info', return_value={'vms': [], 'total': 0, 'online': 0}), \
          patch('modules.dashboard_module._tail_log', return_value=[]), \
+         patch('modules.dashboard_module.gemini_status_snapshot', return_value={}), \
+         patch('modules.dashboard_module.antigravity_status_snapshot', return_value={}), \
+         patch('modules.dashboard_module._codebase_analysis_summary', return_value={'status': 'ready', 'summary': {}}), \
+         patch('modules.dashboard_module._alliance_status_summary', return_value={'status': 'ready'}), \
+         patch('modules.dashboard_module._cloud_sync_status_summary', return_value={'status': 'synced', 'blockers': [], 'warnings': []}), \
          patch('modules.dashboard_module.build_repo_context_guard', return_value={'status': 'ready', 'summary': {}, 'collisions': [], 'guardrails': []}):
 
         monkeypatch.setenv('DASHBOARD_CACHE_TTL_S', '2')

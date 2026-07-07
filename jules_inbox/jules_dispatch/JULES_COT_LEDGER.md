@@ -1,6 +1,6 @@
 # Jules COT Ledger
 
-- generated_at_utc: 2026-07-01T02:02:45.162302+00:00
+- generated_at_utc: 2026-07-06T01:01:25.487937+00:00
 - packet_dir: C:\Users\abdul\jules-bridge\jules_inbox\jules_dispatch
 - launch_state_path: C:\Users\abdul\jules-bridge\jules_inbox\jules_dispatch\JULES_LAUNCH_STATE.json
 - selected_count: 4
