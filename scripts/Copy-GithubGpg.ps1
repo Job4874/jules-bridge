@@ -58,7 +58,7 @@ function Get-KeyIdFromFile {
     return $null
 }
 
-function Refresh-PublicKeyFile {
+function Update-PublicKeyFile {
     param([string]$Path)
     $gitRoot = Get-GitRoot
     if (-not $gitRoot) { return }
@@ -129,7 +129,7 @@ try {
         }
     }
 
-    Refresh-PublicKeyFile -Path $KeyFile
+    Update-PublicKeyFile -Path $KeyFile
 
     if (-not (Test-Path $KeyFile)) {
         throw "Public key file missing: $KeyFile"
