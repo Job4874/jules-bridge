@@ -85,7 +85,8 @@ if not BRIDGE_TOKEN:
 def require_auth():
     if request.method == "OPTIONS":
         return None
-    if request.path in (
+    path = request.path
+    if path in (
         "/health",
         "/ping",
         "/host/identity",
@@ -97,6 +98,10 @@ def require_auth():
         "/chat",
         "/chat/test",
     ):
+        return None
+    if path.startswith("/dashboard/workflows/"):
+        return None
+    if path.startswith("/dashboard/commands/") and path.endswith("/cancel"):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
