@@ -119,14 +119,20 @@ def _workflows_dir() -> Path:
 def configure_store_root(root: Path | None) -> None:
     """Point the dashboard store at an alternate root (tests only)."""
     global _DASHBOARD_ROOT, _COMMANDS_DIR, _WORKFLOWS_DIR  # pylint: disable=global-statement
+    from modules.dashboard_evidence import configure_evidence_root  # pylint: disable=import-outside-toplevel
+
     base = root or (_ROOT / ".jules-dashboard")
     _DASHBOARD_ROOT = base
     _COMMANDS_DIR = base / "commands"
     _WORKFLOWS_DIR = base / "workflows"
+    configure_evidence_root(base)
 
 
 def reset_store_root() -> None:
+    from modules.dashboard_evidence import reset_evidence_root  # pylint: disable=import-outside-toplevel
+
     configure_store_root(None)
+    reset_evidence_root()
 
 
 def _now_iso() -> str:
@@ -646,6 +652,29 @@ def list_pending_commands(limit: int = 20) -> list[dict[str, Any]]:
     return pending[:limit]
 
 
+def _attach_execution_evidence(command: dict[str, Any]) -> dict[str, Any]:
+    """Write durable evidence for safe worker-executed commands and attach evidenceRefs."""
+    if command.get("type") != "route_probe":
+        return command
+    if command.get("status") not in {"succeeded", "blocked", "failed"}:
+        return command
+
+    from modules.dashboard_evidence import write_command_evidence  # pylint: disable=import-outside-toplevel
+
+    evidence = write_command_evidence(
+        command,
+        result=command.get("result") if isinstance(command.get("result"), dict) else {},
+        status=str(command.get("status") or ""),
+        summary=str(command.get("summary") or ""),
+    )
+    refs = [str(item) for item in (command.get("evidenceRefs") or []) if str(item).strip()]
+    evidence_id = str(evidence.get("evidenceId") or "")
+    if evidence_id and evidence_id not in refs:
+        refs.append(evidence_id)
+    command["evidenceRefs"] = refs
+    return command
+
+
 def process_command(command_id: str, *, bridge_start_utc: datetime | None = None) -> dict[str, Any]:
     """Advance one command through running to a terminal status."""
     data = _read_json(_command_path(command_id))
@@ -667,6 +696,7 @@ def process_command(command_id: str, *, bridge_start_utc: datetime | None = None
     _touch_workflow(command)
 
     command = _execute_command(command, bridge_start_utc=bridge_start_utc)
+    command = _attach_execution_evidence(command)
     command = _persist_command(command)
     workflow = _touch_workflow(command)
     return {
@@ -819,6 +849,7 @@ def _collect_blockers(
 
 def get_dashboard_projection(*, bridge_start_utc: datetime | None = None, limit: int = 20) -> dict[str, Any]:
     from modules.dashboard_command_worker import worker_status  # pylint: disable=import-outside-toplevel
+    from modules.dashboard_evidence import list_latest_evidence_summaries  # pylint: disable=import-outside-toplevel
 
     bridge_health = get_dashboard_status(bridge_start_utc=bridge_start_utc)
     cache_age_s = int(bridge_health.get("cache_age_s") or 0)
@@ -861,5 +892,6 @@ def get_dashboard_projection(*, bridge_start_utc: datetime | None = None, limit:
         ),
         "currentWorkflowId": (latest_workflow or {}).get("workflowId"),
         "commandWorker": worker_status(),
+        "latestEvidence": list_latest_evidence_summaries(limit=min(limit, 10)),
     }
     return sanitize_projection_value(projection)

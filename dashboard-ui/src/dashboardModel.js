@@ -1816,7 +1816,20 @@ export const EMPTY_DASHBOARD_PROJECTION = {
     lastCommandId: null,
     running: false,
     poll_interval_s: 1
-  }
+  },
+  latestEvidence: []
+};
+
+export const EMPTY_DASHBOARD_EVIDENCE = {
+  evidenceId: '',
+  commandId: '',
+  workflowId: '',
+  traceId: '',
+  type: '',
+  status: '',
+  summary: '',
+  createdAt: '',
+  redactionStatus: 'redacted'
 };
 
 const COMMAND_STATUS_TONES = {
@@ -1897,6 +1910,23 @@ export const normalizeDashboardCommandWorker = worker => {
   };
 };
 
+export const normalizeDashboardEvidenceSummary = evidence => {
+  const source = evidence && typeof evidence === 'object' ? evidence : {};
+  return {
+    ...EMPTY_DASHBOARD_EVIDENCE,
+    ...source,
+    evidenceId: source.evidenceId || '',
+    commandId: source.commandId || '',
+    workflowId: source.workflowId || '',
+    traceId: source.traceId || '',
+    type: source.type || '',
+    status: source.status || '',
+    summary: source.summary || '',
+    createdAt: source.createdAt || '',
+    redactionStatus: source.redactionStatus || 'redacted'
+  };
+};
+
 export const normalizeDashboardProjection = payload => {
   const source = payload && typeof payload === 'object' ? payload : {};
   const contract = source.contract && typeof source.contract === 'object' ? source.contract : {};
@@ -1922,7 +1952,10 @@ export const normalizeDashboardProjection = payload => {
     blockers: Array.isArray(source.blockers) ? source.blockers : [],
     nextSafeAction: source.nextSafeAction || '',
     currentWorkflowId: source.currentWorkflowId || '',
-    commandWorker: normalizeDashboardCommandWorker(source.commandWorker)
+    commandWorker: normalizeDashboardCommandWorker(source.commandWorker),
+    latestEvidence: Array.isArray(source.latestEvidence)
+      ? source.latestEvidence.map(normalizeDashboardEvidenceSummary)
+      : []
   };
 };
 
