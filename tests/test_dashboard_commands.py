@@ -205,3 +205,115 @@ def test_process_command_skips_terminal_status(command_store):
     assert skipped["ok"] is True
     assert skipped["skipped"] is True
     assert skipped["command"]["status"] == "not_implemented"
+
+
+def test_route_probe_ping_succeeds(command_store, monkeypatch):
+    monkeypatch.setattr(
+        "modules.dashboard_commands._http_probe_get_route",
+        lambda path: (200, {"status": "Jules Bridge Online"}),
+    )
+
+    admitted = admit_command({"type": "route_probe", "route": "/ping", "summary": "Probe ping"})
+    finished = process_command(admitted["command"]["commandId"])
+
+    command = finished["command"]
+    assert command["status"] == "succeeded"
+    assert command["route"] == "/ping"
+    assert command["result"]["statusCode"] == 200
+    assert command["result"]["route"] == "/ping"
+    assert command["summary"] == "GET /ping returned 200"
+
+
+def test_route_probe_dashboard_status_succeeds(command_store, monkeypatch):
+    monkeypatch.setattr(
+        "modules.dashboard_commands.get_dashboard_status",
+        lambda bridge_start_utc=None: {
+            "ok": True,
+            "contract": {"name": "jules_dashboard_status", "version": 2},
+        },
+    )
+
+    admitted = admit_command({"type": "route_probe", "route": "/dashboard/status"})
+    finished = process_command(admitted["command"]["commandId"])
+
+    command = finished["command"]
+    assert command["status"] == "succeeded"
+    assert command["route"] == "/dashboard/status"
+    assert command["result"]["statusCode"] == 200
+    assert command["summary"] == "GET /dashboard/status returned 200"
+
+
+def test_route_probe_external_url_blocked(command_store):
+    admitted = admit_command({"type": "route_probe", "route": "https://example.com/ping"})
+    finished = process_command(admitted["command"]["commandId"])
+
+    command = finished["command"]
+    assert command["status"] == "blocked"
+    assert command["blockReason"] == "route_not_allowed"
+
+
+def test_route_probe_non_allowlisted_internal_route_blocked(command_store):
+    admitted = admit_command({"type": "route_probe", "route": "/not-allowed"})
+    finished = process_command(admitted["command"]["commandId"])
+
+    command = finished["command"]
+    assert command["status"] == "blocked"
+    assert command["blockReason"] == "route_not_allowed"
+    assert command["route"] == "/not-allowed"
+
+
+def test_route_probe_result_is_redacted(command_store, monkeypatch):
+    monkeypatch.setattr(
+        "modules.dashboard_commands._http_probe_get_route",
+        lambda path: (
+            200,
+            {
+                "status": "ok",
+                "Authorization": "Bearer super-secret-token",
+                "api_key": "abc123",
+                "cookie": "session=deadbeef",
+            },
+        ),
+    )
+
+    admitted = admit_command({"type": "route_probe", "route": "/ping"})
+    finished = process_command(admitted["command"]["commandId"])
+    result = finished["command"]["result"]
+
+    assert result["Authorization"] == "<redacted>"
+    assert result["api_key"] == "<redacted>"
+    assert result["cookie"] == "<redacted>"
+
+
+def test_projection_shows_succeeded_route_probe_terminal_state(command_store, monkeypatch):
+    monkeypatch.setattr(
+        "modules.dashboard_commands._http_probe_get_route",
+        lambda path: (200, {"status": "Jules Bridge Online"}),
+    )
+    monkeypatch.setattr(
+        "modules.dashboard_commands.get_dashboard_status",
+        lambda bridge_start_utc=None: {
+            "ok": True,
+            "online": True,
+            "contract": {"name": "jules_dashboard_status", "version": 2, "transport": "poll"},
+            "execution_context": "local",
+            "cloud_sync": {"status": "synced", "summary": "clean"},
+            "alliance": {"ready_to_execute_alliance": False},
+            "cache_age_s": 0,
+        },
+    )
+    monkeypatch.setattr(
+        "modules.dashboard_commands.get_cloud_sync_status",
+        lambda **kwargs: {"status": "synced", "summary": "clean"},
+    )
+
+    admitted = admit_command({"type": "route_probe", "route": "/ping"})
+    process_command(admitted["command"]["commandId"])
+
+    projection = get_dashboard_projection(limit=10)
+    latest = next(item for item in projection["commands"] if item["commandId"] == admitted["command"]["commandId"])
+
+    assert latest["status"] == "succeeded"
+    assert latest["type"] == "route_probe"
+    assert latest["route"] == "/ping"
+    assert latest["result"]["statusCode"] == 200
