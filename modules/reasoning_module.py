@@ -173,18 +173,33 @@ _GENERIC_STEP_RE = re.compile(r"^Executed action for step \d+\.?$", re.IGNORECAS
 
 _MCQ_SYSTEM_PROMPT = """\
 You are answering a multiple-choice quiz question for Jules Bridge.
-Return ONLY valid JSON — no markdown, no prose, no follow-up questions.
+Return ONLY one JSON object — no markdown fences, no prose before or after, no follow-up questions.
 
-If you can select an answer from the provided options, return:
+If you can select an answer from the provided options, return exactly:
 {"index": <int>, "selected_text": "<exact option text>", "confidence": <0.0-1.0>, "reason": "<brief explanation>"}
 
 Rules:
 - index is zero-based and must match one of the numbered options.
-- selected_text must exactly match one provided answer choice.
+- selected_text must be copied verbatim from one provided answer choice (character-for-character).
 - confidence must be between 0.0 and 1.0.
+- reason must be one concise sentence.
+- Never return browser action traces or text like "Executed action for step N".
 
-If the question is incomplete or the answer cannot be determined, return:
+If the question is incomplete or the answer cannot be determined, return exactly:
 {"abstain": true, "reason": "missing or ambiguous context"}
+"""
+
+_MCQ_RETRY_SYSTEM_PROMPT = """\
+Your previous response was rejected because it was not strict valid JSON.
+Return ONLY one JSON object with no markdown and no extra text.
+
+Required shape when answering:
+{"index": <int>, "selected_text": "<exact option text>", "confidence": <0.0-1.0>, "reason": "<brief explanation>"}
+
+Or when abstaining:
+{"abstain": true, "reason": "missing or ambiguous context"}
+
+Do not include markdown, prose, or browser action traces.
 """
 
 
@@ -228,12 +243,42 @@ def _normalize_option_text(text: str) -> str:
     return re.sub(r"\s+", " ", str(text or "").strip().lower())
 
 
-def _option_index_for_text(options: List[str], selected_text: str) -> Optional[int]:
+def _exact_option_index(options: List[str], selected_text: str) -> Optional[int]:
+    """Match option text with trim-only equality (before normalization fallback)."""
+    target = str(selected_text or "").strip()
+    if not target:
+        return None
+    for index, option in enumerate(options):
+        if option.strip() == target:
+            return index
+    return None
+
+
+def _normalized_option_index(options: List[str], selected_text: str) -> Optional[int]:
     target = _normalize_option_text(selected_text)
+    if not target:
+        return None
     for index, option in enumerate(options):
         if _normalize_option_text(option) == target:
             return index
     return None
+
+
+def _resolve_option_match(options: List[str], selected_text: str) -> Optional[int]:
+    """Try exact option text match first, then normalized whitespace/case match."""
+    return _exact_option_index(options, selected_text) or _normalized_option_index(
+        options, selected_text
+    )
+
+
+def _is_rejected_mcq_raw(raw: str) -> bool:
+    """True when model output is known non-answer placeholder text."""
+    stripped = str(raw or "").strip()
+    if not stripped:
+        return True
+    if _GENERIC_STEP_RE.match(stripped):
+        return True
+    return False
 
 
 def _validate_mcq_payload(data: Dict[str, Any], options: List[str]) -> Optional[Dict[str, Any]]:
@@ -264,10 +309,11 @@ def _validate_mcq_payload(data: Dict[str, Any], options: List[str]) -> Optional[
     if index < 0 or index >= len(options):
         return None
 
-    matched_index = _option_index_for_text(options, selected_text)
-    if matched_index is None or matched_index != index:
-        return None
     if _GENERIC_STEP_RE.match(selected_text):
+        return None
+
+    matched_index = _resolve_option_match(options, selected_text)
+    if matched_index is None or matched_index != index:
         return None
 
     return {
@@ -290,16 +336,33 @@ def _mcq_stub(problem: str, context: str) -> Dict[str, Any]:
     }
 
 
+def _parse_mcq_model_payload(raw: str) -> Dict[str, Any]:
+    """Parse MCQ model output; raises JSONDecodeError when not recoverable."""
+    if _is_rejected_mcq_raw(raw):
+        raise json.JSONDecodeError("Rejected MCQ placeholder text", str(raw or ""), 0)
+    return _parse_llm_json(raw)
+
+
 def _mcq_model_loop_call(problem: str, context: str, model_alias: str) -> Dict[str, Any]:
     user_prompt = problem
     if context:
         user_prompt = f"{problem}\n\nContext:\n{context}"
     raw = _model_loop_chat(_MCQ_SYSTEM_PROMPT, user_prompt, model_alias)
     try:
-        data = _parse_llm_json(raw)
+        data = _parse_mcq_model_payload(raw)
     except json.JSONDecodeError:
-        _LOGGER.warning("MCQ model-loop returned non-JSON")
-        return {"abstain": True, "reason": "model returned non-JSON output"}
+        _LOGGER.warning("MCQ model-loop returned non-JSON — retrying once with strict prompt")
+        retry_prompt = (
+            f"{user_prompt}\n\n"
+            "RETRY: Your last response was not strict valid JSON. "
+            "Return ONLY one JSON object."
+        )
+        raw = _model_loop_chat(_MCQ_RETRY_SYSTEM_PROMPT, retry_prompt, model_alias)
+        try:
+            data = _parse_mcq_model_payload(raw)
+        except json.JSONDecodeError:
+            _LOGGER.warning("MCQ model-loop retry still returned non-JSON")
+            return {"abstain": True, "reason": "model returned non-JSON output"}
     if "error" in data:
         _LOGGER.warning("MCQ model-loop error: %s", data["error"])
         return {"abstain": True, "reason": str(data["error"])}

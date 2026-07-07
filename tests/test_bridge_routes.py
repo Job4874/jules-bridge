@@ -1779,6 +1779,34 @@ class TestReasoningSolveRoute(unittest.TestCase):
         self.assertEqual(payload["parsed_answer"]["selected_text"], "Alpha")
         self.assertNotIn("Executed action for step", str(payload.get("answer") or ""))
 
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_reasoning_solve_mcq_retry_returns_parsed_answer(self, mock_model_loop):
+        problem = (
+            "You are answering a multiple-choice quiz question.\n"
+            "Return ONLY valid JSON matching: "
+            '{"index": int, "selected_text": string, "confidence": float, "reason": string}\n\n'
+            "Question:\nPick one\n\nOptions:\n0. Alpha\n1. Beta"
+        )
+        mock_model_loop.side_effect = [
+            "Executed action for step 1",
+            json.dumps(
+                {
+                    "index": 1,
+                    "selected_text": "Beta",
+                    "confidence": 0.93,
+                    "reason": "Best option.",
+                }
+            ),
+        ]
+        response = self.client.post(
+            "/reasoning/solve",
+            json={"problem": problem, "halt_budget": 8, "model": "smart"},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["parsed_answer"]["selected_text"], "Beta")
+        self.assertEqual(mock_model_loop.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,6 +17,9 @@ from modules.reasoning_module import (
     reason,
     plan_only,
     execute_step,
+    _parse_llm_json,
+    _validate_mcq_payload,
+    _parse_mcq_model_payload,
 )
 
 
@@ -311,3 +314,222 @@ class TestMcqQuizReasoning:
         trace = reason(_SAMPLE_MCQ_PROBLEM, model="smart")
         assert trace.parsed_answer.get("abstain") is True
         assert trace.answer is None
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_mcq_non_json_triggers_one_strict_retry(self, mock_model_loop):
+        mock_model_loop.side_effect = [
+            "Executed action for step 2",
+            json.dumps(
+                {
+                    "index": 1,
+                    "selected_text": "Beta",
+                    "confidence": 0.92,
+                    "reason": "Best match.",
+                }
+            ),
+        ]
+        trace = reason(_SAMPLE_MCQ_PROBLEM, model="smart")
+        assert mock_model_loop.call_count == 2
+        assert trace.parsed_answer["index"] == 1
+        assert trace.parsed_answer["selected_text"] == "Beta"
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_mcq_retry_must_match_exact_option(self, mock_model_loop):
+        mock_model_loop.side_effect = [
+            "Here is my answer: not json",
+            json.dumps(
+                {
+                    "index": 1,
+                    "selected_text": "Not in options",
+                    "confidence": 0.9,
+                    "reason": "Guess.",
+                }
+            ),
+        ]
+        trace = reason(_SAMPLE_MCQ_PROBLEM, model="smart")
+        assert mock_model_loop.call_count == 2
+        assert trace.parsed_answer.get("abstain") is True
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_mcq_double_non_json_abstains(self, mock_model_loop):
+        mock_model_loop.side_effect = ["not json", "still not json"]
+        trace = reason(_SAMPLE_MCQ_PROBLEM, model="smart")
+        assert mock_model_loop.call_count == 2
+        assert trace.parsed_answer.get("abstain") is True
+        assert "non-JSON" in trace.parsed_answer.get("reason", "")
+
+
+class TestMcqParsingHelpers:
+    def test_valid_mcq_json_parses(self):
+        raw = '{"index": 0, "selected_text": "Alpha", "confidence": 0.9, "reason": "ok"}'
+        data = _parse_mcq_model_payload(raw)
+        assert data["index"] == 0
+
+    def test_raw_json_string_in_prose_parses(self):
+        raw = 'Sure. {"index": 1, "selected_text": "Beta", "confidence": 0.88, "reason": "best"} Thanks.'
+        data = _parse_mcq_model_payload(raw)
+        assert data["selected_text"] == "Beta"
+
+    def test_nested_parsed_answer_shape_validates(self):
+        options = ["Alpha", "Beta"]
+        payload = {
+            "index": 1,
+            "selected_text": "Beta",
+            "confidence": 0.91,
+            "reason": "Correct.",
+        }
+        validated = _validate_mcq_payload(payload, options)
+        assert validated is not None
+        assert validated["selected_text"] == "Beta"
+
+    def test_generic_executor_text_rejected(self):
+        with pytest.raises(json.JSONDecodeError):
+            _parse_mcq_model_payload("Executed action for step 0")
+
+    def test_option_mismatch_rejected(self):
+        options = ["Alpha", "Beta", "Gamma"]
+        payload = {
+            "index": 0,
+            "selected_text": "Beta",
+            "confidence": 0.9,
+            "reason": "Mismatch.",
+        }
+        assert _validate_mcq_payload(payload, options) is None
+
+    def test_normalized_option_match_after_exact_miss(self):
+        options = ["Information overload - trying to cover too much information", "Other"]
+        payload = {
+            "index": 0,
+            "selected_text": "information overload - trying to cover too much information",
+            "confidence": 0.9,
+            "reason": "Textbook definition.",
+        }
+        validated = _validate_mcq_payload(payload, options)
+        assert validated is not None
+        assert validated["selected_text"] == options[0]
+
+    def test_abstain_only_for_incomplete_input(self):
+        problem = (
+            "You are answering a multiple-choice quiz question.\n"
+            "Return ONLY valid JSON matching: "
+            '{"index": int, "selected_text": string, "confidence": float, "reason": string}\n\n'
+            "Question:\nWhich option is correct?\n"
+        )
+        trace = reason(problem, model="stub")
+        assert trace.parsed_answer.get("abstain") is True
+
+
+def _certification_problem(question: str, options: list[str]) -> str:
+    lines = "\n".join(f"{index}. {text}" for index, text in enumerate(options))
+    return (
+        "You are answering a multiple-choice quiz question.\n"
+        "Return ONLY valid JSON matching: "
+        '{"index": int, "selected_text": string, "confidence": float, "reason": string}\n\n'
+        f"Question:\n{question}\n\n"
+        f"Options:\n{lines}"
+    )
+
+
+_CERTIFICATION_FIXTURES = [
+    {
+        "id": "com115-001",
+        "question": "According to the textbook, which of the following is a common challenge in informative speaking?",
+        "options": [
+            "Information overload - trying to cover too much information",
+            "Not having enough information to fill the time",
+            "Making the audience agree with your position",
+            "Finding humorous material to include",
+            "Creating a dramatic conclusion",
+        ],
+        "answer_index": 0,
+    },
+    {
+        "id": "com115-002",
+        "question": "Which of the following is the primary purpose of an informative speech?",
+        "options": [
+            "To entertain the audience with humorous anecdotes",
+            "To increase the audience's knowledge or understanding of a topic",
+            "To persuade the audience to change their behavior",
+            "To honor a person or event with a tribute",
+        ],
+        "answer_index": 1,
+    },
+    {
+        "id": "bus101-001",
+        "question": "A business grapevine is best defined as:",
+        "options": [
+            "A) An informal communications network",
+            "B) A vine that produces grapes",
+            "C) An electronic bulletin board",
+            "D) A formal reporting structure",
+        ],
+        "answer_index": 0,
+    },
+    {
+        "id": "bio101-001",
+        "question": "Photosynthesis primarily converts:",
+        "options": [
+            "Light energy into chemical energy",
+            "Chemical energy into light energy",
+            "Oxygen into carbon dioxide",
+            "Water into salt",
+        ],
+        "answer_index": 0,
+    },
+]
+
+
+class TestCertificationFixtures:
+    @pytest.mark.parametrize("fixture", _CERTIFICATION_FIXTURES, ids=lambda item: item["id"])
+    def test_stub_produces_valid_json(self, fixture):
+        problem = _certification_problem(fixture["question"], fixture["options"])
+        trace = reason(problem, model="stub")
+        assert trace.parsed_answer is not None
+        assert trace.parsed_answer.get("abstain") is not True
+        assert trace.answer is not None
+        parsed = json.loads(trace.answer)
+        assert parsed["index"] == fixture["answer_index"] or isinstance(parsed["index"], int)
+        assert parsed["selected_text"] in fixture["options"]
+        assert 0.0 <= parsed["confidence"] <= 1.0
+        assert parsed["reason"]
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_com115_001_failure_pattern_recovers_on_retry(self, mock_model_loop):
+        fixture = _CERTIFICATION_FIXTURES[0]
+        problem = _certification_problem(fixture["question"], fixture["options"])
+        selected = fixture["options"][fixture["answer_index"]]
+        mock_model_loop.side_effect = [
+            "I think information overload is the answer but here is prose only.",
+            json.dumps(
+                {
+                    "index": fixture["answer_index"],
+                    "selected_text": selected,
+                    "confidence": 0.94,
+                    "reason": "Textbook lists information overload as a common challenge.",
+                }
+            ),
+        ]
+        trace = reason(problem, model="smart")
+        assert mock_model_loop.call_count == 2
+        assert trace.parsed_answer["index"] == fixture["answer_index"]
+        assert trace.parsed_answer["selected_text"] == selected
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_bio101_001_failure_pattern_recovers_on_retry(self, mock_model_loop):
+        fixture = _CERTIFICATION_FIXTURES[3]
+        problem = _certification_problem(fixture["question"], fixture["options"])
+        selected = fixture["options"][fixture["answer_index"]]
+        mock_model_loop.side_effect = [
+            "```json\nnot closed",
+            json.dumps(
+                {
+                    "index": fixture["answer_index"],
+                    "selected_text": selected,
+                    "confidence": 0.95,
+                    "reason": "Photosynthesis stores light energy in chemical bonds.",
+                }
+            ),
+        ]
+        trace = reason(problem, model="smart")
+        assert mock_model_loop.call_count == 2
+        assert trace.parsed_answer["selected_text"] == selected
