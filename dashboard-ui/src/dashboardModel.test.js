@@ -26,6 +26,12 @@ import {
   restorePersistentCommandJournal,
   serializePersistentCommandJournal,
   buildRouteNotImplementedReceipt,
+  buildCommandAdmissionPayload,
+  commandReceiptDetail,
+  dashboardCommandToJournalRow,
+  normalizeDashboardProjection,
+  normalizeDashboardWorkflow,
+  toneForCommandStatus,
   summarizeCloudSyncGate,
   summarizeControlAudit
 } from './dashboardModel.js';
@@ -882,4 +888,105 @@ test('break test status refresh failure returns an offline snapshot for scoring'
   assert.match(source, /return offlineStatus \|\| offlineDashboardStatusSnapshot\(\)/);
   assert.match(source, /catch \{\s+return markDashboardOffline\(\);\s+\}/);
   assert.doesNotMatch(source, /catch \{\s+markDashboardOffline\(\);\s+return null;\s+\}/);
+});
+
+test('command projection normalizes bridge-backed commands and workflows', () => {
+  const payload = normalizeDashboardProjection({
+    ok: true,
+    contract: { name: 'jules_dashboard_projection', version: 1, generated_at_utc: '2026-07-07T00:00:00Z' },
+    commands: [{
+      commandId: 'cmd-1',
+      workflowId: 'wf-1',
+      traceId: 'trace-1',
+      type: 'break_test',
+      status: 'succeeded',
+      route: 'GET /dashboard/status',
+      summary: 'Break test status refresh succeeded.'
+    }],
+    workflows: [{
+      workflowId: 'wf-1',
+      title: 'Break test',
+      status: 'succeeded',
+      commandIds: ['cmd-1'],
+      latestCommandId: 'cmd-1',
+      traceIds: ['trace-1'],
+      summary: 'Break test status refresh succeeded.',
+      nextSafeAction: 'Continue with the next safe dashboard control.'
+    }],
+    nextSafeAction: 'Continue with the next safe dashboard control.',
+    currentWorkflowId: 'wf-1'
+  });
+
+  assert.equal(payload.commands[0].commandId, 'cmd-1');
+  assert.equal(payload.workflows[0].latestCommandId, 'cmd-1');
+  assert.equal(payload.contract.name, 'jules_dashboard_projection');
+});
+
+test('blocked command renders blockReason in journal row', () => {
+  const row = dashboardCommandToJournalRow({
+    commandId: 'cmd-blocked',
+    type: 'chat_send',
+    status: 'blocked',
+    blockReason: 'Press Send blocked because there is no draft content to send.',
+    route: 'POST /chat'
+  }, { controlId: 'comms-actions' });
+
+  assert.equal(row.title, 'Command blocked');
+  assert.match(row.detail, /no draft content/i);
+  assert.equal(row.tone, 'warn');
+  assert.equal(row.commandStatus, 'blocked');
+});
+
+test('not_implemented command renders clear message', () => {
+  const row = dashboardCommandToJournalRow({
+    commandId: 'cmd-ni',
+    type: 'button_sweep',
+    status: 'not_implemented',
+    blockReason: 'button_sweep runs in the dashboard UI; backend stores admission only.',
+    route: 'local_preview'
+  });
+
+  assert.equal(row.title, 'Route not implemented');
+  assert.match(commandReceiptDetail({
+    status: 'not_implemented',
+    blockReason: 'button_sweep runs in the dashboard UI; backend stores admission only.'
+  }), /dashboard UI/i);
+});
+
+test('click admission payload includes command type and route', () => {
+  const payload = buildCommandAdmissionPayload({
+    type: 'route_probe',
+    route: 'GET /ping',
+    summary: 'Probe bridge health'
+  });
+
+  assert.equal(payload.type, 'route_probe');
+  assert.equal(payload.route, 'GET /ping');
+  assert.equal(payload.requestedBy, 'dashboard');
+});
+
+test('workflow lane normalizer keeps latest command linkage', () => {
+  const workflow = normalizeDashboardWorkflow({
+    workflowId: 'wf-2',
+    title: 'Route probe',
+    status: 'running',
+    commandIds: ['cmd-a', 'cmd-b'],
+    latestCommandId: 'cmd-b',
+    nextSafeAction: 'Wait for the command lifecycle to finish.'
+  });
+
+  assert.equal(workflow.latestCommandId, 'cmd-b');
+  assert.equal(workflow.commandIds.length, 2);
+  assert.equal(toneForCommandStatus('succeeded'), 'success');
+});
+
+test('command workflow panel and backend admission are wired in App', () => {
+  const source = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
+
+  assert.match(source, /function CommandWorkflowPanel\(/);
+  assert.match(source, /fetch\(`\$\{BRIDGE\}\/dashboard\/projection/);
+  assert.match(source, /fetch\(`\$\{BRIDGE\}\/dashboard\/commands`/);
+  assert.match(source, /commandType: 'break_test'/);
+  assert.match(source, /commandType: 'chat_send'/);
+  assert.match(source, /normalizeDashboardProjection/);
 });

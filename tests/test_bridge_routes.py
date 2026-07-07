@@ -1715,6 +1715,38 @@ class TestDashboardRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "Invalid input")
 
+    @patch("modules.dashboard_commands.admit_command")
+    def test_dashboard_commands_post_delegates_to_module(self, mock_admit):
+        mock_admit.return_value = {
+            "ok": True,
+            "command": {"commandId": "cmd-1", "status": "admitted", "type": "button_sweep"},
+            "workflow": {"workflowId": "wf-1", "status": "running"},
+        }
+
+        response = self.client.post(
+            "/dashboard/commands",
+            json={"type": "button_sweep", "summary": "sweep"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["command"]["commandId"], "cmd-1")
+        mock_admit.assert_called_once()
+
+    @patch("modules.dashboard_commands.get_dashboard_projection")
+    def test_dashboard_projection_delegates_to_module(self, mock_projection):
+        mock_projection.return_value = {
+            "ok": True,
+            "contract": {"name": "jules_dashboard_projection", "version": 1},
+            "commands": [],
+            "workflows": [],
+        }
+
+        response = self.client.get("/dashboard/projection?limit=5")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["contract"]["name"], "jules_dashboard_projection")
+        mock_projection.assert_called_once()
+
 
 class TestChatRoutes(unittest.TestCase):
     def setUp(self):

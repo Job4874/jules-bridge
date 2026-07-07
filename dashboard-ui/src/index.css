@@ -698,6 +698,100 @@ button.action-receipt-blocker.selected {
   scrollbar-gutter: stable;
 }
 
+.command-workflow-panel .command-workflow {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px 14px;
+}
+
+.command-workflow-head,
+.command-workflow-row-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.command-workflow-head div,
+.command-workflow-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.command-workflow-head span,
+.command-workflow-row-meta span {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.command-workflow-head strong,
+.command-workflow-row strong {
+  font-size: 14px;
+}
+
+.command-workflow-head em,
+.command-workflow-row em,
+.command-workflow-next,
+.command-workflow-block-reason,
+.command-workflow-empty {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.command-workflow-grid,
+.command-workflow-row-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.command-workflow-grid span,
+.command-workflow-row-meta span {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.command-workflow-blockers,
+.command-workflow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.command-workflow-blocker,
+.command-workflow-row {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.command-workflow-row.success {
+  border-color: rgba(88, 214, 141, 0.28);
+}
+
+.command-workflow-row.warn {
+  border-color: rgba(255, 193, 79, 0.28);
+}
+
+.command-workflow-row.danger {
+  border-color: rgba(255, 107, 107, 0.28);
+}
+
+.command-workflow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .command-panel {
   position: relative;
   display: flex;

@@ -18,6 +18,7 @@ import {
   buildAllianceLanes,
   buildBridgeProbeCommsReceipt,
   buildBlockedControlReceipt,
+  buildCommandAdmissionPayload,
   buildCommandIntelligence,
   buildEvidenceIssueWindow,
   buildEvidenceReviewSignature,
@@ -33,8 +34,12 @@ import {
   cloudSyncLabel,
   cloudSyncTone,
   collisionKey,
+  commandReceiptDetail,
+  commandReceiptTitle,
+  dashboardCommandToJournalRow,
   ensureUniqueCommandIds,
   evaluateCommsSendGate,
+  EMPTY_DASHBOARD_PROJECTION,
   formatTimestamp,
   gateTone,
   impactedReposLabel,
@@ -44,7 +49,9 @@ import {
   mergeCommandJournalRows,
   normalizeCodebaseAnalysis,
   normalizeCollaborationProof,
+  normalizeDashboardCommandsPayload,
   normalizeDashboardPayload,
+  normalizeDashboardProjection,
   normalizeRepoContext,
   normalizeVmRelayStatus,
   offlineDashboardStatusSnapshot,
@@ -53,6 +60,7 @@ import {
   serializePersistentCommandJournal,
   summarizeCloudSyncGate,
   summarizeControlAudit,
+  toneForCommandStatus,
   toneForActionStatus,
   toneForStatus,
   workerKey
@@ -89,6 +97,7 @@ const commsDegradedReason = (reply, errors = []) => {
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Overview', icon: 'overview' },
+  { id: 'commands', label: 'Commands', icon: 'commands' },
   { id: 'tiu', label: 'TIU', icon: 'tiu' },
   { id: 'alliance', label: 'Alliance', icon: 'alliance' },
   { id: 'sync', label: 'Sync', icon: 'sync' },
@@ -108,6 +117,14 @@ const ICONS = {
       <path d="M4 5h16" />
       <path d="M4 12h10" />
       <path d="M4 19h16" />
+    </>
+  ),
+  commands: (
+    <>
+      <path d="M5 6h14" />
+      <path d="M5 12h10" />
+      <path d="M5 18h14" />
+      <circle cx="18" cy="12" r="2" />
     </>
   ),
   tiu: (
@@ -1967,7 +1984,7 @@ function IntelligencePanel({
       'Button sweep run',
       `${nextSweep.total} rendered buttons / ${nextSweep.issueCount} button risks / ${nextSweep.taggedControlCount}/${nextSweep.contractControlCount} tagged controls`,
       nextSweep.tone,
-      { controlId: 'button-sweep' }
+      { controlId: 'button-sweep', commandType: 'button_sweep', route: 'local_preview' }
     );
     return nextSweep;
   };
@@ -2261,7 +2278,7 @@ function IntelligencePanel({
       'Break test run',
       `${report.score}% resilience / ${report.failCount} failures / ${report.warnCount} warnings`,
       report.tone,
-      { controlId: 'break-test-lab' }
+      { controlId: 'break-test-lab', commandType: 'break_test', route: 'GET /dashboard/status' }
     );
     return report;
   };
@@ -2819,7 +2836,7 @@ function IntelligencePanel({
       'Live bridge probe run',
       `${passCount}/${totalCount} routes passed; ${failCount} failed; avg ${averageMs}ms`,
       probe.tone,
-      { controlId: 'bridge-probe' }
+      { controlId: 'bridge-probe', commandType: 'route_probe', route: 'GET /ping' }
     );
     const commsReceipt = buildBridgeProbeCommsReceipt(rows.find(row => row.id === 'chat-test'));
     if (commsReceipt) {
@@ -2964,7 +2981,7 @@ function IntelligencePanel({
       'Proof replay run',
       `${rows.length} safe checks observed; next target ${nextTarget?.label || 'none'}`,
       replay.tone,
-      { controlId: 'proof-replay-lab' }
+      { controlId: 'proof-replay-lab', commandType: 'proof_replay', route: 'local_preview' }
     );
     return replay;
   };
@@ -5832,7 +5849,11 @@ function AllianceControl({ sysStatus, activeFocus, onStagePacket, onFocusChange,
 
   const runCollaborationProof = async () => {
     setProofError('');
-    onCommandEvent('Alliance proof requested', 'POST /proof/collaboration', 'info', { controlId: 'alliance-actions' });
+    onCommandEvent('Alliance proof requested', 'POST /proof/collaboration', 'info', {
+      controlId: 'alliance-actions',
+      commandType: 'collaboration_proof',
+      route: 'POST /proof/collaboration'
+    });
     if (!TOKEN) {
       const tokenGate = normalizeCollaborationProof({
         status: 'blocked',
@@ -6122,7 +6143,11 @@ function CloudSyncPanel({ cloudSync, activeFocus, onStagePacket, onCommandEvent 
   const previewPublishPacket = () => {
     const preview = buildLocalPublishPreview(sync, writePacket);
     setPublishPacket(preview);
-    onCommandEvent('Publish local preview generated', preview.state, toneForActionStatus(preview), { controlId: 'sync-packet' });
+    onCommandEvent('Publish local preview generated', preview.state, toneForActionStatus(preview), {
+      controlId: 'sync-packet',
+      commandType: 'publish_preview',
+      route: 'GET /sync/publish-preview'
+    });
   };
 
   const buildPublishPacket = async () => {
@@ -6139,7 +6164,11 @@ function CloudSyncPanel({ cloudSync, activeFocus, onStagePacket, onCommandEvent 
           ].filter(Boolean))]
         };
         setPublishPacket(gatedPreview);
-        onCommandEvent('Publish local preview generated', gatedPreview.state || gatedPreview.status || 'preview', toneForActionStatus(gatedPreview), { controlId: 'sync-packet' });
+        onCommandEvent('Publish local preview generated', gatedPreview.state || gatedPreview.status || 'preview', toneForActionStatus(gatedPreview), {
+          controlId: 'sync-packet',
+          commandType: 'publish_preview',
+          route: 'GET /sync/publish-preview'
+        });
         return;
       }
       const response = effectiveWritePacket
@@ -6170,7 +6199,11 @@ function CloudSyncPanel({ cloudSync, activeFocus, onStagePacket, onCommandEvent 
         effectiveWritePacket ? 'Publish packet saved' : 'Publish preview built',
         data.state || data.status || 'ready',
         toneForActionStatus(data),
-        { controlId: 'sync-packet' }
+        {
+          controlId: 'sync-packet',
+          commandType: 'publish_preview',
+          route: effectiveWritePacket ? 'POST /sync/publish-packet' : 'GET /sync/publish-preview'
+        }
       );
     } catch (error) {
       setPublishPacket({
@@ -8030,6 +8063,99 @@ function CommPanel({
   );
 }
 
+function CommandWorkflowPanel({
+  projection,
+  activeFocus,
+  onRefresh,
+  onOpenFocus
+}) {
+  const workflow = projection?.workflows?.[0] || null;
+  const commands = projection?.commands?.slice(0, 6) || [];
+  const blockers = projection?.blockers?.slice(0, 3) || [];
+  const tone = projection?.ok ? (blockers.length > 0 ? 'warn' : 'success') : 'danger';
+  const headline = workflow?.title || 'Command / workflow lane';
+  const summary = workflow?.summary
+    || projection?.nextSafeAction
+    || 'Admit dashboard controls to build bridge-backed command history.';
+
+  return (
+    <Panel
+      title="Command / Workflow"
+      meta={projection?.ok ? `${commands.length} commands` : 'projection offline'}
+      tone={tone}
+      focus="commands"
+      activeFocus={activeFocus}
+      className="command-workflow-panel"
+      actions={(
+        <button className="secondary-action" type="button" data-control-id="command-workflow" onClick={onRefresh}>
+          Refresh Projection
+        </button>
+      )}
+    >
+      <div className={`command-workflow ${tone}`}>
+        <div className="command-workflow-head">
+          <div>
+            <span>Current workflow</span>
+            <strong>{headline}</strong>
+            <em>{summary}</em>
+          </div>
+          <StatusPill tone={toneForCommandStatus(workflow?.status || 'ready')}>
+            {workflow?.status || 'ready'}
+          </StatusPill>
+        </div>
+        <div className="command-workflow-grid">
+          <span><strong>{workflow?.workflowId || '--'}</strong> workflowId</span>
+          <span><strong>{workflow?.latestCommandId || '--'}</strong> latestCommand</span>
+          <span><strong>{projection?.dashboardCache?.transport || 'poll'}</strong> transport</span>
+          <span><strong>{projection?.bridgeHealth?.ok ? 'online' : 'offline'}</strong> bridge</span>
+        </div>
+        {workflow?.nextSafeAction ? (
+          <p className="command-workflow-next">{workflow.nextSafeAction}</p>
+        ) : null}
+        {blockers.length ? (
+          <div className="command-workflow-blockers">
+            {blockers.map(blocker => (
+              <div key={blocker.id} className="command-workflow-blocker">
+                <strong>{blocker.label}</strong>
+                <em>{blocker.detail}</em>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <div className="command-workflow-list">
+          {commands.length ? commands.map(command => (
+            <div key={command.commandId} className={`command-workflow-row ${toneForCommandStatus(command.status)}`}>
+              <div className="command-workflow-row-head">
+                <strong>{commandReceiptTitle(command)}</strong>
+                <StatusPill tone={toneForCommandStatus(command.status)}>{command.status}</StatusPill>
+              </div>
+              <em>{commandReceiptDetail(command)}</em>
+              <div className="command-workflow-row-meta">
+                <span>{command.type}</span>
+                <span>{command.route || 'local_preview'}</span>
+                <span>{command.traceId}</span>
+              </div>
+              {command.blockReason ? (
+                <p className="command-workflow-block-reason">{command.blockReason}</p>
+              ) : null}
+            </div>
+          )) : (
+            <p className="command-workflow-empty">No bridge-backed commands admitted yet.</p>
+          )}
+        </div>
+        <div className="command-workflow-actions">
+          <button className="secondary-action" type="button" data-control-id="command-workflow" onClick={() => onOpenFocus('evidence')}>
+            Open Evidence
+          </button>
+          <button className="secondary-action" type="button" data-control-id="command-workflow" onClick={() => onOpenFocus('sync')}>
+            Open Sync
+          </button>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 function App() {
   const [sysStatus, setSysStatus] = useState(DEFAULT_STATUS);
   const [cpuHistory, setCpuHistory] = useState(Array(36).fill(0));
@@ -8052,13 +8178,20 @@ function App() {
   const [streamSnapshot, setStreamSnapshot] = useState([]);
   const [eventFilter, setEventFilter] = useState('ALL');
   const [commandJournal, setCommandJournal] = useState(loadInitialCommandJournal);
+  const [dashboardProjection, setDashboardProjection] = useState(EMPTY_DASHBOARD_PROJECTION);
+  const [activeWorkflowId, setActiveWorkflowId] = useState('');
   const [liveBlockerRun, setLiveBlockerRun] = useState(null);
   const [selectedLiveBlockerId, setSelectedLiveBlockerId] = useState('');
   const [lastClickTrace, setLastClickTrace] = useState(null);
   const chatBoxRef = useRef(null);
   const commandSequenceRef = useRef(0);
+  const activeWorkflowIdRef = useRef('');
 
-  const pushCommand = (title, detail, tone = 'info', meta = {}) => {
+  useEffect(() => {
+    activeWorkflowIdRef.current = activeWorkflowId;
+  }, [activeWorkflowId]);
+
+  const pushCommandLocal = (title, detail, tone = 'info', meta = {}) => {
     commandSequenceRef.current += 1;
     const commandId = `${Date.now()}-${commandSequenceRef.current}`;
     const controlIds = [
@@ -8088,6 +8221,57 @@ function App() {
       previous,
       storedProofs
     ).slice(0, COMMAND_JOURNAL_MAX_ROWS));
+  };
+
+  const admitBackendCommand = useCallback(async (payload, meta = {}) => {
+    try {
+      const body = {
+        ...payload,
+        ...(activeWorkflowIdRef.current && !payload.workflowId ? { workflowId: activeWorkflowIdRef.current } : {})
+      };
+      const response = await fetch(`${BRIDGE}/dashboard/commands`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = normalizeDashboardCommandsPayload(await response.json());
+      if (data.workflow?.workflowId) {
+        setActiveWorkflowId(data.workflow.workflowId);
+      }
+      if (data.command) {
+        const row = dashboardCommandToJournalRow(data.command, meta);
+        const storedProofs = loadStoredCommandJournalProofs();
+        setCommandJournal(previous => mergeCommandJournalRows(
+          [row],
+          previous,
+          storedProofs
+        ).slice(0, COMMAND_JOURNAL_MAX_ROWS));
+      }
+      return data;
+    } catch (error) {
+      const receipt = buildBlockedControlReceipt({
+        reason: error.message,
+        label: 'Command admission failed'
+      });
+      pushCommandLocal(receipt.title, receipt.detail, receipt.tone, meta);
+      return { ok: false, error: error.message };
+    }
+  }, []);
+
+  const pushCommand = (title, detail, tone = 'info', meta = {}) => {
+    if (meta?.commandType) {
+      void admitBackendCommand(buildCommandAdmissionPayload({
+        type: meta.commandType,
+        route: meta.route || '',
+        summary: detail || title,
+        blockReason: meta.blockReason || null,
+        result: meta.result || {},
+        workflowId: meta.workflowId || activeWorkflowIdRef.current || '',
+        traceId: meta.traceId || ''
+      }), meta);
+      return;
+    }
+    pushCommandLocal(title, detail, tone, meta);
   };
 
   const traceControlClick = useCallback(event => {
@@ -8158,6 +8342,22 @@ function App() {
       return markDashboardOffline();
     }
   }, [applyDashboardStatusPayload, markDashboardOffline]);
+
+  const refreshDashboardProjection = useCallback(async () => {
+    try {
+      const response = await fetch(`${BRIDGE}/dashboard/projection?limit=12`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`status ${response.status}`);
+      const projection = normalizeDashboardProjection(await response.json());
+      setDashboardProjection(projection);
+      if (projection.currentWorkflowId) {
+        setActiveWorkflowId(projection.currentWorkflowId);
+      }
+      return projection;
+    } catch {
+      setDashboardProjection(previous => ({ ...previous, ok: false }));
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -8248,6 +8448,24 @@ function App() {
       if (eventSource) eventSource.close();
     };
   }, [applyDashboardStatusPayload, markDashboardOffline]);
+
+  useEffect(() => {
+    let mounted = true;
+    let projectionTimer = null;
+
+    const fetchProjection = async () => {
+      if (!mounted) return;
+      await refreshDashboardProjection();
+    };
+
+    fetchProjection();
+    projectionTimer = setInterval(fetchProjection, 5000);
+
+    return () => {
+      mounted = false;
+      if (projectionTimer) clearInterval(projectionTimer);
+    };
+  }, [refreshDashboardProjection]);
 
   useEffect(() => {
     if (chatBoxRef.current) {
@@ -8516,7 +8734,13 @@ function App() {
       if (gate.chatMessage) {
         setChatHistory(previous => [...previous, { role: 'sys', content: gate.chatMessage }]);
       }
-      pushCommand(gate.receiptTitle, gate.reason, gate.tone, { controlId: 'comms-actions' });
+      pushCommand(gate.receiptTitle, gate.reason, gate.tone, {
+        controlId: 'comms-actions',
+        commandType: 'chat_send',
+        blockReason: gate.reason,
+        route: 'POST /chat',
+        result: { draft: inputValue.trim(), hasImage: !!pendingImage, isThinking }
+      });
       return;
     }
     await sendCommsMessage({
@@ -8546,7 +8770,13 @@ function App() {
         if (gate.chatMessage) {
           setChatHistory(previous => [...previous, { role: 'sys', content: gate.chatMessage }]);
         }
-        pushCommand(gate.receiptTitle, gate.reason, gate.tone, { controlId: 'comms-actions' });
+        pushCommand(gate.receiptTitle, gate.reason, gate.tone, {
+        controlId: 'comms-actions',
+        commandType: 'chat_send',
+        blockReason: gate.reason,
+        route: 'POST /chat',
+        result: { draft: inputValue.trim(), hasImage: !!pendingImage, isThinking }
+      });
         return;
       }
       sendChat();
@@ -9508,6 +9738,12 @@ function App() {
           onNodeSelect={selectTopology}
           onOpenNode={openTopology}
           onStageNode={stageTopologyBrief}
+        />
+        <CommandWorkflowPanel
+          projection={dashboardProjection}
+          activeFocus={activeFocus}
+          onRefresh={refreshDashboardProjection}
+          onOpenFocus={focus => changeFocus(focus, { controlId: 'command-workflow' })}
         />
         <IntelligencePanel
           sysStatus={sysStatus}
