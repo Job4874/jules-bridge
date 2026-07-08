@@ -232,3 +232,86 @@ def get_evidence(evidence_id: str) -> dict[str, Any]:
 
 def list_latest_evidence_summaries(limit: int = 10) -> list[dict[str, Any]]:
     return [evidence_summary(row) for row in _load_evidence_rows(limit=limit)]
+
+
+def build_command_safe_payload(command: dict[str, Any]) -> dict[str, Any]:
+    """Build the redacted safe payload used for evidence hashing."""
+    payload = _build_safe_payload(
+        command=command,
+        result=command.get("result") if isinstance(command.get("result"), dict) else {},
+        status=str(command.get("status") or ""),
+        summary=str(command.get("summary") or ""),
+    )
+    return payload if isinstance(payload, dict) else {}
+
+
+def _load_evidence_record(evidence_id: str) -> dict[str, Any] | None:
+    try:
+        path = _evidence_path(evidence_id)
+    except ValueError:
+        return None
+    data = _read_json(path)
+    return data if isinstance(data, dict) else None
+
+
+def verify_command_against_evidence(command: dict[str, Any]) -> dict[str, Any]:
+    """Verify stored evidence hashes against the command's redacted result without re-execution."""
+    command_id = str(command.get("commandId") or "")
+    workflow_id = str(command.get("workflowId") or "")
+    trace_id = str(command.get("traceId") or "")
+    checked_at = _now_iso()
+    refs = [str(item) for item in (command.get("evidenceRefs") or []) if str(item).strip()]
+
+    if not refs:
+        return {
+            "ok": False,
+            "commandId": command_id,
+            "workflowId": workflow_id,
+            "traceId": trace_id,
+            "replayStatus": "missing_evidence",
+            "blockReason": "No evidenceRefs found for command.",
+            "evidenceRefs": [],
+            "checkedAt": checked_at,
+        }
+
+    safe_payload = build_command_safe_payload(command)
+    expected_hash = compute_result_hash(safe_payload)
+
+    for evidence_id in refs:
+        record = _load_evidence_record(evidence_id)
+        if not record:
+            return {
+                "ok": False,
+                "commandId": command_id,
+                "workflowId": workflow_id,
+                "traceId": trace_id,
+                "replayStatus": "missing_evidence",
+                "blockReason": f"Evidence file not found for {evidence_id}.",
+                "evidenceRefs": refs,
+                "checkedAt": checked_at,
+            }
+
+        stored_hash = str(record.get("resultHash") or "")
+        if stored_hash != expected_hash:
+            return {
+                "ok": False,
+                "commandId": command_id,
+                "workflowId": workflow_id,
+                "traceId": trace_id,
+                "replayStatus": "evidence_mismatch",
+                "blockReason": "Stored result hash does not match redacted command result.",
+                "evidenceRefs": refs,
+                "checkedAt": checked_at,
+            }
+
+    return {
+        "ok": True,
+        "commandId": command_id,
+        "workflowId": workflow_id,
+        "traceId": trace_id,
+        "replayStatus": "verified",
+        "summary": "Stored evidence hash and command result are consistent.",
+        "evidenceRefs": refs,
+        "checkedAt": checked_at,
+        "stale": False,
+    }

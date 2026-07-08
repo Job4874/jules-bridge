@@ -31,8 +31,11 @@ import {
   dashboardCommandToJournalRow,
   normalizeDashboardProjection,
   normalizeDashboardEvidenceSummary,
+  normalizeDashboardLastReplay,
   normalizeDashboardWorkflow,
+  replayStatusLabel,
   toneForCommandStatus,
+  toneForReplayStatus,
   summarizeCloudSyncGate,
   summarizeControlAudit
 } from './dashboardModel.js';
@@ -1064,4 +1067,81 @@ test('command workflow panel and backend admission are wired in App', () => {
   assert.match(source, /normalizeDashboardProjection/);
   assert.match(source, /latestEvidence/);
   assert.match(source, /evidenceRefs\.length/);
+  assert.match(source, /Replay Evidence/);
+  assert.match(source, /\/dashboard\/commands\/\$\{commandId\}\/replay/);
+  assert.match(source, /lastReplay/);
+  assert.match(source, /replayStatus/);
+});
+
+test('lastReplay normalizes onto command payload', () => {
+  const payload = normalizeDashboardProjection({
+    ok: true,
+    contract: { name: 'jules_dashboard_projection', version: 1, generated_at_utc: '2026-07-07T00:00:00Z' },
+    commands: [{
+      commandId: 'cmd-1',
+      workflowId: 'wf-1',
+      traceId: 'trace-1',
+      type: 'route_probe',
+      status: 'succeeded',
+      route: '/ping',
+      evidenceRefs: ['ev-abc123'],
+      lastReplay: {
+        status: 'verified',
+        checkedAt: '2026-07-07T00:00:00Z',
+        summary: 'Stored evidence hash and command result are consistent.',
+        blockReason: null,
+        evidenceRefs: ['ev-abc123']
+      }
+    }],
+    workflows: [],
+    replayStatus: {
+      verified: 1,
+      missing_evidence: 0,
+      evidence_mismatch: 0,
+      never_replayed: 2
+    }
+  });
+
+  assert.equal(payload.commands[0].lastReplay.status, 'verified');
+  assert.equal(payload.replayStatus.verified, 1);
+  assert.equal(payload.replayStatus.never_replayed, 2);
+  assert.equal(toneForReplayStatus('verified'), 'success');
+});
+
+test('verified replay renders summary label', () => {
+  const replay = normalizeDashboardLastReplay({
+    status: 'verified',
+    checkedAt: '2026-07-07T00:00:00Z',
+    summary: 'Stored evidence hash and command result are consistent.',
+    evidenceRefs: ['ev-1']
+  });
+
+  assert.equal(replayStatusLabel(replay.status), 'Verified');
+  assert.equal(replay.summary, 'Stored evidence hash and command result are consistent.');
+});
+
+test('missing_evidence replay renders blockReason', () => {
+  const replay = normalizeDashboardLastReplay({
+    status: 'missing_evidence',
+    checkedAt: '2026-07-07T00:00:00Z',
+    blockReason: 'No evidenceRefs found for command.',
+    evidenceRefs: []
+  });
+
+  assert.equal(replayStatusLabel(replay.status), 'Missing evidence');
+  assert.match(replay.blockReason, /No evidenceRefs/i);
+  assert.equal(toneForReplayStatus('missing_evidence'), 'warn');
+});
+
+test('evidence_mismatch replay renders blockReason', () => {
+  const replay = normalizeDashboardLastReplay({
+    status: 'evidence_mismatch',
+    checkedAt: '2026-07-07T00:00:00Z',
+    blockReason: 'Stored result hash does not match redacted command result.',
+    evidenceRefs: ['ev-1']
+  });
+
+  assert.equal(replayStatusLabel(replay.status), 'Hash mismatch');
+  assert.match(replay.blockReason, /hash/i);
+  assert.equal(toneForReplayStatus('evidence_mismatch'), 'danger');
 });
