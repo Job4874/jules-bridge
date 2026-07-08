@@ -1,0 +1,633 @@
+{
+  "agents": {
+    "antigravity": {
+      "cli_reachable": true,
+      "likely_blocker": "",
+      "model_ready": true,
+      "point_of_view": "Antigravity CLI is the supported Google terminal-agent path for individual Gemini CLI migration. It exposes print mode, model listing, plugin management, and prompt execution through agy.",
+      "skill_count": 2,
+      "skills": [
+        {
+          "description": "Manage Antigravity plugins that package skills and workflows.",
+          "location": "agy plugin",
+          "name": "plugin-management"
+        },
+        {
+          "description": "Run noninteractive terminal-agent prompts with bounded print timeouts.",
+          "location": "agy -p",
+          "name": "headless-print-mode"
+        }
+      ]
+    },
+    "gemini": {
+      "cli_reachable": true,
+      "likely_blocker": "",
+      "model_ready": true,
+      "point_of_view": "Gemini CLI is the terminal agent reached through @google/gemini-cli. It exposes command-managed skills with SKILL.md packages, optional scripts/references/assets, MCP listings, extensions, and headless prompts.",
+      "skill_count": 2,
+      "skills": [
+        {
+          "description": "Use when the user asks questions, seeks help, or requests instructions related to installing, setting up, or migrating to Antigravity CLI. This skill provides the latest up to date details, requirements, and commands sourced from the official Antigravity CLI documentation.",
+          "location": "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\builtin\\antigravity-support\\SKILL.md",
+          "name": "antigravity-support"
+        },
+        {
+          "description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Gemini CLI's capabilities with specialized knowledge, workflows, or tool integrations.",
+          "location": "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\builtin\\skill-creator\\SKILL.md",
+          "name": "skill-creator"
+        }
+      ]
+    },
+    "jules": {
+      "akc_ready": true,
+      "mode": "REST API",
+      "point_of_view": "Jules is the asynchronous coding/workflow agent reached through the bridge. Its local project skill system lives in .agents/skills and its operational contract is loaded from .agents/AGENTS.md, AKC, gotchas, and memory.",
+      "reachable": true,
+      "skill_count": 11,
+      "skills": [
+        {
+          "description": "Run before starting any complex feature, new module, or major change. Reads the project context files, interviews the user one question at a time to resolve design decisions, and produces a clear, structured implementation plan.",
+          "name": "architect",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\architect\\SKILL.md"
+        },
+        {
+          "description": "Interview the user relentlessly to reach a shared design concept before any planning or coding begins. Use this at the very start of any new feature, project, or non-trivial task. Prevents misalignment. Never eagerly jump to producing a plan \u2014 keep asking until full alignment is achieved.",
+          "name": "grill-me",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\grill-me\\SKILL.md"
+        },
+        {
+          "description": "Run after creating or modifying API routes or module layouts. Captures coding patterns, route structures, and middleware registration to maintain system-wide consistency.",
+          "name": "imprint",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\imprint\\SKILL.md"
+        },
+        {
+          "description": "Identify shallow modules in a codebase and refactor them into deep modules (from John Ousterhout's \"A Philosophy of Software Design\"). Use when the AI keeps getting confused navigating the codebase, tests are hard to write, or you feel cognitive overload from too many small files with tangled concerns. Produces a clean module boundary map and executes the refactor incrementally.",
+          "name": "improve-codebase-architecture",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\improve-codebase-architecture\\SKILL.md"
+        },
+        {
+          "description": "Break a PRD into independently grabbable implementation tickets using vertical slices (tracer bullets). Creates a kanban board of issues with dependency/blocking relationships and AFK vs human-in-loop classification. CRITICAL: Issues must be vertical slices, NOT horizontal layers.",
+          "name": "prd-to-issues",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\prd-to-issues\\SKILL.md"
+        },
+        {
+          "description": "Implements a Ralph Loop \u2014 a self-correcting, ticket-driven agentic loop that picks the next most important ticket, implements it with TDD principles, commits, and repeats. Named after Ralph Wiggum (The Simpsons) who just keeps trying the same thing until it works. Run this skill when you want to autonomously work through a backlog of tickets in doc/tickets/.",
+          "name": "ralph-loop",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\ralph-loop\\SKILL.md"
+        },
+        {
+          "description": "Run when a session is stuck, tests are failing repeatedly, or the agent is in a doom loop. Diagnoses the current failure mode and provides the correct remediation steps.",
+          "name": "recover",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\recover\\SKILL.md"
+        },
+        {
+          "description": "Run at the end of every coding session. Synthesizes decisions made, patterns established, and progress completed during the session, and compresses them into a memory file in the `memory/` directory.",
+          "name": "remember",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\remember\\SKILL.md"
+        },
+        {
+          "description": "Run after completing any feature or file modification. Checks the implementation against the plan, verifies code standards, and surfaces potential bugs.",
+          "name": "review",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\review\\SKILL.md"
+        },
+        {
+          "description": "Scan the codebase to extract domain terminology and create a Ubiquitous Language document (from Domain-Driven Design). Use this to reduce AI verbosity, improve alignment between planning and implementation, and give the AI a shared vocabulary with the codebase. Run this at the start of any project or when the AI seems to be \"talking across purposes\".",
+          "name": "ubiquitous-language",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\ubiquitous-language\\SKILL.md"
+        },
+        {
+          "description": "Distill the current conversation (ideally a completed grill-me session) into a Product Requirements Document. The PRD is the \"destination document\" \u2014 it defines WHERE you're going, not HOW you'll get there. Use after a grill-me session, or with a detailed problem description as input.",
+          "name": "write-prd",
+          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\write-prd\\SKILL.md"
+        }
+      ],
+      "source": "sources/github/Job4874/jules-bridge"
+    }
+  },
+  "blockers": [
+    {
+      "blocker": "reasoning_trace_incomplete",
+      "gate": "hrm_reasoning",
+      "status": "blocked"
+    }
+  ],
+  "collaboration_workflow": [
+    {
+      "gemini_role": "Expose Gemini and Antigravity CLI capabilities without replacing project context.",
+      "jules_role": "Load AKC, AGENTS.md, gotchas, memory, and repo source truth.",
+      "phase": "context"
+    },
+    {
+      "gemini_role": "Provide terminal-agent critique through the supported Google CLI path.",
+      "jules_role": "Use HRE/HRM gates to classify blockers and plan architecture-safe work.",
+      "phase": "reason"
+    },
+    {
+      "gemini_role": "Run headless prompts safely and only edit when explicitly allowed.",
+      "jules_role": "Route actual code changes through deep modules, thin bridge handlers, and tests.",
+      "phase": "implement"
+    },
+    {
+      "gemini_role": "Report legacy Gemini blockers and pass Antigravity model smoke when available.",
+      "jules_role": "Record pytest evidence, live preflight state, and proof JSON.",
+      "phase": "verify"
+    }
+  ],
+  "completion_assessment": {
+    "blocking_gates": [
+      "hrm_reasoning"
+    ],
+    "legacy_caveats": [],
+    "reason": "The original goal remains active until every required proof gate passes.",
+    "safe_to_mark_goal_complete": false,
+    "status": "blocked"
+  },
+  "evidence": {
+    "bridge_code": {
+      "antigravity_exported": true,
+      "antigravity_module_exists": true,
+      "antigravity_tests_exist": true,
+      "collaboration_module_exists": true,
+      "exported": true,
+      "route_markers": {
+        "antigravity_preflight": true,
+        "antigravity_prompt": true,
+        "collaboration_proof": true,
+        "gemini_preflight": true,
+        "gemini_prompt": true,
+        "jules_preflight": true
+      },
+      "tests_exist": true
+    },
+    "context": {
+      "agents_protocol_found": true,
+      "antigravity_boundary_found": true,
+      "architecture_boundary_found": true,
+      "gemini_boundary_found": true,
+      "missing_files": [],
+      "present_count": 10
+    },
+    "google_terminal_agent": {
+      "antigravity_blocker": "",
+      "antigravity_installed": true,
+      "antigravity_ready": true
+    },
+    "tests": {
+      "output_hash": "574485a88a0ce23748fb7a01c22fe12db64c83247327602c876bdb636fcf0d08",
+      "passed": true,
+      "raw_output_tail": "bdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\desktop-before-clean-packet.png; C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\desktop-after-clean-packet.png; C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\mobile-clean-packet-ready.png. Direct public preview proof: /sync/publish-preview returned packet_written false, include 29, exclude 9, model/package/cache-test files included, .codex and __tmp absent from stage command.",
+      "test_count": 513,
+      "timestamp_utc": "2026-07-06T19:47:19.648743+00:00"
+    }
+  },
+  "gates": [
+    {
+      "blocker": "",
+      "evidence": {
+        "preferred_command": "JULES_REST_API",
+        "remote_status": "ok",
+        "resolved_command": "JULES_REST_API",
+        "rest_api": true,
+        "source": "sources/github/Job4874/jules-bridge"
+      },
+      "name": "jules_reachable",
+      "required": true,
+      "status": "pass",
+      "summary": "Jules preflight is ready."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "headless_mode": "-p/--prompt",
+        "output_formats": [
+          "json",
+          "stream-json",
+          "text"
+        ],
+        "resolved_command": "C:\\Program Files\\nodejs\\node.EXE C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
+        "version": "0.49.0"
+      },
+      "name": "gemini_cli_reachable",
+      "required": true,
+      "status": "pass",
+      "summary": "Gemini CLI answered version/capability probes."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "smoke_status": "skipped"
+      },
+      "name": "gemini_model_execution",
+      "required": true,
+      "status": "skipped",
+      "summary": "Authenticated Gemini model execution was not requested for this proof run."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "headless_mode": "-p/--print",
+        "model_count": 0,
+        "plugin_management": "plugin list/install/uninstall/enable/disable",
+        "resolved_command": "C:\\Users\\abdul\\AppData\\Local\\agy\\bin\\agy.EXE",
+        "version": "1.1.0"
+      },
+      "name": "antigravity_cli_reachable",
+      "required": true,
+      "status": "pass",
+      "summary": "Antigravity CLI answered version/model/plugin probes."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "smoke_status": "skipped"
+      },
+      "name": "google_terminal_model_execution",
+      "required": true,
+      "status": "skipped",
+      "summary": "Supported Google terminal-agent model execution was not requested for this proof run."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "antigravity_skill_count": 2,
+        "antigravity_skill_names": [
+          "plugin-management",
+          "headless-print-mode"
+        ],
+        "gemini_skill_count": 2,
+        "gemini_skill_names": [
+          "antigravity-support",
+          "skill-creator"
+        ],
+        "jules_skill_count": 11,
+        "jules_skill_names": [
+          "architect",
+          "grill-me",
+          "imprint",
+          "improve-codebase-architecture",
+          "prd-to-issues",
+          "ralph-loop",
+          "recover",
+          "remember",
+          "review",
+          "ubiquitous-language",
+          "write-prd"
+        ]
+      },
+      "name": "skills_framework",
+      "required": true,
+      "status": "pass",
+      "summary": "Jules and the Google terminal-agent surface expose skills/workflow metadata."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "agents_protocol_found": true,
+        "akc_status": "ready",
+        "context_file_count": 10,
+        "missing_files": [],
+        "present_rules": [
+          "context_system",
+          "grill_alignment",
+          "tdd_feedback",
+          "evidence_gates",
+          "deep_modules",
+          "ralph_loop",
+          "hrm_reasoning",
+          "smart_zone",
+          "google_drive_cloud"
+        ]
+      },
+      "name": "context_handling",
+      "required": true,
+      "status": "pass",
+      "summary": "AKC and project context files are ready."
+    },
+    {
+      "blocker": "reasoning_trace_incomplete",
+      "evidence": {
+        "actions": 4,
+        "feedback": {
+          "halt_reason": "budget_exhausted",
+          "halted_early": false,
+          "mean_action_confidence": 0.7,
+          "plan_confidence": 0.8,
+          "steps_executed": 4,
+          "steps_planned": 4
+        },
+        "goal_statement": "Resolve: Prove that Jules and Gemini can coordinate through a no-slop",
+        "halt_reason": "budget_exhausted",
+        "step_count": 4
+      },
+      "name": "hrm_reasoning",
+      "required": true,
+      "status": "blocked",
+      "summary": "Reasoning trace was incomplete."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "antigravity_boundary_found": true,
+        "antigravity_module_exists": true,
+        "architecture_boundary_found": true,
+        "collaboration_module_exists": true,
+        "gemini_boundary_found": true
+      },
+      "name": "architecture_guardrails",
+      "required": true,
+      "status": "pass",
+      "summary": "Proof work follows deep-module/thin-route guardrails."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "route_markers": {
+          "antigravity_preflight": true,
+          "antigravity_prompt": true,
+          "collaboration_proof": true,
+          "gemini_preflight": true,
+          "gemini_prompt": true,
+          "jules_preflight": true
+        }
+      },
+      "name": "bridge_collaboration_surface",
+      "required": true,
+      "status": "pass",
+      "summary": "Bridge exposes Jules, Gemini, and Antigravity collaboration routes."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "antigravity_exported": true,
+        "antigravity_module": "modules/antigravity_cli.py",
+        "antigravity_route": "POST /gemini/antigravity/preflight",
+        "antigravity_tests": "tests/test_antigravity_cli.py",
+        "antigravity_tests_exist": true,
+        "exported": true,
+        "module": "modules/collaboration_proof.py",
+        "route": "POST /proof/collaboration",
+        "tests": "tests/test_collaboration_proof.py",
+        "tests_exist": true
+      },
+      "name": "actual_code_changes",
+      "required": true,
+      "status": "pass",
+      "summary": "Collaboration proof is implemented as code with tests."
+    },
+    {
+      "blocker": "",
+      "evidence": {
+        "output_hash": "574485a88a0ce23748fb7a01c22fe12db64c83247327602c876bdb636fcf0d08",
+        "passed": true,
+        "raw_output_tail": "bdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\desktop-before-clean-packet.png; C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\desktop-after-clean-packet.png; C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\mobile-clean-packet-ready.png. Direct public preview proof: /sync/publish-preview returned packet_written false, include 29, exclude 9, model/package/cache-test files included, .codex and __tmp absent from stage command.",
+        "test_count": 513,
+        "timestamp_utc": "2026-07-06T19:47:19.648743+00:00"
+      },
+      "name": "local_tests_and_evidence",
+      "required": true,
+      "status": "pass",
+      "summary": "Latest recorded local test evidence passed."
+    }
+  ],
+  "generated_at_utc": "2026-07-08T06:12:38.551979+00:00",
+  "legacy_caveats": [],
+  "objective_requirements": [
+    "Jules is reachable through CLI or REST and through the local bridge.",
+    "Gemini CLI is installed, callable, and exposes its capability surface.",
+    "Antigravity CLI is installed as the supported Google terminal-agent path.",
+    "The supported Google terminal-agent model smoke works through the bridge.",
+    "The bridge can prove skills/workflows for both agent systems.",
+    "Context handling is source-backed through AKC and project context files.",
+    "HRM/HRE reasoning works through the reasoning module boundary.",
+    "Architecture guardrails keep code out of bridge route handlers.",
+    "Actual code changes exist for the collaboration proof surface.",
+    "The integration is dry-run-first and does not produce sloppy live side effects.",
+    "Local tests and evidence records back completion claims.",
+    "Jules and the supported Google terminal agent work together end-to-end while legacy Gemini CLI migration state is tracked separately."
+  ],
+  "proof_policy": {
+    "antigravity_smoke_requested": false,
+    "gemini_live_edits": false,
+    "gemini_smoke_requested": false,
+    "jules_sessions_created": false,
+    "live_read_only_checks": false,
+    "live_side_effects": "none"
+  },
+  "requirement_audit": [
+    {
+      "blockers": [],
+      "evidence_refs": [
+        {
+          "gate": "jules_reachable",
+          "status": "pass",
+          "summary": "Jules preflight is ready."
+        },
+        {
+          "gate": "bridge_collaboration_surface",
+          "status": "pass",
+          "summary": "Bridge exposes Jules, Gemini, and Antigravity collaboration routes."
+        }
+      ],
+      "id": "REQ-001",
+      "required_for_completion": true,
+      "requirement": "Jules is reachable through CLI or REST and through the local bridge.",
+      "status": "pass"
+    },
+    {
+      "blockers": [],
+      "evidence_refs": [
+        {
+          "gate": "gemini_cli_reachable",
+          "status": "pass",
+          "summary": "Gemini CLI answered version/capability probes."
+        }
+      ],
+      "id": "REQ-002",
+      "required_for_completion": true,
+      "requirement": "Gemini CLI is installed, callable, and exposes its capability surface.",
+      "status": "pass"
+    },
+    {
+      "blockers": [],
+      "evidence_refs": [
+        {
+          "gate": "gemini_model_execution",
+          "status": "skipped",
+          "summary": "Authenticated Gemini model execution was not requested for this proof run."
+        }
+      ],
+      "id": "REQ-003",
+      "required_for_completion": false,
+      "requirement": "Legacy Gemini authenticated model execution works through the bridge when that legacy lane is supported for the account.",
+      "status": "skipped"
+    },
+    {
+      "blockers": [],
+      "evidence_refs": [
+        {
+          "gate": "antigravity_cli_reachable",
+          "status": "pass",
+          "summary": "Antigravity CLI answered version/model/plugin probes."
+        },
+        {
+          "gate": "google_terminal_model_execution",
+          "status": "skipped",
+          "summary": "Supported Google terminal-agent model execution was not requested for this proof run."
+        }
+      ],
+      "id": "REQ-003A",
+      "required_for_completion": true,
+      "requirement": "Antigravity can execute a Google terminal-agent model smoke through the bridge.",
+      "status": "skipped"
+    },
+    {
+      "blockers": [],
+      "evidence_refs": [
+        {
+          "gate": "skills_framework",
+          "status": "pass",
+          "summary": "Jules and the Google terminal-agent surface expose skills/workflow metadata."
+        }
+      ],
+      "id": "REQ-004",
+      "required_for_completion": true,
+      "requirement": "Both systems expose skills and reusable workflows.",
+      "status": "pass"
+    },
+    {
+      "blockers": [],
+      "evidence_refs": [
+        {
+          "gate": "context_handling",
+          "status": "pass",
+          "summary": "AKC and project context files are ready."
+        }
+      ],
+      "id": "REQ-005",
+      "required_for_completion": true,
+      "requirement": "The proof is grounded in source-backed context handling.",
+      "status": "pass"
+    },
+    {
+      "blockers": [
+        {
+          "blocker": "reasoning_trace_incomplete",
+          "gate": "hrm_reasoning",
+          "status": "blocked"
+        }
+      ],
+      "evidence_refs": [
+        {
+          "gate": "hrm_reasoning",
+          "status": "blocked",
+          "summary": "Reasoning trace was incomplete."
+        }
+      ],
+      "id": "REQ-006",
+      "required_for_completion": true,
+      "requirement": "HRM/HRE reasoning is operational through the module boundary.",
+      "status": "blocked"
+    },
+    {
+      "blockers": [],
+      "evidence_refs": [
+        {
+          "gate": "architecture_guardrails",
+          "status": "pass",
+          "summary": "Proof work follows deep-module/thin-route guardrails."
+        },
+        {
+          "gate": "bridge_collaboration_surface",
+          "status": "pass",
+          "summary": "Bridge exposes Jules, Gemini, and Antigravity collaboration routes."
+        }
+      ],
+      "id": "REQ-007",
+      "required_for_completion": true,
+      "requirement": "Architecture guardrails prevent slop code in complex changes.",
+      "status": "pass"
+    },
+    {
+      "blockers": [],
+      "evidence_refs": [
+        {
+          "gate": "actual_code_changes",
+          "status": "pass",
+          "summary": "Collaboration proof is implemented as code with tests."
+        },
+        {
+          "gate": "local_tests_and_evidence",
+          "status": "pass",
+          "summary": "Latest recorded local test evidence passed."
+        }
+      ],
+      "id": "REQ-008",
+      "required_for_completion": true,
+      "requirement": "Actual code changes and local tests prove implementation, not intent.",
+      "status": "pass"
+    },
+    {
+      "blockers": [
+        {
+          "blocker": "reasoning_trace_incomplete",
+          "gate": "hrm_reasoning",
+          "status": "blocked"
+        }
+      ],
+      "evidence_refs": [
+        {
+          "gate": "jules_reachable",
+          "status": "pass",
+          "summary": "Jules preflight is ready."
+        },
+        {
+          "gate": "gemini_cli_reachable",
+          "status": "pass",
+          "summary": "Gemini CLI answered version/capability probes."
+        },
+        {
+          "gate": "antigravity_cli_reachable",
+          "status": "pass",
+          "summary": "Antigravity CLI answered version/model/plugin probes."
+        },
+        {
+          "gate": "google_terminal_model_execution",
+          "status": "skipped",
+          "summary": "Supported Google terminal-agent model execution was not requested for this proof run."
+        },
+        {
+          "gate": "skills_framework",
+          "status": "pass",
+          "summary": "Jules and the Google terminal-agent surface expose skills/workflow metadata."
+        },
+        {
+          "gate": "context_handling",
+          "status": "pass",
+          "summary": "AKC and project context files are ready."
+        },
+        {
+          "gate": "hrm_reasoning",
+          "status": "blocked",
+          "summary": "Reasoning trace was incomplete."
+        },
+        {
+          "gate": "actual_code_changes",
+          "status": "pass",
+          "summary": "Collaboration proof is implemented as code with tests."
+        },
+        {
+          "gate": "local_tests_and_evidence",
+          "status": "pass",
+          "summary": "Latest recorded local test evidence passed."
+        }
+      ],
+      "id": "REQ-009",
+      "required_for_completion": true,
+      "requirement": "Jules and Gemini work together end-to-end.",
+      "status": "blocked"
+    }
+  ],
+  "state_path": "",
+  "status": "blocked",
+  "summary": "9/12 proof gates passed; blockers remain at hrm_reasoning."
+}

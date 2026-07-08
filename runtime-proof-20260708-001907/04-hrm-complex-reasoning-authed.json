@@ -1,0 +1,135 @@
+{
+  "actions": [],
+  "answer": {
+    "architecture_proven": [
+      "Command admission and worker tick persist operator intent to the control plane.",
+      "Evidence replay verifies stored command results against redacted hashes.",
+      "Projection reflects backend command and workflow state for the dashboard.",
+      "Protected routes reject missing Authorization with HTTP 401."
+    ],
+    "not_yet_proven": [
+      "Clickable frontend controls do not prove backend mutation by themselves.",
+      "Manual worker tick does not prove autonomous scheduling or cloud execution.",
+      "Local control-loop success does not prove publish or live side effects."
+    ],
+    "operator_plan": [
+      "Admit a route_probe against an allowed public route and capture the command id.",
+      "Run worker tick, store evidence JSON, and replay it before trusting projection.",
+      "Validate complex reasoning separately with require_json and bearer auth."
+    ],
+    "risk_controls": [
+      "Require bearer token for protected routes and keep blocked routes honest.",
+      "Never mark succeeded without validated structured JSON when require_json=true.",
+      "Store redacted evidence hashes and avoid persisting secrets in proof artifacts."
+    ],
+    "tests": [
+      "POST /dashboard/commands/admit with route_probe returns admitted status.",
+      "POST /dashboard/worker/tick transitions the command to succeeded with evidenceRefs.",
+      "POST /dashboard/evidence/{id}/replay returns verified when the hash matches."
+    ]
+  },
+  "elapsed_ms": 0.1,
+  "feedback": {
+    "halt_reason": "confident",
+    "halted_early": true,
+    "hrm_structured_path": true,
+    "mean_action_confidence": 0.92,
+    "plan_confidence": 0.92,
+    "require_json": true,
+    "source": "local_deterministic_hrm",
+    "steps_executed": 4,
+    "steps_planned": 4,
+    "trace_complete": true,
+    "trace_steps": [
+      "Classify diagnostic scope and required JSON fields",
+      "Plan architecture proof vs not-yet-proven boundaries",
+      "Draft operator plan, tests, and risk controls",
+      "Validate structured answer and finalize trace"
+    ]
+  },
+  "halt": {
+    "halted_early": false,
+    "reason": "confident",
+    "steps_budget": 4,
+    "steps_used": 4
+  },
+  "parsed_answer": {
+    "architecture_proven": [
+      "Command admission and worker tick persist operator intent to the control plane.",
+      "Evidence replay verifies stored command results against redacted hashes.",
+      "Projection reflects backend command and workflow state for the dashboard.",
+      "Protected routes reject missing Authorization with HTTP 401."
+    ],
+    "not_yet_proven": [
+      "Clickable frontend controls do not prove backend mutation by themselves.",
+      "Manual worker tick does not prove autonomous scheduling or cloud execution.",
+      "Local control-loop success does not prove publish or live side effects."
+    ],
+    "operator_plan": [
+      "Admit a route_probe against an allowed public route and capture the command id.",
+      "Run worker tick, store evidence JSON, and replay it before trusting projection.",
+      "Validate complex reasoning separately with require_json and bearer auth."
+    ],
+    "risk_controls": [
+      "Require bearer token for protected routes and keep blocked routes honest.",
+      "Never mark succeeded without validated structured JSON when require_json=true.",
+      "Store redacted evidence hashes and avoid persisting secrets in proof artifacts."
+    ],
+    "tests": [
+      "POST /dashboard/commands/admit with route_probe returns admitted status.",
+      "POST /dashboard/worker/tick transitions the command to succeeded with evidenceRefs.",
+      "POST /dashboard/evidence/{id}/replay returns verified when the hash matches."
+    ]
+  },
+  "plan": {
+    "confidence": 0.92,
+    "goal_statement": "Return structured HRM diagnostic JSON",
+    "model": "stub",
+    "steps": [
+      "Classify diagnostic scope and required JSON fields",
+      "Plan architecture proof vs not-yet-proven boundaries",
+      "Draft operator plan, tests, and risk controls",
+      "Validate structured answer and finalize trace"
+    ]
+  },
+  "problem": "You are testing a local/cloud dashboard control plane.\n\nGiven:\n- A dashboard button appears clickable.\n- Backend command projection exists.\n- Worker mode is manual_tick.\n- Evidence replay verifies stored evidence.\n- Some controls are frontend-only.\n\nTask:\n1. Identify what this architecture proves.\n2. Identify what it does not prove.\n3. Produce a safe operator plan to validate a complex action without fake success.\n4. Define three concrete tests and expected evidence.\nReturn structured JSON with fields:\narchitecture_proven, not_yet_proven, operator_plan, tests, risk_controls.",
+  "result": {
+    "architecture_proven": [
+      "Command admission and worker tick persist operator intent to the control plane.",
+      "Evidence replay verifies stored command results against redacted hashes.",
+      "Projection reflects backend command and workflow state for the dashboard.",
+      "Protected routes reject missing Authorization with HTTP 401."
+    ],
+    "not_yet_proven": [
+      "Clickable frontend controls do not prove backend mutation by themselves.",
+      "Manual worker tick does not prove autonomous scheduling or cloud execution.",
+      "Local control-loop success does not prove publish or live side effects."
+    ],
+    "operator_plan": [
+      "Admit a route_probe against an allowed public route and capture the command id.",
+      "Run worker tick, store evidence JSON, and replay it before trusting projection.",
+      "Validate complex reasoning separately with require_json and bearer auth."
+    ],
+    "risk_controls": [
+      "Require bearer token for protected routes and keep blocked routes honest.",
+      "Never mark succeeded without validated structured JSON when require_json=true.",
+      "Store redacted evidence hashes and avoid persisting secrets in proof artifacts."
+    ],
+    "tests": [
+      "POST /dashboard/commands/admit with route_probe returns admitted status.",
+      "POST /dashboard/worker/tick transitions the command to succeeded with evidenceRefs.",
+      "POST /dashboard/evidence/{id}/replay returns verified when the hash matches."
+    ]
+  },
+  "succeeded": true,
+  "trace": {
+    "complete": true,
+    "source": "local_deterministic_hrm",
+    "steps": [
+      "Classify diagnostic scope and required JSON fields",
+      "Plan architecture proof vs not-yet-proven boundaries",
+      "Draft operator plan, tests, and risk controls",
+      "Validate structured answer and finalize trace"
+    ]
+  }
+}
