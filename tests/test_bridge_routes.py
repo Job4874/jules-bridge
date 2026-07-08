@@ -1840,6 +1840,41 @@ class TestDashboardRoutes(unittest.TestCase):
         self.assertEqual(response.get_json()["evidence"]["evidenceId"], "ev-abc")
         mock_get.assert_called_once_with("ev-abc")
 
+    @patch("modules.dashboard_commands.replay_command")
+    def test_dashboard_command_replay_delegates_to_module(self, mock_replay):
+        mock_replay.return_value = {
+            "ok": True,
+            "commandId": "cmd-1",
+            "replayStatus": "verified",
+            "summary": "Stored evidence hash and command result are consistent.",
+            "evidenceRefs": ["ev-1"],
+            "checkedAt": "2026-07-07T00:00:00Z",
+            "stale": False,
+        }
+
+        response = self.client.post("/dashboard/commands/cmd-1/replay")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["replayStatus"], "verified")
+        mock_replay.assert_called_once_with("cmd-1")
+
+    @patch("modules.dashboard_commands.replay_command")
+    def test_dashboard_command_replay_missing_evidence(self, mock_replay):
+        mock_replay.return_value = {
+            "ok": False,
+            "commandId": "cmd-2",
+            "replayStatus": "missing_evidence",
+            "blockReason": "No evidenceRefs found for command.",
+            "evidenceRefs": [],
+            "checkedAt": "2026-07-07T00:00:00Z",
+        }
+
+        response = self.client.post("/dashboard/commands/cmd-2/replay")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["replayStatus"], "missing_evidence")
+        mock_replay.assert_called_once_with("cmd-2")
+
 
 class TestChatRoutes(unittest.TestCase):
     def setUp(self):

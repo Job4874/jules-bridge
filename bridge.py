@@ -106,6 +106,8 @@ def require_auth():
     if path.startswith("/dashboard/commands/"):
         if path.endswith("/cancel"):
             return None
+        if path.endswith("/replay") and request.method == "POST":
+            return None
         if request.method == "GET":
             return None
     if path == "/dashboard/worker/tick" and request.method == "POST":
@@ -518,6 +520,7 @@ TENTACLES = [
     {"name": "dashboard_commands_post", "route": "POST /dashboard/commands", "reach": "Admit a dashboard command/workflow event without external mutation"},  # pylint: disable=line-too-long
     {"name": "dashboard_command_get", "route": "GET /dashboard/commands/<commandId>", "reach": "Fetch one dashboard command by id"},  # pylint: disable=line-too-long
     {"name": "dashboard_command_cancel", "route": "POST /dashboard/commands/<commandId>/cancel", "reach": "Cancel an in-flight dashboard command"},  # pylint: disable=line-too-long
+    {"name": "dashboard_command_replay", "route": "POST /dashboard/commands/<commandId>/replay", "reach": "Verify stored evidence for a dashboard command without re-execution"},  # pylint: disable=line-too-long
     {"name": "dashboard_worker_tick", "route": "POST /dashboard/worker/tick", "reach": "Process admitted dashboard commands once for deterministic tests"},  # pylint: disable=line-too-long
     {"name": "dashboard_worker_status", "route": "GET /dashboard/worker/status", "reach": "Read dashboard command worker mode, counts, and last tick metadata"},  # pylint: disable=line-too-long
     {"name": "dashboard_evidence", "route": "GET /dashboard/evidence", "reach": "Read recent redacted dashboard command evidence summaries"},  # pylint: disable=line-too-long
@@ -2388,6 +2391,19 @@ def dashboard_command_cancel(command_id):
 
     result = cancel_command(command_id)
     return jsonify(result), 200 if result.get("ok") else 400
+
+
+@app.route("/dashboard/commands/<command_id>/replay", methods=["POST"])
+@route_errors
+def dashboard_command_replay(command_id):
+    """POST /dashboard/commands/<commandId>/replay — verify stored evidence without re-execution."""
+    from modules.dashboard_commands import replay_command  # pylint: disable=import-outside-toplevel
+
+    result = replay_command(command_id)
+    status_code = 200 if result.get("replayStatus") == "verified" else 400
+    if result.get("error") == "command_not_found":
+        status_code = 404
+    return jsonify(result), status_code
 
 
 @app.route("/dashboard/workflows", methods=["GET"])

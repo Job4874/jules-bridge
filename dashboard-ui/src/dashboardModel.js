@@ -1780,6 +1780,21 @@ export const EMPTY_DASHBOARD_COMMAND = {
   evidenceRefs: []
 };
 
+export const EMPTY_DASHBOARD_LAST_REPLAY = {
+  status: '',
+  checkedAt: '',
+  summary: '',
+  blockReason: null,
+  evidenceRefs: []
+};
+
+export const EMPTY_DASHBOARD_REPLAY_STATUS = {
+  verified: 0,
+  missing_evidence: 0,
+  evidence_mismatch: 0,
+  never_replayed: 0
+};
+
 export const EMPTY_DASHBOARD_WORKFLOW = {
   workflowId: '',
   title: '',
@@ -1817,7 +1832,8 @@ export const EMPTY_DASHBOARD_PROJECTION = {
     running: false,
     poll_interval_s: 1
   },
-  latestEvidence: []
+  latestEvidence: [],
+  replayStatus: { ...EMPTY_DASHBOARD_REPLAY_STATUS }
 };
 
 export const EMPTY_DASHBOARD_EVIDENCE = {
@@ -1844,6 +1860,46 @@ const COMMAND_STATUS_TONES = {
 
 export const toneForCommandStatus = status => COMMAND_STATUS_TONES[String(status || '').trim()] || 'info';
 
+export const toneForReplayStatus = status => {
+  const value = String(status || '').trim();
+  if (value === 'verified') return 'success';
+  if (value === 'missing_evidence') return 'warn';
+  if (value === 'evidence_mismatch') return 'danger';
+  return 'info';
+};
+
+export const replayStatusLabel = status => {
+  const value = String(status || '').trim();
+  if (value === 'verified') return 'Verified';
+  if (value === 'missing_evidence') return 'Missing evidence';
+  if (value === 'evidence_mismatch') return 'Hash mismatch';
+  if (value === 'never_replayed') return 'Never replayed';
+  return value || 'Unknown';
+};
+
+export const normalizeDashboardLastReplay = replay => {
+  const source = replay && typeof replay === 'object' ? replay : null;
+  if (!source || !source.status) return null;
+  return {
+    ...EMPTY_DASHBOARD_LAST_REPLAY,
+    status: String(source.status || ''),
+    checkedAt: source.checkedAt || '',
+    summary: source.summary || '',
+    blockReason: source.blockReason ?? null,
+    evidenceRefs: Array.isArray(source.evidenceRefs) ? source.evidenceRefs.map(String) : []
+  };
+};
+
+export const normalizeReplayStatusCounts = counts => {
+  const source = counts && typeof counts === 'object' ? counts : {};
+  return {
+    verified: Number(source.verified || 0),
+    missing_evidence: Number(source.missing_evidence || 0),
+    evidence_mismatch: Number(source.evidence_mismatch || 0),
+    never_replayed: Number(source.never_replayed || 0)
+  };
+};
+
 export const normalizeDashboardCommand = command => {
   const source = command && typeof command === 'object' ? command : {};
   return {
@@ -1858,7 +1914,8 @@ export const normalizeDashboardCommand = command => {
     summary: source.summary || '',
     blockReason: source.blockReason ?? null,
     result: source.result && typeof source.result === 'object' ? source.result : {},
-    evidenceRefs: Array.isArray(source.evidenceRefs) ? source.evidenceRefs : []
+    evidenceRefs: Array.isArray(source.evidenceRefs) ? source.evidenceRefs : [],
+    lastReplay: normalizeDashboardLastReplay(source.lastReplay)
   };
 };
 
@@ -1955,7 +2012,8 @@ export const normalizeDashboardProjection = payload => {
     commandWorker: normalizeDashboardCommandWorker(source.commandWorker),
     latestEvidence: Array.isArray(source.latestEvidence)
       ? source.latestEvidence.map(normalizeDashboardEvidenceSummary)
-      : []
+      : [],
+    replayStatus: normalizeReplayStatusCounts(source.replayStatus)
   };
 };
 

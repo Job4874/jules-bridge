@@ -56,11 +56,13 @@ import {
   normalizeVmRelayStatus,
   offlineDashboardStatusSnapshot,
   PROOF_JOURNAL_MAX_COMMANDS,
+  replayStatusLabel,
   restorePersistentCommandJournal,
   serializePersistentCommandJournal,
   summarizeCloudSyncGate,
   summarizeControlAudit,
   toneForCommandStatus,
+  toneForReplayStatus,
   toneForActionStatus,
   toneForStatus,
   workerKey
@@ -8067,13 +8069,15 @@ function CommandWorkflowPanel({
   projection,
   activeFocus,
   onRefresh,
-  onOpenFocus
+  onOpenFocus,
+  onReplayEvidence
 }) {
   const workflow = projection?.workflows?.[0] || null;
   const commands = projection?.commands?.slice(0, 6) || [];
   const blockers = projection?.blockers?.slice(0, 3) || [];
   const worker = projection?.commandWorker || null;
   const latestEvidence = projection?.latestEvidence?.[0] || null;
+  const replayStatus = projection?.replayStatus || null;
   const tone = projection?.ok ? (blockers.length > 0 ? 'warn' : 'success') : 'danger';
   const headline = workflow?.title || 'Command / workflow lane';
   const summary = workflow?.summary
@@ -8129,6 +8133,14 @@ function CommandWorkflowPanel({
             <span><strong>{latestEvidence.summary || '--'}</strong> summary</span>
           </div>
         ) : null}
+        {replayStatus ? (
+          <div className="command-replay-status">
+            <span><strong>{replayStatus.verified ?? 0}</strong> verified</span>
+            <span><strong>{replayStatus.missing_evidence ?? 0}</strong> missing</span>
+            <span><strong>{replayStatus.evidence_mismatch ?? 0}</strong> mismatch</span>
+            <span><strong>{replayStatus.never_replayed ?? 0}</strong> never replayed</span>
+          </div>
+        ) : null}
         {workflow?.nextSafeAction ? (
           <p className="command-workflow-next">{workflow.nextSafeAction}</p>
         ) : null}
@@ -8156,8 +8168,29 @@ function CommandWorkflowPanel({
                 <span>{command.traceId}</span>
                 <span>{Array.isArray(command.evidenceRefs) ? command.evidenceRefs.length : 0} evidence</span>
               </div>
+              {command.lastReplay ? (
+                <div className={`command-replay-row ${toneForReplayStatus(command.lastReplay.status)}`}>
+                  <span><strong>{replayStatusLabel(command.lastReplay.status)}</strong> replay</span>
+                  <span>{command.lastReplay.checkedAt || '--'}</span>
+                  {command.lastReplay.blockReason ? (
+                    <em>{command.lastReplay.blockReason}</em>
+                  ) : (
+                    <em>{command.lastReplay.summary || 'Replay checked'}</em>
+                  )}
+                </div>
+              ) : null}
               {command.blockReason ? (
                 <p className="command-workflow-block-reason">{command.blockReason}</p>
+              ) : null}
+              {command.commandId ? (
+                <button
+                  className="secondary-action command-replay-button"
+                  type="button"
+                  data-control-id="command-workflow"
+                  onClick={() => { void onReplayEvidence?.(command.commandId); }}
+                >
+                  Replay Evidence
+                </button>
               ) : null}
             </div>
           )) : (
@@ -8379,6 +8412,39 @@ function App() {
       return null;
     }
   }, []);
+
+  const replayCommandEvidence = useCallback(async (commandId, meta = {}) => {
+    if (!commandId) return { ok: false, error: 'missing_command_id' };
+    try {
+      const response = await fetch(`${BRIDGE}/dashboard/commands/${commandId}/replay`, {
+        method: 'POST',
+        headers: { Accept: 'application/json' }
+      });
+      const data = await response.json();
+      const replayStatus = String(data.replayStatus || '');
+      const receiptTitle = replayStatus === 'verified'
+        ? 'Evidence replay verified'
+        : 'Evidence replay blocked';
+      const receiptDetail = data.summary || data.blockReason || replayStatus || 'Replay finished';
+      const tone = toneForReplayStatus(replayStatus);
+      pushCommandLocal(receiptTitle, receiptDetail, tone, {
+        controlId: meta.controlId || 'command-workflow',
+        ...meta
+      });
+      await refreshDashboardProjection();
+      return data;
+    } catch (error) {
+      const receipt = buildBlockedControlReceipt({
+        reason: error.message,
+        label: 'Evidence replay failed'
+      });
+      pushCommandLocal(receipt.title, receipt.detail, receipt.tone, {
+        controlId: meta.controlId || 'command-workflow',
+        ...meta
+      });
+      return { ok: false, error: error.message };
+    }
+  }, [refreshDashboardProjection]);
 
   useEffect(() => {
     let mounted = true;
@@ -9765,6 +9831,7 @@ function App() {
           activeFocus={activeFocus}
           onRefresh={refreshDashboardProjection}
           onOpenFocus={focus => changeFocus(focus, { controlId: 'command-workflow' })}
+          onReplayEvidence={replayCommandEvidence}
         />
         <IntelligencePanel
           sysStatus={sysStatus}

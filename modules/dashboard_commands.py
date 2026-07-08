@@ -188,6 +188,26 @@ def sanitize_projection_value(value: Any) -> Any:
     return value
 
 
+_REPLAY_STATUSES = frozenset({"verified", "missing_evidence", "evidence_mismatch"})
+
+
+def _normalize_last_replay(raw: Any) -> dict[str, Any] | None:
+    if not isinstance(raw, dict):
+        return None
+    status = str(raw.get("status") or "").strip()
+    if status not in _REPLAY_STATUSES:
+        return None
+    return {
+        "status": status,
+        "checkedAt": str(raw.get("checkedAt") or ""),
+        "summary": str(raw.get("summary") or ""),
+        "blockReason": raw.get("blockReason"),
+        "evidenceRefs": [
+            str(item) for item in (raw.get("evidenceRefs") or []) if str(item).strip()
+        ],
+    }
+
+
 def _normalize_command(raw: dict[str, Any]) -> dict[str, Any]:
     command_type = str(raw.get("type") or "").strip()
     status = str(raw.get("status") or "admitted").strip()
@@ -195,7 +215,7 @@ def _normalize_command(raw: dict[str, Any]) -> dict[str, Any]:
         command_type = "route_probe"
     if status not in COMMAND_STATUSES:
         status = "admitted"
-    return {
+    normalized = {
         "commandId": str(raw.get("commandId") or _new_id("cmd")),
         "workflowId": str(raw.get("workflowId") or _new_id("wf")),
         "traceId": str(raw.get("traceId") or _new_id("trace")),
@@ -210,6 +230,10 @@ def _normalize_command(raw: dict[str, Any]) -> dict[str, Any]:
         "result": raw.get("result") if isinstance(raw.get("result"), dict) else {},
         "evidenceRefs": raw.get("evidenceRefs") if isinstance(raw.get("evidenceRefs"), list) else [],
     }
+    last_replay = _normalize_last_replay(raw.get("lastReplay"))
+    if last_replay:
+        normalized["lastReplay"] = last_replay
+    return normalized
 
 
 def _normalize_workflow(raw: dict[str, Any]) -> dict[str, Any]:
@@ -797,6 +821,59 @@ def cancel_command(command_id: str) -> dict[str, Any]:
     }
 
 
+def replay_command(command_id: str) -> dict[str, Any]:
+    """Verify stored evidence for a command without re-executing it."""
+    data = _read_json(_command_path(command_id))
+    if not data:
+        return {"ok": False, "error": "command_not_found", "commandId": command_id}
+
+    from modules.dashboard_evidence import verify_command_against_evidence  # pylint: disable=import-outside-toplevel
+
+    command = _normalize_command(data)
+    result = verify_command_against_evidence(command)
+    last_replay = {
+        "status": str(result.get("replayStatus") or ""),
+        "checkedAt": str(result.get("checkedAt") or _now_iso()),
+        "summary": str(result.get("summary") or result.get("blockReason") or ""),
+        "blockReason": result.get("blockReason"),
+        "evidenceRefs": result.get("evidenceRefs") if isinstance(result.get("evidenceRefs"), list) else [],
+    }
+    command["lastReplay"] = last_replay
+    command = _persist_command(command)
+    return sanitize_projection_value({
+        **result,
+        "command": command,
+        "lastReplay": last_replay,
+    })
+
+
+def _replay_status_counts(commands: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {
+        "verified": 0,
+        "missing_evidence": 0,
+        "evidence_mismatch": 0,
+        "never_replayed": 0,
+    }
+    for command in commands:
+        replay = command.get("lastReplay")
+        if not isinstance(replay, dict):
+            counts["never_replayed"] += 1
+            continue
+        status = str(replay.get("status") or "")
+        if status in counts:
+            counts[status] += 1
+        else:
+            counts["never_replayed"] += 1
+    return counts
+
+
+def _latest_terminal_command(commands: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for command in commands:
+        if command.get("status") in _TERMINAL_STATUSES:
+            return command
+    return None
+
+
 def list_workflows(limit: int = 50) -> dict[str, Any]:
     limit = max(1, min(int(limit or 50), 200))
     workflows = [_normalize_workflow(row) for row in _load_workflows(limit)]
@@ -844,6 +921,25 @@ def _collect_blockers(
                 "detail": str(command.get("blockReason") or command.get("summary") or command.get("status")),
                 "nextSafeAction": _next_safe_action(command),
             })
+    latest_terminal = _latest_terminal_command(commands)
+    if latest_terminal:
+        replay = latest_terminal.get("lastReplay")
+        if isinstance(replay, dict):
+            replay_status = str(replay.get("status") or "")
+            if replay_status == "missing_evidence":
+                blockers.append({
+                    "id": f"replay:{latest_terminal.get('commandId')}",
+                    "label": "Evidence replay",
+                    "detail": str(replay.get("blockReason") or "Stored evidence is missing for the latest command."),
+                    "nextSafeAction": "Re-run the command to regenerate evidence or inspect evidenceRefs.",
+                })
+            elif replay_status == "evidence_mismatch":
+                blockers.append({
+                    "id": f"replay:{latest_terminal.get('commandId')}",
+                    "label": "Evidence replay",
+                    "detail": str(replay.get("blockReason") or "Stored evidence hash does not match command result."),
+                    "nextSafeAction": "Inspect command result and evidence integrity before trusting replay.",
+                })
     return blockers[:8]
 
 
@@ -893,5 +989,6 @@ def get_dashboard_projection(*, bridge_start_utc: datetime | None = None, limit:
         "currentWorkflowId": (latest_workflow or {}).get("workflowId"),
         "commandWorker": worker_status(),
         "latestEvidence": list_latest_evidence_summaries(limit=min(limit, 10)),
+        "replayStatus": _replay_status_counts(commands),
     }
     return sanitize_projection_value(projection)
