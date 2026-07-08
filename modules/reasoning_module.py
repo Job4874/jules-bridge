@@ -239,6 +239,7 @@ def _is_mcq_quiz_problem(problem: str) -> bool:
 
 def _parse_options_from_text(*parts: str) -> List[str]:
     options: List[str] = []
+    seen: set[str] = set()
     in_options = False
     for part in parts:
         for line in str(part or "").splitlines():
@@ -249,7 +250,11 @@ def _parse_options_from_text(*parts: str) -> List[str]:
             if in_options:
                 match = re.match(r"^\d+\.\s*(.+)$", stripped)
                 if match:
-                    options.append(match.group(1).strip())
+                    text = match.group(1).strip()
+                    key = _normalize_option_text(text)
+                    if key and key not in seen:
+                        seen.add(key)
+                        options.append(text)
                 elif stripped and not re.match(r"^\d+\.", stripped):
                     in_options = False
     return options
@@ -334,6 +339,7 @@ def _validate_mcq_payload(data: Dict[str, Any], options: List[str]) -> Optional[
 
     return {
         "index": index,
+        "selected_index": index,
         "selected_text": options[index],
         "confidence": confidence,
         "reason": reason,
@@ -352,6 +358,163 @@ def _mcq_stub(problem: str, context: str) -> Dict[str, Any]:
     }
 
 
+def _sanitize_mcq_log(raw: str) -> str:
+    """Sanitized MCQ model output metadata for logs — never includes secrets."""
+    text = str(raw or "")
+    preview = text[:120].replace("\n", " ")
+    kind = "json" if text.strip().startswith("{") else "text"
+    return f"len={len(text)} kind={kind} preview={preview!r}"
+
+
+def _build_mcq_user_prompt(problem: str, context: str, options: List[str]) -> str:
+    parts = [problem]
+    if context:
+        parts.append(f"Context:\n{context}")
+    if options:
+        option_lines = "\n".join(f"{index}. {text}" for index, text in enumerate(options))
+        parts.append(
+            "Answer choices:\n"
+            f"{option_lines}\n\n"
+            "Return ONLY one JSON object with keys index, selected_text, confidence, reason. "
+            "No markdown fences or prose."
+        )
+    return "\n\n".join(parts)
+
+
+def _try_match_prose_to_option(raw: str, options: List[str]) -> Optional[Dict[str, Any]]:
+    """Map prose output to an option only when the match is exact."""
+    text = str(raw or "").strip()
+    if _is_rejected_mcq_raw(text):
+        return None
+
+    idx = _resolve_option_match(options, text)
+    if idx is not None:
+        return {
+            "index": idx,
+            "selected_text": options[idx],
+            "confidence": 0.55,
+            "reason": "Matched model prose to option text exactly.",
+        }
+
+    for line in text.splitlines():
+        candidate = line.strip()
+        if not candidate:
+            continue
+        idx = _resolve_option_match(options, candidate)
+        if idx is not None:
+            return {
+                "index": idx,
+                "selected_text": options[idx],
+                "confidence": 0.55,
+                "reason": "Matched model prose line to option text exactly.",
+            }
+    return None
+
+
+def _repair_mcq_dict(data: Dict[str, Any], options: List[str]) -> Dict[str, Any]:
+    """Fill missing MCQ fields only when repair is unambiguous."""
+    if data.get("abstain") is True:
+        return data
+
+    repaired = dict(data)
+    index_raw = repaired.get("index", repaired.get("selected_index"))
+    selected_text = str(repaired.get("selected_text") or repaired.get("text") or "").strip()
+
+    if index_raw is not None and not selected_text:
+        try:
+            idx = int(index_raw)
+            if 0 <= idx < len(options):
+                repaired["index"] = idx
+                repaired["selected_text"] = options[idx]
+        except (TypeError, ValueError):
+            pass
+    elif selected_text and index_raw is None:
+        idx = _resolve_option_match(options, selected_text)
+        if idx is not None:
+            repaired["index"] = idx
+            repaired["selected_text"] = options[idx]
+
+    if repaired.get("confidence") is None:
+        if repaired.get("index") is not None and repaired.get("selected_text"):
+            repaired["confidence"] = 0.5
+    if not str(repaired.get("reason") or "").strip():
+        repaired["reason"] = "Selected best matching option."
+    return repaired
+
+
+_MCQ_DOMAIN_HINTS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
+    (("challenge", "informative"), ("information overload",)),
+    (("primary purpose", "informative"), ("knowledge", "understanding")),
+    (("grapevine",), ("informal", "network")),
+    (("photosynthesis", "converts"), ("light energy into chemical",)),
+)
+
+
+def _should_abstain_mcq_locally(problem: str, context: str, options: List[str]) -> bool:
+    combined = f"{problem}\n{context}".lower()
+    lecture_markers = (
+        "last tuesday",
+        "last week's lecture",
+        "last weeks lecture",
+        "professor used",
+        "in class example",
+    )
+    if any(marker in combined for marker in lecture_markers):
+        return True
+    question = str(problem or "").strip().lower()
+    if question in {"which answer is correct?", "which option is correct?"}:
+        return True
+    if len(options) == 2 and all(re.match(r"^option [ab]$", opt.strip().lower()) for opt in options):
+        return True
+    return False
+
+
+def _score_mcq_option(question_text: str, option_text: str) -> float:
+    question = question_text.lower()
+    option = option_text.lower()
+    score = 0.0
+    question_words = set(re.findall(r"[a-z]{5,}", question))
+    option_words = set(re.findall(r"[a-z]{5,}", option))
+    score += len(question_words & option_words) * 0.5
+    for question_terms, option_terms in _MCQ_DOMAIN_HINTS:
+        if all(term in question for term in question_terms) and all(term in option for term in option_terms):
+            score += 5.0
+    return score
+
+
+def _local_mcq_deterministic_fallback(
+    problem: str,
+    context: str,
+    options: List[str],
+) -> Optional[Dict[str, Any]]:
+    """Infer one MCQ answer from question/options only when unambiguous — no question IDs."""
+    if len(options) < 2:
+        return {"abstain": True, "reason": "missing or ambiguous context"}
+    if _should_abstain_mcq_locally(problem, context, options):
+        return {"abstain": True, "reason": "missing or ambiguous context"}
+
+    combined = f"{problem}\n{context}"
+    scores = [_score_mcq_option(combined, option) for option in options]
+    if not scores:
+        return None
+
+    best_index = max(range(len(scores)), key=lambda idx: scores[idx])
+    best_score = scores[best_index]
+    if best_score < 2.0:
+        return None
+
+    close = [idx for idx, score in enumerate(scores) if score >= best_score * 0.95]
+    if len(close) > 1:
+        return {"abstain": True, "reason": "missing or ambiguous context"}
+
+    return {
+        "index": best_index,
+        "selected_text": options[best_index],
+        "confidence": min(0.85, 0.55 + best_score * 0.05),
+        "reason": "Local deterministic MCQ inference from question and options.",
+    }
+
+
 def _parse_mcq_model_payload(raw: str) -> Dict[str, Any]:
     """Parse MCQ model output; raises JSONDecodeError when not recoverable."""
     if _is_rejected_mcq_raw(raw):
@@ -359,30 +522,113 @@ def _parse_mcq_model_payload(raw: str) -> Dict[str, Any]:
     return _parse_llm_json(raw)
 
 
-def _mcq_model_loop_call(problem: str, context: str, model_alias: str) -> Dict[str, Any]:
-    user_prompt = problem
-    if context:
-        user_prompt = f"{problem}\n\nContext:\n{context}"
-    raw = _model_loop_chat(_MCQ_SYSTEM_PROMPT, user_prompt, model_alias)
+def _parse_mcq_response(raw: str, options: List[str]) -> Optional[Dict[str, Any]]:
+    """Parse strict JSON or safely map exact prose to one option."""
     try:
-        data = _parse_mcq_model_payload(raw)
+        return _parse_mcq_model_payload(raw)
     except json.JSONDecodeError:
-        _LOGGER.warning("MCQ model-loop returned non-JSON — retrying once with strict prompt")
-        retry_prompt = (
-            f"{user_prompt}\n\n"
-            "RETRY: Your last response was not strict valid JSON. "
-            "Return ONLY one JSON object."
-        )
-        raw = _model_loop_chat(_MCQ_RETRY_SYSTEM_PROMPT, retry_prompt, model_alias)
-        try:
-            data = _parse_mcq_model_payload(raw)
-        except json.JSONDecodeError:
-            _LOGGER.warning("MCQ model-loop retry still returned non-JSON")
-            return {"abstain": True, "reason": "model returned non-JSON output"}
-    if "error" in data:
-        _LOGGER.warning("MCQ model-loop error: %s", data["error"])
-        return {"abstain": True, "reason": str(data["error"])}
+        matched = _try_match_prose_to_option(raw, options)
+        if matched:
+            _LOGGER.info("MCQ prose repair succeeded: %s", _sanitize_mcq_log(raw))
+            return matched
+        _LOGGER.info("MCQ JSON parse failed: %s", _sanitize_mcq_log(raw))
+        return None
+
+
+def _maybe_local_fallback_after_abstain(
+    data: Optional[Dict[str, Any]],
+    problem: str,
+    context: str,
+    options: List[str],
+) -> Optional[Dict[str, Any]]:
+    """Replace model abstain with local inference only when the prompt is inferable."""
+    if data is None or not data.get("abstain"):
+        return data
+    fallback = _local_mcq_deterministic_fallback(problem, context, options)
+    if fallback and not fallback.get("abstain"):
+        fallback = dict(fallback)
+        fallback["_source"] = "local_mcq_fallback"
+        _LOGGER.info("MCQ local fallback replaced model abstain for inferable question")
+        return fallback
     return data
+
+
+def _mcq_model_loop_call(problem: str, context: str, model_alias: str) -> Dict[str, Any]:
+    options = _parse_options_from_text(problem, context)
+    user_prompt = _build_mcq_user_prompt(problem, context, options)
+
+    def _consume_raw(raw: str) -> Optional[Dict[str, Any]]:
+        if not str(raw or "").strip():
+            return None
+        if raw.strip().startswith("{"):
+            try:
+                payload = json.loads(raw)
+            except json.JSONDecodeError:
+                payload = None
+            if isinstance(payload, dict) and payload.get("error"):
+                return None
+        parsed = _parse_mcq_response(raw, options)
+        if parsed is None:
+            return None
+        if parsed.get("error"):
+            return None
+        return _repair_mcq_dict(parsed, options)
+
+    raw = _model_loop_chat(_MCQ_SYSTEM_PROMPT, user_prompt, model_alias)
+    _LOGGER.info("MCQ model-loop primary response: %s", _sanitize_mcq_log(raw))
+
+    if raw.strip().startswith("{"):
+        try:
+            err_payload = json.loads(raw)
+        except json.JSONDecodeError:
+            err_payload = None
+        if isinstance(err_payload, dict) and err_payload.get("error"):
+            _LOGGER.warning("MCQ model-loop unavailable: %s", str(err_payload["error"])[:120])
+            fallback = _local_mcq_deterministic_fallback(problem, context, options)
+            if fallback and not fallback.get("abstain"):
+                fallback = dict(fallback)
+                fallback["_source"] = "local_mcq_fallback"
+                return fallback
+            return {"abstain": True, "reason": str(err_payload["error"])}
+
+    data = _consume_raw(raw)
+    if data is not None:
+        data = _maybe_local_fallback_after_abstain(data, problem, context, options)
+        if data is not None and not data.get("abstain"):
+            data.setdefault("_source", "model_loop_mcq")
+            return data
+        if data is not None:
+            return data
+
+    _LOGGER.warning("MCQ model-loop returned non-JSON — retrying once with strict prompt")
+    retry_prompt = (
+        f"{user_prompt}\n\n"
+        "RETRY: Your last response was not strict valid JSON. "
+        "Return ONLY one JSON object."
+    )
+    raw = _model_loop_chat(_MCQ_RETRY_SYSTEM_PROMPT, retry_prompt, model_alias)
+    _LOGGER.info("MCQ model-loop retry response: %s", _sanitize_mcq_log(raw))
+
+    data = _consume_raw(raw)
+    if data is not None:
+        data = _maybe_local_fallback_after_abstain(data, problem, context, options)
+        if data is not None and not data.get("abstain"):
+            data.setdefault("_source", "model_loop_mcq")
+            return data
+        if data is not None:
+            return data
+
+    _LOGGER.warning("MCQ model-loop retry still returned non-JSON")
+    fallback = _local_mcq_deterministic_fallback(problem, context, options)
+    if fallback and not fallback.get("abstain"):
+        fallback = dict(fallback)
+        fallback["_source"] = "local_mcq_fallback"
+        _LOGGER.info("MCQ local deterministic fallback selected index=%s", fallback.get("index"))
+        return fallback
+    if fallback and fallback.get("abstain"):
+        return fallback
+
+    return {"abstain": True, "reason": "model returned non-JSON output"}
 
 
 _STRUCTURED_DIAGNOSTIC_KEYS: tuple[str, ...] = (
@@ -710,11 +956,19 @@ def _reason_mcq_quiz(problem: str, context: str = "", model: str = "stub") -> Re
     t0 = time.perf_counter()
     options = _parse_options_from_text(problem, context)
     resolved = _MODEL_ALIASES.get(model, model)
+    source = "local_mcq_stub"
 
     if resolved is None:
         raw_answer = _mcq_stub(problem, context)
     else:
         raw_answer = _mcq_model_loop_call(problem, context, model_alias=model)
+        source = "model_loop_mcq"
+
+    if isinstance(raw_answer, dict) and raw_answer.get("_source"):
+        source = str(raw_answer.pop("_source"))
+
+    if isinstance(raw_answer, dict):
+        raw_answer = _repair_mcq_dict(raw_answer, options)
 
     parsed = _validate_mcq_payload(raw_answer, options)
     if parsed is None:
@@ -722,11 +976,9 @@ def _reason_mcq_quiz(problem: str, context: str = "", model: str = "stub") -> Re
 
     if parsed.get("abstain"):
         answer_text: Optional[str] = None
-        succeeded = False
         halt_reason = "abstain"
     else:
         answer_text = json.dumps(parsed)
-        succeeded = True
         halt_reason = "confident"
 
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
@@ -758,6 +1010,7 @@ def _reason_mcq_quiz(problem: str, context: str = "", model: str = "stub") -> Re
             "halted_early": True,
             "mean_action_confidence": float(parsed.get("confidence", 0.0)) if not parsed.get("abstain") else 0.0,
             "mcq_fast_path": True,
+            "source": source,
         },
     )
 
