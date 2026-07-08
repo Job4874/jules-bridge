@@ -14,12 +14,15 @@ from modules.reasoning_module import (
     LLevelAction,
     HaltDecision,
     ReasoningTrace,
+    HRM_CONTROL_PLANE_PROBLEM,
+    HRM_COLLABORATION_PROBLEM,
     reason,
     plan_only,
     execute_step,
     _parse_llm_json,
     _validate_mcq_payload,
     _parse_mcq_model_payload,
+    _validate_structured_diagnostic_answer,
 )
 
 
@@ -357,6 +360,60 @@ class TestMcqQuizReasoning:
         assert mock_model_loop.call_count == 2
         assert trace.parsed_answer.get("abstain") is True
         assert "non-JSON" in trace.parsed_answer.get("reason", "")
+
+
+# ---------------------------------------------------------------------------
+# Structured HRM diagnostic fast-path
+# ---------------------------------------------------------------------------
+
+
+class TestStructuredDiagnosticReasoning:
+    def test_control_plane_stub_returns_structured_answer(self):
+        trace = reason(HRM_CONTROL_PLANE_PROBLEM, model="stub", require_json=True)
+        assert trace.succeeded is True
+        assert trace.parsed_answer is not None
+        assert trace.trace_complete is True
+        for key in (
+            "architecture_proven",
+            "not_yet_proven",
+            "operator_plan",
+            "tests",
+            "risk_controls",
+        ):
+            assert isinstance(trace.parsed_answer[key], list)
+            assert trace.parsed_answer[key]
+        assert "Executed action for step" not in json.dumps(trace.parsed_answer)
+
+    def test_collaboration_stub_returns_structured_answer(self):
+        trace = reason(HRM_COLLABORATION_PROBLEM, model="stub", require_json=True)
+        assert trace.succeeded is True
+        assert trace.parsed_answer["architecture_proven"]
+        assert trace.feedback.get("source") == "local_deterministic_hrm"
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_require_json_blocks_invalid_model_output(self, mock_model_loop):
+        mock_model_loop.side_effect = ["Executed action for step 1", "still not json"]
+        trace = reason(HRM_CONTROL_PLANE_PROBLEM, model="smart", require_json=True)
+        assert trace.succeeded is False
+        assert trace.parsed_answer.get("blockReason") == "model returned invalid structured JSON"
+        assert trace.trace_complete is False
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_provider_unavailable_falls_back_to_deterministic_stub(self, mock_model_loop):
+        mock_model_loop.return_value = json.dumps({"error": "model loop unavailable"})
+        trace = reason(HRM_CONTROL_PLANE_PROBLEM, model="smart", require_json=True)
+        assert trace.succeeded is True
+        assert trace.feedback.get("source") == "local_deterministic_hrm"
+
+    def test_validate_structured_diagnostic_rejects_placeholder(self):
+        payload = {
+            "architecture_proven": ["Executed action for step 1"],
+            "not_yet_proven": ["x"],
+            "operator_plan": ["x"],
+            "tests": ["x"],
+            "risk_controls": ["x"],
+        }
+        assert _validate_structured_diagnostic_answer(payload) is None
 
 
 class TestMcqParsingHelpers:
