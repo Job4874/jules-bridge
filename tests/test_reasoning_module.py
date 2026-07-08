@@ -22,6 +22,9 @@ from modules.reasoning_module import (
     _parse_llm_json,
     _validate_mcq_payload,
     _parse_mcq_model_payload,
+    _parse_mcq_response,
+    _repair_mcq_dict,
+    _local_mcq_deterministic_fallback,
     _validate_structured_diagnostic_answer,
 )
 
@@ -359,7 +362,8 @@ class TestMcqQuizReasoning:
         trace = reason(_SAMPLE_MCQ_PROBLEM, model="smart")
         assert mock_model_loop.call_count == 2
         assert trace.parsed_answer.get("abstain") is True
-        assert "non-JSON" in trace.parsed_answer.get("reason", "")
+        assert trace.answer is None
+        assert trace.succeeded is False
 
 
 # ---------------------------------------------------------------------------
@@ -474,6 +478,69 @@ class TestMcqParsingHelpers:
         )
         trace = reason(problem, model="stub")
         assert trace.parsed_answer.get("abstain") is True
+
+    def test_json_in_code_fence_parses(self):
+        raw = '```json\n{"index": 0, "selected_text": "Alpha", "confidence": 0.8, "reason": "ok"}\n```'
+        data = _parse_mcq_response(raw, ["Alpha", "Beta"])
+        assert data is not None
+        assert data["selected_text"] == "Alpha"
+
+    def test_prose_exact_option_maps_safely(self):
+        raw = "Information overload - trying to cover too much information"
+        options = [
+            "Information overload - trying to cover too much information",
+            "Not having enough information to fill the time",
+        ]
+        data = _parse_mcq_response(raw, options)
+        assert data is not None
+        assert data["index"] == 0
+
+    def test_prose_without_exact_option_match_abstains_via_validation(self):
+        options = ["Alpha", "Beta"]
+        data = _parse_mcq_response("Probably Beta but I'm not sure.", options)
+        assert data is None
+
+    def test_selected_index_out_of_range_abstains(self):
+        options = ["Alpha", "Beta"]
+        payload = {
+            "index": 9,
+            "selected_text": "Alpha",
+            "confidence": 0.9,
+            "reason": "Bad index.",
+        }
+        assert _validate_mcq_payload(payload, options) is None
+
+    def test_invalid_confidence_abstains(self):
+        options = ["Alpha", "Beta"]
+        payload = {
+            "index": 0,
+            "selected_text": "Alpha",
+            "confidence": 1.5,
+            "reason": "Too confident.",
+        }
+        assert _validate_mcq_payload(payload, options) is None
+
+    def test_repair_fills_selected_text_from_index(self):
+        options = ["Alpha", "Beta"]
+        repaired = _repair_mcq_dict({"index": 1, "confidence": 0.7, "reason": "pick"}, options)
+        validated = _validate_mcq_payload(repaired, options)
+        assert validated is not None
+        assert validated["selected_text"] == "Beta"
+        assert validated["selected_index"] == 1
+
+    def test_duplicate_option_blocks_dedupe_for_fallback(self):
+        from modules.reasoning_module import _parse_options_from_text
+
+        problem = (
+            "Question:\nAccording to the textbook, which challenge?\n\n"
+            "Options:\n0. Information overload - trying to cover too much information\n"
+            "1. Not having enough information to fill the time\n"
+        )
+        context = (
+            "Options:\n0. Information overload - trying to cover too much information\n"
+            "1. Not having enough information to fill the time\n"
+        )
+        assert len(_parse_options_from_text(problem, context)) == 2
 
 
 def _certification_problem(question: str, options: list[str]) -> str:
@@ -590,3 +657,52 @@ class TestCertificationFixtures:
         trace = reason(problem, model="smart")
         assert mock_model_loop.call_count == 2
         assert trace.parsed_answer["selected_text"] == selected
+
+    @pytest.mark.parametrize("fixture", _CERTIFICATION_FIXTURES, ids=lambda item: item["id"])
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_live_non_json_falls_back_to_local_deterministic(self, mock_model_loop, fixture):
+        problem = _certification_problem(fixture["question"], fixture["options"])
+        mock_model_loop.side_effect = ["not json", "still not json"]
+        trace = reason(problem, model="smart")
+        assert trace.succeeded is True
+        assert trace.answer is not None
+        assert trace.parsed_answer.get("abstain") is not True
+        assert trace.parsed_answer["index"] == fixture["answer_index"]
+        assert trace.feedback.get("source") == "local_mcq_fallback"
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_model_abstain_json_replaced_by_local_fallback(self, mock_model_loop):
+        fixture = _CERTIFICATION_FIXTURES[0]
+        problem = _certification_problem(fixture["question"], fixture["options"])
+        mock_model_loop.return_value = json.dumps(
+            {"abstain": True, "reason": "missing or ambiguous context"}
+        )
+        trace = reason(problem, model="smart")
+        assert trace.succeeded is True
+        assert trace.parsed_answer["index"] == fixture["answer_index"]
+        assert trace.feedback.get("source") == "local_mcq_fallback"
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_vm_unavailable_uses_local_fallback(self, mock_model_loop):
+        fixture = _CERTIFICATION_FIXTURES[0]
+        problem = _certification_problem(fixture["question"], fixture["options"])
+        mock_model_loop.return_value = json.dumps({"error": "VM worker did not respond"})
+        trace = reason(problem, model="smart")
+        assert trace.succeeded is True
+        assert trace.parsed_answer["index"] == fixture["answer_index"]
+        assert trace.feedback.get("source") == "local_mcq_fallback"
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_abstain_fixture_stays_abstain_with_local_fallback(self, mock_model_loop):
+        problem = _certification_problem(
+            "According to last Tuesday's lecture, what example did the professor use?",
+            [
+                "A personal story about hiking",
+                "A statistic about smartphone usage",
+            ],
+        )
+        mock_model_loop.side_effect = ["not json", "still not json"]
+        trace = reason(problem, model="smart")
+        assert trace.parsed_answer.get("abstain") is True
+        assert trace.answer is None
+        assert trace.succeeded is False
