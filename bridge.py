@@ -1822,20 +1822,38 @@ def reasoning_solve():
         context  (str, optional): Additional context / background
         halt_budget (int, optional, default=8): Max L-module steps
         model    (str, optional, default="stub"): LLM model identifier
+        require_json (bool, optional, default=False): Require validated structured JSON answer
 
-    Returns JSON with plan, actions, halt decision, answer, and feedback.
+    Returns JSON with plan, actions, halt decision, answer, trace, and feedback.
     """
     data = json_payload()
     problem = string_field(data, "problem")
     context = string_field(data, "context", default="")
     halt_budget = int_field(data, "halt_budget", default=8, min_value=1)
     model = string_field(data, "model", default="stub")
+    require_json = bool_field(data, "require_json", default=False)
 
-    trace = modules.reason(problem, context=context, halt_budget=halt_budget, model=model)
+    trace = modules.reason(
+        problem,
+        context=context,
+        halt_budget=halt_budget,
+        model=model,
+        require_json=require_json,
+    )
+
+    structured_answer = trace.parsed_answer if isinstance(trace.parsed_answer, dict) else None
+    block_reason = None
+    if structured_answer and structured_answer.get("blockReason"):
+        block_reason = str(structured_answer["blockReason"])
+
+    if structured_answer and not structured_answer.get("abstain") and not block_reason:
+        answer: Any = structured_answer
+    else:
+        answer = trace.answer
 
     payload: dict[str, Any] = {
         "problem": trace.problem,
-        "answer": trace.answer,
+        "answer": answer,
         "succeeded": trace.succeeded,
         "elapsed_ms": round(trace.elapsed_ms, 1),
         "plan": {
@@ -1861,12 +1879,22 @@ def reasoning_solve():
             "steps_budget": trace.halt.steps_budget,
             "halted_early": trace.halt.halted_early,
         },
+        "trace": {
+            "complete": trace.trace_complete,
+            "steps": trace.trace_steps,
+            "source": trace.feedback.get("source", ""),
+        },
         "feedback": trace.feedback,
     }
-    if trace.parsed_answer is not None:
-        payload["parsed_answer"] = trace.parsed_answer
-        if not trace.parsed_answer.get("abstain"):
-            payload["result"] = trace.parsed_answer
+    if block_reason:
+        payload["blocked"] = True
+        payload["blockReason"] = block_reason
+        payload["succeeded"] = False
+        payload["answer"] = None
+    if structured_answer is not None:
+        payload["parsed_answer"] = structured_answer
+        if not structured_answer.get("abstain") and not block_reason:
+            payload["result"] = structured_answer
     return jsonify(payload)
 
 

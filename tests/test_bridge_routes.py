@@ -1921,6 +1921,44 @@ class TestReasoningSolveRoute(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        self.unauthed_client = bridge.app.test_client()
+
+    def test_reasoning_solve_requires_auth(self):
+        response = self.unauthed_client.post(
+            "/reasoning/solve",
+            json={"problem": "hello", "model": "stub"},
+        )
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.get_json()["error"], "Unauthorized")
+
+    def test_reasoning_solve_complex_hrm_returns_structured_answer(self):
+        from modules.reasoning_module import HRM_CONTROL_PLANE_PROBLEM
+
+        response = self.client.post(
+            "/reasoning/solve",
+            json={
+                "problem": HRM_CONTROL_PLANE_PROBLEM,
+                "halt_budget": 12,
+                "model": "stub",
+                "require_json": True,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload["succeeded"])
+        self.assertIsInstance(payload["answer"], dict)
+        self.assertTrue(payload["trace"]["complete"])
+        self.assertTrue(payload["trace"]["steps"])
+        for key in (
+            "architecture_proven",
+            "not_yet_proven",
+            "operator_plan",
+            "tests",
+            "risk_controls",
+        ):
+            self.assertIn(key, payload["answer"])
+            self.assertTrue(payload["answer"][key])
+        self.assertNotIn("Executed action for step", json.dumps(payload))
 
     def test_reasoning_solve_mcq_returns_parsed_answer(self):
         problem = (
@@ -1966,6 +2004,26 @@ class TestReasoningSolveRoute(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload["parsed_answer"]["selected_text"], "Beta")
         self.assertEqual(mock_model_loop.call_count, 2)
+
+    @patch("modules.reasoning_module._model_loop_chat")
+    def test_reasoning_solve_require_json_blocks_invalid_model_output(self, mock_model_loop):
+        from modules.reasoning_module import HRM_CONTROL_PLANE_PROBLEM
+
+        mock_model_loop.side_effect = ["Executed action for step 1", "still not json"]
+        response = self.client.post(
+            "/reasoning/solve",
+            json={
+                "problem": HRM_CONTROL_PLANE_PROBLEM,
+                "model": "smart",
+                "require_json": True,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertFalse(payload["succeeded"])
+        self.assertTrue(payload["blocked"])
+        self.assertEqual(payload["blockReason"], "model returned invalid structured JSON")
+        self.assertIsNone(payload["answer"])
 
 
 if __name__ == "__main__":

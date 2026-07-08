@@ -20,7 +20,7 @@ from .akc_module import check_akc_readiness
 from .antigravity_cli import antigravity_preflight
 from .gemini_cli import gemini_preflight
 from .jules_orchestrator import jules_preflight
-from .reasoning_module import discover_skills, reason
+from .reasoning_module import HRM_COLLABORATION_PROBLEM, discover_skills, reason
 from .retrospective_module import load_test_evidence
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -90,10 +90,11 @@ def build_collaboration_proof(
         )
         akc = check_akc_readiness()
         reasoning_trace = reason(
-            "Prove that Jules and Gemini can coordinate through a no-slop bridge.",
+            HRM_COLLABORATION_PROBLEM,
             context="Use context, skills, HRM reasoning, evidence gates, and tests.",
-            halt_budget=4,
+            halt_budget=8,
             model="stub",
+            require_json=True,
         )
         jules_skills = _jules_skill_inventory()
         gemini_skills = _gemini_skill_inventory(gemini)
@@ -607,18 +608,24 @@ def _context_gate(akc: dict[str, Any], context_state: dict[str, Any]) -> dict[st
 def _hrm_gate(trace: Any) -> dict[str, Any]:
     plan = getattr(trace, "plan", None)
     halt = getattr(trace, "halt", None)
+    feedback = getattr(trace, "feedback", {}) or {}
+    parsed = getattr(trace, "parsed_answer", None)
     step_count = getattr(plan, "step_count", 0) if plan else 0
-    ok = step_count >= 3 and bool(getattr(trace, "answer", None))
+    trace_complete = bool(getattr(trace, "trace_complete", False) or feedback.get("trace_complete"))
+    structured_ok = isinstance(parsed, dict) and not parsed.get("blockReason") and bool(getattr(trace, "succeeded", False))
+    ok = trace_complete and structured_ok and bool(getattr(trace, "answer", None)) and step_count >= 3
     return _gate(
         "hrm_reasoning",
         "pass" if ok else "blocked",
-        "Reasoning module produced an H/L/ACT trace." if ok else "Reasoning trace was incomplete.",
+        "Reasoning module produced a complete structured HRM trace." if ok else "Reasoning trace was incomplete.",
         {
             "goal_statement": getattr(plan, "goal_statement", ""),
             "step_count": step_count,
             "actions": len(getattr(trace, "actions", []) or []),
             "halt_reason": getattr(halt, "reason", ""),
-            "feedback": getattr(trace, "feedback", {}),
+            "trace_complete": trace_complete,
+            "source": feedback.get("source", ""),
+            "feedback": feedback,
         },
         blocker="reasoning_trace_incomplete" if not ok else "",
     )
