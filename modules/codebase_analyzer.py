@@ -204,7 +204,8 @@ def _file_row(root: Path, path: Path, size: int) -> dict[str, Any]:
 
 def _line_count(path: Path) -> int:
     try:
-        return len(path.read_text(encoding="utf-8", errors="replace").splitlines())
+        with path.open("r", encoding="utf-8", errors="replace") as f:
+            return sum(1 for _ in f)
     except Exception:  # pylint: disable=broad-exception-caught
         return 0
 
