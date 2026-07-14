@@ -11,7 +11,7 @@ Public interface:
 
 from __future__ import annotations
 
-from collections import Counter
+import collections
 import hashlib
 import json
 import os
@@ -1832,11 +1832,7 @@ def _compact_lines(lines: Iterable[str]) -> list[str]:
 
 
 def _count_statuses(tasks: Iterable[JulesTask]) -> dict[str, int]:
-    counts: dict[str, int] = {}
-    for task in tasks:
-        status = str(task.get("status") or "unknown")
-        counts[status] = counts.get(status, 0) + 1
-    return counts
+    return dict(collections.Counter(str(task.get("status") or "unknown") for task in tasks))
 
 
 def _status_filter(include_statuses: str | Iterable[str] | None) -> tuple[str, ...]:
@@ -2559,7 +2555,7 @@ def _looks_pulled_output(text: str) -> bool:
 
 
 def _count_row_statuses(rows: Iterable[dict]) -> dict[str, int]:
-    return dict(Counter(str(row.get("cot_status") or "unknown") for row in rows))
+    return dict(collections.Counter(str(row.get("cot_status") or "unknown") for row in rows))
 
 
 def _cot_ledger_markdown(payload: JulesCotResult) -> str:
@@ -2761,7 +2757,7 @@ def _remote_last_active_seconds(line: str) -> int | None:
 
 
 def _count_remote_statuses(rows: Iterable[dict]) -> dict[str, int]:
-    return dict(Counter([str(row.get("remote_status") or "unknown") for row in rows]))
+    return dict(collections.Counter(str(row.get("remote_status") or "unknown") for row in rows))
 
 
 def _active_remote_session_count(rows: Iterable[dict]) -> int:
