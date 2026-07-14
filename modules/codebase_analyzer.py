@@ -323,15 +323,16 @@ def _environment_summary(root: Path) -> dict[str, Any]:
         if not env_path.exists():
             continue
         try:
-            for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
-                if "=" not in line or line.lstrip().startswith("#"):
-                    continue
-                key = line.partition("=")[0].strip()
-                if not key:
-                    continue
-                keys.append(key)
-                if _SECRET_KEY_RE.search(key):
-                    secret_key_count += 1
+            with env_path.open(encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    if "=" not in line or line.lstrip().startswith("#"):
+                        continue
+                    key = line.partition("=")[0].strip()
+                    if not key:
+                        continue
+                    keys.append(key)
+                    if _SECRET_KEY_RE.search(key):
+                        secret_key_count += 1
         except Exception:  # pylint: disable=broad-exception-caught
             continue
     safe_keys = sorted(set(keys))
