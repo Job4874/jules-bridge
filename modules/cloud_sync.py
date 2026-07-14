@@ -233,12 +233,15 @@ def build_cloud_publish_packet(
             status = CloudSyncStatusResult(json.loads(json.dumps(status)))
             git_status = status.setdefault("git", {})
             git_status["dirty_count"] = int(git_status.get("dirty_count", 0)) + len(planned_entries)
-            git_status["untracked_count"] = int(git_status.get("untracked_count", 0)) + sum(
-                1 for entry in planned_entries if not entry.get("tracked")
-            )
-            git_status["unstaged_count"] = int(git_status.get("unstaged_count", 0)) + sum(
-                1 for entry in planned_entries if entry.get("tracked")
-            )
+            untracked_add = 0
+            unstaged_add = 0
+            for entry in planned_entries:
+                if entry.get("tracked"):
+                    unstaged_add += 1
+                else:
+                    untracked_add += 1
+            git_status["untracked_count"] = int(git_status.get("untracked_count", 0)) + untracked_add
+            git_status["unstaged_count"] = int(git_status.get("unstaged_count", 0)) + unstaged_add
             blockers = list(status.get("blockers", []))
             if "dirty_worktree" not in blockers:
                 blockers.append("dirty_worktree")
