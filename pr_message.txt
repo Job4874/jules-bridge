@@ -1,0 +1,6 @@
+🧹 [Code Health] Remove unused import 'sys' in send_email.py
+
+🎯 **What:** Removed the unused `import sys` statement from `send_email.py`.
+💡 **Why:** Reduces clutter and improves code readability.
+✅ **Verification:** Ran `pylint` and the project test suite (`pytest`) to confirm no regressions were introduced.
+✨ **Result:** Cleaned up `send_email.py` by removing dead code.
