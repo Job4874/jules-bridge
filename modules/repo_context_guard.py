@@ -21,7 +21,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, TypedDict
 
-
 _ROOT = Path(__file__).parent.parent
 _SKIP_DIRS = {
     ".git",
@@ -49,10 +48,14 @@ _DEPENDENCY_FIELDS = (
     "optionalDependencies",
     "peerDependencies",
 )
-_SECRET_KEY_RE = re.compile(r"(KEY|TOKEN|SECRET|PASSWORD|PASS|CREDENTIAL|AUTH)", re.IGNORECASE)
+_SECRET_KEY_RE = re.compile(
+    r"(KEY|TOKEN|SECRET|PASSWORD|PASS|CREDENTIAL|AUTH)", re.IGNORECASE
+)
 _NODE_KEY_RE = re.compile(r"(NODE|WORKER|VM|SERVER|HOST|IP)", re.IGNORECASE)
 _PORT_KEY_RE = re.compile(r"PORT", re.IGNORECASE)
-_LOCALHOST_PORT_RE = re.compile(r"(?:localhost|127\.0\.0\.1|0\.0\.0\.0):(\d{2,5})", re.IGNORECASE)
+_LOCALHOST_PORT_RE = re.compile(
+    r"(?:localhost|127\.0\.0\.1|0\.0\.0\.0):(\d{2,5})", re.IGNORECASE
+)
 _FLAG_PORT_RE = re.compile(r"(?:--port|-p|PORT)\s*[=: ]\s*(\d{2,5})", re.IGNORECASE)
 _URL_CREDENTIAL_RE = re.compile(r"(https?://)([^/@\s]+@)", re.IGNORECASE)
 
@@ -184,7 +187,9 @@ def _resolve_roots(roots: Iterable[str | Path] | None) -> list[Path]:
             raw_roots = [
                 _ROOT,
                 Path("C:/aotp/projects"),
-                home / "Downloads" / "All-project-files-End-folders-Plus-Project-context.worktrees",
+                home
+                / "Downloads"
+                / "All-project-files-End-folders-Plus-Project-context.worktrees",
                 home / "Downloads" / "all-of-the-projects" / "projects",
                 home / "OneDrive" / "Documents",
                 home / "Documents" / "Codex",
@@ -272,7 +277,9 @@ def _inspect_repo(path: Path) -> dict[str, Any]:
         "dependency_count": package.get("dependency_count", 0),
         "dependency_versions": package.get("dependency_versions", {}),
         "local_dependencies": package.get("local_dependencies", []),
-        "ports": _dedupe_rows([*package.get("ports", []), *env.get("ports", [])], ("port", "source")),
+        "ports": _dedupe_rows(
+            [*package.get("ports", []), *env.get("ports", [])], ("port", "source")
+        ),
         "env_keys_present": env.get("env_keys_present", []),
         "node_refs": _dedupe_rows(env.get("node_refs", []), ("value", "source")),
     }
@@ -301,7 +308,11 @@ def _git_config_path(git_dir: Path) -> Path:
     if direct.exists():
         return direct
     try:
-        common_raw = (git_dir / "commondir").read_text(encoding="utf-8", errors="replace").strip()
+        common_raw = (
+            (git_dir / "commondir")
+            .read_text(encoding="utf-8", errors="replace")
+            .strip()
+        )
         common = Path(common_raw)
         if not common.is_absolute():
             common = git_dir / common
@@ -320,7 +331,9 @@ def _remote_url(git_dir: Path) -> str:
     parser = configparser.ConfigParser(strict=False)
     try:
         parser.read_string(config_path.read_text(encoding="utf-8", errors="replace"))
-        if parser.has_section('remote "origin"') and parser.has_option('remote "origin"', "url"):
+        if parser.has_section('remote "origin"') and parser.has_option(
+            'remote "origin"', "url"
+        ):
             return parser.get('remote "origin"', "url")
         for section in parser.sections():
             if section.startswith("remote ") and parser.has_option(section, "url"):
@@ -383,7 +396,9 @@ def _package_info(repo_path: Path) -> dict[str, Any]:
     scripts = data.get("scripts", {})
     if isinstance(scripts, dict):
         for script_name, script_value in scripts.items():
-            ports.extend(_ports_from_text(str(script_value), f"package:scripts.{script_name}"))
+            ports.extend(
+                _ports_from_text(str(script_value), f"package:scripts.{script_name}")
+            )
 
     return {
         "package_name": str(data.get("name", "")),
@@ -395,14 +410,21 @@ def _package_info(repo_path: Path) -> dict[str, Any]:
     }
 
 
-def _local_dependency(repo_path: Path, field: str, name: str, version: str) -> dict[str, Any] | None:
+def _local_dependency(
+    repo_path: Path, field: str, name: str, version: str
+) -> dict[str, Any] | None:
     prefixes = ("file:", "link:")
     if version.startswith(prefixes):
         raw_target = version.split(":", 1)[1]
     elif version.startswith("workspace:"):
         raw_target = version.split(":", 1)[1]
         if raw_target in ("*", "^", "~", ""):
-            return {"name": name, "field": field, "specifier": version, "target_path": ""}
+            return {
+                "name": name,
+                "field": field,
+                "specifier": version,
+                "target_path": "",
+            }
     else:
         return None
 
@@ -437,24 +459,31 @@ def _env_info(repo_path: Path) -> dict[str, Any]:
         if not path.exists():
             continue
         try:
-            for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                key, _, value = line.partition("=")
-                key = key.strip()
-                value = value.strip().strip('"').strip("'")
-                if not key:
-                    continue
-                keys.append(key)
-                source = f"{name}:{key}"
-                secret = _is_secret_key(key)
-                if not secret:
-                    ports.extend(
-                        _ports_from_text(value, source, allow_bare_number=bool(_PORT_KEY_RE.search(key)))
-                    )
-                    if _NODE_KEY_RE.search(key) and value:
-                        node_refs.append({"value": _safe_value(value), "source": source})
+            with open(path, encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    key, _, value = line.partition("=")
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    if not key:
+                        continue
+                    keys.append(key)
+                    source = f"{name}:{key}"
+                    secret = _is_secret_key(key)
+                    if not secret:
+                        ports.extend(
+                            _ports_from_text(
+                                value,
+                                source,
+                                allow_bare_number=bool(_PORT_KEY_RE.search(key)),
+                            )
+                        )
+                        if _NODE_KEY_RE.search(key) and value:
+                            node_refs.append(
+                                {"value": _safe_value(value), "source": source}
+                            )
         except Exception:  # pylint: disable=broad-exception-caught
             continue
 
@@ -465,7 +494,9 @@ def _env_info(repo_path: Path) -> dict[str, Any]:
     }
 
 
-def _ports_from_text(text: str, source: str, *, allow_bare_number: bool = False) -> list[dict[str, Any]]:
+def _ports_from_text(
+    text: str, source: str, *, allow_bare_number: bool = False
+) -> list[dict[str, Any]]:
     ports: list[dict[str, Any]] = []
     for pattern in (_LOCALHOST_PORT_RE, _FLAG_PORT_RE):
         for match in pattern.finditer(text):
@@ -491,9 +522,13 @@ def _valid_port(value: str) -> int | None:
 
 def _detect_collisions(repos: list[dict[str, Any]]) -> list[dict[str, Any]]:
     collisions: list[dict[str, Any]] = []
-    collisions.extend(_group_collisions(repos, "remote_url", "remote_duplicate", "warning"))
+    collisions.extend(
+        _group_collisions(repos, "remote_url", "remote_duplicate", "warning")
+    )
     collisions.extend(_group_collisions(repos, "name", "repo_name_duplicate", "info"))
-    collisions.extend(_group_collisions(repos, "package_name", "package_name_duplicate", "info"))
+    collisions.extend(
+        _group_collisions(repos, "package_name", "package_name_duplicate", "info")
+    )
 
     port_map: dict[int, list[dict[str, Any]]] = defaultdict(list)
     for repo in repos:
@@ -502,7 +537,9 @@ def _detect_collisions(repos: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for port, rows in sorted(port_map.items()):
         unique = _unique_repos(rows)
         if len(unique) > 1:
-            collisions.append(_collision("port_collision", "warning", str(port), unique))
+            collisions.append(
+                _collision("port_collision", "warning", str(port), unique)
+            )
 
     node_map: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for repo in repos:
@@ -516,7 +553,9 @@ def _detect_collisions(repos: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     collisions.extend(_local_dependency_collisions(repos))
     collisions.extend(_dependency_version_drift(repos))
-    collisions.sort(key=lambda item: (_severity_rank(item["severity"]), item["type"], item["key"]))
+    collisions.sort(
+        key=lambda item: (_severity_rank(item["severity"]), item["type"], item["key"])
+    )
     return collisions[:100]
 
 
@@ -545,14 +584,16 @@ def _local_dependency_collisions(repos: list[dict[str, Any]]) -> list[dict[str, 
         for dep in repo.get("local_dependencies", []):
             target_raw = dep.get("target_path", "")
             if not target_raw:
-                collisions.append({
-                    "type": "workspace_dependency",
-                    "severity": "info",
-                    "key": dep.get("name", ""),
-                    "repo_refs": [repo["path_ref"]],
-                    "repo_names": [repo["name"]],
-                    "detail": f"{dep.get('name')} uses {dep.get('specifier')}",
-                })
+                collisions.append(
+                    {
+                        "type": "workspace_dependency",
+                        "severity": "info",
+                        "key": dep.get("name", ""),
+                        "repo_refs": [repo["path_ref"]],
+                        "repo_names": [repo["name"]],
+                        "detail": f"{dep.get('name')} uses {dep.get('specifier')}",
+                    }
+                )
                 continue
             target = Path(target_raw)
             for other in repos:
@@ -560,17 +601,19 @@ def _local_dependency_collisions(repos: list[dict[str, Any]]) -> list[dict[str, 
                     continue
                 other_path = Path(other["path"])
                 if _is_inside(target, other_path):
-                    collisions.append({
-                        "type": "local_dependency_cross_project",
-                        "severity": "warning",
-                        "key": dep.get("name", ""),
-                        "repo_refs": [repo["path_ref"], other["path_ref"]],
-                        "repo_names": [repo["name"], other["name"]],
-                        "detail": (
-                            f"{repo['name']} depends on {dep.get('name')} from "
-                            f"{other['path_ref']} via {dep.get('specifier')}"
-                        ),
-                    })
+                    collisions.append(
+                        {
+                            "type": "local_dependency_cross_project",
+                            "severity": "warning",
+                            "key": dep.get("name", ""),
+                            "repo_refs": [repo["path_ref"], other["path_ref"]],
+                            "repo_names": [repo["name"], other["name"]],
+                            "detail": (
+                                f"{repo['name']} depends on {dep.get('name')} from "
+                                f"{other['path_ref']} via {dep.get('specifier')}"
+                            ),
+                        }
+                    )
                     break
             if _is_inside(target, repo_path):
                 continue
@@ -578,7 +621,9 @@ def _local_dependency_collisions(repos: list[dict[str, Any]]) -> list[dict[str, 
 
 
 def _dependency_version_drift(repos: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    dep_map: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+    dep_map: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
     for repo in repos:
         for name, version in repo.get("dependency_versions", {}).items():
             if name.startswith("@types/"):
@@ -589,7 +634,13 @@ def _dependency_version_drift(repos: list[dict[str, Any]]) -> list[dict[str, Any
     for name, version_map in dep_map.items():
         if len(version_map) <= 1:
             continue
-        rows = _unique_repos([repo for repos_for_version in version_map.values() for repo in repos_for_version])
+        rows = _unique_repos(
+            [
+                repo
+                for repos_for_version in version_map.values()
+                for repo in repos_for_version
+            ]
+        )
         if len(rows) <= 1:
             continue
         detail_versions = ", ".join(sorted(version_map.keys())[:5])
@@ -672,7 +723,9 @@ def _is_secret_key(key: str) -> bool:
     return bool(_SECRET_KEY_RE.search(key))
 
 
-def _dedupe_rows(rows: list[dict[str, Any]], keys: tuple[str, ...]) -> list[dict[str, Any]]:
+def _dedupe_rows(
+    rows: list[dict[str, Any]], keys: tuple[str, ...]
+) -> list[dict[str, Any]]:
     seen: set[tuple[Any, ...]] = set()
     result: list[dict[str, Any]] = []
     for row in rows:
