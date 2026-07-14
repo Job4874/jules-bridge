@@ -4,9 +4,12 @@ from bridge import app
 
 class TestHealthDeep(unittest.TestCase):
     def setUp(self):
+        import os
+        self.env_patcher = patch.dict(os.environ, {'BRIDGE_TOKEN': 'testtoken'})
+        self.env_patcher.start()
         self.app = app.test_client()
         self.app.testing = True
-        self.token = "JULES-SECURE-999"
+        self.token = "testtoken"
 
     @patch("modules.health_service.test_chat_providers")
     @patch("modules.health_service.detect_resource_pressure")
@@ -48,6 +51,47 @@ class TestHealthDeep(unittest.TestCase):
     def test_health_deep_unauthorized(self):
         response = self.app.get('/health/deep')
         self.assertEqual(response.status_code, 401)
+
+    def tearDown(self):
+        if hasattr(self, 'env_patcher'):
+            self.env_patcher.stop()
+
+
+class TestCheckGCP(unittest.TestCase):
+    @patch('subprocess.run')
+    def test_gcp_fallback_success_on_second(self, mock_run):
+        from modules.health_service import _check_gcp
+        # First call raises an exception (e.g. FileNotFoundError)
+        # Second call succeeds
+        mock_run.side_effect = [
+            Exception("Command not found"),
+            MagicMock(returncode=0, stdout="fake_token\n")
+        ]
+
+        result = _check_gcp()
+
+        self.assertEqual(result["status"], "pass")
+        self.assertEqual(result["detail"], "gcloud token active")
+        self.assertEqual(mock_run.call_count, 2)
+
+        self.assertEqual(mock_run.call_args_list[0][0][0], ["gcloud", "auth", "print-access-token"])
+        self.assertEqual(mock_run.call_args_list[1][0][0], ["gcloud.cmd", "auth", "print-access-token"])
+
+    @patch('subprocess.run')
+    def test_gcp_fallback_all_fail(self, mock_run):
+        from modules.health_service import _check_gcp
+        mock_run.side_effect = [
+            MagicMock(returncode=1, stdout=""),
+            MagicMock(returncode=1, stdout="")
+        ]
+
+        result = _check_gcp()
+
+        self.assertEqual(result["status"], "fail")
+        self.assertEqual(result["detail"], "No active gcloud session")
+        self.assertEqual(mock_run.call_count, 2)
+
+
 
 if __name__ == "__main__":
     unittest.main()
