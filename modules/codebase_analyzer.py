@@ -302,10 +302,11 @@ def _dependency_summary(root: Path) -> dict[str, Any]:
     requirements_path = root / "requirements.txt"
     try:
         with open(requirements_path, "r", encoding="utf-8", errors="replace") as f:
-            for line in f:
-                line_stripped = line.strip()
-                if line_stripped and not line_stripped.startswith("#"):
-                    requirements.append(line_stripped)
+            requirements = [
+                stripped
+                for line in f
+                if (stripped := line.strip()) and not stripped.startswith("#")
+            ]
     except Exception:  # pylint: disable=broad-exception-caught
         requirements = []
     return {
