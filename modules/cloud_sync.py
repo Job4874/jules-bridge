@@ -35,6 +35,66 @@ class CloudPublishPacketResult(dict):
     """Keys: status, state, status_snapshot, change_families, packet, blockers."""
 
 
+
+def _resolve_repo_root(root: str | Path, timeout: int, generated_at: str) -> tuple[Path | None, CloudSyncStatusResult | None]:
+    repo_root = Path(root).expanduser().resolve() if root else _ROOT
+    if not repo_root.exists():
+        return None, _blocked(generated_at, "missing_repo", f"repo root does not exist: {repo_root.name}")
+
+    inside = _git(repo_root, ["rev-parse", "--is-inside-work-tree"], timeout)
+    if not _ok_text(inside, "true"):
+        return None, _blocked(generated_at, "not_git_repo", "root is not a Git worktree")
+
+    top = _git(repo_root, ["rev-parse", "--show-toplevel"], timeout)
+    if top["ok"] and top["stdout"].strip():
+        repo_root = Path(top["stdout"].strip()).resolve()
+
+    return repo_root, None
+
+
+def _evaluate_blockers(
+    upstream: str,
+    remote_host: str,
+    ahead: int,
+    behind: int,
+    dirty_count: int,
+    gh_authenticated: bool,
+    fetch_age_s: int | None,
+) -> tuple[list[str], list[str], bool, bool, str]:
+    blockers: list[str] = []
+    warnings: list[str] = []
+
+    if not upstream:
+        blockers.append("no_upstream")
+    if not remote_host:
+        blockers.append("no_remote")
+    if dirty_count > 0:
+        blockers.append("dirty_worktree")
+    if behind > 0:
+        blockers.append("behind_remote")
+    if remote_host == "github.com" and not gh_authenticated:
+        blockers.append("github_auth_required")
+
+    if fetch_age_s is None:
+        warnings.append("remote_tracking_not_sampled")
+    elif fetch_age_s > 86400:
+        warnings.append("remote_tracking_stale")
+
+    publish_ready = not blockers and ahead > 0
+    synced = not blockers and ahead == 0 and behind == 0
+
+    if blockers:
+        state = "blocked"
+    elif publish_ready:
+        state = "push_ready"
+    elif synced:
+        state = "synced"
+    else:
+        state = "ready"
+
+    return blockers, warnings, publish_ready, synced, state
+
+
 def get_cloud_sync_status(
     root: str | Path = "",
     *,
@@ -58,6 +118,7 @@ def get_cloud_sync_status(
         cache_ttl = max(1, int(os.environ.get("CLOUD_SYNC_CACHE_TTL_S", "30")))
         cache_key = json.dumps({"root": str(repo_root), "timeout": timeout}, sort_keys=True)
         now_ts = time.time()
+
         if use_cache and cache_key in _cloud_sync_cache:
             cached_ts, cached = _cloud_sync_cache[cache_key]
             if now_ts - cached_ts < cache_ttl:
@@ -65,16 +126,11 @@ def get_cloud_sync_status(
                 result["cache_age_s"] = int(now_ts - cached_ts)
                 return result
 
-        if not repo_root.exists():
-            return _blocked(generated_at, "missing_repo", f"repo root does not exist: {repo_root.name}")
-
-        inside = _git(repo_root, ["rev-parse", "--is-inside-work-tree"], timeout)
-        if not _ok_text(inside, "true"):
-            return _blocked(generated_at, "not_git_repo", "root is not a Git worktree")
-
-        top = _git(repo_root, ["rev-parse", "--show-toplevel"], timeout)
-        if top["ok"] and top["stdout"].strip():
-            repo_root = Path(top["stdout"].strip()).resolve()
+        resolved_root, blocked_result = _resolve_repo_root(root, timeout, generated_at)
+        if blocked_result:
+            return blocked_result
+        assert resolved_root is not None
+        repo_root = resolved_root
 
         branch = _git_stdout(repo_root, ["branch", "--show-current"], timeout) or "detached"
         upstream = _git_stdout(repo_root, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], timeout)
@@ -87,33 +143,9 @@ def get_cloud_sync_status(
         gh = _github_auth(timeout)
         fetch_age_s = _fetch_head_age_s(repo_root)
 
-        blockers: list[str] = []
-        warnings: list[str] = []
-        if not upstream:
-            blockers.append("no_upstream")
-        if not remote_host:
-            blockers.append("no_remote")
-        if dirty["dirty_count"] > 0:
-            blockers.append("dirty_worktree")
-        if behind > 0:
-            blockers.append("behind_remote")
-        if remote_host == "github.com" and not gh["authenticated"]:
-            blockers.append("github_auth_required")
-        if fetch_age_s is None:
-            warnings.append("remote_tracking_not_sampled")
-        elif fetch_age_s > 86400:
-            warnings.append("remote_tracking_stale")
-
-        publish_ready = not blockers and ahead > 0
-        synced = not blockers and ahead == 0 and behind == 0
-        if blockers:
-            state = "blocked"
-        elif publish_ready:
-            state = "push_ready"
-        elif synced:
-            state = "synced"
-        else:
-            state = "ready"
+        blockers, warnings, publish_ready, synced, state = _evaluate_blockers(
+            upstream, remote_host, ahead, behind, dirty["dirty_count"], gh["authenticated"], fetch_age_s
+        )
 
         result = CloudSyncStatusResult(
             status="ready" if not blockers else "blocked",
@@ -718,6 +750,10 @@ def _write_publish_packet(
         packet_path, state_path, planned_error = _plan_publish_artifacts(repo_root, output_dir)
         if planned_error:
             return planned_error
+
+    # We must ensure they are not None after calling _plan_publish_artifacts
+    assert packet_path is not None and state_path is not None
+
     directory = packet_path.parent
     directory.mkdir(parents=True, exist_ok=True)
     packet_path.write_text(str(result.get("packet", "")), encoding="utf-8")
