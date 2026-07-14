@@ -52,6 +52,7 @@ VM_ZONE = _env().get("GCE_WORKER_ZONE", "us-central1-a")
 VM_PROJ = _env().get("GCE_WORKER_PROJECT", "tibin-terminal-2026")
 VM_USER = "julesadmin"
 VM_PORT = 6000   # The agent port on the VM
+VM_TOKEN = _env().get("VM_WORKER_TOKEN", "JULES-VM-WORKER-999")
 
 _relay_log_lock = threading.Lock()
 
@@ -148,6 +149,7 @@ def _build_worker_env(env_vars: dict[str, str], local_ip: str) -> str:
         f"BROWSER_MODEL_LOOP_URL={env_vars.get('BROWSER_MODEL_LOOP_URL','')}",
         f"LOCAL_BRIDGE_URL=http://{local_ip}:5000",
         f"LOCAL_BRIDGE_TOKEN={bridge_token}",
+        f"VM_WORKER_TOKEN={VM_TOKEN}",
     ])
 
 
@@ -181,7 +183,7 @@ def send_task_to_vm(task: str, task_type: str = "build", context: str = "") -> d
         r = _req.post(
             f"http://{VM_IP}:{VM_PORT}/task",
             json=payload, timeout=30,
-            headers={"Authorization": "Bearer JULES-VM-WORKER-999"}
+            headers={"Authorization": f"Bearer {VM_TOKEN}"}
         )
         return r.json()
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -221,7 +223,7 @@ for line in Path("/home/julesadmin/.jules_worker.env").read_text().splitlines():
         os.environ[k.strip()] = v.strip()
 
 app = Flask(__name__)
-TOKEN = "JULES-VM-WORKER-999"
+TOKEN = os.environ.get("VM_WORKER_TOKEN", "JULES-VM-WORKER-999")
 BROWSER_MODEL_LOOP_URL = os.environ.get("BROWSER_MODEL_LOOP_URL", "")
 LOCAL_BRIDGE = os.environ.get("LOCAL_BRIDGE_URL", "http://127.0.0.1:5000")
 LOCAL_TOKEN = os.environ.get("LOCAL_BRIDGE_TOKEN", "")

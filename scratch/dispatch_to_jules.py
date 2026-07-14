@@ -1,3 +1,4 @@
+import os
 # pylint: disable=broad-exception-caught
 
 """dispatch_to_jules.py — send work packets directly to Jules VM agent."""
@@ -5,7 +6,7 @@ import json
 import requests
 
 VM = "http://34.132.193.73:6000"
-TOKEN = "JULES-VM-WORKER-999"
+TOKEN = os.environ.get("VM_WORKER_TOKEN", "JULES-VM-WORKER-999")
 HEADERS = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
 
 # Check status first
