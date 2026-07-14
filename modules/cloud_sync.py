@@ -11,6 +11,7 @@ Public interface:
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import re
@@ -61,7 +62,7 @@ def get_cloud_sync_status(
         if use_cache and cache_key in _cloud_sync_cache:
             cached_ts, cached = _cloud_sync_cache[cache_key]
             if now_ts - cached_ts < cache_ttl:
-                result = CloudSyncStatusResult(json.loads(json.dumps(cached)))
+                result = CloudSyncStatusResult(copy.deepcopy(cached))
                 result["cache_age_s"] = int(now_ts - cached_ts)
                 return result
 
@@ -150,7 +151,7 @@ def get_cloud_sync_status(
             },
         )
         if use_cache:
-            _cloud_sync_cache[cache_key] = (now_ts, json.loads(json.dumps(result)))
+            _cloud_sync_cache[cache_key] = (now_ts, copy.deepcopy(result))
         return result
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return CloudSyncStatusResult(
@@ -230,7 +231,7 @@ def build_cloud_publish_packet(
         )
         if planned_entries:
             entries = [*entries, *planned_entries]
-            status = CloudSyncStatusResult(json.loads(json.dumps(status)))
+            status = CloudSyncStatusResult(copy.deepcopy(status))
             git_status = status.setdefault("git", {})
             git_status["dirty_count"] = int(git_status.get("dirty_count", 0)) + len(planned_entries)
             git_status["untracked_count"] = int(git_status.get("untracked_count", 0)) + sum(
