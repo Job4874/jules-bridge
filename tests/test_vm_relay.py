@@ -100,3 +100,12 @@ def test_worker_env_uses_configured_bridge_token_without_provider_keys():
     assert "LOCAL_BRIDGE_TOKEN=configured-token" in env_text
     assert "GEMINI_API_KEY" not in env_text
     assert "OPENROUTER_API_KEY" not in env_text
+
+def test_worker_agent_script_uses_shlex_and_avoids_shell_true():
+    from modules.vm_relay import _build_worker_agent_script  # pylint: disable=import-outside-toplevel
+
+    script = _build_worker_agent_script()
+
+    assert "import shlex" in script or "import json, os, subprocess, threading, time, requests, shlex" in script
+    assert "shlex.split(" in script
+    assert "shell=True" not in script

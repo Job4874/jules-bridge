@@ -209,7 +209,7 @@ Accepts task packets from the local bridge relay and executes them.
 Calls back to local bridge with results. Self-improving: it reads its
 own instructions and can modify them via the local bridge /chat endpoint.
 """
-import json, os, subprocess, threading, time, requests
+import json, os, subprocess, threading, time, requests, shlex
 from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, request, jsonify
@@ -290,8 +290,14 @@ def task():
 def execute_task(task: str, task_type: str, context: str) -> str:
     """Route task to appropriate executor."""
     if task_type == "shell":
-        proc = subprocess.run(task, shell=True, capture_output=True, text=True, timeout=60)
-        return proc.stdout + proc.stderr
+        try:
+            cmd = shlex.split(task)
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60, check=False)
+            return proc.stdout + proc.stderr
+        except FileNotFoundError:
+            return f"Error: Command not found: {task}"
+        except Exception as e:
+            return f"Error executing command: {e}"
     elif task_type in ("build", "research", "chat"):
         return call_llm(task, context)
     else:
