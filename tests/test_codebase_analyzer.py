@@ -1,6 +1,7 @@
 import json
 
-from modules.codebase_analyzer import analyze_codebase
+from unittest.mock import patch
+from modules.codebase_analyzer import analyze_codebase, _route_rows
 
 
 def _write(path, content):
@@ -86,3 +87,9 @@ def test_analyze_codebase_skips_node_modules(tmp_path):
 
     assert result["ok"] is True
     assert all("node_modules" not in row["path"] for row in result["files"])
+
+def test_route_rows_read_error(tmp_path):
+    _write(tmp_path / "bridge.py", "@app.route('/ping')\ndef ping(): pass")
+    with patch("pathlib.Path.read_text", side_effect=Exception("mock error")):
+        rows = _route_rows(tmp_path)
+    assert rows == []
