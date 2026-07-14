@@ -144,6 +144,9 @@ def test_background_worker_processes_admitted_command(command_store, monkeypatch
     deadline = time.time() + 2.0
     while time.time() < deadline:
         stored = get_command(command_id)
+        if not stored.get("ok"):
+            time.sleep(0.01)
+            continue
         terminal_status = stored["command"]["status"]
         if terminal_status in {"succeeded", "failed", "blocked", "not_implemented", "cancelled"}:
             break

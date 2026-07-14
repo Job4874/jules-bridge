@@ -4,9 +4,9 @@ from bridge import app
 
 class TestHealthDeep(unittest.TestCase):
     def setUp(self):
-        import os
-        self.env_patcher = patch.dict(os.environ, {'BRIDGE_TOKEN': 'testtoken'})
-        self.env_patcher.start()
+        # bridge reads BRIDGE_TOKEN at import time — patch the module-level variable directly
+        self.token_patcher = patch("bridge.BRIDGE_TOKEN", "testtoken")
+        self.token_patcher.start()
         self.app = app.test_client()
         self.app.testing = True
         self.token = "testtoken"
@@ -53,8 +53,7 @@ class TestHealthDeep(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
 
     def tearDown(self):
-        if hasattr(self, 'env_patcher'):
-            self.env_patcher.stop()
+        self.token_patcher.stop()
 
 
 class TestCheckGCP(unittest.TestCase):

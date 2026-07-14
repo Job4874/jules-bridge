@@ -333,16 +333,20 @@ def test_tail_log_exception():
         assert _tail_log() == []
 
 def test_safe_log_lines_masks_local_paths():
+    from pathlib import Path
+    # Use actual repo root and home so this test works on any machine
+    root = str(Path(__file__).resolve().parent.parent)
+    home = str(Path.home())
     lines = [
-        r"Log path: C:\Users\abdul\jules-bridge\bridge.log",
-        r"Tool path: C:\Users\abdul\AppData\Local\agy\bin\agy.exe",
+        f"Log path: {root}\\bridge.log",
+        f"Tool path: {home}\\AppData\\Local\\agy\\bin\\agy.exe",
     ]
 
     result = _safe_log_lines(lines)
 
     assert "[repo-root]" in result[0]
     assert "[user-home]" in result[1]
-    assert r"C:\Users" not in "\n".join(result)
+    assert "Users" not in "\n".join(result)
 
 def test_cli_status_summary_is_frontend_compact():
     payload = {
