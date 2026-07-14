@@ -138,14 +138,16 @@ def test_background_worker_processes_admitted_command(command_store, monkeypatch
     assert status["started"] is True
     assert status["running"] is True
 
-    deadline = time.time() + 3.0
     terminal_status = None
+
+    # We replace sleep with active waiting logic that's cleaner and shorter in timeout for the test
+    deadline = time.time() + 2.0
     while time.time() < deadline:
         stored = get_command(command_id)
         terminal_status = stored["command"]["status"]
         if terminal_status in {"succeeded", "failed", "blocked", "not_implemented", "cancelled"}:
             break
-        time.sleep(0.1)
+        time.sleep(0.01)
 
     dashboard_command_worker.stop_command_worker()
     assert terminal_status == "succeeded"
@@ -161,3 +163,89 @@ def test_worker_disabled_by_env_does_not_start_daemon(command_store, monkeypatch
     admitted = admit_command({"type": "button_sweep", "summary": "Should stay admitted"})
     stored = get_command(admitted["command"]["commandId"])
     assert stored["command"]["status"] == "admitted"
+
+
+def test_poll_interval_value_error(monkeypatch):
+    monkeypatch.setenv("DASHBOARD_COMMAND_WORKER_INTERVAL_S", "invalid")
+    assert dashboard_command_worker._poll_interval_s() == 1.0
+
+
+def test_worker_loop_handles_exception(command_store, monkeypatch):
+    import threading
+    called = threading.Event()
+    def fake_tick(**kwargs):
+        called.set()
+        raise Exception("intentional")
+    monkeypatch.setenv("DASHBOARD_COMMAND_WORKER", "1")
+    monkeypatch.setattr("modules.dashboard_command_worker.tick_command_worker", fake_tick)
+    monkeypatch.setenv("DASHBOARD_COMMAND_WORKER_INTERVAL_S", "0.01")
+
+    status = dashboard_command_worker.start_command_worker()
+    assert status["started"] is True
+
+    assert called.wait(timeout=2.0)
+
+    dashboard_command_worker.stop_command_worker()
+
+
+def test_start_command_worker_already_running(command_store, monkeypatch):
+    monkeypatch.setenv("DASHBOARD_COMMAND_WORKER", "1")
+
+    status1 = dashboard_command_worker.start_command_worker()
+    assert status1["started"] is True
+
+    status2 = dashboard_command_worker.start_command_worker()
+    assert status2["started"] is False
+    assert status2["reason"] == "already_running"
+
+    dashboard_command_worker.stop_command_worker()
+
+def test_tick_command_worker_returns_deterministic_counts(command_store, monkeypatch):
+    monkeypatch.setattr(
+        "modules.dashboard_commands.process_pending_commands",
+        lambda bridge_start_utc=None, limit=5: {
+            "processed": [{"commandId": "cmd-1"}],
+            "processedCount": 1,
+            "skipped": 0,
+            "succeeded": 1,
+            "failed": 0,
+            "blocked": 0,
+            "not_implemented": 0,
+        },
+    )
+
+    result = dashboard_command_worker.tick_command_worker()
+    assert result["ok"] is True
+    assert result["processed"] == 1
+    assert result["succeeded"] == 1
+    assert result["lastCommandId"] == "cmd-1"
+    assert result["lastTickAt"] is not None
+
+
+def test_worker_enabled_various_formats(monkeypatch):
+    monkeypatch.setenv("DASHBOARD_COMMAND_WORKER", "True")
+    assert dashboard_command_worker.worker_enabled() is True
+
+    monkeypatch.setenv("DASHBOARD_COMMAND_WORKER", "yes")
+    assert dashboard_command_worker.worker_enabled() is True
+
+    monkeypatch.setenv("DASHBOARD_COMMAND_WORKER", "on")
+    assert dashboard_command_worker.worker_enabled() is True
+
+    monkeypatch.setenv("DASHBOARD_COMMAND_WORKER", "0")
+    assert dashboard_command_worker.worker_enabled() is False
+
+def test_worker_status_reflects_counts(command_store, monkeypatch):
+    monkeypatch.setattr(
+        "modules.dashboard_commands.get_command_status_counts",
+        lambda: {
+            "pendingCount": 5,
+            "runningCount": 2,
+            "terminalCount": 10,
+        }
+    )
+
+    status = dashboard_command_worker.worker_status()
+    assert status["pendingCount"] == 5
+    assert status["runningCount"] == 2
+    assert status["terminalCount"] == 10
