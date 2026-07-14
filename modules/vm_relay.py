@@ -304,7 +304,7 @@ def call_llm(prompt: str, context: str = "") -> str:
         "You are the worker node in a multi-agent system. Your job is to build, fix, research, "
         "and ship code. You have access to a Linux shell (Ubuntu 22.04), Python, git, curl, and pip. "
         "When asked to build something, produce complete working code. "
-        "Be direct and production-focused. No placeholders, no TODOs."
+        "Be direct and production-focused. No placeholders."
     )
     full_prompt = f"{context}\\n\\n{prompt}" if context else prompt
 
