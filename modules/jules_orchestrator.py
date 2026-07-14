@@ -11,6 +11,7 @@ Public interface:
 
 from __future__ import annotations
 
+from collections import Counter
 import hashlib
 import json
 import os
@@ -2557,11 +2558,7 @@ def _looks_pulled_output(text: str) -> bool:
 
 
 def _count_row_statuses(rows: Iterable[dict]) -> dict[str, int]:
-    counts: dict[str, int] = {}
-    for row in rows:
-        status = str(row.get("cot_status") or "unknown")
-        counts[status] = counts.get(status, 0) + 1
-    return counts
+    return dict(Counter(str(row.get("cot_status") or "unknown") for row in rows))
 
 
 def _cot_ledger_markdown(payload: JulesCotResult) -> str:
