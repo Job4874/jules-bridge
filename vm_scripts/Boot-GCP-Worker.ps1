@@ -26,12 +26,9 @@ if (-not (Test-Path $gcloud)) {
 }
 
 # --- Fix: point gcloud and ADC quota to tibin-terminal-2026, not the API key project ---
-# Hardcoded to 'tibin-terminal-2026' to prevent misdirection to API key projects.
-Write-Log "Setting active project and ADC quota project to tibin-terminal-2026 (hardcoded)"
+Write-Log "Setting active project and ADC quota project to tibin-terminal-2026"
 & $gcloud config set project "tibin-terminal-2026" --quiet 2>&1 | ForEach-Object { Write-Log $_ }
-if ($LASTEXITCODE -ne 0) { Write-Log "WARNING: Could not set default project to tibin-terminal-2026" }
 & $gcloud auth application-default set-quota-project "tibin-terminal-2026" 2>&1 | ForEach-Object { Write-Log $_ }
-if ($LASTEXITCODE -ne 0) { Write-Log "WARNING: Could not set ADC quota project to tibin-terminal-2026" }
 
 # --- Enable Compute API ---
 # NOTE: serviceusage.googleapis.com must already be enabled manually via:

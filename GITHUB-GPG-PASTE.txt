@@ -1,0 +1,20 @@
+﻿GITHUB GPG - copy paste instructions
+=====================================
+
+DO NOT paste from this file into the Key field.
+
+1. Double-click: Copy-GithubGpg.cmd
+   (copies ONLY the valid key + opens GitHub)
+
+2. On GitHub:
+   Title: jules
+   Key:   Ctrl+V
+   Add GPG key
+
+3. If GitHub still errors, check email match:
+   GitHub -> Settings -> Emails
+   Enable "Keep my email addresses private"
+   The key uses: Job4874@users.noreply.github.com
+
+Key-only file (select all, copy if needed):
+  GITHUB-GPG-KEY.asc

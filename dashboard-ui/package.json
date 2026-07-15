@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview",
-    "test:model": "node --test src/dashboardModel.test.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

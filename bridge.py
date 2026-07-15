@@ -71,7 +71,7 @@ LOGGER = logging.getLogger("jules_bridge")
 app = Flask(__name__)
 ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:6000,http://127.0.0.1:6000,http://localhost:6001,http://127.0.0.1:6001,http://localhost:6003,http://127.0.0.1:6003,http://localhost:5000,http://127.0.0.1:5000"
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5000,http://127.0.0.1:5000"
 ).split(",")
 
 CORS(app, origins=ALLOWED_ORIGINS)
@@ -83,36 +83,16 @@ if not BRIDGE_TOKEN:
 
 @app.before_request
 def require_auth():
-    if request.method == "OPTIONS":
-        return None
-    path = request.path
-    if path in (
+    if request.path in (
         "/health",
         "/ping",
         "/host/identity",
+        "/ghost/status",
         "/dashboard/status",
-        "/dashboard/commands",
-        "/dashboard/workflows",
-        "/dashboard/projection",
-        "/dashboard/worker/status",
-        "/dashboard/evidence",
         "/vm/status",
         "/chat",
         "/chat/test",
     ):
-        return None
-    if path.startswith("/dashboard/workflows/"):
-        return None
-    if path.startswith("/dashboard/commands/"):
-        if path.endswith("/cancel"):
-            return None
-        if path.endswith("/replay") and request.method == "POST":
-            return None
-        if request.method == "GET":
-            return None
-    if path == "/dashboard/worker/tick" and request.method == "POST":
-        return None
-    if path.startswith("/dashboard/evidence/") and request.method == "GET":
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -443,8 +423,14 @@ TENTACLES = [
     {"name": "health",       "route": "GET /health",            "reach": "Liveness + uptime check for monitoring tools and ngrok"},  # pylint: disable=line-too-long
     {"name": "health_deep",  "route": "GET /health/deep",       "reach": "Authenticated provider connectivity and host resource health"},  # pylint: disable=line-too-long
     {"name": "pulse",        "route": "GET /ping",              "reach": "Confirm the bridge is alive"},
-    {"name": "host_identity", "route": "GET /host/identity",   "reach": "Hostname, RAM, Jules identity label, GPG key id (no auth)"},  # pylint: disable=line-too-long
+    {"name": "host_identity", "route": "GET /host/identity",   "reach": "Hostname, RAM, Jules identity label, GPG key id, ghost state (no auth)"},  # pylint: disable=line-too-long
     {"name": "host_gpg",     "route": "GET /host/gpg/public",  "reach": "Full GPG public key block for remote GitHub paste"},  # pylint: disable=line-too-long
+    {"name": "ghost_status", "route": "GET /ghost/status",     "reach": "Ghost lock state, operator intro, bridge URLs (no auth)"},  # pylint: disable=line-too-long
+    {"name": "ghost_lock",   "route": "POST /ghost/lock",      "reach": "Lock always-on ghost mode with operator password"},  # pylint: disable=line-too-long
+    {"name": "ghost_unlock", "route": "POST /ghost/unlock",    "reach": "Unlock ghost mode with operator password"},  # pylint: disable=line-too-long
+    {"name": "mesh_status",  "route": "GET /mesh/status",      "reach": "Fleet mesh discovery, tunnel health, live ghost identity"},  # pylint: disable=line-too-long
+    {"name": "mesh_register","route": "POST /mesh/register",   "reach": "Register or refresh this host in MESH_REGISTRY.json"},  # pylint: disable=line-too-long
+    {"name": "mesh_talk",    "route": "GET|POST /mesh/talk",   "reach": "Two-way school ↔ laptop inbox messages"},  # pylint: disable=line-too-long
     {"name": "manifest",     "route": "GET /tentacles",          "reach": "List every tentacle (this endpoint)"},
     {"name": "session_log",  "route": "GET /session/log",        "reach": "Audit which tools Jules used recently"},
     {"name": "shell",        "route": "POST /shell",             "reach": "Run PowerShell, cmd.exe, or Git Bash on the host"},  # pylint: disable=line-too-long
@@ -453,10 +439,6 @@ TENTACLES = [
     {"name": "list",         "route": "POST /fs/list",           "reach": "List a directory like Codex file tree"},
     {"name": "tail",         "route": "POST /fs/tail",           "reach": "Tail log/CSV files"},
     {"name": "grep",         "route": "POST /fs/grep",           "reach": "Search file contents for gate/log strings"},
-    {"name": "codebase_analyze", "route": "POST /codebase/analyze", "reach": "Bounded secret-safe local repo analysis for VM/Jules handoff"},  # pylint: disable=line-too-long
-    {"name": "sync_status",   "route": "GET /sync/status",       "reach": "Read-only Git/GitHub cloud sync readiness and blockers"},  # pylint: disable=line-too-long
-    {"name": "sync_publish_preview", "route": "GET /sync/publish-preview", "reach": "Authenticated read-only cloud publish preview; never writes packet artifacts"},  # pylint: disable=line-too-long
-    {"name": "sync_publish_packet", "route": "POST /sync/publish-packet", "reach": "Authenticated cloud publish review packet builder; can write packet artifacts"},  # pylint: disable=line-too-long
     {"name": "oracle_status","route": "GET /oracle/status",      "reach": "Structured Oracle/Quantower health + blockers"},  # pylint: disable=line-too-long
     {"name": "oracle_build", "route": "POST /oracle/build-deploy","reach": "Build + deploy + verify in one call"},
     {"name": "codex_handover","route": "GET /codex/handover",    "reach": "Index TIBIN Codex handover files on host"},
@@ -471,18 +453,10 @@ TENTACLES = [
     {"name": "mail",            "route": "POST /notify/email",             "reach": "Email the operator (Gmail to iCloud)"},  # pylint: disable=line-too-long
     {"name": "inbox_read",      "route": "POST /inbox/read",               "reach": "Read operator/Jules inbox messages"},  # pylint: disable=line-too-long
     {"name": "inbox_write",     "route": "POST /inbox/write",              "reach": "Write Jules inbox replies"},
-    {"name": "inbox_append",    "route": "POST /inbox/append",             "reach": "Append VM/Jules result lines into inbox files"},
     {"name": "jules_dispatch",  "route": "POST /jules/dispatch",           "reach": "Parse Jules task dumps into worker packets and explicit launch commands"},  # pylint: disable=line-too-long
     {"name": "jules_launch",    "route": "POST /jules/launch",             "reach": "Launch prepared Jules worker packets when dry_run=false"},  # pylint: disable=line-too-long
     {"name": "jules_sessions",  "route": "POST /jules/sessions",           "reach": "List remote Jules sessions with timeout protection"},  # pylint: disable=line-too-long
     {"name": "jules_preflight", "route": "POST /jules/preflight",          "reach": "Diagnose Jules CLI install/auth/remote readiness without launching"},  # pylint: disable=line-too-long
-    {"name": "gemini_preflight", "route": "POST /gemini/preflight",        "reach": "Diagnose Gemini CLI install/headless readiness without modifying workspace"},  # pylint: disable=line-too-long
-    {"name": "gemini_prompt",    "route": "POST /gemini/prompt",           "reach": "Run Gemini CLI headless prompts; dry-run and plan mode by default"},  # pylint: disable=line-too-long
-    {"name": "antigravity_preflight", "route": "POST /gemini/antigravity/preflight", "reach": "Diagnose Antigravity CLI install/plugin/model readiness"},  # pylint: disable=line-too-long
-    {"name": "antigravity_prompt", "route": "POST /gemini/antigravity/prompt", "reach": "Run Antigravity CLI prompts; dry-run by default"},  # pylint: disable=line-too-long
-    {"name": "collaboration_proof", "route": "POST /proof/collaboration",  "reach": "Rerunnable proof gates for Jules, Gemini, skills, context, HRM, and tests"},  # pylint: disable=line-too-long
-    {"name": "alliance_switchboard", "route": "POST /alliance/switchboard", "reach": "Assign dry-run-first Jules creator and Google terminal implementer roles"},  # pylint: disable=line-too-long
-    {"name": "tiu_workbench", "route": "POST /tiu/workbench", "reach": "Build a safe interactive TIU operator packet from dashboard controls"},  # pylint: disable=line-too-long
     {"name": "jules_api_sources", "route": "POST /jules/api/sources",       "reach": "List Jules REST API sources connected to this account"},  # pylint: disable=line-too-long
     {"name": "jules_api_sessions_list", "route": "POST /jules/api/sessions/list", "reach": "List Jules REST API sessions"},  # pylint: disable=line-too-long
     {"name": "jules_api_sessions_create", "route": "POST /jules/api/sessions", "reach": "Create a Jules REST API session from a prompt and source"},  # pylint: disable=line-too-long
@@ -516,19 +490,20 @@ TENTACLES = [
     {"name": "repo_context_guard", "route": "GET /repo/context-guard",       "reach": "Protected Git repo inventory with port/node/dependency collision guardrails"},  # pylint: disable=line-too-long
     # Dashboard + Chat routes
     {"name": "dashboard_status", "route": "GET /dashboard/status",           "reach": "Live dashboard metrics: CPU, memory, fleet, VMs, logs, env"},  # pylint: disable=line-too-long
-    {"name": "dashboard_commands", "route": "GET /dashboard/commands",       "reach": "Read recent Jules dashboard command admissions"},  # pylint: disable=line-too-long
-    {"name": "dashboard_commands_post", "route": "POST /dashboard/commands", "reach": "Admit a dashboard command/workflow event without external mutation"},  # pylint: disable=line-too-long
-    {"name": "dashboard_command_get", "route": "GET /dashboard/commands/<commandId>", "reach": "Fetch one dashboard command by id"},  # pylint: disable=line-too-long
-    {"name": "dashboard_command_cancel", "route": "POST /dashboard/commands/<commandId>/cancel", "reach": "Cancel an in-flight dashboard command"},  # pylint: disable=line-too-long
-    {"name": "dashboard_command_replay", "route": "POST /dashboard/commands/<commandId>/replay", "reach": "Verify stored evidence for a dashboard command without re-execution"},  # pylint: disable=line-too-long
-    {"name": "dashboard_worker_tick", "route": "POST /dashboard/worker/tick", "reach": "Process admitted dashboard commands once for deterministic tests"},  # pylint: disable=line-too-long
-    {"name": "dashboard_worker_status", "route": "GET /dashboard/worker/status", "reach": "Read dashboard command worker mode, counts, and last tick metadata"},  # pylint: disable=line-too-long
-    {"name": "dashboard_evidence", "route": "GET /dashboard/evidence", "reach": "Read recent redacted dashboard command evidence summaries"},  # pylint: disable=line-too-long
-    {"name": "dashboard_evidence_get", "route": "GET /dashboard/evidence/<evidenceId>", "reach": "Fetch one redacted dashboard evidence object by id"},  # pylint: disable=line-too-long
-    {"name": "dashboard_workflows", "route": "GET /dashboard/workflows",     "reach": "Read recent Jules dashboard workflow lanes"},  # pylint: disable=line-too-long
-    {"name": "dashboard_projection", "route": "GET /dashboard/projection",   "reach": "Aggregate bridge health, commands, workflows, sync, and blockers"},  # pylint: disable=line-too-long
     {"name": "chat",             "route": "POST /chat",                      "reach": "Conversational endpoint routed through the VM/browser model loop"},  # pylint: disable=line-too-long
     {"name": "chat_test",        "route": "GET /chat/test",                  "reach": "Diagnostic: test the configured VM/browser model loop"},  # pylint: disable=line-too-long
+    # Autonomous Mission Control routes
+    {"name": "mission_queue",    "route": "GET /mission/queue",              "reach": "Load and display the current MISSION_QUEUE.md"},  # pylint: disable=line-too-long
+    {"name": "mission_cycle",    "route": "POST /mission/cycle",             "reach": "Pick next pending task, mark active, return task details"},  # pylint: disable=line-too-long
+    {"name": "mission_done",     "route": "POST /mission/done",              "reach": "Mark active task as done with result evidence"},  # pylint: disable=line-too-long
+    {"name": "mission_failed",   "route": "POST /mission/failed",            "reach": "Mark active task as failed with reason"},  # pylint: disable=line-too-long
+    {"name": "mission_digest",   "route": "GET /mission/digest",             "reach": "Weekly summary of completed/failed missions"},  # pylint: disable=line-too-long
+    {"name": "browser_navigate", "route": "POST /browser/navigate",          "reach": "Navigate to URL using authenticated Chrome profile"},  # pylint: disable=line-too-long
+    {"name": "browser_screenshot","route": "POST /browser/screenshot",       "reach": "Navigate to URL and take screenshot evidence"},  # pylint: disable=line-too-long
+    {"name": "browser_form",     "route": "POST /browser/form",              "reach": "Fill and submit a web form with provided field values"},  # pylint: disable=line-too-long
+    {"name": "browser_quiz",     "route": "POST /browser/quiz",              "reach": "Autonomously answer and submit a quiz using AI"},  # pylint: disable=line-too-long
+    {"name": "browser_assignment","route": "POST /browser/assignment",       "reach": "Read assignment page and generate AI answer"},  # pylint: disable=line-too-long
+    {"name": "learning_reflect", "route": "POST /learning/reflect",          "reach": "Post-task retrospective: write lessons to domain memory"},  # pylint: disable=line-too-long
 ]
 
 # ---------------------------------------------------------------------------
@@ -545,7 +520,7 @@ def bridge_info_payload(include_routes=False):
         "uptime_s": uptime_s,
         "auth": {
             "type": "bearer",
-            "public_routes": ["GET /health", "GET /ping", "GET /host/identity"],
+            "public_routes": ["GET /health", "GET /ping", "GET /host/identity", "GET /ghost/status"],
             "protected_routes": "All other routes require Authorization: Bearer <token>",
         },
         "manifest": "GET /tentacles",
@@ -614,6 +589,9 @@ def ping():
         "hostname": host.get("hostname"),
         "ram_gb": host.get("ram_gb"),
         "gpg_configured": host.get("gpg_configured"),
+        "ghost_locked": host.get("ghost_locked", False),
+        "host_id": host.get("host_id"),
+        "location": host.get("location"),
     })
 
 
@@ -642,6 +620,112 @@ def host_gpg_public():
             details="Run Copy-GithubGpg.cmd on the host or scripts/Setup-GitHubGpg.ps1",
         )
     return jsonify(payload)
+
+
+@app.route("/ghost/status", methods=["GET"])
+@route_errors
+def ghost_status():
+    """GET /ghost/status — Public ghost lock snapshot for remote Jules agents."""
+    from modules.ghost_state import get_ghost_status  # pylint: disable=import-outside-toplevel
+
+    payload = get_ghost_status()
+    payload["status"] = "ok"
+    return jsonify(payload)
+
+
+@app.route("/ghost/lock", methods=["POST"])
+@route_errors
+def ghost_lock():
+    """POST /ghost/lock — Lock always-on ghost mode (password required)."""
+    from modules.ghost_state import lock_ghost  # pylint: disable=import-outside-toplevel
+
+    data = json_payload()
+    password = string_field(data, "password")
+    overrides = {}
+    for key in ("host_id", "location"):
+        if key in data and data[key] is not None:
+            overrides[key] = string_field(data, key)
+    if "ram_gb" in data:
+        overrides["ram_gb"] = int_field(data, "ram_gb", min_value=1)
+    result = lock_ghost(password, repo_root=ROOT_DIR, **overrides)
+    status = result.get("status")
+    if status == "error":
+        raise BridgeHTTPError(400, "Invalid input", details=result.get("error", "lock failed"))
+    safe = {
+        "status": status,
+        "ghost_locked": True,
+        "locked_at_utc": result.get("locked_at_utc"),
+        "host_id": result.get("host_id"),
+        "location": result.get("location"),
+    }
+    return jsonify(safe)
+
+
+@app.route("/ghost/unlock", methods=["POST"])
+@route_errors
+def ghost_unlock():
+    """POST /ghost/unlock — Unlock ghost mode with operator password."""
+    from modules.ghost_state import unlock_ghost  # pylint: disable=import-outside-toplevel
+
+    data = json_payload()
+    password = string_field(data, "password")
+    result = unlock_ghost(password, repo_root=ROOT_DIR)
+    status = result.get("status")
+    if status == "denied":
+        raise BridgeHTTPError(403, "Access denied", reason=result.get("error", "invalid unlock password"))
+    return jsonify({
+        "status": status,
+        "ghost_locked": False,
+        "unlocked_at_utc": result.get("unlocked_at_utc"),
+    })
+
+
+@app.route("/mesh/status", methods=["GET"])
+@route_errors
+def mesh_status():
+    """GET /mesh/status — Mesh discovery: nodes, tunnel, primary bridge URLs."""
+    return jsonify(modules.get_mesh_status())
+
+
+@app.route("/mesh/register", methods=["POST"])
+@route_errors
+def mesh_register():
+    """POST /mesh/register — Register or refresh this host in MESH_REGISTRY.json."""
+    data = json_payload()
+    overrides = {}
+    for key in ("host_id", "role", "location", "hostname", "status"):
+        if key in data and data[key] is not None:
+            overrides[key] = string_field(data, key)
+    if "ram_gb" in data:
+        overrides["ram_gb"] = int_field(data, "ram_gb", min_value=1)
+    if "bridge_urls" in data and isinstance(data["bridge_urls"], dict):
+        overrides["bridge_urls"] = data["bridge_urls"]
+    registry = modules.register_local_node(**overrides)
+    return jsonify({"status": "registered", "primary_host_id": registry.get("primary_host_id"), "nodes": registry.get("nodes")})
+
+
+@app.route("/mesh/talk", methods=["GET", "POST"])
+@route_errors
+def mesh_talk():
+    """Two-way school ↔ laptop messages via jules_inbox/LAPTOP_MESSAGE.md and SCHOOL_MESSAGE.md."""
+    if request.method == "GET":
+        laptop_msg, laptop_status = modules.inbox_read(file="LAPTOP_MESSAGE.md")
+        school_msg, school_status = modules.inbox_read(file="SCHOOL_MESSAGE.md")
+        return jsonify({
+            "to_laptop": dict(laptop_msg) if laptop_status == 200 else {"content": "", "missing": True},
+            "from_laptop": dict(school_msg) if school_status == 200 else {"content": "", "missing": True},
+        })
+
+    data = json_payload()
+    sender = string_field(data, "from")
+    message = string_field(data, "message")
+    if sender not in ("school", "laptop"):
+        raise BridgeHTTPError(400, "Invalid input", details="from must be 'school' or 'laptop'")
+    target = "LAPTOP_MESSAGE.md" if sender == "school" else "SCHOOL_MESSAGE.md"
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    body = f"[{stamp}] {sender}:\n{message}\n"
+    result = modules.inbox_write(content=body, file=target)
+    return jsonify({"status": "sent", "channel": target, **result})
 
 
 @app.route("/tentacles", methods=["GET"])
@@ -686,16 +770,6 @@ def inbox_write():
     name = inbox_name_field(data, "JULES_RESPONSE.md")
     content = content_field(data)
     result = modules.inbox_write(content=content, file=name)
-    return jsonify(result)
-
-
-@app.route("/inbox/append", methods=["POST"])
-@route_errors
-def inbox_append():
-    data = json_payload()
-    name = inbox_name_field(data, "JULES_RESPONSE.md")
-    content = content_field(data)
-    result = modules.inbox_append(content=content, file=name)
     return jsonify(result)
 
 
@@ -934,234 +1008,6 @@ def jules_preflight_route():
         check_remote=bool_field(data, "check_remote", default=True),
         write_state=bool_field(data, "write_state", default=True),
         state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
-    )
-    status = 400 if result.get("error") else 200
-    return jsonify(dict(result)), status
-
-
-@app.route("/gemini/preflight", methods=["POST"])
-@route_errors
-def gemini_preflight_route():
-    """POST /gemini/preflight - Diagnose Gemini CLI readiness.
-
-    Body (JSON):
-        gemini_command (str, optional, default="gemini"): CLI path/name
-        timeout_s      (int, optional, default=8): Probe timeout
-        run_smoke      (bool, optional, default=false): Run a live headless prompt
-        smoke_prompt   (str, optional): Prompt for the live smoke check
-        model          (str, optional): Gemini model for the optional smoke
-        cwd            (str, optional): Working directory for the optional smoke
-        write_state    (bool, optional, default=true): Persist preflight JSON
-        state_path     (str, optional): Explicit state file path
-    """
-    data = json_payload()
-    result = modules.gemini_preflight(
-        gemini_command=string_field(data, "gemini_command", default="gemini"),
-        timeout_s=int_field(data, "timeout_s", default=8, min_value=1, max_value=300),
-        run_smoke=bool_field(data, "run_smoke", default=False),
-        smoke_prompt=string_field(
-            data,
-            "smoke_prompt",
-            default="Reply with GEMINI_BRIDGE_READY only.",
-            allow_empty=False,
-        ),
-        model=string_field(data, "model", default="", allow_empty=True),
-        cwd=string_field(data, "cwd", default="", allow_empty=True, control_safe=True),
-        write_state=bool_field(data, "write_state", default=True),
-        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
-    )
-    status = 400 if result.get("error") else 200
-    return jsonify(dict(result)), status
-
-
-@app.route("/gemini/prompt", methods=["POST"])
-@route_errors
-def gemini_prompt_route():
-    """POST /gemini/prompt - Run one Gemini CLI headless prompt.
-
-    Body (JSON):
-        prompt         (str, required): Prompt passed to `gemini -p`
-        cwd            (str, optional): Working directory, defaults to repo root
-        model          (str, optional): Gemini model override
-        approval_mode  (str, optional, default="plan"): default|auto_edit|yolo|plan
-        output_format  (str, optional, default="text"): text|json|stream-json
-        timeout_s      (int, optional, default=120): CLI timeout
-        gemini_command (str, optional, default="gemini"): CLI path/name
-        dry_run        (bool, optional, default=true): False invokes Gemini CLI
-        trust_workspace (bool, optional, default=true): Pass --skip-trust
-        write_state    (bool, optional, default=true): Persist prompt result JSON
-        state_path     (str, optional): Explicit state file path
-    """
-    data = json_payload()
-    result = modules.run_gemini_prompt(
-        prompt=string_field(data, "prompt", allow_empty=False),
-        cwd=string_field(data, "cwd", default="", allow_empty=True, control_safe=True),
-        model=string_field(data, "model", default="", allow_empty=True),
-        approval_mode=string_field(data, "approval_mode", default="plan", allow_empty=False),
-        output_format=string_field(data, "output_format", default="text", allow_empty=False),
-        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
-        gemini_command=string_field(data, "gemini_command", default="gemini"),
-        dry_run=bool_field(data, "dry_run", default=True),
-        trust_workspace=bool_field(data, "trust_workspace", default=True),
-        write_state=bool_field(data, "write_state", default=True),
-        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
-    )
-    status = 400 if result.get("error") else 200
-    return jsonify(dict(result)), status
-
-
-@app.route("/gemini/antigravity/preflight", methods=["POST"])
-@route_errors
-def antigravity_preflight_route():
-    """POST /gemini/antigravity/preflight - Diagnose Antigravity CLI readiness.
-
-    Body (JSON):
-        agy_command  (str, optional, default="agy"): CLI path/name
-        timeout_s    (int, optional, default=8): Probe timeout
-        run_smoke    (bool, optional, default=false): Run a live headless prompt
-        smoke_prompt (str, optional): Prompt for the live smoke check
-        model        (str, optional): Model override for the optional smoke
-        cwd          (str, optional): Working directory for the optional smoke
-        write_state  (bool, optional, default=true): Persist preflight JSON
-        state_path   (str, optional): Explicit state file path
-    """
-    data = json_payload()
-    result = modules.antigravity_preflight(
-        agy_command=string_field(data, "agy_command", default="agy"),
-        timeout_s=int_field(data, "timeout_s", default=8, min_value=1, max_value=300),
-        run_smoke=bool_field(data, "run_smoke", default=False),
-        smoke_prompt=string_field(
-            data,
-            "smoke_prompt",
-            default="Reply with ANTIGRAVITY_BRIDGE_READY only.",
-            allow_empty=False,
-        ),
-        model=string_field(data, "model", default="", allow_empty=True),
-        cwd=string_field(data, "cwd", default="", allow_empty=True, control_safe=True),
-        write_state=bool_field(data, "write_state", default=True),
-        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
-    )
-    status = 400 if result.get("error") else 200
-    return jsonify(dict(result)), status
-
-
-@app.route("/gemini/antigravity/prompt", methods=["POST"])
-@route_errors
-def antigravity_prompt_route():
-    """POST /gemini/antigravity/prompt - Run one Antigravity CLI prompt.
-
-    Body (JSON):
-        prompt      (str, required): Prompt passed to `agy -p`
-        cwd         (str, optional): Working directory, defaults to repo root
-        model       (str, optional): Model override
-        timeout_s   (int, optional, default=120): CLI timeout
-        agy_command (str, optional, default="agy"): CLI path/name
-        dry_run     (bool, optional, default=true): False invokes Antigravity CLI
-        write_state (bool, optional, default=true): Persist prompt result JSON
-        state_path  (str, optional): Explicit state file path
-    """
-    data = json_payload()
-    result = modules.run_antigravity_prompt(
-        prompt=string_field(data, "prompt", allow_empty=False),
-        cwd=string_field(data, "cwd", default="", allow_empty=True, control_safe=True),
-        model=string_field(data, "model", default="", allow_empty=True),
-        timeout_s=int_field(data, "timeout_s", default=120, min_value=1, max_value=3600),
-        agy_command=string_field(data, "agy_command", default="agy"),
-        dry_run=bool_field(data, "dry_run", default=True),
-        write_state=bool_field(data, "write_state", default=True),
-        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
-    )
-    status = 400 if result.get("error") else 200
-    return jsonify(dict(result)), status
-
-
-@app.route("/proof/collaboration", methods=["POST"])
-@route_errors
-def collaboration_proof_route():
-    """POST /proof/collaboration - Prove Jules/Gemini collaboration gates.
-
-    Body (JSON):
-        include_live_checks (bool, optional, default=false): Read-only live probes
-        run_gemini_smoke    (bool, optional, default=false): Authenticated Gemini smoke
-        timeout_s           (int, optional, default=12): CLI/API probe timeout
-        write_state         (bool, optional, default=true): Persist proof JSON
-        state_path          (str, optional): Explicit proof state path
-    """
-    data = json_payload()
-    result = modules.build_collaboration_proof(
-        include_live_checks=bool_field(data, "include_live_checks", default=False),
-        run_gemini_smoke=bool_field(data, "run_gemini_smoke", default=False),
-        timeout_s=int_field(data, "timeout_s", default=12, min_value=1, max_value=300),
-        write_state=bool_field(data, "write_state", default=True),
-        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
-    )
-    status = 400 if result.get("error") else 200
-    return jsonify(dict(result)), status
-
-
-@app.route("/alliance/switchboard", methods=["POST"])
-@route_errors
-def alliance_switchboard_route():
-    """POST /alliance/switchboard - Assign Jules/Google terminal roles.
-
-    Body (JSON):
-        objective               (str, required): Complex-codebase objective
-        target_files            (list[str], optional): Files/dirs that bound scope
-        complexity              (str, optional, default="complex")
-        preferred_creator       (str, optional, default="jules")
-        preferred_implementer   (str, optional, default="antigravity_cli")
-        include_live_checks     (bool, optional, default=false): Bounded preflights
-        run_implementer_smoke   (bool, optional, default=false): Optional agy smoke
-        write_packets           (bool, optional, default=false): Persist role packets
-        state_path              (str, optional): State JSON path or packet directory
-        timeout_s               (int, optional, default=12): Probe timeout
-    """
-    data = json_payload()
-    result = modules.build_alliance_switchboard(
-        objective=string_field(data, "objective", allow_empty=False),
-        target_files=string_list_field(data, "target_files", default=[], control_safe=True),
-        complexity=string_field(data, "complexity", default="complex", allow_empty=False),
-        preferred_creator=string_field(data, "preferred_creator", default="jules", allow_empty=False),
-        preferred_implementer=string_field(data, "preferred_implementer", default="antigravity_cli", allow_empty=False),
-        include_live_checks=bool_field(data, "include_live_checks", default=False),
-        run_implementer_smoke=bool_field(data, "run_implementer_smoke", default=False),
-        write_packets=bool_field(data, "write_packets", default=False),
-        state_path=string_field(data, "state_path", default="", allow_empty=True, control_safe=True),
-        timeout_s=int_field(data, "timeout_s", default=12, min_value=1, max_value=300),
-    )
-    status = 400 if result.get("error") else 200
-    return jsonify(dict(result)), status
-
-
-@app.route("/tiu/workbench", methods=["POST"])
-@route_errors
-def tiu_workbench_route():
-    """POST /tiu/workbench - Build a safe interactive TIU packet.
-
-    Body (JSON):
-        objective           (str, required): Operator objective
-        scope               (str, optional, default="dashboard")
-        model_lane          (str, optional, default="alliance")
-        mode                (str, optional, default="design_review")
-        target_files        (list[str], optional): Explicit relative scope
-        require_cloud_sync  (bool, optional, default=true): Gate publish status
-        include_live_checks (bool, optional, default=false): Bounded preflights
-        write_packet        (bool, optional, default=false): Persist local packet
-        output_dir          (str, optional): Repo-local packet directory
-        timeout_s           (int, optional, default=12): Probe timeout
-    """
-    data = json_payload()
-    result = modules.build_tiu_workbench_plan(
-        objective=string_field(data, "objective", allow_empty=False),
-        scope=string_field(data, "scope", default="dashboard", allow_empty=False),
-        model_lane=string_field(data, "model_lane", default="alliance", allow_empty=False),
-        mode=string_field(data, "mode", default="design_review", allow_empty=False),
-        target_files=string_list_field(data, "target_files", default=[], control_safe=True),
-        require_cloud_sync=bool_field(data, "require_cloud_sync", default=True),
-        include_live_checks=bool_field(data, "include_live_checks", default=False),
-        write_packet=bool_field(data, "write_packet", default=False),
-        timeout_s=int_field(data, "timeout_s", default=12, min_value=1, max_value=300),
-        output_dir=string_field(data, "output_dir", default="", allow_empty=True, control_safe=True),
     )
     status = 400 if result.get("error") else 200
     return jsonify(dict(result)), status
@@ -1525,28 +1371,6 @@ def grep_file():
     return jsonify(dict(result))
 
 
-@app.route("/codebase/analyze", methods=["POST"])
-@route_errors
-def codebase_analyze_route():
-    """POST /codebase/analyze - Build a bounded local repository snapshot.
-
-    Body (JSON):
-        path          (str, optional): Directory to analyze; defaults to bridge root
-        max_files     (int, optional): Bounded source-file scan limit
-        include_files (bool, optional): Include a capped relative file inventory
-    """
-    data = json_payload()
-    root_path = existing_path(path_field(data, "path", default=ROOT_DIR), kind="directory")
-    max_files = int_field(data, "max_files", default=2500, min_value=50, max_value=10000)
-    include_files = bool_field(data, "include_files", default=False)
-    result = modules.analyze_codebase(
-        root_path=root_path,
-        max_files=max_files,
-        include_files=include_files,
-    )
-    return jsonify(dict(result))
-
-
 @app.route("/fs/write", methods=["POST"])
 @route_errors
 def save_file_content():
@@ -1822,38 +1646,20 @@ def reasoning_solve():
         context  (str, optional): Additional context / background
         halt_budget (int, optional, default=8): Max L-module steps
         model    (str, optional, default="stub"): LLM model identifier
-        require_json (bool, optional, default=False): Require validated structured JSON answer
 
-    Returns JSON with plan, actions, halt decision, answer, trace, and feedback.
+    Returns JSON with plan, actions, halt decision, answer, and feedback.
     """
     data = json_payload()
     problem = string_field(data, "problem")
     context = string_field(data, "context", default="")
     halt_budget = int_field(data, "halt_budget", default=8, min_value=1)
     model = string_field(data, "model", default="stub")
-    require_json = bool_field(data, "require_json", default=False)
 
-    trace = modules.reason(
-        problem,
-        context=context,
-        halt_budget=halt_budget,
-        model=model,
-        require_json=require_json,
-    )
+    trace = modules.reason(problem, context=context, halt_budget=halt_budget, model=model)
 
-    structured_answer = trace.parsed_answer if isinstance(trace.parsed_answer, dict) else None
-    block_reason = None
-    if structured_answer and structured_answer.get("blockReason"):
-        block_reason = str(structured_answer["blockReason"])
-
-    if structured_answer and not structured_answer.get("abstain") and not block_reason:
-        answer: Any = structured_answer
-    else:
-        answer = trace.answer
-
-    payload: dict[str, Any] = {
+    return jsonify({
         "problem": trace.problem,
-        "answer": answer,
+        "answer": trace.answer,
         "succeeded": trace.succeeded,
         "elapsed_ms": round(trace.elapsed_ms, 1),
         "plan": {
@@ -1879,23 +1685,8 @@ def reasoning_solve():
             "steps_budget": trace.halt.steps_budget,
             "halted_early": trace.halt.halted_early,
         },
-        "trace": {
-            "complete": trace.trace_complete,
-            "steps": trace.trace_steps,
-            "source": trace.feedback.get("source", ""),
-        },
         "feedback": trace.feedback,
-    }
-    if block_reason:
-        payload["blocked"] = True
-        payload["blockReason"] = block_reason
-        payload["succeeded"] = False
-        payload["answer"] = None
-    if structured_answer is not None:
-        payload["parsed_answer"] = structured_answer
-        if not structured_answer.get("abstain") and not block_reason:
-            payload["result"] = structured_answer
-    return jsonify(payload)
+    })
 
 
 @app.route("/reasoning/plan", methods=["POST"])
@@ -2284,69 +2075,6 @@ def repo_context_guard():
     return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
 
 
-@app.route("/sync/status", methods=["GET"])
-@route_errors
-def sync_status():
-    """GET /sync/status - Read-only Git/GitHub cloud sync readiness."""
-    result = modules.get_cloud_sync_status(
-        root=request.args.get("root", ""),
-        timeout_s=query_int_field("timeout_s", 4, min_value=1, max_value=30),
-        use_cache=query_bool_field("use_cache", True),
-    )
-    return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
-
-
-@app.route("/sync/publish-packet", methods=["POST"])
-@route_errors
-def sync_publish_packet():
-    """POST /sync/publish-packet - Build a read-only cloud publish packet.
-
-    Body (JSON):
-        root         (str, optional): Git repository root
-        objective    (str, optional): Publish objective/reason
-        timeout_s    (int, optional): Per-command timeout
-        use_cache    (bool, optional): Reuse cached sync status
-        write_packet (bool, optional): Save markdown/JSON under repo
-        output_dir   (str, optional): Repo-local packet directory
-    """
-    data = json_payload()
-    result = modules.build_cloud_publish_packet(
-        root=path_field(data, "root", default=""),
-        objective=string_field(data, "objective", default="", allow_empty=True),
-        timeout_s=int_field(data, "timeout_s", default=4, min_value=1, max_value=30),
-        use_cache=bool_field(data, "use_cache", default=False),
-        write_packet=bool_field(data, "write_packet", default=False),
-        output_dir=path_field(data, "output_dir", default=""),
-    )
-    return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
-
-
-@app.route("/sync/publish-preview", methods=["GET"])
-@route_errors
-def sync_publish_preview():
-    """GET /sync/publish-preview - Authenticated read-only cloud publish preview.
-
-    This route intentionally never writes packet artifacts. It lets the local
-    dashboard build a current repo-relative review packet without enabling the
-    write-capable publish-packet route.
-    """
-    if request.args.get("root"):
-        raise BridgeHTTPError(
-            400,
-            "Invalid input",
-            details="root is only supported by the authenticated publish-packet route",
-        )
-    result = modules.build_cloud_publish_packet(
-        root="",
-        objective=request.args.get("objective", ""),
-        timeout_s=query_int_field("timeout_s", 4, min_value=1, max_value=30),
-        use_cache=query_bool_field("use_cache", False),
-        write_packet=False,
-        output_dir="",
-    )
-    return jsonify(dict(result)), 200 if result.get("status") != "error" else 500
-
-
 # ---------------------------------------------------------------------------
 # Dashboard
 # ---------------------------------------------------------------------------
@@ -2354,150 +2082,9 @@ def sync_publish_preview():
 @app.route("/dashboard/status", methods=["GET"])
 @route_errors
 def dashboard_status():
-    """GET /dashboard/status — real-time dashboard snapshot or SSE stream."""
-    from modules.dashboard_module import (  # pylint: disable=import-outside-toplevel
-        dashboard_status_event_stream,
-        get_dashboard_status,
-    )
-
-    if query_bool_field("stream", False):
-        from flask import Response, stream_with_context  # pylint: disable=import-outside-toplevel
-
-        interval_s = query_int_field("interval_s", 1, min_value=1, max_value=30)
-        events = query_int_field("events", 0, min_value=0, max_value=500)
-        stream = dashboard_status_event_stream(
-            bridge_start_utc=_BRIDGE_START_UTC,
-            interval_s=interval_s,
-            max_events=events,
-        )
-        return Response(
-            stream_with_context(stream),
-            mimetype="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "X-Accel-Buffering": "no",
-            },
-        )
-
+    """GET /dashboard/status — real-time multi-cloud mission control snapshot."""
+    from modules.dashboard_module import get_dashboard_status  # pylint: disable=import-outside-toplevel
     result = get_dashboard_status(bridge_start_utc=_BRIDGE_START_UTC)
-    return jsonify(result), 200 if result.get("ok") else 500
-
-
-@app.route("/dashboard/commands", methods=["GET", "POST"])
-@route_errors
-def dashboard_commands():
-    """GET/POST /dashboard/commands — admit or list dashboard command events."""
-    from modules.dashboard_commands import (  # pylint: disable=import-outside-toplevel
-        admit_command,
-        list_commands,
-    )
-
-    if request.method == "GET":
-        result = list_commands(limit=query_int_field("limit", 50, min_value=1, max_value=200))
-        return jsonify(result), 200 if result.get("ok") else 500
-
-    data = json_payload()
-    result = admit_command(data, bridge_start_utc=_BRIDGE_START_UTC)
-    return jsonify(result), 200 if result.get("ok") else 400
-
-
-@app.route("/dashboard/commands/<command_id>", methods=["GET"])
-@route_errors
-def dashboard_command_get(command_id):
-    """GET /dashboard/commands/<commandId> — fetch one dashboard command."""
-    from modules.dashboard_commands import get_command  # pylint: disable=import-outside-toplevel
-
-    result = get_command(command_id)
-    return jsonify(result), 200 if result.get("ok") else 404
-
-
-@app.route("/dashboard/commands/<command_id>/cancel", methods=["POST"])
-@route_errors
-def dashboard_command_cancel(command_id):
-    """POST /dashboard/commands/<commandId>/cancel — cancel an in-flight command."""
-    from modules.dashboard_commands import cancel_command  # pylint: disable=import-outside-toplevel
-
-    result = cancel_command(command_id)
-    return jsonify(result), 200 if result.get("ok") else 400
-
-
-@app.route("/dashboard/commands/<command_id>/replay", methods=["POST"])
-@route_errors
-def dashboard_command_replay(command_id):
-    """POST /dashboard/commands/<commandId>/replay — verify stored evidence without re-execution."""
-    from modules.dashboard_commands import replay_command  # pylint: disable=import-outside-toplevel
-
-    result = replay_command(command_id)
-    status_code = 200 if result.get("replayStatus") == "verified" else 400
-    if result.get("error") == "command_not_found":
-        status_code = 404
-    return jsonify(result), status_code
-
-
-@app.route("/dashboard/workflows", methods=["GET"])
-@app.route("/dashboard/workflows/<workflow_id>", methods=["GET"])
-@route_errors
-def dashboard_workflows(workflow_id=None):
-    """GET /dashboard/workflows — list or fetch dashboard workflow lanes."""
-    from modules.dashboard_commands import (  # pylint: disable=import-outside-toplevel
-        get_workflow,
-        list_workflows,
-    )
-
-    if workflow_id:
-        result = get_workflow(workflow_id)
-        return jsonify(result), 200 if result.get("ok") else 404
-    result = list_workflows(limit=query_int_field("limit", 50, min_value=1, max_value=200))
-    return jsonify(result), 200 if result.get("ok") else 500
-
-
-@app.route("/dashboard/projection", methods=["GET"])
-@route_errors
-def dashboard_projection():
-    """GET /dashboard/projection — aggregate dashboard control-plane state."""
-    from modules.dashboard_commands import get_dashboard_projection  # pylint: disable=import-outside-toplevel
-
-    result = get_dashboard_projection(
-        bridge_start_utc=_BRIDGE_START_UTC,
-        limit=query_int_field("limit", 20, min_value=1, max_value=200),
-    )
-    return jsonify(result), 200 if result.get("ok") else 500
-
-
-@app.route("/dashboard/worker/tick", methods=["POST"])
-@route_errors
-def dashboard_worker_tick():
-    """POST /dashboard/worker/tick — process admitted dashboard commands once."""
-    from modules.dashboard_command_worker import tick_command_worker  # pylint: disable=import-outside-toplevel
-
-    result = tick_command_worker(
-        bridge_start_utc=_BRIDGE_START_UTC,
-        limit=query_int_field("limit", 5, min_value=1, max_value=50),
-    )
-    return jsonify(result), 200 if result.get("ok") else 500
-
-
-@app.route("/dashboard/worker/status", methods=["GET"])
-@route_errors
-def dashboard_worker_status():
-    """GET /dashboard/worker/status — read dashboard command worker state."""
-    from modules.dashboard_command_worker import worker_status  # pylint: disable=import-outside-toplevel
-
-    result = worker_status()
-    return jsonify(result), 200 if result.get("ok") else 500
-
-
-@app.route("/dashboard/evidence", methods=["GET"])
-@app.route("/dashboard/evidence/<evidence_id>", methods=["GET"])
-@route_errors
-def dashboard_evidence(evidence_id=None):
-    """GET /dashboard/evidence — list or fetch redacted command evidence summaries."""
-    from modules.dashboard_evidence import get_evidence, list_evidence  # pylint: disable=import-outside-toplevel
-
-    if evidence_id:
-        result = get_evidence(evidence_id)
-        return jsonify(result), 200 if result.get("ok") else 404
-    result = list_evidence(limit=query_int_field("limit", 20, min_value=1, max_value=200))
     return jsonify(result), 200 if result.get("ok") else 500
 
 
@@ -2585,14 +2172,224 @@ def chat() -> Any:
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Mission Control routes
 # ---------------------------------------------------------------------------
 
-def _ensure_command_worker_started() -> None:
-    from modules.dashboard_command_worker import start_command_worker  # pylint: disable=import-outside-toplevel
+@app.route("/mission/queue", methods=["GET"])
+@route_errors
+def mission_queue_route():
+    """GET /mission/queue — Load and return the current MISSION_QUEUE.md."""
+    from modules.mission_controller import load_queue  # noqa: PLC0415
+    queue = load_queue()
+    tasks = [{"task_id": t.task_id, "type": t.task_type, "title": t.title,
+               "url": t.url, "deadline": t.deadline, "assigned_to": t.assigned_to,
+               "status": t.status, "notes": t.notes}
+              for t in queue.tasks]
+    return jsonify({
+        "ok": True,
+        "tasks": tasks,
+        "pending": queue.pending_count,
+        "active": queue.active_count,
+        "done": queue.done_count,
+        "parsed_at": queue.parsed_at,
+    })
 
-    start_command_worker(bridge_start_utc=_BRIDGE_START_UTC)
 
+@app.route("/mission/cycle", methods=["POST"])
+@route_errors
+def mission_cycle_route():
+    """POST /mission/cycle — Pick next task, mark active, return task details."""
+    from modules.mission_controller import run_mission_cycle  # noqa: PLC0415
+    result = run_mission_cycle()
+    return jsonify({
+        "ok": result.ok,
+        "active_task": result.active_task,
+        "queue_summary": result.queue_summary,
+        "timestamp": result.timestamp,
+        "error": result.error,
+    })
+
+
+@app.route("/mission/done", methods=["POST"])
+@route_errors
+def mission_done_route():
+    """POST /mission/done — Mark a task done with result evidence."""
+    data = json_payload()
+    from modules.mission_controller import load_queue, mark_task_done  # noqa: PLC0415
+    task_id = string_field(data, "task_id")
+    result = data.get("result", {})
+    queue = load_queue()
+    task = next((t for t in queue.tasks if t.task_id == task_id), None)
+    if task is None:
+        raise BridgeHTTPError(404, "Resource not found", path=task_id)
+    mark_task_done(task, result)
+    return jsonify({"ok": True, "task_id": task_id, "status": "done"})
+
+
+@app.route("/mission/failed", methods=["POST"])
+@route_errors
+def mission_failed_route():
+    """POST /mission/failed — Mark a task failed with reason."""
+    data = json_payload()
+    from modules.mission_controller import load_queue, mark_task_failed  # noqa: PLC0415
+    task_id = string_field(data, "task_id")
+    reason = string_field(data, "reason", default="unspecified")
+    queue = load_queue()
+    task = next((t for t in queue.tasks if t.task_id == task_id), None)
+    if task is None:
+        raise BridgeHTTPError(404, "Resource not found", path=task_id)
+    mark_task_failed(task, reason)
+    return jsonify({"ok": True, "task_id": task_id, "status": "failed"})
+
+
+@app.route("/mission/digest", methods=["GET"])
+@route_errors
+def mission_digest_route():
+    """GET /mission/digest — Weekly summary of completed/failed missions."""
+    from modules.learning_loop import weekly_digest  # noqa: PLC0415
+    result = weekly_digest()
+    return jsonify({
+        "ok": result.ok,
+        "tasks_done": result.tasks_done,
+        "tasks_failed": result.tasks_failed,
+        "summary": result.summary,
+        "digest_path": result.digest_path,
+        "error": result.error,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Browser Automation routes
+# ---------------------------------------------------------------------------
+
+@app.route("/browser/navigate", methods=["POST"])
+@route_errors
+def browser_navigate_route():
+    """POST /browser/navigate — Navigate to URL using authenticated Chrome profile."""
+    data = json_payload()
+    url = string_field(data, "url")
+    profile = string_field(data, "profile", default=None, allow_empty=True)
+    from modules.playwright_agent import navigate  # noqa: PLC0415
+    result = navigate(url, profile=profile or None)
+    return jsonify({
+        "ok": result.ok,
+        "url": result.url,
+        "page_text": result.page_text[:4000],
+        "screenshot_path": result.screenshot_path,
+        "timing_ms": result.timing_ms,
+        "error": result.error,
+    })
+
+
+@app.route("/browser/screenshot", methods=["POST"])
+@route_errors
+def browser_screenshot_route():
+    """POST /browser/screenshot — Navigate to URL and take screenshot."""
+    data = json_payload()
+    url = string_field(data, "url")
+    profile = string_field(data, "profile", default=None, allow_empty=True)
+    from modules.playwright_agent import take_screenshot  # noqa: PLC0415
+    result = take_screenshot(url, profile=profile or None)
+    return jsonify({
+        "ok": result.ok,
+        "url": result.url,
+        "screenshot_path": result.screenshot_path,
+        "timing_ms": result.timing_ms,
+        "error": result.error,
+    })
+
+
+@app.route("/browser/form", methods=["POST"])
+@route_errors
+def browser_form_route():
+    """POST /browser/form — Fill and submit a web form."""
+    data = json_payload()
+    url = string_field(data, "url")
+    fields = data.get("fields", {})
+    if not isinstance(fields, dict):
+        raise BridgeHTTPError(400, "Invalid input", details="fields must be an object")
+    submit_selector = string_field(data, "submit_selector",
+                                   default="input[type=submit], button[type=submit]")
+    profile = string_field(data, "profile", default=None, allow_empty=True)
+    from modules.playwright_agent import fill_and_submit_form  # noqa: PLC0415
+    result = fill_and_submit_form(url, fields, submit_selector, profile=profile or None)
+    return jsonify({
+        "ok": result.ok,
+        "url": result.url,
+        "submitted": result.form_submitted,
+        "screenshot_path": result.screenshot_path,
+        "page_text": result.page_text[:2000],
+        "timing_ms": result.timing_ms,
+        "error": result.error,
+    })
+
+
+@app.route("/browser/quiz", methods=["POST"])
+@route_errors
+def browser_quiz_route():
+    """POST /browser/quiz — Autonomously answer and submit a quiz using AI."""
+    data = json_payload()
+    url = string_field(data, "url")
+    model = string_field(data, "model", default="fast")
+    profile = string_field(data, "profile", default=None, allow_empty=True)
+    from modules.academic_agent import solve_quiz  # noqa: PLC0415
+    result = solve_quiz(url, profile=profile or None, model=model)
+    return jsonify({
+        "ok": result.ok,
+        "url": result.url,
+        "questions_found": result.questions_found,
+        "questions_answered": result.questions_answered,
+        "submitted": result.submitted,
+        "screenshot_path": result.screenshot_path,
+        "ai_answers": result.ai_answers,
+        "timestamp": result.timestamp,
+        "error": result.error,
+    })
+
+
+@app.route("/browser/assignment", methods=["POST"])
+@route_errors
+def browser_assignment_route():
+    """POST /browser/assignment — Read assignment page and generate AI answer."""
+    data = json_payload()
+    url = string_field(data, "url")
+    profile = string_field(data, "profile", default=None, allow_empty=True)
+    from modules.academic_agent import solve_assignment  # noqa: PLC0415
+    result = solve_assignment(url, profile=profile or None)
+    return jsonify({
+        "ok": result.ok,
+        "url": result.url,
+        "questions_found": result.questions_found,
+        "ai_answers": result.ai_answers,
+        "screenshot_path": result.screenshot_path,
+        "timestamp": result.timestamp,
+        "error": result.error,
+    })
+
+
+@app.route("/learning/reflect", methods=["POST"])
+@route_errors
+def learning_reflect_route():
+    """POST /learning/reflect — Post-task retrospective, write to domain memory."""
+    data = json_payload()
+    task = data.get("task", {})
+    result = data.get("result", {})
+    if not isinstance(task, dict):
+        raise BridgeHTTPError(400, "Invalid input", details="task must be an object")
+    from modules.learning_loop import reflect_on_task  # noqa: PLC0415
+    reflection = reflect_on_task(task, result)
+    return jsonify({
+        "ok": reflection.ok,
+        "task_id": reflection.task_id,
+        "lesson": reflection.lesson,
+        "memory_updated": reflection.memory_updated,
+        "error": reflection.error,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     LOGGER.info("========================================")
@@ -2601,5 +2398,4 @@ if __name__ == "__main__":
     LOGGER.info("Log path: %s", LOG_PATH)
     LOGGER.info("Token auth: ENABLED")
     LOGGER.info("========================================")
-    _ensure_command_worker_started()
     app.run(port=5000, host="0.0.0.0")

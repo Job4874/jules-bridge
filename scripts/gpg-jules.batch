@@ -1,0 +1,10 @@
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Subkey-Length: 4096
+Name-Real: Abdulwahab Tibin
+Name-Email: Job4874@users.noreply.github.com
+Name-Comment: Jules school PC
+Expire-Date: 0
+%no-protection
+%commit

@@ -14,9 +14,15 @@ from typing import Iterable
 
 
 def load_env():
-    from modules.jules_env import load_env as load_jules_env
-
-    load_jules_env()
+    env_path = Path(__file__).with_name(".env")
+    if not env_path.exists():
+        return
+    for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
 def _attachment_paths(attachments: Iterable[str] | None) -> list[Path]:
@@ -63,7 +69,8 @@ def send_email(subject, body, mail_to=None, attachments=None):
 
     if not gmail_user or not gmail_pass:
         raise RuntimeError(
-            "Missing GMAIL_USER or GMAIL_APP_PASSWORD in c:\\Users\\abdul\\.jules\\.env"
+            "Missing GMAIL_USER or GMAIL_APP_PASSWORD in "
+            f"{Path(__file__).with_name('.env')}"
         )
 
     attachment_paths = _attachment_paths(attachments)

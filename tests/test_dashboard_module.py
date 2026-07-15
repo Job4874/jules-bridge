@@ -8,7 +8,6 @@ import modules.dashboard_module
 from pathlib import Path
 
 from modules.dashboard_module import (
-    dashboard_status_event_stream,
     get_dashboard_status,
     _dashboard_status_cache,
     _env_vars,
@@ -18,11 +17,6 @@ from modules.dashboard_module import (
     _fleet_status,
     _vm_info,
     _runtime_context,
-    _safe_log_lines,
-    _cli_status_summary,
-    _codebase_analysis_summary,
-    _alliance_status_summary,
-    _cloud_sync_status_summary,
 )
 
 @pytest.fixture(autouse=True)
@@ -36,20 +30,13 @@ def test_get_dashboard_status_happy_path():
     with patch('modules.dashboard_module._env_vars') as mock_env_vars, \
          patch('modules.dashboard_module.detect_resource_pressure') as mock_pressure, \
          patch('modules.dashboard_module._fleet_status') as mock_fleet, \
-         patch('modules.dashboard_module.gemini_status_snapshot') as mock_gemini, \
-         patch('modules.dashboard_module.antigravity_status_snapshot') as mock_antigravity, \
          patch('modules.dashboard_module._vm_info') as mock_vm, \
-         patch('modules.dashboard_module._codebase_analysis_summary') as mock_codebase, \
-         patch('modules.dashboard_module._alliance_status_summary') as mock_alliance, \
-         patch('modules.dashboard_module._cloud_sync_status_summary') as mock_cloud_sync, \
          patch('modules.dashboard_module._tail_log') as mock_tail, \
          patch('modules.dashboard_module.build_repo_context_guard') as mock_repo_guard:
 
         mock_env_vars.return_value = {
             "BROWSER_MODEL_LOOP_URL": "http://127.0.0.1:8765/model-loop",
-            "GCE_WORKER_IP": "10.0.0.1",
-            "GEMINI_CLI_PATH": r"C:\Users\abdul\.npm-packages\gemini.cmd",
-            "ANTIGRAVITY_CLI_PATH": r"C:\Users\abdul\AppData\Local\agy\bin\agy.exe",
+            "GCE_WORKER_IP": "10.0.0.1"
         }
         mock_pressure.return_value = {
             "status": "normal",
@@ -67,83 +54,10 @@ def test_get_dashboard_status_happy_path():
             "all_complete": False,
             "sessions_tracked": 0,
         }
-        mock_gemini.return_value = {
-            "installed": True,
-            "ready": True,
-            "version": "0.49.0",
-            "headless_mode": "-p/--prompt",
-            "state_path": r"C:\Users\abdul\jules-bridge\jules_inbox\gemini\GEMINI_PREFLIGHT.json",
-            "preferred_gemini_command": r"C:\Users\abdul\.npm-packages\gemini.cmd",
-        }
-        mock_antigravity.return_value = {
-            "installed": True,
-            "ready": True,
-            "version": "1.0.16",
-            "headless_mode": "-p/--print",
-            "model_count": 8,
-            "state_path": r"C:\Users\abdul\jules-bridge\jules_inbox\gemini\ANTIGRAVITY_PREFLIGHT.json",
-            "preferred_antigravity_command": r"C:\Users\abdul\AppData\Local\agy\bin\agy.exe",
-        }
         mock_vm.return_value = {
             "vms": [{"provider": "GCP", "name": "jules-offload-worker", "ip": "10.0.0.1"}],
             "total": 1,
             "online": 1
-        }
-        mock_codebase.return_value = {
-            "status": "ready",
-            "root_name": "jules-bridge",
-            "summary": {
-                "file_count": 88,
-                "route_count": 42,
-                "module_count": 20,
-                "test_count": 30,
-                "frontend_dependency_count": 8,
-                "integration_ready_count": 7,
-                "truncated": False,
-            },
-            "frontend": {"present": True, "package_name": "dashboard-ui", "app_entry_present": True},
-            "integrations": [{"id": "codebase_analyzer", "label": "Bounded local codebase analyzer", "ready": True, "tone": "success"}],
-            "findings": [{"tone": "success", "title": "Ready", "detail": "Bounded handoff present."}],
-        }
-        mock_alliance.return_value = {
-            "status": "ready",
-            "summary": "8/8 switchboard gates passed.",
-            "mode": "two_agent_alliance",
-            "creator": "jules",
-            "implementer": "antigravity_cli",
-            "implementer_selection": "preferred",
-            "ready_to_execute_alliance": True,
-            "simultaneous_two_agent_mode": True,
-            "safe_to_launch_live_work": False,
-            "required_blocker_count": 0,
-            "partial_caveat_count": 0,
-            "gate_pass_count": 8,
-            "gate_total_count": 8,
-            "packet_count": 3,
-            "workflow_step_count": 6,
-            "state_age_s": 3,
-            "lanes": [{"id": "jules", "label": "Jules", "role": "creator", "ready": True}],
-        }
-        mock_cloud_sync.return_value = {
-            "status": "blocked",
-            "state": "blocked",
-            "branch": "master",
-            "upstream": "origin/master",
-            "remote_host": "github.com",
-            "remote_label": "github.com/jules-bridge",
-            "ahead": 0,
-            "behind": 0,
-            "dirty_count": 2,
-            "staged_count": 0,
-            "unstaged_count": 1,
-            "untracked_count": 1,
-            "github_authenticated": True,
-            "github_account": "Job4874",
-            "publish_ready": False,
-            "synced": False,
-            "blockers": ["dirty_worktree"],
-            "warnings": [],
-            "cache_age_s": 0,
         }
         mock_tail.return_value = [
             "Log line 1",
@@ -164,11 +78,6 @@ def test_get_dashboard_status_happy_path():
         # Assertions
         assert result["ok"] is True
         assert "timestamp" in result
-        assert result["contract"]["name"] == "jules_dashboard_status"
-        assert result["contract"]["version"] == 2
-        assert result["contract"]["transport"] == "poll"
-        assert result["delivery"]["transport"] == "poll"
-        assert result["delivery"]["streaming"] is False
         assert result["cache_age_s"] == 0
         assert result["execution_context"] == "[SCHOOL_COMPUTE]"
         assert result["quant_allowed"] is False
@@ -184,21 +93,6 @@ def test_get_dashboard_status_happy_path():
 
         assert result["cloud"]["total"] == 1
         assert result["jules_fleet"]["launched"] == 1
-        assert result["gemini_cli"]["ready"] is True
-        assert result["gemini_cli"]["version"] == "0.49.0"
-        assert "state_path" not in result["gemini_cli"]
-        assert "preferred_gemini_command" not in result["gemini_cli"]
-        assert result["antigravity_cli"]["ready"] is True
-        assert result["antigravity_cli"]["model_count"] == 8
-        assert "state_path" not in result["antigravity_cli"]
-        assert "preferred_antigravity_command" not in result["antigravity_cli"]
-        assert result["codebase_analysis"]["summary"]["route_count"] == 42
-        assert result["codebase_analysis"]["integrations"][0]["id"] == "codebase_analyzer"
-        assert result["alliance"]["mode"] == "two_agent_alliance"
-        assert result["alliance"]["implementer"] == "antigravity_cli"
-        assert result["alliance"]["safe_to_launch_live_work"] is False
-        assert result["cloud_sync"]["state"] == "blocked"
-        assert result["cloud_sync"]["blockers"] == ["dirty_worktree"]
         assert result["repo_context"]["summary"]["repo_count"] == 2
         assert "sample_repos" not in result["repo_context"]["summary"]
         assert result["repo_context"]["collisions"][0]["type"] == "port_collision"
@@ -208,8 +102,6 @@ def test_get_dashboard_status_happy_path():
         assert result["model_loop"]["requires_provider_api_keys"] is False
         assert "BROWSER_MODEL_LOOP_URL" in result["env_keys_present"]
         assert "GCE_WORKER_IP" in result["env_keys_present"]
-        assert "GEMINI_CLI_PATH" in result["env_keys_present"]
-        assert "ANTIGRAVITY_CLI_PATH" in result["env_keys_present"]
         assert "GEMINI_API_KEY" not in result["env_keys_present"]
 
 def test_get_dashboard_status_cache():
@@ -222,44 +114,6 @@ def test_get_dashboard_status_cache():
         assert result["ok"] is True
         assert result["cached_key"] == "cached_val"
         assert "cache_age_s" in result
-        assert result["contract"]["transport"] == "poll"
-
-def test_dashboard_status_event_stream_emits_contract_events():
-    snapshots = [
-        {
-            "ok": True,
-            "timestamp": "2026-07-05T20:00:00+00:00",
-            "bridge": {"status": "running"},
-        },
-        {
-            "ok": True,
-            "timestamp": "2026-07-05T20:00:01+00:00",
-            "bridge": {"status": "running"},
-        },
-    ]
-
-    with patch('modules.dashboard_module._build_dashboard_status', side_effect=snapshots):
-        events = list(dashboard_status_event_stream(max_events=2, sleep_fn=lambda _seconds: None))
-
-    assert events[0] == "retry: 3000\n\n"
-    assert events[1].startswith("id: 1\nevent: dashboard-status\ndata: ")
-    assert events[2].startswith("id: 2\nevent: dashboard-status\ndata: ")
-
-    payload = json.loads(events[1].split("data:", 1)[1])
-    assert payload["contract"]["name"] == "jules_dashboard_status"
-    assert payload["contract"]["version"] == 2
-    assert payload["contract"]["transport"] == "sse"
-    assert payload["contract"]["sequence"] == 1
-    assert payload["delivery"]["streaming"] is True
-
-def test_dashboard_status_event_stream_returns_error_event_on_snapshot_failure():
-    with patch('modules.dashboard_module._build_dashboard_status', side_effect=RuntimeError("boom")):
-        events = list(dashboard_status_event_stream(max_events=1, sleep_fn=lambda _seconds: None))
-
-    payload = json.loads(events[1].split("data:", 1)[1])
-    assert payload["ok"] is False
-    assert payload["error"] == "stream_error"
-    assert payload["contract"]["transport"] == "sse"
 
 def test_get_dashboard_status_exception():
     with patch('modules.dashboard_module._env_vars') as mock_env_vars:
@@ -332,40 +186,6 @@ def test_tail_log_exception():
     with patch('pathlib.Path.read_text', side_effect=Exception("Read error")):
         assert _tail_log() == []
 
-def test_safe_log_lines_masks_local_paths():
-    from pathlib import Path
-    # Use actual repo root and home so this test works on any machine
-    root = str(Path(__file__).resolve().parent.parent)
-    home = str(Path.home())
-    lines = [
-        f"Log path: {root}\\bridge.log",
-        f"Tool path: {home}\\AppData\\Local\\agy\\bin\\agy.exe",
-    ]
-
-    result = _safe_log_lines(lines)
-
-    assert "[repo-root]" in result[0]
-    assert "[user-home]" in result[1]
-    assert "Users" not in "\n".join(result)
-
-def test_cli_status_summary_is_frontend_compact():
-    payload = {
-        "installed": True,
-        "ready": True,
-        "version": "1.0.16",
-        "headless_mode": "-p/--print",
-        "model_count": 8,
-        "state_path": r"C:\Users\abdul\secret.json",
-        "preferred_antigravity_command": r"C:\Users\abdul\AppData\Local\agy\bin\agy.exe",
-    }
-
-    result = _cli_status_summary(payload, include_model_count=True)
-
-    assert result["ready"] is True
-    assert result["model_count"] == 8
-    assert "state_path" not in result
-    assert "preferred_antigravity_command" not in result
-
 def test_read_json():
     json_content = '{"key": "value"}'
     # Don't mock pathlib.Path.read_text globally here because mock_path needs to mock it
@@ -377,162 +197,6 @@ def test_read_json_exception():
     mock_path = MagicMock(spec=Path)
     mock_path.read_text.side_effect = Exception("Parse error")
     assert _read_json(mock_path) is None
-
-def test_codebase_analysis_summary_is_compact():
-    with patch('modules.dashboard_module.analyze_codebase') as mock_analyze:
-        mock_analyze.return_value = {
-            "status": "ready",
-            "root": {"name": "jules-bridge", "path_ref": "path:jules-bridge:abc"},
-            "summary": {
-                "file_count": 100,
-                "route_count": 50,
-                "module_count": 25,
-                "test_count": 40,
-                "frontend_dependency_count": 8,
-                "integration_ready_count": 7,
-                "truncated": False,
-                "line_count": 99999,
-            },
-            "frontend": {"present": True, "package_name": "dashboard-ui", "app_entry_present": True},
-            "integrations": [
-                {"id": "codebase_analyzer", "label": "Bounded local codebase analyzer", "ready": True, "tone": "success"}
-            ],
-            "findings": [{"tone": "success", "title": "Ready", "detail": "No raw files returned."}],
-            "files": [{"path": "secret.py", "bytes": 10}],
-        }
-
-        result = _codebase_analysis_summary()
-
-    assert result["status"] == "ready"
-    assert result["root_name"] == "jules-bridge"
-    assert result["summary"]["route_count"] == 50
-    assert result["integrations"][0]["id"] == "codebase_analyzer"
-    assert "files" not in result
-    mock_analyze.assert_called_once_with(max_files=1800, include_files=False)
-
-def test_alliance_status_summary_is_privacy_safe():
-    now = datetime.now(timezone.utc).isoformat()
-    state = {
-        "generated_at_utc": now,
-        "status": "ready",
-        "summary": "8/8 switchboard gates passed.",
-        "roles": {
-            "mode": "two_agent_alliance",
-            "creator": {"agent": "jules"},
-        },
-        "active_implementer": {"name": "antigravity_cli", "selection": "preferred"},
-        "readiness": {
-            "jules": {"ready": True, "installed": True},
-            "antigravity_cli": {"ready": True, "installed": True},
-            "legacy_gemini_cli": {"ready": False, "installed": True, "likely_blocker": "auth_required"},
-            "akc": {"ready": True},
-            "collaboration_proof_state": {"available": True, "status": "pass"},
-        },
-        "completion_assessment": {
-            "ready_to_execute_alliance": True,
-            "simultaneous_two_agent_mode": True,
-            "required_blockers": [],
-            "partial_caveats": [],
-            "safe_to_launch_live_work": False,
-        },
-        "gates": [
-            {"name": "creator_jules_reachable", "status": "pass", "required": True},
-            {"name": "preferred_implementer_reachable", "status": "pass", "required": True},
-        ],
-        "workflow": [{"step": "classify"}, {"step": "verify"}],
-        "packets": {
-            "packet_paths": {
-                "creator_jules": r"C:\Users\abdul\secret\ALLIANCE_CREATOR_JULES.md",
-                "implementer_google": r"C:\Users\abdul\secret\ALLIANCE_IMPLEMENTER_GOOGLE_TERMINAL.md",
-            }
-        },
-    }
-
-    with patch('modules.dashboard_module._read_json', return_value=state):
-        result = _alliance_status_summary()
-
-    assert result["status"] == "ready"
-    assert result["mode"] == "two_agent_alliance"
-    assert result["creator"] == "jules"
-    assert result["implementer"] == "antigravity_cli"
-    assert result["gate_pass_count"] == 2
-    assert result["packet_count"] == 2
-    assert result["lanes"][2]["id"] == "legacy_gemini_cli"
-    assert result["lanes"][2]["status"] == "installed"
-    assert r"C:\Users" not in json.dumps(result)
-
-def test_alliance_status_summary_handles_missing_state():
-    with patch('modules.dashboard_module._read_json', return_value=None):
-        result = _alliance_status_summary()
-
-    assert result["status"] == "missing"
-    assert result["mode"] == "unconfigured"
-    assert result["ready_to_execute_alliance"] is False
-    assert result["required_blocker_count"] == 1
-
-def test_alliance_status_summary_uses_live_cli_readiness():
-    state = {
-        "status": "ready",
-        "roles": {"mode": "two_agent_alliance", "creator": {"agent": "jules"}},
-        "active_implementer": {"name": "antigravity_cli", "selection": "preferred"},
-        "readiness": {
-            "jules": {"ready": True, "installed": True},
-            "antigravity_cli": {"ready": False, "installed": False},
-            "legacy_gemini_cli": {"ready": True, "installed": True},
-        },
-        "completion_assessment": {"ready_to_execute_alliance": True, "simultaneous_two_agent_mode": True},
-        "gates": [],
-        "workflow": [],
-        "packets": {"packet_paths": {}},
-    }
-
-    with patch('modules.dashboard_module._read_json', return_value=state):
-        result = _alliance_status_summary(
-            gemini_cli={"ready": False, "installed": True, "last_blocker": "auth_required"},
-            antigravity_cli={"ready": True, "installed": True, "last_blocker": ""},
-        )
-
-    lanes = {row["id"]: row for row in result["lanes"]}
-    assert lanes["legacy_gemini_cli"]["status"] == "installed"
-    assert lanes["legacy_gemini_cli"]["blocker"] == "auth_required"
-    assert lanes["antigravity_cli"]["status"] == "ready"
-
-def test_cloud_sync_status_summary_is_compact():
-    payload = {
-        "status": "blocked",
-        "state": "blocked",
-        "repo": {
-            "branch": "master",
-            "upstream": "origin/master",
-            "remote_host": "github.com",
-            "remote_label": "github.com/jules-bridge",
-        },
-        "git": {
-            "ahead": 0,
-            "behind": 0,
-            "dirty_count": 3,
-            "staged_count": 1,
-            "unstaged_count": 1,
-            "untracked_count": 1,
-        },
-        "github": {"authenticated": True, "account": "Job4874"},
-        "publish_ready": False,
-        "synced": False,
-        "blockers": ["dirty_worktree"],
-        "warnings": ["remote_tracking_stale"],
-        "cache_age_s": 4,
-        "privacy": {"remote_url_returned": False},
-    }
-
-    with patch('modules.dashboard_module.get_cloud_sync_status', return_value=payload):
-        result = _cloud_sync_status_summary()
-
-    assert result["state"] == "blocked"
-    assert result["remote_host"] == "github.com"
-    assert result["dirty_count"] == 3
-    assert result["github_authenticated"] is True
-    assert result["blockers"] == ["dirty_worktree"]
-    assert "privacy" not in result
 
 def test_fleet_status():
     cot_data = {"selected_count": 5, "completed_count": 2, "pending_count": 3, "all_complete": False}

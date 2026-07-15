@@ -22,12 +22,6 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 │   ├── akc_module.py       ← Agent Knowledge Context checkpoints from source files
 │   ├── context_orchestrator.py ← Source capsule and no-slop subagent packet planning
 │   ├── repo_context_guard.py ← Git repo inventory plus port/node/dependency collision guardrails
-│   ├── codebase_analyzer.py ← Bounded local repo analysis snapshots for VM/Jules handoff
-│   ├── cloud_sync.py ← Read-only Git/GitHub cloud publish readiness, blockers, and publish packets
-│   ├── gemini_cli.py ← Legacy Gemini CLI preflight and dry-run-first prompts
-│   ├── antigravity_cli.py ← Supported Google terminal-agent CLI preflight, plugins, models, prompts
-│   ├── alliance_switchboard.py ← Dry-run-first Jules creator + Google implementer role switching
-│   ├── tiu_workbench.py ← Safe dashboard workbench packet planning across alliance/codebase/sync gates
 │   └── dashboard_module.py ← Compact live status aggregator for the browser dashboard
 ├── memory/                 ← Per-domain markdown memory files
 │   ├── general.md          ← General harness learnings
@@ -66,18 +60,11 @@ bridge.py                   ← Thin HTTP routing only. NO business logic.
 | `/inbox/` | inbox_service | Message passing |
 | `/jules/` | jules_orchestrator | Jules task dispatch, worker packets, launch state, and remote session checks |
 | `/jules/api/` | jules_api | Jules REST API source/session/message helpers behind the local bridge |
-| `/gemini/` | gemini_cli | Gemini CLI preflight and headless prompt execution |
-| `/gemini/antigravity/` | antigravity_cli | Antigravity CLI preflight, model/plugin discovery, and headless prompts |
-| `/proof/` | collaboration_proof | Rerunnable proof gates for Jules, Gemini, skills, context, HRM, and tests |
-| `/alliance/` | alliance_switchboard | Assign Jules creator and Google terminal implementer roles for complex work |
-| `/tiu/` | tiu_workbench | Protected interactive TIU packet planning for dashboard-selected scope/lane/mode |
 | `/oracle/` | oracle_session | Oracle V5 + Quantower |
 | `/reasoning/` | reasoning_module | H/L/ACT reasoning (stub or VM/browser model loop) |
 | `/retrospective/` | retrospective_module | Log analysis + memory + pruning |
 | `/akc/` | akc_module | Agent Knowledge Context source inventory, checkpoint loading, and readiness gating |
 | `/repo/` | repo_context_guard | Protected Git repo inventory, provenance labels, and collision guardrails |
-| `/codebase/` | codebase_analyzer | Secret-safe local repo analysis snapshots for VM/Jules handoff |
-| `/sync/` | cloud_sync | Protected read-only Git/GitHub cloud sync readiness, publish blockers, and publish review packets |
 | `/notify/` | notify_email | Email notifications |
 | `/chat` | chat_service | VM/browser model-loop chat and diagnostics |
 
@@ -93,15 +80,8 @@ Every module has a **simple typed interface** hiding complex implementation:
 - `build_akc_context(source_paths)` → one call reads sources, masks paths, hashes files, extracts operating rules, and writes a checkpoint
 - `check_akc_readiness()` → one call verifies the checkpoint exists, is `ready`, and contains required operating rules before session start
 - `build_repo_context_guard()` → one call scans bounded roots for Git repos, ports, node refs, and local dependency coupling without returning secret values
-- `analyze_codebase()` → one call summarizes routes, modules, tests, frontend dependencies, integrations, and findings without returning secret values or bulk file contents
-- `get_cloud_sync_status()` → one call summarizes branch/upstream, ahead/behind, dirty counts, GitHub auth, and publish blockers without mutating Git or returning remote URLs
-- `build_cloud_publish_packet()` → one call classifies dirty worktree families, generated/noisy files, and review commands for cloud publish without staging, committing, fetching, pulling, or pushing
-- `antigravity_preflight()` → one call verifies the supported Google terminal-agent CLI, available models, plugin framework, and optional model smoke
-- `build_alliance_switchboard()` → one call chooses Jules creator plus Google terminal implementer roles, fallback policy, dry-run packets, and readiness gates
-- `build_tiu_workbench_plan()` → one call converts simple dashboard controls into a safe operator packet with alliance, codebase, and cloud-sync readiness gates
 - `boot_secondary_vm(script_name)` → one call validates allowlisted VM boot scripts and defaults to dry-run
-- `chat(message)` → one call routes prompts through the VM/browser model loop with timing, stable offline responses, and local codebase context injection for repo-analysis prompts
-- `build_collaboration_proof()` → one call evaluates Jules/Gemini reachability, skills, AKC/context, HRM reasoning, bridge route surfaces, and latest test evidence without launching workers or running live edits
+- `chat(message)` → one call routes prompts through the VM/browser model loop with timing and stable offline responses
 
 ### Evidence-Based Verification (Nick Ni)
 
@@ -158,21 +138,6 @@ Every module has a **simple typed interface** hiding complex implementation:
 - This guard is advisory context memory for orchestration. It prevents sloppy
   project mixing by making collisions visible before dispatching agents or
   reusing ports/nodes/dependencies.
-
-### Dashboard Status Contract
-
-- `GET /dashboard/status` is the public browser snapshot route. JSON responses
-  carry `contract.name="jules_dashboard_status"`, `contract.version=2`, and
-  `delivery.transport="poll"`.
-- `GET /dashboard/status?stream=1&interval_s=1` uses the same route for
-  Server-Sent Events. Each `event: dashboard-status` payload carries the same
-  v2 contract with `delivery.transport="sse"` and an increasing sequence.
-- The React dashboard must prefer the SSE stream, display the stream sequence
-  and `CONTRACT V2`, then fall back to polling if EventSource fails or no first
-  event arrives promptly.
-- Dashboard snapshots are unauthenticated, so logs and CLI status blocks must
-  stay compact and sanitized. Keep full inventories and action routes behind
-  protected endpoints.
 
 ### Jules Dispatch
 
@@ -300,68 +265,7 @@ Every module has a **simple typed interface** hiding complex implementation:
   so completed sessions are pulled, COT is refreshed, and newly freed capacity
   is filled without manually alternating fleet and watch calls. It writes
   `JULES_FLEET_WATCH_STATE.json`.
-
-### Gemini CLI
-
-- `modules/gemini_cli.py` wraps the installed Gemini CLI instead of adding a
-  provider SDK dependency to the bridge.
-- `POST /gemini/preflight` checks CLI resolution, `gemini --version`, and local
-  capability commands such as MCP, extensions, and skills. It can run an
-  authenticated headless smoke only when `run_smoke=true`.
-- `POST /gemini/prompt` runs `gemini -p` only when `dry_run=false`; the route
-  defaults to `approval_mode="plan"` and `dry_run=true`.
-- `GET /dashboard/status` includes a compact `gemini_cli` snapshot from the
-  latest preflight state. It must not spawn Gemini on every dashboard poll.
-
-### Antigravity CLI
-
-- `modules/antigravity_cli.py` wraps the supported `agy` CLI path Google now
-  directs individual Gemini CLI users toward.
-- `POST /gemini/antigravity/preflight` checks `agy --version`, `agy models`,
-  `agy plugin list`, and optionally a bounded `agy -p` smoke prompt.
-- `POST /gemini/antigravity/prompt` is dry-run-first and redacts prompt text
-  from command previews. It never uses `--dangerously-skip-permissions`.
-- `GET /dashboard/status` includes compact `antigravity_cli` state from the
-  persisted preflight file so dashboard polling does not spawn the CLI.
-- Keep legacy Gemini CLI model execution and supported Antigravity model
-  execution as separate proof gates. A passing Antigravity smoke does not claim
-  legacy Gemini passed; it records legacy Gemini `UNSUPPORTED_CLIENT` as a
-  non-required compatibility caveat.
 - **Circuit Breaker**: An `@app.before_request` hook blocks any route that is
   called excessively (default 20 calls/min, polling routes 200 calls/min)
   with an HTTP 429 to prevent autonomous doom loops.
 - Observe: `retrospective_module.py` reads logs → writes memory
-
-### Collaboration Proof
-
-- `modules/collaboration_proof.py` is the certification harness for the combined
-  Jules + Gemini objective. It produces gate rows for Jules reachability, Gemini
-  CLI reachability, optional Gemini model smoke, Antigravity CLI/model smoke,
-  skills, AKC/context handling, HRM reasoning, architecture guardrails, bridge
-  collaboration routes, actual code changes, and local test evidence.
-- `POST /proof/collaboration` is protected and side-effect safe. It never
-  creates Jules sessions and never lets Gemini edit files; optional live checks
-  are read-only preflights.
-- `run_gemini_smoke=true` attempts both legacy Gemini model execution and the
-  supported Antigravity model smoke. If Antigravity passes and legacy Gemini is
-  blocked by consumer-tier migration, `gemini_model_execution` is recorded as a
-  legacy caveat rather than a required blocker.
-- The proof result includes `requirement_audit` and `completion_assessment` so
-  goal status is derived from requirement-by-requirement evidence, not from a
-  loose summary string.
-
-### Alliance Switchboard
-
-- `modules/alliance_switchboard.py` is the role-allocation surface for complex
-  Jules + Google terminal-agent work. It answers who owns creation, who supports
-  implementation, when to fall back, and what proof gates must be satisfied.
-- `POST /alliance/switchboard` is protected and dry-run-first. It can run
-  bounded readiness checks, but it does not launch Jules sessions, run live edit
-  prompts, or modify source files.
-- Default role policy: Jules is the preferred creator/actual change owner;
-  Antigravity CLI is the preferred implementer/reviewer support lane; legacy
-  Gemini CLI is only a compatibility fallback when the supported Google lane is
-  unavailable.
-- With `write_packets=true`, the route writes markdown role packets under
-  `jules_inbox/alliance/` plus `ALLIANCE_SWITCHBOARD_STATE.json`. These packets
-  are handoff artifacts, not approval to start live work.

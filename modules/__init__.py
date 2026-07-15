@@ -24,7 +24,8 @@ from .ui_automation import (
     get_secret,
     detect_ui_state,
 )
-from .inbox_service import InboxMessage, inbox_read, inbox_write, inbox_append
+from .inbox_service import InboxMessage, inbox_read, inbox_write
+from .mesh_registry import get_mesh_status, register_local_node
 from .human_mimic_driver import (
     HumanMimicResult,
     drive_quantower_login,
@@ -76,30 +77,6 @@ from .jules_api import (
     list_activities as jules_api_list_activities,
     send_message as jules_api_send_message,
     approve_plan as jules_api_approve_plan,
-)
-from .gemini_cli import (
-    GeminiPreflightResult,
-    GeminiPromptResult,
-    GeminiStatusResult,
-    gemini_preflight,
-    run_gemini_prompt,
-    gemini_status_snapshot,
-)
-from .antigravity_cli import (
-    AntigravityPreflightResult,
-    AntigravityPromptResult,
-    AntigravityStatusResult,
-    antigravity_preflight,
-    run_antigravity_prompt,
-    antigravity_status_snapshot,
-)
-from .collaboration_proof import (
-    CollaborationProofResult,
-    build_collaboration_proof,
-)
-from .alliance_switchboard import (
-    AllianceSwitchboardResult,
-    build_alliance_switchboard,
 )
 from .oracle_session import (
     OracleStatus,
@@ -153,22 +130,20 @@ from .repo_context_guard import (
     RepoContextGuardResult,
     build_repo_context_guard,
 )
-from .codebase_analyzer import (
-    CodebaseAnalysisResult,
-    analyze_codebase,
-)
-from .cloud_sync import (
-    CloudSyncStatusResult,
-    CloudPublishPacketResult,
-    get_cloud_sync_status,
-    build_cloud_publish_packet,
-)
-from .tiu_workbench import (
-    TIUWorkbenchResult,
-    build_tiu_workbench_plan,
-)
 from .app_launcher import LaunchResult, launch_browser_to_url
 from .chat_service import ChatHealthResult, ChatResult, test_chat_providers, chat
+from .ghost_state import (
+    GhostState,
+    HostIdentity,
+    load_ghost_state,
+    lock_ghost,
+    unlock_ghost,
+    verify_unlock,
+    ghost_protected,
+    get_ghost_status,
+    get_bridge_urls,
+    get_host_identity as get_ghost_host_identity,
+)
 
 __all__ = [
     # fs_service
@@ -212,7 +187,9 @@ __all__ = [
     "InboxMessage",
     "inbox_read",
     "inbox_write",
-    "inbox_append",
+    # mesh_registry
+    "get_mesh_status",
+    "register_local_node",
     # jules_orchestrator
     "JulesTask",
     "JulesDispatchResult",
@@ -248,26 +225,6 @@ __all__ = [
     "jules_api_list_activities",
     "jules_api_send_message",
     "jules_api_approve_plan",
-    # gemini_cli
-    "GeminiPreflightResult",
-    "GeminiPromptResult",
-    "GeminiStatusResult",
-    "gemini_preflight",
-    "run_gemini_prompt",
-    "gemini_status_snapshot",
-    # antigravity_cli
-    "AntigravityPreflightResult",
-    "AntigravityPromptResult",
-    "AntigravityStatusResult",
-    "antigravity_preflight",
-    "run_antigravity_prompt",
-    "antigravity_status_snapshot",
-    # collaboration_proof
-    "CollaborationProofResult",
-    "build_collaboration_proof",
-    # alliance_switchboard
-    "AllianceSwitchboardResult",
-    "build_alliance_switchboard",
     # oracle_session
     "OracleStatus",
     "BuildDeployResult",
@@ -314,17 +271,6 @@ __all__ = [
     # repo_context_guard
     "RepoContextGuardResult",
     "build_repo_context_guard",
-    # codebase_analyzer
-    "CodebaseAnalysisResult",
-    "analyze_codebase",
-    # cloud_sync
-    "CloudSyncStatusResult",
-    "CloudPublishPacketResult",
-    "get_cloud_sync_status",
-    "build_cloud_publish_packet",
-    # tiu_workbench
-    "TIUWorkbenchResult",
-    "build_tiu_workbench_plan",
     # app_launcher
     "LaunchResult",
     "launch_browser_to_url",
@@ -333,4 +279,15 @@ __all__ = [
     "ChatResult",
     "test_chat_providers",
     "chat",
+    # ghost_state
+    "GhostState",
+    "HostIdentity",
+    "load_ghost_state",
+    "lock_ghost",
+    "unlock_ghost",
+    "verify_unlock",
+    "ghost_protected",
+    "get_ghost_status",
+    "get_bridge_urls",
+    "get_ghost_host_identity",
 ]

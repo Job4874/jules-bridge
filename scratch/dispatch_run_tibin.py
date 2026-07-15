@@ -1,9 +1,8 @@
-import os
 """dispatch_write_and_run.py — tell Jules to write tibin_core.py to disk and run it."""
 import requests
 
 VM = "http://34.132.193.73:6000"
-H = {"Authorization": f"Bearer {os.environ.get('VM_WORKER_TOKEN', 'JULES-VM-WORKER-999')}"}
+H = {"Authorization": "Bearer JULES-VM-WORKER-999"}
 P = {"http": None, "https": None}
 
 # Tell Jules to write the tibin core script and run it

@@ -1,0 +1,3 @@
+# Jules Mesh - one paste (PowerShell, no admin)
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; & "c:\jules-bridge-master\scripts\Connect-Mesh.ps1"

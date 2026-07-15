@@ -68,17 +68,12 @@ if (-not (Test-Path $agentSrc)) {
     --zone=$VM_ZONE --project=$VM_PROJECT 2>&1
 
 # Push env file
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$envFile = Join-Path $repoRoot ".env"
-$fallbackEnvFile = Join-Path $env:USERPROFILE ".jules\.env"
+$localIP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.*" } | Select-Object -First 1).IPAddress
+$envFile = "C:\Users\abdul\.jules\.env"
 $envRaw = ""
 if (Test-Path $envFile) {
     $envRaw = Get-Content $envFile -Raw
-} elseif (Test-Path $fallbackEnvFile) {
-    $envRaw = Get-Content $fallbackEnvFile -Raw
 }
-
-$localIP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.*" } | Select-Object -First 1).IPAddress
 
 # Determine LOCAL_BRIDGE_TOKEN
 $bridgeToken = $LocalBridgeToken

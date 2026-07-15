@@ -1,352 +1,127 @@
 [
   {
-    "output_hash": "638d2e621771009486e7420e86f90d9b5ef09d5409bbdb809dcacc6a9f850110",
-    "timestamp_utc": "2026-07-05T14:55:50.148754+00:00",
+    "output_hash": "8de1babe4bdad5b8fbc168813686c348a5073fdf758f71cd4b4dd788fddf7007",
+    "timestamp_utc": "2026-06-26T20:38:37.116440+00:00",
     "passed": true,
-    "test_count": 451,
-    "raw_output_tail": "python -m pytest tests/ -q\n451 passed in 18.78s"
+    "test_count": 244,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n244 passed, 1 warning in 1.68s"
   },
   {
-    "output_hash": "638d2e621771009486e7420e86f90d9b5ef09d5409bbdb809dcacc6a9f850110",
-    "timestamp_utc": "2026-07-05T14:55:57.859276+00:00",
+    "output_hash": "665ca5504aaad019c608b6186db9fb6e62ab8865aa30f01c05433173abec703d",
+    "timestamp_utc": "2026-06-26T20:50:26.142820+00:00",
     "passed": true,
-    "test_count": 451,
-    "raw_output_tail": "python -m pytest tests/ -q\n451 passed in 18.78s"
+    "test_count": 248,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n248 passed, 1 warning in 1.71s"
   },
   {
-    "output_hash": "0b019fdb559fd1aa241df1622900d84c9f326f85742b37be408f2bd190637016",
-    "timestamp_utc": "2026-07-05T15:40:05.178686+00:00",
+    "output_hash": "770defafb30620443caac2e1948960ca262a7699951fc8eb49ccc88065acde10",
+    "timestamp_utc": "2026-06-26T20:50:54.328377+00:00",
     "passed": true,
-    "test_count": 456,
-    "raw_output_tail": "python -m pytest tests/ -q\n456 passed in 17.10s"
+    "test_count": 248,
+    "raw_output_tail": "  /workspace/jules-bridge/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n248 passed, 1 warning in 1.70s"
   },
   {
-    "output_hash": "cb974cad47478b1736df435142d53b93fda854fe50d64b2d2c5b75f7f4de2fa2",
-    "timestamp_utc": "2026-07-05T15:41:48.415623+00:00",
+    "output_hash": "345a334043ad604b3bb248efa4ac2a4bea96a4cc8551c9325fb79fe2bcc9ad34",
+    "timestamp_utc": "2026-06-27T02:26:35.709465+00:00",
     "passed": true,
-    "test_count": 457,
-    "raw_output_tail": "python -m pytest tests/ -q\n457 passed in 16.17s"
+    "test_count": 274,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n274 passed, 1 warning in 3.93s"
   },
   {
-    "output_hash": "c858669d3cabadfad1674f85c2c729ee8c43d0d3d64579b7dba0f84afe17a685",
-    "timestamp_utc": "2026-07-05T15:46:02.074106+00:00",
+    "output_hash": "9c9f9477f26ebdcc9c8696bb67ed1cffbdc54f6632be10242c27c41aaed2de7a",
+    "timestamp_utc": "2026-06-27T02:29:02.733206+00:00",
     "passed": true,
-    "test_count": 457,
-    "raw_output_tail": "python -m pytest tests/ -q\n457 passed in 16.31s"
+    "test_count": 274,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n274 passed, 1 warning in 4.42s"
   },
   {
-    "output_hash": "66c72e8b7d8956a3d019a86a376da4ef611e4346e127fd4bdeacf2408bc7ba1b",
-    "timestamp_utc": "2026-07-05T16:02:32.500630+00:00",
+    "output_hash": "3bd4877b9b4e3313f93f5ba9f70a4051c373c8045ac0f4747832d81263ccc357",
+    "timestamp_utc": "2026-06-27T21:50:48.627325+00:00",
     "passed": true,
-    "test_count": 465,
-    "raw_output_tail": "........................................................................ [ 61%]\n........................................................................ [ 77%]\n........................................................................ [ 92%]\n.................................                                        [100%]\n465 passed in 15.93s"
+    "test_count": 280,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 280 passed, 1 warning in 2.21s ========================"
   },
   {
-    "output_hash": "02c7c3cbb6af31ebaec7c35c067b247d66f3317575b4eda9f6a14f74a634bc11",
-    "timestamp_utc": "2026-07-05T16:08:46.907657+00:00",
+    "output_hash": "281005fade8ce71fb3b568ea19bb5fb420466584703fe78d9ec1e18c35adadb4",
+    "timestamp_utc": "2026-06-28T07:51:34.934759+00:00",
     "passed": true,
-    "test_count": 466,
-    "raw_output_tail": "........................................................................ [ 61%]\n........................................................................ [ 77%]\n........................................................................ [ 92%]\n..................................                                       [100%]\n466 passed in 16.55s"
+    "test_count": 284,
+    "raw_output_tail": "  C:\\Users\\abdul\\.jules\\modules\\retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n284 passed, 1 warning in 3.86s"
   },
   {
-    "output_hash": "9f85514fe800ed0a3444a41836dc20028770cc49552d1c1ea32609988e28750c",
-    "timestamp_utc": "2026-07-05T17:12:01.083764+00:00",
+    "output_hash": "93c3c248eb977a5969a1ab02fc9d3968a721e6ef40b5947319b117a9874ad68b",
+    "timestamp_utc": "2026-06-29T06:20:13.532671+00:00",
     "passed": true,
-    "test_count": 473,
-    "raw_output_tail": "........................................................................ [ 60%]\n........................................................................ [ 76%]\n........................................................................ [ 91%]\n.........................................                                [100%]\n473 passed in 17.44s"
+    "test_count": 290,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 290 passed, 1 warning in 2.20s ========================"
   },
   {
-    "output_hash": "eba6ef6d3a6725a0374610f2ea0b1423b86e708361184b89708a1047a7579976",
-    "timestamp_utc": "2026-07-05T18:10:33.042764+00:00",
+    "output_hash": "93c3c248eb977a5969a1ab02fc9d3968a721e6ef40b5947319b117a9874ad68b",
+    "timestamp_utc": "2026-06-29T06:20:37.444096+00:00",
     "passed": true,
-    "test_count": 477,
-    "raw_output_tail": "........................................................................ [ 60%]\n........................................................................ [ 75%]\n........................................................................ [ 90%]\n.............................................                            [100%]\n477 passed in 16.44s"
+    "test_count": 290,
+    "raw_output_tail": "  /app/modules/retrospective_module.py:58: PytestCollectionWarning: cannot collect test class 'TestEvidence' because it has a __init__ constructor (from: tests/test_retrospective_module.py)\n    @dataclass\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 290 passed, 1 warning in 2.20s ========================"
   },
   {
-    "output_hash": "d7a83d67a951217969fda0fa489aaeb0545269b2df48696eb9bdf1073b8dcf97",
-    "timestamp_utc": "2026-07-05T19:41:37.510406+00:00",
-    "passed": true,
-    "test_count": 485,
-    "raw_output_tail": "npm run build\npassed\nlive /codebase/analyze ok=true routes=75 modules=33 tests=44 integrations=7\nlive /chat/test healthy=true provider=vm/jules-worker status=ok\nlive /chat local-codebase prompt model_used=vm/jules-worker response=\"The local snapshot shows 75 routes, 33 modules, and 44 test files.\""
+    "timestamp_utc": "2026-06-29T15:26:20.653615+00:00",
+    "type": "pytest_run",
+    "output_sha256": "220249393f995f8939b48b6a6839f7a784a73e6f51636ab9dce145c3b5b61646",
+    "output_snippet": "304 passed in 9.06s"
   },
   {
-    "output_hash": "66cfe626324c5b8920eda3161d0557406ea8e8d8dfd644f02aae31369373bdc1",
-    "timestamp_utc": "2026-07-05T20:21:59.251411+00:00",
+    "output_hash": "3031a1ea1e97a8c01522812371f86e98efcd1e265e94f5c83e09ce18f32274f3",
+    "timestamp_utc": "2026-06-29T17:13:33.825254+00:00",
     "passed": true,
-    "test_count": 500,
-    "raw_output_tail": "........................................................................ [ 57%]\n........................................................................ [ 72%]\n........................................................................ [ 86%]\n....................................................................     [100%]\n500 passed in 21.19s"
+    "test_count": 307,
+    "raw_output_tail": "307 passed in 14.08s"
   },
   {
-    "output_hash": "08313ff8191f0d1d0eb27c8769e8a0bec5d586ac42e7fab65f091b3d8d542d66",
-    "timestamp_utc": "2026-07-05T20:23:57.393414+00:00",
+    "output_hash": "40e1389e0c36e3f2471acae69bd158c0022dc0f9257a47ffa0c8a6b0cc65b86a",
+    "timestamp_utc": "2026-06-29T17:21:29.387869+00:00",
     "passed": true,
-    "test_count": 500,
-    "raw_output_tail": "........................................................................ [ 57%]\n........................................................................ [ 72%]\n........................................................................ [ 86%]\n....................................................................     [100%]\n500 passed in 24.63s"
+    "test_count": 307,
+    "raw_output_tail": "307 passed in 14.31s"
   },
   {
-    "output_hash": "16cd7ab88345f4a7a37ea9ddec402d4fae73e3d2a2e679d63fa02dee3c2b7f9d",
-    "timestamp_utc": "2026-07-05T20:35:50.796548+00:00",
+    "output_hash": "fd5a5a13015e3f4bf8f36720d7acb9aafa4e7b2eee3d0caa1d2714b22fb65022",
+    "timestamp_utc": "2026-06-29T18:25:05.263907+00:00",
     "passed": true,
-    "test_count": 505,
-    "raw_output_tail": "........................................................................ [ 71%]\n........................................................................ [ 85%]\n........................................................................ [ 99%]\n.                                                                        [100%]\n505 passed in 31.15s"
+    "test_count": 314,
+    "raw_output_tail": "python -m pytest tests/ -q\n314 passed in 13.89s"
   },
   {
-    "output_hash": "85f001f01078842b31e93fbc0a3c99fb90b55f115dd1cd181ff331f3ce22b5b8",
-    "timestamp_utc": "2026-07-05T20:37:14.568993+00:00",
+    "output_hash": "e1e7b4bce3b265a14326d66a18eb33d1a99af42a348d85cb1d45c9a614065408",
+    "timestamp_utc": "2026-06-29T18:27:32.710356+00:00",
     "passed": true,
-    "test_count": 505,
-    "raw_output_tail": "........................................................................ [ 71%]\n........................................................................ [ 85%]\n........................................................................ [ 99%]\n.                                                                        [100%]\n505 passed in 33.07s"
+    "test_count": 315,
+    "raw_output_tail": "python -m pytest tests/ -q\n315 passed in 13.10s"
   },
   {
-    "output_hash": "8e5aa0027d79b082743549b0e66eeabfe0e0eea08329890b8e732387a9ae2a32",
-    "timestamp_utc": "2026-07-06T06:11:37.889764+00:00",
+    "output_hash": "aec621dd9213862d8b20486cad0a6d68e88d7c494ac6c57788262927eb03f5e6",
+    "timestamp_utc": "2026-06-30T17:56:57.716418+00:00",
     "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "........................................................................ [ 70%]\n........................................................................ [ 84%]\n........................................................................ [ 98%]\n........                                                                 [100%]\n512 passed in 22.17s"
+    "test_count": 415,
+    "raw_output_tail": "python -m py_compile bridge.py modules\\jules_api.py modules\\jules_orchestrator.py modules\\__init__.py modules\\dashboard_module.py modules\\ui_automation.py modules\\retrospective_module.py modules\\health_service.py -> passed\npython -m pytest tests/ -q -> 415 passed in 16.21s\nlive smoke http://127.0.0.1:5000 -> /health ok; /health/deep ok keyless_mode=False; /jules/preflight ready rest_api=True; /jules/api/sources ok target_source_present=True sources_total_returned=15; /jules/api/sessions/list ok sessions_count=5"
   },
   {
-    "output_hash": "4f5e810330d593ec9309444fe2553db7adb03c3e19b12f03cbf74e3e70b76593",
-    "timestamp_utc": "2026-07-06T06:27:34.689556+00:00",
+    "output_hash": "ba8774986e7c2fa4ff30f8883de494bfc49236f31e41c715cfe881fc2dba6001",
+    "timestamp_utc": "2026-07-01T03:14:13.799704+00:00",
     "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "........................................................................ [ 70%]\n........................................................................ [ 84%]\n........................................................................ [ 98%]\n........                                                                 [100%]\n512 passed in 22.26s"
+    "test_count": 429,
+    "raw_output_tail": "python -m pytest tests/ -q\n429 passed in 27.27s"
   },
   {
-    "output_hash": "0bdf6004c842fe85846a18a4ad5880b649070e9b8c4efd47314a18c00e635979",
-    "timestamp_utc": "2026-07-06T06:37:36.773285+00:00",
+    "output_hash": "5644577224bae6ab58f576a5206e1c42c39c2611751def13c1f4234fc16078e7",
+    "timestamp_utc": "2026-07-01T03:23:34.007289+00:00",
     "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "........................................................................ [ 70%]\n........................................................................ [ 84%]\n........................................................................ [ 98%]\n........                                                                 [100%]\n512 passed in 21.91s"
+    "test_count": 429,
+    "raw_output_tail": "python -m pytest tests/ -q\n429 passed in 64.64s (0:01:04)"
   },
   {
-    "output_hash": "9721487ce06062e49577172a222d8d282b2ba978ee528a2ec1355993b8a21d97",
-    "timestamp_utc": "2026-07-06T06:51:54.739908+00:00",
+    "output_hash": "fb218182e8ee7edf67bee4b96692edef8fc3591f944e5155646b778341c12c5a",
+    "timestamp_utc": "2026-07-01T03:33:35.707353+00:00",
     "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "python -m pytest tests/ -q\n512 passed in 22.60s"
-  },
-  {
-    "output_hash": "9721487ce06062e49577172a222d8d282b2ba978ee528a2ec1355993b8a21d97",
-    "timestamp_utc": "2026-07-06T06:52:00.701209+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "python -m pytest tests/ -q\n512 passed in 22.60s"
-  },
-  {
-    "output_hash": "842a764cd1c7cf7c3458ccba9c5b704d41c8359614cc882f4c534fccd942c96e",
-    "timestamp_utc": "2026-07-06T07:13:39.138387+00:00",
-    "passed": true,
-    "test_count": 6,
-    "raw_output_tail": "python -m pytest tests/test_cloud_sync.py -q\n6 passed in 5.84s\n\npython -m pytest tests/ -q\n512 passed in 23.66s"
-  },
-  {
-    "output_hash": "37b067a7243fdbdf866a2004908f2923b4d0411e71b841021ce5c87bd72d1830",
-    "timestamp_utc": "2026-07-06T07:13:49.959039+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "npm run lint\noxlint passed\n\nnpm run build\nvite build passed; warning: Some chunks are larger than 500 kB after minification."
-  },
-  {
-    "output_hash": "8de3b2dded103b6123418f42de758133a39d5287c6c98d981eb01e1aa183dde4",
-    "timestamp_utc": "2026-07-06T07:14:49.792751+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "npm run lint\noxlint passed\n\nnpm run build\nvite build passed; warning: Some chunks are larger than 500 kB after minification."
-  },
-  {
-    "output_hash": "cf10ca46e86527dfb6e5fc2309e5190c89682b0bff8b9d7095dca24a2553c769",
-    "timestamp_utc": "2026-07-06T07:28:10.636054+00:00",
-    "passed": true,
-    "test_count": 6,
-    "raw_output_tail": "\npython -m pytest tests/ -v\n512 passed in 23.12s\n\nBrowser QA on http://127.0.0.1:6001/: Safe Batch 29/29 safe checks; failures 0; warnings 9; local_panel_actions 8; Stage Batch packet includes protected_routes_called: no, chat_send_called: no, local_panel_actions: 8; desktop 1280x900 no overflow; mobile 390x820 no overflow."
-  },
-  {
-    "output_hash": "ec0a2a784621724250f426cbb031cba3926adc6fedb95f91f6dcd5c2c7409103",
-    "timestamp_utc": "2026-07-06T07:28:25.812760+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "\nnpm run build\nvite build passed; warning: Some chunks are larger than 500 kB after minification.\n\nBrowser QA on http://127.0.0.1:6001/: Safe Batch 29/29 safe checks; failures 0; warnings 9; local_panel_actions 8; Stage Batch packet includes protected_routes_called: no, chat_send_called: no, local_panel_actions: 8; desktop 1280x900 no overflow; mobile 390x820 no overflow."
-  },
-  {
-    "output_hash": "6c9adf4e641854098c54291bcdf242890a6b30ffff5dde67995ed6da40dcea7b",
-    "timestamp_utc": "2026-07-06T08:16:51.398222+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "PASS: no whitespace errors; Git reported LF-to-CRLF warnings only\n\nBrowser QA http://127.0.0.1:6001/\nDesktop: Safe Batch then Run Break Test reported control proof 29/29 proven, no Rendered button surface failure, horizontalOverflow 0, overflowButtons [].\nMobile 390x820: Safe Batch then Run Break Test reported 29/29 proven, 29/29 safe checks exercised, horizontalOverflow 0, overflowButtons [], renderedButtonFailure false, remaining remediation rows Cloud Sync/Evidence/Comms."
-  },
-  {
-    "output_hash": "b40abd60043d9b566949a6163c32e7840c1e288ec1e31b2a784d004263a1e0c6",
-    "timestamp_utc": "2026-07-06T08:24:52.963143+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA http://127.0.0.1:6001/\nBaseline after clearing proof store: Break Test showed 1/29 proven, proving the previous proof-reset failure.\nAfter Safe Batch: 29/29 safe checks exercised, 29/29 proven, 32 persisted proof commands covering all 29 control ids.\nAfter reload: Proof ledger restored 29/29 persistent control proofs loaded; Break Test stayed 29/29 proven with no Rendered button surface failure, horizontalOverflow 0, overflowButtons [].\nMobile 390x820: Proof ledger restored; Break Test stayed 29/29 proven, horizontalOverflow 0, overflowButtons [], renderedButtonFailure false."
-  },
-  {
-    "output_hash": "6eff22a83537b0973664484a7a38ffabfdc75e730f84b82e7534fa47c43fb4e9",
-    "timestamp_utc": "2026-07-06T08:26:27.105784+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Baseline after clearing proof store: Break Test showed 1/29 proven, proving the previous proof-reset failure.\nAfter Safe Batch: 29/29 safe checks exercised, 29/29 proven, 32 persisted proof commands covering all 29 control ids.\nAfter reload: Proof ledger restored 29/29 persistent control proofs loaded; Break Test stayed 29/29 proven with no Rendered button surface failure, horizontalOverflow 0, overflowButtons [].\nMobile 390x820: Proof ledger restored; Break Test stayed 29/29 proven, horizontalOverflow 0, overflowButtons [], renderedButtonFailure false.\nFinal current-code sanity: reload plus Run Break Test still reported Proof ledger restored, 29/29 proven, horizontalOverflow 0, overflowButtons [], renderedButtonFailure false; remaining remediation rows Cloud Sync, Evidence, Comms."
-  },
-  {
-    "output_hash": "a68e96ab123e7b4f5ed59186eb57a6d3b39692d9f1f53627435b0a505791ac4c",
-    "timestamp_utc": "2026-07-06T08:38:51.609575+00:00",
-    "passed": true,
-    "test_count": 7,
-    "raw_output_tail": "exit 0; Windows LF->CRLF warnings only\n\nBrowser QA on http://127.0.0.1:6001/\nDesktop: Stage Window wrote an Evidence Window Brief with evidence_signature and review_window_rows; rerun Break Test changed Evidence stream health from fail/danger to warn with Current issue window staged timestamp and remediation action changed to use the staged evidence window. Reload with changed evidence tail returned Evidence stream health to fail until a fresh Stage Window was produced.\nMobile 390x820: Stage Window and Run Break Test each resolved to one data-control-id button; visible Break Test list showed Evidence stream health warn with Current issue window staged; Staged review preview included evidence_signature: evidence:v1:40:2:16:1b6b07d3 and review_window_rows: 12; scrollWidthOverflow 0; appOverlayCount 0. Browser domSnapshot failed with known Browser Use incrementalAriaSnapshot error; targeted Playwright evaluate and screenshot were used instead. Browser dev logs only showed Browser Use clipboard bridge unavailable."
-  },
-  {
-    "output_hash": "721c2a2ba1759421c372c0986bac2f9e83cd1c2ddccc8d76324c73163ef7df75",
-    "timestamp_utc": "2026-07-06T08:40:40.707997+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "exit 0; Windows LF->CRLF warnings only\n\nBrowser QA on http://127.0.0.1:6001/\nDesktop: Stage Window wrote an Evidence Window Brief with evidence_signature and review_window_rows; rerun Break Test changed Evidence stream health from fail/danger to warn with Current issue window staged timestamp and remediation action changed to use the staged evidence window. Reload with changed evidence tail returned Evidence stream health to fail until a fresh Stage Window was produced.\nMobile 390x820: Stage Window and Run Break Test each resolved to one data-control-id button; visible Break Test list showed Evidence stream health warn with Current issue window staged; Staged review preview included evidence_signature: evidence:v1:40:2:16:1b6b07d3 and review_window_rows: 12; scrollWidthOverflow 0; appOverlayCount 0. Browser domSnapshot failed with known Browser Use incrementalAriaSnapshot error; targeted Playwright evaluate and screenshot were used instead. Browser dev logs only showed Browser Use clipboard bridge unavailable."
-  },
-  {
-    "output_hash": "429e56a82fe8be26d4accdf6c06a603f1d69e6d1dc8ae876d036fcb6a7f53712",
-    "timestamp_utc": "2026-07-06T08:50:03.562100+00:00",
-    "passed": true,
-    "test_count": 7,
-    "raw_output_tail": "exit 0; Windows LF->CRLF warnings only\n\nBrowser QA on http://127.0.0.1:6001/\nFlow: Run Break Test -> Run Safe Step -> Stage Safe Step. Desktop 1280x900: each target button resolved to one element; safe-step receipt rendered warn, target Cloud sync gate, 2/2 safe steps, 1 packet review; staged Dashboard Remediation Safe Step packet included protected_routes_called: no, chat_send_called: no, publish_or_dispatch_called: no; active focus ended in Comms; no framework overlay; scrollWidthOverflow 0; overflow offenders [].\nMobile 390x820: same flow passed; staged Dashboard Remediation Safe Step packet included all three guardrails; scrollWidthOverflow 0; overflow offenders []; remediation action buttons stayed within viewport. Browser domSnapshot still failed with known Browser Use incrementalAriaSnapshot error; targeted locators/evaluate/screenshots were used. Browser dev logs only showed Browser Use clipboard bridge unavailable."
-  },
-  {
-    "output_hash": "373d59620be473bf818ec3edb2017bc566130c0c90e0c76a0f68b048d7da574d",
-    "timestamp_utc": "2026-07-06T08:50:14.732198+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "exit 0; Windows LF->CRLF warnings only\n\nBrowser QA on http://127.0.0.1:6001/\nFlow: Run Break Test -> Run Safe Step -> Stage Safe Step. Desktop 1280x900: each target button resolved to one element; safe-step receipt rendered warn, target Cloud sync gate, 2/2 safe steps, 1 packet review; staged Dashboard Remediation Safe Step packet included protected_routes_called: no, chat_send_called: no, publish_or_dispatch_called: no; active focus ended in Comms; no framework overlay; scrollWidthOverflow 0; overflow offenders [].\nMobile 390x820: same flow passed; staged Dashboard Remediation Safe Step packet included all three guardrails; scrollWidthOverflow 0; overflow offenders []; remediation action buttons stayed within viewport. Browser domSnapshot still failed with known Browser Use incrementalAriaSnapshot error; targeted locators/evaluate/screenshots were used. Browser dev logs only showed Browser Use clipboard bridge unavailable."
-  },
-  {
-    "output_hash": "428ef73e1a7948bdefc900eeb622ae112883f181ea472843a8a5f285dc2a8a4c",
-    "timestamp_utc": "2026-07-06T09:00:34.917238+00:00",
-    "passed": true,
-    "test_count": 8,
-    "raw_output_tail": "- Browser QA desktop on http://127.0.0.1:6001/: Local Review rendered Packet Intelligence, staged Break Test packet included SUCCESS / Local packet intelligence / pass and separate WARN / Comms model loop honesty.\n- Browser QA mobile 390x820: no horizontal overflow, staged Break Test packet preserved local packet intelligence and separate Comms model-loop rows.\n\nGoal caveat:\n- Broad dashboard intelligence goal remains active; local bounded packet review is proven, but dirty sync, live provider/model-loop readiness, and remaining live-state blockers are still not complete."
-  },
-  {
-    "output_hash": "30c81bda2ec5601fee09f1c8c1a7fab934442b72342b5c78a570fe946209ac05",
-    "timestamp_utc": "2026-07-06T09:07:23.574774+00:00",
-    "passed": true,
-    "test_count": 8,
-    "raw_output_tail": "- Browser QA mobile 390x820: same flow worked after scrolling the internal dashboard container; min action button width 251px, horizontal overflow 0, overflow offenders [], safe-plan packet and guardrails present.\n- Browser domSnapshot still fails with TypeError: o.incrementalAriaSnapshot is not a function; Browser dev logs only showed Browser Use clipboard bridge warning, not an app bundle error.\n\nGoal caveat:\n- Broad dashboard intelligence goal remains active. Buttons and safe multi-target planning are stronger, but dirty Cloud Sync, evidence errors, and live provider/model-loop readiness remain real blockers."
-  },
-  {
-    "output_hash": "252dcabde884475ba975ab0a9a0ffcb0ce31bf083d3fc3434431e74eab38a385",
-    "timestamp_utc": "2026-07-06T09:25:42.710993+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "- repo: python -m pytest tests/ -v PASS, 512 passed in 22.81s.\n\nKnown residual:\n- dashboard-ui/src/dashboardModel.test.js exists locally and npm run test:model depends on it, but it is still untracked until staged/committed.\n- Browser domSnapshot still fails in this environment with incrementalAriaSnapshot unavailable, so rendered proof used targeted evaluate, locators, console logs, and screenshots."
-  },
-  {
-    "output_hash": "9db06dc6918753de1092879656f7b7fc5b05441b92c3fa0fd83c26a560bc3fc3",
-    "timestamp_utc": "2026-07-06T09:37:24.700041+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "npm run lint\npassed\nnpm run build\npassed with existing Vite chunk-size warning\nbrowser: 127.0.0.1:6001 audit proof batch desktop/mobile passed; 29/29 controls proven; 5 system/runtime risks remain; no horizontal overflow"
-  },
-  {
-    "output_hash": "1a98fd38b57c447c1764300182dd638168476fffb8129c5f06124221b5b16080",
-    "timestamp_utc": "2026-07-06T09:47:17.876161+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "browser: http://127.0.0.1:6001 Button Sweep after fix desktop\nPASS observed: Button Sweep reported 223 rendered buttons, 0 button risks, 29/29 control targets. Run Sweep/Open Audit/Stage Sweep measured 62x32; horizontal overflow 0. domSnapshot still fails in Browser runtime with incrementalAriaSnapshot TypeError, so proof used targeted DOM evaluation and screenshots.\n\nbrowser: http://127.0.0.1:6001 Button Sweep after fix mobile 390x820\nPASS observed: Button Sweep reported 167 rendered buttons, 0 button risks, 29/29 control targets. Run Sweep/Open Audit/Stage Sweep measured 292x32; horizontal overflow 0. Button Sweep status pill measured 57x26 and stayed inside card."
-  },
-  {
-    "output_hash": "62f2ff1b2269338b35a9e2861facf8ffc3641acb2ccb93fab118d1528acf38c0",
-    "timestamp_utc": "2026-07-06T12:58:32+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nDesktop 1280x900: Overview -> Sync lands Cloud Sync panel at top 127/title 128-184/diagnosis visible/no horizontal overflow; Run Break Test -> Open Weakest routes to Cloud Sync with title visible and diagnosis visible.\nMobile 390x820: Overview -> Sync lands Cloud Sync panel at top 12/title 13-152/diagnosis visible/no horizontal overflow; Run Break Test -> Open Weakest routes to Cloud Sync with title visible and diagnosis visible.\nCommands: npm run test:model passed 12 tests; npm run lint passed; npm run build passed with existing Vite large chunk warning; python -m pytest tests/ -q passed 512 tests; git diff --check passed with LF-to-CRLF warnings only."
-  },
-  {
-    "output_hash": "4b13e7fa7602a78b73f97e74b822bf2105941f40bd667cf86d9e3d21131b10a0",
-    "timestamp_utc": "2026-07-06T13:53:46Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: Run Break Test -> Run Safe Plan -> rerun Break Test after final remediation-safe proof-batch wiring.\nDesktop/default final code: patched Safe Plan routes control-proof to the Proof Runner Safe Batch, Action Receipt showed 29/29 proven, Proof Runner Safe Batch showed 29/29 safe checks and projected proof 29/29, and current rerun Break Test removed Explicit control proof from the remediation queue. Current queue is Cloud Sync, Evidence stream health, and Comms model loop honesty.\nButton Sweep sanity: 223 rendered buttons, 0 button risks, 29/29 control targets, horizontalOverflow 0, no framework overlay.\nMobile 390x844: reload restored the persistent proof ledger at 29/29 with no framework overlay; proofBatch panel is session state and reset to Not run after reload while proof ledger persisted.\nChecks: npm --prefix dashboard-ui run lint passed clean; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; npm --prefix dashboard-ui run test:model passed 12 tests; python -m pytest tests/test_cloud_sync.py -q passed 6 tests; python -m pytest tests/ -q passed 512 tests; python -m pytest tests/ -v passed 512 tests; git diff --check passed with LF-to-CRLF warnings only."
-  },
-  {
-    "output_hash": "9860ea59fcd04a0aaa48d02c31e4cd3907514ce55d50240a8dc93e644273523f",
-    "timestamp_utc": "2026-07-06T14:13:52Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: Safe Batch -> Run Break Test -> Run Safe Plan -> rerun Break Test after proof-ledger capacity patch.\nRendered proof fallback: in-app Browser navigation/reload stalled twice, so bundled Playwright was used. Page health: dashboard rendered, no framework overlay, 261 buttons, 117 data-control-id buttons, horizontalOverflow 0, consoleEntries []. After Safe Batch: 35 persisted proof commands covering all 29 control ids and Action Receipt showed 29/29 safe checks / projected proof 29/29. After Run Safe Plan: 43 proof commands covering all 29 control ids; final rerun Break Test: 44 proof commands covering all 29 control ids with 29/29 controls proven. Screenshots: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa\\proof-ledger-before-2026-07-06T14-13-46-737Z.png and C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa\\proof-ledger-after-2026-07-06T14-13-51-749Z.png.\nChecks: npm --prefix dashboard-ui run test:model passed 15 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; python -m pytest tests/test_cloud_sync.py -q passed 6 tests; python -m pytest tests/ -q passed 512 tests; git diff --check passed with LF-to-CRLF warnings only."
-  },
-  {
-    "output_hash": "f57a99ccd65a1950e684db9fd01fe5e40d7e2481550bc0339720860f5f4134ac",
-    "timestamp_utc": "2026-07-06T14:31:48Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: reload default in-app viewport -> Probe Model -> Run Break Test -> mobile 390x820 layout check after proof honesty and medium-layout repair.\nDefault viewport 1074x794: Comms stayed in the first viewport with Probe Model fully visible (top 698, bottom 730), body horizontalOverflow 0, no framework overlay, and no fresh console errors. Probe Model resolved to one enabled button and produced an honest Comms degraded state: vm/jules-worker - 2233ms / No LLM available - GEMINI_API_KEY is rate-limited and all OpenRouter free models failed. Break Test then reported Comms model loop honesty fail and Explicit control proof warn at 17/29, proving failed/degraded control events no longer clear proof debt. Mobile 390x820: no framework overlay, horizontalOverflow 0, Probe Model and Run Break Test remained present, and no fresh console errors. Browser domSnapshot still fails with TypeError incrementalAriaSnapshot unavailable, so verification used Browser locators, targeted evaluate, screenshots, console logs, and viewport checks.\nChecks: npm --prefix dashboard-ui run test:model passed 17 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; python -m pytest tests -q passed 512 tests; git diff --check passed with LF-to-CRLF warnings only.\nScreenshots: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706\\layout-visible-comms.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706\\probe-model-degraded.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706\\break-test-honest-proof.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706\\mobile-overflow-check.png."
-  },
-  {
-    "output_hash": "99afdf5398b16deb14f34d4e8383c62442e6068d93612828462a7a91f513ee45",
-    "timestamp_utc": "2026-07-06T14:47:57Z",
-    "passed": true,
-    "test_count": 18,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: reload default viewport -> global Action Receipt Dock -> Open Evidence/Open Comms -> Run Break Test -> Probe Model -> mobile 390x820 layout check.\nDefault viewport 1074x794: Action Receipt Dock rendered in first viewport, no framework overlay, horizontalOverflow 0, no fresh console errors, Comms remained visible. Open Evidence changed active focus to evidence and updated dock to Focus changed evidence while retaining 17/29 proof. Open Comms changed active focus to comms while retaining 17/29 proof. Run Break Test updated dock to 51% resilience / 3 failures / 1 warnings while retaining 17/29 proof. Probe Model returned Comms response received with JULES_COMMS_PROOF_OK through vm/jules-worker - 6328ms, and dock updated to Comms response received. Mobile 390x820 after tightening: dock height 263, nav rail visible in first viewport, Mission Control starts in first viewport, horizontalOverflow 0, no framework overlay.\nChecks: npm --prefix dashboard-ui run test:model passed 18 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning.\nScreenshots: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-action-receipt\\desktop-action-receipt-comms-proof.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-action-receipt\\mobile-action-receipt-tightened.png."
-  },
-  {
-    "output_hash": "5fa96159646e89a27e61a8372aecf3f3e775998cbc6d7c5088662af259e56002",
-    "timestamp_utc": "2026-07-06T15:06:54Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: reload desktop -> Action Receipt Dock live blocker queue -> Open Top -> Stage Top -> mobile 390x820 layout check after live blocker queue wiring.\nDesktop 1280x900: dock rendered with 3 live blockers, Top Blocker Cloud Sync, 175 buttons, 107 control-tagged buttons, horizontal overflow 0, and no framework overlay. Open Top recorded Live blocker opened and routed to Sync. Stage Top staged # Live Dashboard Blocker with protected_routes_called: no, chat_send_called: no, publish_or_dispatch_called: no, ## Immediate Safe Action, ## Current Queue, and review-only blocker-card intent; desktop overflow stayed 0. Mobile 390x820: live blocker dock rendered with 3 blocker rows, dock height 410, horizontal overflow 0, no offenders, no framework overlay, and no console errors.\nChecks: npm --prefix dashboard-ui run test:model passed 20 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; pytest -q passed 512 tests; git diff --check passed with LF-to-CRLF warnings only.\nScreenshots: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-live-blocker\\desktop-live-blocker-before.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-live-blocker\\desktop-live-blocker-open-top.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-live-blocker\\desktop-live-blocker-stage-top.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-live-blocker\\mobile-live-blocker-queue.png."
-  },
-  {
-    "output_hash": "1a4f9c4f0db34dbd694a5c0d2ab43536a4f7f9566c29586288f24fbcb71566b8",
-    "timestamp_utc": "2026-07-06T15:16:05Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: reload desktop -> Action Receipt Dock -> Run Top Check on the live top blocker -> guarded local publish preview staged -> mobile 390x820 Run Top Check layout check.\nBrowser path: in-app Browser loaded http://127.0.0.1:6001/, title dashboard-ui, evaluated dock state, and reported no console errors, but timed out during the Run Top Check click/screenshot and reset its automation session. Bundled Playwright fallback was used for interaction proof.\nDesktop 1280x900: dock rendered 3 live blockers, 176 buttons, 108 control-tagged buttons, Run Top Check resolved to one button, horizontal overflow 0, and no framework overlay. Clicking Run Top Check produced latest action Top blocker check run, rendered a Resolution Check for Cloud Sync -> Stage Sync Local Preview, staged # Cloud Publish Review Packet, and the packet included protected_routes_called: no, chat_send_called: no, publish_or_dispatch_called: no, and local_preview_only: yes. The run receipt reported preview_blocked, 1 blocker, 2 warnings, and exit criteria to rerun Break Test after the publish packet is reviewed and the sync gate has no danger blockers.\nMobile 390x820: Run Top Check resolved to one button, produced a Resolution Check, staged the guarded publish preview, dock height 716, horizontal overflow 0, overflow offenders [], and no framework overlay. Console entries were empty.\nChecks: npm --prefix dashboard-ui run test:model passed 20 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; pytest -q passed 512 tests; git diff --check passed with LF-to-CRLF warnings only.\nScreenshots: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-top-check\\desktop-before-run-top-check.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-top-check\\desktop-after-run-top-check.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-top-check\\mobile-after-run-top-check.png."
-  },
-  {
-    "output_hash": "4c87180e15458e2b79e2a8d240fabc522cd57254534569b18ed5acef6d1aaae5",
-    "timestamp_utc": "2026-07-06T17:49:14Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: held-open dashboard SSE stream -> immediate Run Break Test -> manual dashboard/status refresh -> scored real status.\nDesktop 1280x900 and mobile 390x820: each resolved one Run Break Test button, recorded Break test status refresh and Break test run receipts, made /dashboard/status requests while SSE was held, removed Waiting for the first dashboard status sample from the report, scored Cloud sync gate as 26 dirty files block publish, kept horizontal overflow 0, no framework overlay, and no console errors.\nChecks: npm --prefix dashboard-ui run test:model passed 22 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; python -m pytest tests/test_cloud_sync.py -q passed 6 tests; python -m pytest tests/ -q passed 512 tests; git diff --check passed with LF-to-CRLF warnings only.\nScreenshots: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-breaktest-refresh\\desktop-breaktest-status-refresh.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-breaktest-refresh\\mobile-breaktest-status-refresh.png."
-  },
-  {
-    "output_hash": "9da96feb25f579ab952fd77bc8470b7418679b03466f1ec5a41b2896365b7591",
-    "timestamp_utc": "2026-07-06T18:03:53Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: forced /dashboard/status failure during startup Break Test -> offline snapshot scoring; then desktop multi-button loop Run Sweep -> Run Break Test -> Open Weakest -> Stage Break Test; then mobile Run Break Test.\nBrowser path: in-app Browser documentation loaded, but selected-tab navigation/reload timed out after 30s and reset the automation session. Repo-local Playwright import failed, and bundled Playwright package was incomplete without playwright-core, so validation used installed Chrome through CDP.\nOffline desktop 1280x900: fetches=1, Run Break Test clicked, Break test status refresh and Break test run receipts recorded, Dashboard status is offline shown, Waiting for the first dashboard status sample absent, visible buttons 190, disabled 12, horizontal overflow 0, no framework overlay, no console errors.\nLive desktop 1280x900: Run Sweep, Run Break Test, Open Weakest, and Stage Break Test all clicked successfully after waiting for enabled state; latest action Break test staged; Cloud Sync lane visible with 26 dirty files block publish; visible buttons 245, disabled 5, horizontal overflow 0, no framework overlay, no console errors.\nLive mobile 390x820: Run Break Test clicked, latest action Break test run with 44% resilience / 2 failures / 4 warnings, Waiting for first sample absent, visible buttons 244, disabled 7, horizontal overflow 0, no framework overlay, no console errors.\nChecks: npm --prefix dashboard-ui run test:model passed 24 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; python -m pytest tests/ -q passed 512 tests; memory/test_evidence.json parsed with python -m json.tool.\nScreenshots: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-offline-breaktest\\desktop-offline-breaktest.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-offline-breaktest\\desktop-live-buttons-waited.png, C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-offline-breaktest\\mobile-live-breaktest-waited.png."
-  },
-  {
-    "output_hash": "8cd91f9c5a1096e4cdb0a1e4699fe12d5c71d47f26bd66134389e519622fd07e",
-    "timestamp_utc": "2026-07-06T18:18:37Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: clean session -> Run Probe -> Run Break Test after Bridge Probe Comms receipt wiring.\nBrowser path: in-app Browser documentation loaded, but selected-tab navigation/inspection timed out after 60s and reset the automation session. Python Playwright fallback used a clean Chromium context.\nDesktop 1280x900: before Run Probe the fresh page had no Comms proof; Run Probe produced Comms response received from live /chat/test; Run Break Test recorded Break test run, removed No Comms response proof / No model-loop proof recorded text, kept horizontal overflow 0, no framework overlay, visible buttons 244, disabled 6, and no console errors. Screenshot: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-bridge-probe-comms\\desktop-1280x900-probe-breaktest.png\nMobile 390x820: same clean-session flow produced Comms response received, Break test run visible, missing-model-loop-proof text absent, horizontal overflow 0, no framework overlay, visible buttons 244, disabled 6, and no console errors. Screenshot: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-bridge-probe-comms\\mobile-390x820-probe-breaktest.png\nBackend live proof: /chat/test healthy=true provider=vm/jules-worker status=ok.\nChecks: npm --prefix dashboard-ui run test:model passed 26 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; python -m pytest tests/test_cloud_sync.py -q passed 6 tests; python -m pytest tests/ -q passed 512 tests; python -m json.tool memory/test_evidence.json passed before append; git diff --check passed with LF-to-CRLF warnings only."
-  },
-  {
-    "output_hash": "18e8dc228dc4bdb8fcedd8afee5e45b436ef2a8627cf49ea9fbf82782a9512eb",
-    "timestamp_utc": "2026-07-06T18:29:09Z",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "Browser QA on http://127.0.0.1:6001/\nFlow: clean desktop/mobile session -> Run Break Test before fresh probe -> Run Probe -> rerun Break Test after proof-journal row-age patch.\nBrowser path: in-app Browser documentation loaded, but selected-tab smoke check timed out after 60s and reset the automation session. Python Playwright Chromium fallback used clean contexts.\nDesktop 1280x900: page rendered nonblank, title dashboard-ui, no framework overlay, no console errors, one exact Run Break Test button, one exact Run Probe button, 241 buttons. Before fresh probe, Break Test reported missing model proof. Run Probe produced Comms response received. Rerun Break Test kept Comms model loop honesty present and removed No Comms response proof / No model-loop proof recorded text while Cloud Sync remained a visible blocker. Screenshot: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-proof-freshness\\desktop-1280x900-proof-freshness.png\nMobile 390x820: same exact-button flow passed with nonblank render, no framework overlay, no console errors, one exact Run Break Test button, one exact Run Probe button, 241 buttons, Comms response received after probe, and missing-model-loop-proof text absent after rerun. Screenshot: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-qa-20260706-proof-freshness\\mobile-390x820-proof-freshness.png\nCode proof: persistent command journal now filters proof rows by each row.time during serialize and restore, so old successful button/model proofs cannot be refreshed indefinitely by a new localStorage savedAt envelope.\nChecks: npm --prefix dashboard-ui run test:model passed 28 tests; npm --prefix dashboard-ui run lint passed; npm --prefix dashboard-ui run build passed with existing Vite chunk warning; python -m pytest tests/test_cloud_sync.py -q passed 6 tests; python -m pytest tests/ -q passed 512 tests; python -m json.tool memory/test_evidence.json passed before append."
-  },
-  {
-    "output_hash": "aaea4d8791cc6b7ffb0434d4990f3d7c1f47213990a9c4af5ac4316bbcb3375d",
-    "timestamp_utc": "2026-07-06T18:58:56.421147+00:00",
-    "passed": true,
-    "test_count": 32,
-    "raw_output_tail": "Browser path: in-app Browser documentation loaded; selected in-app tab reload timed out after 45s and reset, so bundled Playwright fallback was used with the desktop runtime node_modules plus pnpm node_modules path.\nRendered desktop 1440x1100: queue settled to Cloud Sync, Evidence Stream, Tunnel Health, Comms Model Loop, and Local Packet Intelligence. Clicking Tunnel Health recorded latest action Live blocker opened. Run Top Check resolved current Cloud Sync top blocker to Stage Sync Local Preview and rendered Resolution Check. Run Probe called public /ping, /health, /dashboard/status, /vm/status, and /chat/test, produced 5/5 routes passed, and recorded Comms response received from live /chat/test vm:ok.\nRendered mobile 390x900: current queue showed five blockers including Tunnel Health, button count 234, disabledWithoutReason empty, horizontal overflow 0.\nScreenshots: C:\\Users\\abdul\\jules-bridge\\.codex\\verification\\dashboard-tunnel-desktop-after.png; C:\\Users\\abdul\\jules-bridge\\.codex\\verification\\dashboard-mobile-current-crop.png.\nGoal caveat: broad dashboard intelligence goal remains open because Cloud Sync dirty_worktree and evidence-risk rows are real blockers; tunnel-health surfacing is one completed repair, not final readiness."
-  },
-  {
-    "output_hash": "46bc6f17061097c5935d3e3f7cd8b7bf31ef6fbaee815a3773dbec5f0f07e6e4",
-    "timestamp_utc": "2026-07-06T19:26:55.346580+00:00",
-    "passed": true,
-    "test_count": 512,
-    "raw_output_tail": "npm run build\nvite build passed; warning: Some chunks are larger than 500 kB after minification.\n\nBrowser QA http://127.0.0.1:6001/\nSelected COMMS MODEL LOOP in the Action Receipt blocker queue, clicked RUN SELECTED CHECK, observed POST http://127.0.0.1:5000/chat, latest action Selected blocker check run, and Resolution Check Comms Model Loop -> Probe Comms Model Loop. The run no longer resolves to Stage Comms Local Review. Live model result was honestly degraded: vm/jules-worker reported No LLM available because GEMINI_API_KEY is rate-limited and OpenRouter free models failed. Desktop overflow 0, mobile 390x900 overflow 0, no console/page errors."
-  },
-  {
-    "output_hash": "574485a88a0ce23748fb7a01c22fe12db64c83247327602c876bdb636fcf0d08",
-    "timestamp_utc": "2026-07-06T19:47:19.648743+00:00",
-    "passed": true,
-    "test_count": 513,
-    "raw_output_tail": "git diff --check 452951fed1432a1fabc361dd32217a13f0b78013\npassed with LF-to-CRLF warnings only\n\nBrowser QA fallback http://127.0.0.1:6001/\nIn-app Browser selected-tab reload timed out after 60s and reset, so bundled Playwright fallback was used. Flow: open Sync lane -> Build Publish Packet -> Stage To Comms. Rendered dashboard called http://127.0.0.1:5000/sync/publish-packet and returned 200. Packet state blocked; change_count 39; include_candidate_count 30; exclude_candidate_count 9; packet_written true; artifact jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_20260706T194537.md. Packet and staged Comms content include dashboard-ui/package.json, dashboard-ui/src/dashboardModel.test.js, and tests/test_dashboard_cache.py. Stage command excludes .codex/ and __tmp artifacts while packet lists Generated or noisy files. Desktop overflow 0, mobile 390x900 overflow 0, no framework overlay, no console/page errors. Screenshots: C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\desktop-before-clean-packet.png; C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\desktop-after-clean-packet.png; C:\\Users\\abdul\\AppData\\Local\\Temp\\jules-dashboard-sync-clean-1783367132424\\mobile-clean-packet-ready.png. Direct public preview proof: /sync/publish-preview returned packet_written false, include 29, exclude 9, model/package/cache-test files included, .codex and __tmp absent from stage command."
+    "test_count": 430,
+    "raw_output_tail": "python -m pytest tests/ -q\n430 passed in 36.76s"
   }
 ]

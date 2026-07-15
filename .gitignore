@@ -14,16 +14,7 @@ jules_inbox/screenshots/
 jules_inbox/JULES_AUTOMATION_GITHUB_DASHBOARD_HANDOFF_*.md
 *.log
 bridge.log
-bridge.log.*
 .env
 .env.*
 !.env.example
 scratch/vm.env
-scratch/screenshots/
-*.key
-*.gpg
-jules-gpg-public.asc
-.gnupg-local/
-private-keys-v1.d/
-jules_inbox/cloud_sync/CLOUD_PUBLISH_STATE.json
-jules_inbox/cloud_sync/CLOUD_PUBLISH_PACKET_*.md

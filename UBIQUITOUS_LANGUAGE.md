@@ -35,26 +35,6 @@
 | **ChatResult** | Typed dict from `chat_service.chat()` with provider response text, model choice, elapsed time, and redacted errors | `modules/chat_service.py` | "chat response", "LLM result" |
 | **ChatHealthResult** | Provider diagnostic snapshot from `chat_service.test_chat_providers()` | `modules/chat_service.py` | "provider status", "LLM health" |
 | **Chat provider routing** | Gemini-first and OpenRouter-fallback selection hidden behind `chat_service` | `modules/chat_service.py` | "chat logic in bridge.py", "provider helper" |
-| **Gemini CLI bridge** | Protected bridge surface that wraps `@google/gemini-cli` preflight and headless prompts | `modules/gemini_cli.py` | "Gemini provider route", "chat replacement" |
-| **Gemini preflight** | Install/headless readiness check for local Gemini CLI, optionally including a live smoke prompt | `modules/gemini_cli.py` | "login check", "provider health" |
-| **Headless prompt** | Noninteractive `gemini -p` execution, dry-run-first and plan-mode by default | `modules/gemini_cli.py` | "interactive Gemini session", "unbounded agent run" |
-| **Antigravity CLI bridge** | Protected bridge surface that wraps Google's supported `agy` terminal-agent CLI for plugin/model discovery and prompts | `modules/antigravity_cli.py` | "new Gemini route", "provider SDK" |
-| **Antigravity preflight** | Install/model/plugin readiness check for `agy`, optionally including a bounded live model smoke | `modules/antigravity_cli.py` | "Gemini fixed", "PATH check" |
-| **Google terminal model execution gate** | Proof gate for supported `agy -p` model execution, separate from legacy Gemini CLI model execution | `modules/collaboration_proof.py` | "Gemini model gate", "auth fixed" |
-| **Collaboration proof** | Rerunnable gate report proving Jules/Gemini reachability, skills, context, HRM, architecture, and tests | `modules/collaboration_proof.py` | "demo", "claim", "status badge" |
-| **Proof gate** | One named requirement row in the collaboration proof result, with status, evidence, and blocker | `modules/collaboration_proof.py` | "check", "assertion", "vibe" |
-| **Gemini model execution gate** | Optional live smoke gate that proves authenticated Gemini headless model execution separately from CLI install | `modules/collaboration_proof.py` | "Gemini installed", "CLI health" |
-| **Requirement audit** | Objective-level matrix mapping each broad proof requirement to specific proof gates and blockers | `modules/collaboration_proof.py` | "summary", "status paragraph" |
-| **Completion assessment** | Boolean-safe decision payload showing whether the active proof goal can be marked complete | `modules/collaboration_proof.py` | "done flag", "vibes pass" |
-| **Alliance switchboard** | Dry-run-first role assignment surface for complex Jules + Google terminal-agent work | `modules/alliance_switchboard.py` | "bot mixer", "agent vibes", "manual prompt plan" |
-| **Creator role** | Jules-owned lane for actual change planning, patch ownership, worker packets, and completion ledger | `modules/alliance_switchboard.py` | "main bot", "doer", "author" |
-| **Implementer role** | Google terminal-agent support lane for implementation critique, bounded prompts, model/plugin skills, and review | `modules/alliance_switchboard.py` | "helper bot", "Gemini worker", "assistant lane" |
-| **Switching policy** | Decision table that chooses preferred, fallback, or blocked agent lanes based on readiness and safety gates | `modules/alliance_switchboard.py` | "routing vibes", "agent guess", "manual toggle" |
-| **Cloud sync readiness** | Read-only Git/GitHub publish gate showing branch/upstream, ahead/behind, dirty counts, GitHub auth, warnings, and blockers | `modules/cloud_sync.py` | "push done", "cloud saved", "sync complete" |
-| **Cloud publish packet** | Read-only operator review artifact that classifies dirty worktree families and suggests review/test/commit/push commands without running them | `modules/cloud_sync.py` | "auto-push", "sync complete", "dashboard commit" |
-| **TIU workbench** | Interactive dashboard surface that converts scope/lane/mode controls into a safe operator packet with alliance, codebase, and cloud-sync gates | `modules/tiu_workbench.py` | "auto-runner", "silent launcher", "push button" |
-| **Dashboard status contract** | Public v2 payload contract shared by JSON polling and SSE streaming for the React dashboard | `modules/dashboard_module.py` | "status blob", "dashboard vibes", "UI-only state" |
-| **Dashboard status stream** | Server-Sent Events mode for `GET /dashboard/status?stream=1`, emitting `dashboard-status` events with increasing sequences | `modules/dashboard_module.py` | "websocket", "poll loop", "live-ish refresh" |
 
 ---
 

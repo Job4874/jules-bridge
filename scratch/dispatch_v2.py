@@ -1,4 +1,3 @@
-import os
 # pylint: disable=redefined-outer-name
 
 """dispatch_v2.py — dispatch tasks to Jules VM with Gemini test first."""
@@ -7,7 +6,7 @@ import time
 import requests
 
 VM = "http://34.132.193.73:6000"
-TOKEN = os.environ.get("VM_WORKER_TOKEN", "JULES-VM-WORKER-999")
+TOKEN = "JULES-VM-WORKER-999"
 H = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
 P = {"http": None, "https": None}  # bypass proxy
 

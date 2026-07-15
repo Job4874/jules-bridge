@@ -1,7 +1,6 @@
 # Launch-Dashboard.ps1
-# Opens PowerShell as Administrator, starts the bridge, boots cloud VMs,
-# and opens the Jules Mission Control dashboard in the browser.
-# Run this by right-clicking and "Run as Administrator", or via the .cmd wrapper.
+# Starts the bridge, boots cloud VMs, and opens the Jules Mission Control dashboard.
+# No Administrator rights required — runs under the current user account.
 
 param(
     [switch]$SkipVMBoot,
@@ -40,13 +39,12 @@ if (-not $SkipBridge) {
     if (Test-BridgeAlive) {
         Write-Host "`n[BRIDGE] Already running at $BridgeUrl" -ForegroundColor Green
     } else {
-        Write-Host "`n[BRIDGE] Not detected — launching with ngrok..." -ForegroundColor Yellow
+        Write-Host "`n[BRIDGE] Not detected — launching..." -ForegroundColor Yellow
         $env:JULES_VM_SCRIPT_DIR = Join-Path $Root "vm_scripts"
-        $launcher = Join-Path $Root "Run-JulesBridge.cmd"
+        $python = if ($env:PYTHON_EXE) { $env:PYTHON_EXE } else { "python" }
         Start-Process -FilePath "cmd.exe" `
-            -ArgumentList "/k `"$launcher`"" `
-            -WindowStyle Normal `
-            -Verb RunAs 2>$null
+            -ArgumentList "/k `"cd /d $Root && `"$python`" bridge.py`"" `
+            -WindowStyle Normal
 
         Write-Host "[BRIDGE] Waiting for bridge to come online..." -ForegroundColor Yellow
         $attempts = 0

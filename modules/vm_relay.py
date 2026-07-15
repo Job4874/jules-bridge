@@ -52,7 +52,6 @@ VM_ZONE = _env().get("GCE_WORKER_ZONE", "us-central1-a")
 VM_PROJ = _env().get("GCE_WORKER_PROJECT", "tibin-terminal-2026")
 VM_USER = "julesadmin"
 VM_PORT = 6000   # The agent port on the VM
-VM_TOKEN = _env().get("VM_WORKER_TOKEN", "JULES-VM-WORKER-999")
 
 _relay_log_lock = threading.Lock()
 
@@ -149,7 +148,6 @@ def _build_worker_env(env_vars: dict[str, str], local_ip: str) -> str:
         f"BROWSER_MODEL_LOOP_URL={env_vars.get('BROWSER_MODEL_LOOP_URL','')}",
         f"LOCAL_BRIDGE_URL=http://{local_ip}:5000",
         f"LOCAL_BRIDGE_TOKEN={bridge_token}",
-        f"VM_WORKER_TOKEN={VM_TOKEN}",
     ])
 
 
@@ -183,7 +181,7 @@ def send_task_to_vm(task: str, task_type: str = "build", context: str = "") -> d
         r = _req.post(
             f"http://{VM_IP}:{VM_PORT}/task",
             json=payload, timeout=30,
-            headers={"Authorization": f"Bearer {VM_TOKEN}"}
+            headers={"Authorization": "Bearer JULES-VM-WORKER-999"}
         )
         return r.json()
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -211,7 +209,7 @@ Accepts task packets from the local bridge relay and executes them.
 Calls back to local bridge with results. Self-improving: it reads its
 own instructions and can modify them via the local bridge /chat endpoint.
 """
-import json, os, subprocess, threading, time, requests, shlex
+import json, os, subprocess, threading, time, requests
 from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, request, jsonify
@@ -223,7 +221,7 @@ for line in Path("/home/julesadmin/.jules_worker.env").read_text().splitlines():
         os.environ[k.strip()] = v.strip()
 
 app = Flask(__name__)
-TOKEN = os.environ.get("VM_WORKER_TOKEN", "JULES-VM-WORKER-999")
+TOKEN = "JULES-VM-WORKER-999"
 BROWSER_MODEL_LOOP_URL = os.environ.get("BROWSER_MODEL_LOOP_URL", "")
 LOCAL_BRIDGE = os.environ.get("LOCAL_BRIDGE_URL", "http://127.0.0.1:5000")
 LOCAL_TOKEN = os.environ.get("LOCAL_BRIDGE_TOKEN", "")
@@ -292,14 +290,8 @@ def task():
 def execute_task(task: str, task_type: str, context: str) -> str:
     """Route task to appropriate executor."""
     if task_type == "shell":
-        try:
-            cmd = shlex.split(task)
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60, check=False)
-            return proc.stdout + proc.stderr
-        except FileNotFoundError:
-            return f"Error: Command not found: {task}"
-        except Exception as e:
-            return f"Error executing command: {e}"
+        proc = subprocess.run(task, shell=True, capture_output=True, text=True, timeout=60)
+        return proc.stdout + proc.stderr
     elif task_type in ("build", "research", "chat"):
         return call_llm(task, context)
     else:
@@ -312,7 +304,7 @@ def call_llm(prompt: str, context: str = "") -> str:
         "You are the worker node in a multi-agent system. Your job is to build, fix, research, "
         "and ship code. You have access to a Linux shell (Ubuntu 22.04), Python, git, curl, and pip. "
         "When asked to build something, produce complete working code. "
-        "Be direct and production-focused. No placeholders."
+        "Be direct and production-focused. No placeholders, no TODOs."
     )
     full_prompt = f"{context}\\n\\n{prompt}" if context else prompt
 

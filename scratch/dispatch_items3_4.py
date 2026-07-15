@@ -1,11 +1,10 @@
-import os
 """dispatch_items3_4.py — dispatch order-flow engine and deployment pipeline."""
 import time
 
 import requests
 
 VM = "http://34.132.193.73:6000"
-TOKEN = os.environ.get("VM_WORKER_TOKEN", "JULES-VM-WORKER-999")
+TOKEN = "JULES-VM-WORKER-999"
 H = {"Authorization": f"Bearer {TOKEN}"}
 P = {"http": None, "https": None}
 

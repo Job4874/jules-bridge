@@ -217,7 +217,22 @@ def run_gemini_prompt(
                 note="Set dry_run=false to invoke Gemini CLI.",
             )
 
-        result = _run_cli_command(argv, timeout_s=timeout_s, cwd=str(resolved_cwd))
+        # Build a clean environment: strip invalid/placeholder API keys so the
+        # CLI falls back to Google OAuth (your Google account login). Only strip
+        # if the key is clearly a placeholder or not set.
+        _clean_env = os.environ.copy()
+        for _key in ("GEMINI_API_KEY", "GOOGLE_API_KEY"):
+            _val = _clean_env.get(_key, "")
+            # Remove if blank, starts with 'your' (placeholder), or is a known placeholder value
+            _is_placeholder = (
+                not _val
+                or _val.lower().startswith("your")
+                or _val.lower() in ("none", "placeholder", "changeme", "your-api-key")
+            )
+            if _is_placeholder:
+                _clean_env.pop(_key, None)
+
+        result = _run_cli_command(argv, timeout_s=timeout_s, cwd=str(resolved_cwd), env=_clean_env)
         elapsed_ms = round((datetime.now(timezone.utc) - started).total_seconds() * 1000, 2)
         status = _prompt_status(result)
         payload = GeminiPromptResult(
@@ -317,6 +332,9 @@ def _npm_prefix_candidates() -> list[Path]:
         str(Path.home() / ".npm-packages"),
         str(Path(os.environ.get("USERPROFILE", "")) / ".npm-packages") if os.environ.get("USERPROFILE") else "",
         str(Path(os.environ.get("APPDATA", "")) / "npm") if os.environ.get("APPDATA") else "",
+        # hermes/node — non-standard npm prefix used on this machine
+        str(Path(os.environ.get("LOCALAPPDATA", "")) / "hermes" / "node") if os.environ.get("LOCALAPPDATA") else "",
+        str(Path(os.environ.get("LOCALAPPDATA", "")) / "npm") if os.environ.get("LOCALAPPDATA") else "",
     ):
         if not raw:
             continue
@@ -402,7 +420,7 @@ def _safe_child_count(path: Path) -> int:
         return 0
 
 
-def _run_cli_command(command: list[str], timeout_s: int, cwd: str | None = None) -> dict:
+def _run_cli_command(command: list[str], timeout_s: int, cwd: str | None = None, env: dict | None = None) -> dict:
     timeout = max(1, int(timeout_s or 1))
     started = datetime.now(timezone.utc)
     creationflags = 0
@@ -412,6 +430,7 @@ def _run_cli_command(command: list[str], timeout_s: int, cwd: str | None = None)
         process = subprocess.Popen(
             command,
             cwd=cwd,
+            env=env,  # None = inherit everything; dict = use sanitized copy
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

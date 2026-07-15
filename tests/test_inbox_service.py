@@ -92,31 +92,5 @@ class TestInboxWrite(unittest.TestCase):
             self.assertTrue(os.path.isdir(d))
 
 
-class TestInboxAppend(unittest.TestCase):
-    def setUp(self):
-        from modules import inbox_service
-        self.svc = inbox_service
-
-    def test_append_adds_line_without_overwriting(self):
-        with tempfile.TemporaryDirectory() as d:
-            path = os.path.join(d, "vm_results.jsonl")
-            with open(path, "w", encoding="utf-8") as f:
-                f.write("first\n")
-
-            result = self.svc.inbox_append("second", file="vm_results.jsonl", inbox_dir=d)
-
-            self.assertEqual(result["status"], "success")
-            self.assertEqual(result["mode"], "append")
-            with open(path, "r", encoding="utf-8") as f:
-                self.assertEqual(f.read(), "first\nsecond\n")
-
-    def test_append_uses_safe_basename(self):
-        with tempfile.TemporaryDirectory() as d:
-            result = self.svc.inbox_append("safe", file="../../vm_results.jsonl", inbox_dir=d)
-
-            self.assertEqual(result["file"], "vm_results.jsonl")
-            self.assertTrue(os.path.exists(os.path.join(d, "vm_results.jsonl")))
-
-
 if __name__ == "__main__":
     unittest.main()

@@ -31,8 +31,6 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-. (Join-Path $PSScriptRoot "GpgHome.ps1")
-
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ExportPath = Join-Path $RepoRoot "jules-gpg-public.asc"
 $KeyTitle = "jules"
@@ -53,21 +51,21 @@ function Write-Err([string]$Message) {
     Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
-function Get-GitRoot {
+function Get-GitInstallRoot {
     $gitCmd = Get-Command git -ErrorAction SilentlyContinue
     if (-not $gitCmd) {
         throw "git is not on PATH. Install Git for Windows first."
     }
-    $probe = Split-Path -Parent $gitCmd.Source
-    while ($probe -and -not (Test-Path (Join-Path $probe "usr\bin\gpg.exe"))) {
-        $parent = Split-Path -Parent $probe
-        if ($parent -eq $probe) { break }
-        $probe = $parent
+    $root = Split-Path -Parent $gitCmd.Source
+    while ($root -and -not (Test-Path (Join-Path $root "usr\bin\gpg.exe"))) {
+        $parent = Split-Path -Parent $root
+        if ($parent -eq $root) { break }
+        $root = $parent
     }
-    if (-not (Test-Path (Join-Path $probe "usr\bin\gpg.exe"))) {
+    if (-not $root -or -not (Test-Path (Join-Path $root "usr\bin\gpg.exe"))) {
         throw "Could not locate Git for Windows installation (need usr\bin\gpg.exe)."
     }
-    return $probe
+    return $root.Trim()
 }
 
 function Get-GpgExe {
@@ -101,24 +99,10 @@ function Invoke-Gpg {
 
 function Get-SecretKeyId {
     param([string]$GpgExe)
-    $previousErrorAction = $ErrorActionPreference
-    try {
-        $ErrorActionPreference = 'Continue'
-        $list = (& $GpgExe --list-secret-keys --keyid-format=long 2>$null | Out-String).TrimEnd()
-        if ($LASTEXITCODE -ne 0 -and -not $list) {
-            return $null
-        }
-    } finally {
-        $ErrorActionPreference = $previousErrorAction
-    }
-    $currentKeyId = $null
+    $list = Invoke-Gpg $GpgExe --list-secret-keys --keyid-format=long $Email
     foreach ($line in ($list -split "`n")) {
         if ($line -match "^sec\s+\S+/([0-9A-Fa-f]{16})\s") {
-            $currentKeyId = $Matches[1].ToUpper()
-            continue
-        }
-        if ($currentKeyId -and $line -match [regex]::Escape($Email)) {
-            return $currentKeyId
+            return $Matches[1].ToUpper()
         }
     }
     return $null
@@ -152,7 +136,8 @@ function Export-PublicKey {
         [string]$Path
     )
     $armor = Invoke-Gpg $GpgExe --armor --export $KeyId
-    Set-Content -Path $Path -Value $armor -Encoding ASCII -NoNewline
+    $header = "# Jules-Key-ID: $KeyId"
+    Set-Content -Path $Path -Value ($header + "`n" + $armor) -Encoding ASCII -NoNewline
     if (-not $armor.EndsWith("`n")) {
         Add-Content -Path $Path -Value "" -Encoding ASCII
     }
@@ -165,10 +150,15 @@ try {
     Write-Host "  GitHub GPG setup (Jules / Job4874)" -ForegroundColor Cyan
     Write-Host $divider -ForegroundColor Cyan
 
-    $GitRoot = Get-GitRoot
+    $GitRoot = Get-GitInstallRoot
     $GpgExe = Get-GpgExe -GitRoot $GitRoot
-    $gpgHomeMsys = Resolve-GpgHomeMsys -GpgExe $GpgExe -RepoRoot $RepoRoot
+    $gpgHomeWin = Join-Path $env:USERPROFILE ".gnupg"
+    $gpgHomeMsys = Get-GpgHomeMsys
     $env:GNUPGHOME = $gpgHomeMsys
+
+    if (-not (Test-Path $gpgHomeWin)) {
+        New-Item -ItemType Directory -Force -Path $gpgHomeWin | Out-Null
+    }
 
     Write-Ok "GPG: $GpgExe"
     Write-Ok "GNUPGHOME: $gpgHomeMsys"

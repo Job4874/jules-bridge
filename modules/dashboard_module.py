@@ -5,7 +5,6 @@ state, and recent log lines into a single snapshot dict.
 
 Public interface:
     get_dashboard_status() -> dict
-    dashboard_status_event_stream() -> iterator[str]
 """
 
 from __future__ import annotations
@@ -19,10 +18,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from modules.antigravity_cli import antigravity_status_snapshot
-from modules.codebase_analyzer import analyze_codebase
-from modules.cloud_sync import get_cloud_sync_status
-from modules.gemini_cli import gemini_status_snapshot
 from modules.repo_context_guard import build_repo_context_guard
 from modules.vm_manager import detect_resource_pressure
 
@@ -31,16 +26,9 @@ _LOG_PATH = _ROOT / "bridge.log"
 _LAUNCH_STATE = _ROOT / "jules_inbox" / "jules_dispatch" / "JULES_LAUNCH_STATE.json"
 _COT_LEDGER = _ROOT / "jules_inbox" / "jules_dispatch" / "JULES_COT_LEDGER.json"
 _WATCH_STATE = _ROOT / "jules_inbox" / "jules_dispatch" / "JULES_WATCH_STATE.json"
-_ALLIANCE_STATE = _ROOT / "jules_inbox" / "alliance" / "ALLIANCE_SWITCHBOARD_STATE.json"
 _ENV_PATH = _ROOT / ".env"
 
 _LOG_TAIL_LINES = 40
-_DASHBOARD_CONTRACT_NAME = "jules_dashboard_status"
-_DASHBOARD_CONTRACT_VERSION = 2
-_DEFAULT_STREAM_INTERVAL_S = 1.0
-_MAX_STREAM_INTERVAL_S = 30.0
-_STREAM_RETRY_MS = 3000
-_dashboard_sequence = 0
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -77,25 +65,9 @@ def _tail_log(n: int = _LOG_TAIL_LINES) -> list[str]:
     try:
         text = _LOG_PATH.read_text(encoding="utf-8", errors="replace")
         lines = text.splitlines()
-        return _safe_log_lines(lines[-n:] if len(lines) >= n else lines)
+        return lines[-n:] if len(lines) >= n else lines
     except Exception:  # pylint: disable=broad-exception-caught
         return []
-
-
-def _safe_log_lines(lines: list[str]) -> list[str]:
-    """Mask local Windows paths before returning dashboard-visible logs."""
-    masked = []
-    home = str(Path.home())
-    root = str(_ROOT)
-    for line in lines:
-        safe = str(line)
-        if root:
-            safe = safe.replace(root, "[repo-root]")
-        if home:
-            safe = safe.replace(home, "[user-home]")
-        safe = re.sub(r"[A-Za-z]:\\Users\\[^\\\s]+", "[user-home]", safe)
-        masked.append(safe)
-    return masked
 
 
 def _read_json(path: Path) -> dict | None:
@@ -199,318 +171,10 @@ def _vm_info(env: dict[str, str]) -> dict[str, Any]:
     return {"vms": vms, "total": len(vms), "online": sum(1 for v in vms if v["reachable"])}
 
 
-def _codebase_analysis_summary() -> dict[str, Any]:
-    """Return a privacy-safe codebase snapshot for dashboard clients."""
-    analysis = analyze_codebase(max_files=1800, include_files=False)
-    summary = analysis.get("summary", {}) if isinstance(analysis, dict) else {}
-    frontend = analysis.get("frontend", {}) if isinstance(analysis, dict) else {}
-    integrations = analysis.get("integrations", []) if isinstance(analysis, dict) else []
-    findings = analysis.get("findings", []) if isinstance(analysis, dict) else []
-    return {
-        "status": analysis.get("status", "unknown") if isinstance(analysis, dict) else "unknown",
-        "root_name": analysis.get("root", {}).get("name", "") if isinstance(analysis, dict) else "",
-        "summary": {
-            "file_count": summary.get("file_count", 0),
-            "route_count": summary.get("route_count", 0),
-            "module_count": summary.get("module_count", 0),
-            "test_count": summary.get("test_count", 0),
-            "frontend_dependency_count": summary.get("frontend_dependency_count", 0),
-            "integration_ready_count": summary.get("integration_ready_count", 0),
-            "truncated": bool(summary.get("truncated", False)),
-        },
-        "frontend": {
-            "present": bool(frontend.get("present", False)),
-            "package_name": frontend.get("package_name", ""),
-            "app_entry_present": bool(frontend.get("app_entry_present", False)),
-        },
-        "integrations": [
-            {
-                "id": row.get("id", ""),
-                "label": row.get("label", ""),
-                "ready": bool(row.get("ready", False)),
-                "tone": row.get("tone", "info"),
-            }
-            for row in integrations[:8]
-            if isinstance(row, dict)
-        ],
-        "findings": [
-            {
-                "tone": row.get("tone", "info"),
-                "title": row.get("title", ""),
-                "detail": row.get("detail", ""),
-            }
-            for row in findings[:4]
-            if isinstance(row, dict)
-        ],
-    }
-
-
-def _alliance_status_summary(
-    gemini_cli: dict[str, Any] | None = None,
-    antigravity_cli: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    """Return a privacy-safe Jules plus Google terminal-agent alliance summary."""
-    state = _read_json(_ALLIANCE_STATE)
-    if not isinstance(state, dict):
-        return {
-            "status": "missing",
-            "summary": "No persisted alliance switchboard state found.",
-            "mode": "unconfigured",
-            "creator": "jules",
-            "implementer": "unassigned",
-            "implementer_selection": "",
-            "ready_to_execute_alliance": False,
-            "simultaneous_two_agent_mode": False,
-            "safe_to_launch_live_work": False,
-            "required_blocker_count": 1,
-            "partial_caveat_count": 0,
-            "gate_pass_count": 0,
-            "gate_total_count": 0,
-            "packet_count": 0,
-            "workflow_step_count": 0,
-            "state_age_s": None,
-            "lanes": [],
-        }
-
-    completion = state.get("completion_assessment", {})
-    roles = state.get("roles", {})
-    active_implementer = state.get("active_implementer", {})
-    readiness = state.get("readiness", {})
-    gates = state.get("gates", [])
-    workflow = state.get("workflow", [])
-    packets = state.get("packets", {})
-    packet_paths = packets.get("packet_paths", {}) if isinstance(packets, dict) else {}
-    required_blockers = completion.get("required_blockers", []) if isinstance(completion, dict) else []
-    partial_caveats = completion.get("partial_caveats", []) if isinstance(completion, dict) else []
-    gate_rows = gates if isinstance(gates, list) else []
-    gate_total = len(gate_rows)
-    gate_pass = sum(1 for row in gate_rows if isinstance(row, dict) and row.get("status") == "pass")
-    gate_required_blockers = [
-        row for row in gate_rows
-        if isinstance(row, dict)
-        and row.get("required")
-        and row.get("status") not in ("pass", "ok", "ready")
-    ]
-
-    state_age_s: int | None = None
-    generated_at = state.get("generated_at_utc")
-    if isinstance(generated_at, str) and generated_at:
-        try:
-            generated = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
-            state_age_s = max(0, int((datetime.now(timezone.utc) - generated).total_seconds()))
-        except ValueError:
-            state_age_s = None
-
-    live_rows = {
-        "legacy_gemini_cli": gemini_cli,
-        "antigravity_cli": antigravity_cli,
-    }
-
-    def readiness_row(name: str, label: str, role: str) -> dict[str, Any]:
-        row = readiness.get(name, {}) if isinstance(readiness, dict) else {}
-        live = live_rows.get(name)
-        if isinstance(live, dict):
-            ready = bool(live.get("ready"))
-            installed = bool(live.get("installed", ready))
-            blocker = live.get("last_blocker") or live.get("likely_blocker") or live.get("blocker") or ""
-        else:
-            ready = bool(row.get("ready") or row.get("available"))
-            installed = bool(row.get("installed", ready))
-            blocker = row.get("likely_blocker") or row.get("blocker") or ""
-        return {
-            "id": name,
-            "label": label,
-            "role": role,
-            "ready": ready,
-            "installed": installed,
-            "blocker": blocker,
-            "status": "ready" if ready else ("installed" if installed else "blocked"),
-        }
-
-    implementer_name = active_implementer.get("name") if isinstance(active_implementer, dict) else ""
-    return {
-        "status": state.get("status", "unknown"),
-        "summary": state.get("summary", ""),
-        "mode": roles.get("mode", "") if isinstance(roles, dict) else "",
-        "creator": roles.get("creator", {}).get("agent", "jules") if isinstance(roles, dict) else "jules",
-        "implementer": implementer_name or "unassigned",
-        "implementer_selection": active_implementer.get("selection", "") if isinstance(active_implementer, dict) else "",
-        "ready_to_execute_alliance": bool(completion.get("ready_to_execute_alliance")) if isinstance(completion, dict) else False,
-        "simultaneous_two_agent_mode": bool(completion.get("simultaneous_two_agent_mode")) if isinstance(completion, dict) else False,
-        "safe_to_launch_live_work": bool(completion.get("safe_to_launch_live_work")) if isinstance(completion, dict) else False,
-        "required_blocker_count": len(required_blockers) + len(gate_required_blockers),
-        "partial_caveat_count": len(partial_caveats),
-        "gate_pass_count": gate_pass,
-        "gate_total_count": gate_total,
-        "packet_count": len(packet_paths) if isinstance(packet_paths, dict) else 0,
-        "workflow_step_count": len(workflow) if isinstance(workflow, list) else 0,
-        "state_age_s": state_age_s,
-        "lanes": [
-            readiness_row("jules", "Jules", "creator"),
-            readiness_row("antigravity_cli", "Antigravity", "google terminal agent"),
-            readiness_row("legacy_gemini_cli", "Gemini CLI", "legacy visibility"),
-            readiness_row("akc", "AKC Context", "checkpoint"),
-            readiness_row("collaboration_proof_state", "Proof State", "evidence"),
-        ],
-    }
-
-
-def _cloud_sync_status_summary() -> dict[str, Any]:
-    """Return a compact cloud sync snapshot for unauthenticated dashboard use."""
-    status = get_cloud_sync_status(timeout_s=3)
-    repo = status.get("repo", {}) if isinstance(status, dict) else {}
-    git = status.get("git", {}) if isinstance(status, dict) else {}
-    github = status.get("github", {}) if isinstance(status, dict) else {}
-    return {
-        "status": status.get("status", "unknown") if isinstance(status, dict) else "unknown",
-        "state": status.get("state", "unknown") if isinstance(status, dict) else "unknown",
-        "branch": repo.get("branch", ""),
-        "upstream": repo.get("upstream", ""),
-        "remote_host": repo.get("remote_host", ""),
-        "remote_label": repo.get("remote_label", ""),
-        "ahead": git.get("ahead", 0),
-        "behind": git.get("behind", 0),
-        "dirty_count": git.get("dirty_count", 0),
-        "staged_count": git.get("staged_count", 0),
-        "unstaged_count": git.get("unstaged_count", 0),
-        "untracked_count": git.get("untracked_count", 0),
-        "github_authenticated": bool(github.get("authenticated", False)),
-        "github_account": github.get("account", ""),
-        "publish_ready": bool(status.get("publish_ready", False)) if isinstance(status, dict) else False,
-        "synced": bool(status.get("synced", False)) if isinstance(status, dict) else False,
-        "blockers": status.get("blockers", [])[:6] if isinstance(status.get("blockers", []), list) else [],
-        "warnings": status.get("warnings", [])[:4] if isinstance(status.get("warnings", []), list) else [],
-        "cache_age_s": status.get("cache_age_s", 0) if isinstance(status, dict) else 0,
-    }
-
-
-def _cli_status_summary(status: dict[str, Any] | None, *, include_model_count: bool = False) -> dict[str, Any]:
-    """Return only frontend-used terminal-agent status fields."""
-    row = status if isinstance(status, dict) else {}
-    compact = {
-        "installed": bool(row.get("installed", False)),
-        "ready": bool(row.get("ready", False)),
-        "version": row.get("version", ""),
-        "headless_mode": row.get("headless_mode", ""),
-        "last_blocker": row.get("last_blocker") or row.get("likely_blocker") or row.get("blocker") or "",
-    }
-    if include_model_count:
-        compact["model_count"] = row.get("model_count", 0)
-    return compact
-
-
 _dashboard_status_cache: dict = {}
 # ---------------------------------------------------------------------------
 # Public interface
 # ---------------------------------------------------------------------------
-
-
-def _next_sequence() -> int:
-    global _dashboard_sequence  # pylint: disable=global-statement
-    _dashboard_sequence += 1
-    return _dashboard_sequence
-
-
-def _stamp_contract(result: dict[str, Any], *, transport: str, sequence: int | None = None) -> dict[str, Any]:
-    """Attach the frontend/backend contract metadata expected by dashboard clients."""
-    seq = _next_sequence() if sequence is None else max(0, int(sequence))
-    timestamp = result.get("timestamp") or datetime.now(timezone.utc).isoformat()
-    result["contract"] = {
-        "name": _DASHBOARD_CONTRACT_NAME,
-        "version": _DASHBOARD_CONTRACT_VERSION,
-        "transport": transport,
-        "sequence": seq,
-        "generated_at_utc": timestamp,
-    }
-    result["delivery"] = {
-        "transport": transport,
-        "sequence": seq,
-        "streaming": transport == "sse",
-    }
-    return result
-
-
-def _build_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, Any]:
-    """Build a fresh dashboard snapshot without using the dashboard cache."""
-    now = datetime.now(timezone.utc)
-    uptime_s = int((now - bridge_start_utc).total_seconds()) if bridge_start_utc else 0
-
-    env = _env_vars()
-    runtime = _runtime_context(env)
-    pressure = detect_resource_pressure()
-    fleet = _fleet_status()
-    raw_gemini_cli = gemini_status_snapshot()
-    raw_antigravity_cli = antigravity_status_snapshot()
-    gemini_cli = _cli_status_summary(raw_gemini_cli)
-    antigravity_cli = _cli_status_summary(raw_antigravity_cli, include_model_count=True)
-    cloud = _vm_info(env)
-    logs = _tail_log()
-    repo_context = build_repo_context_guard(include_repos=False)
-    codebase_analysis = _codebase_analysis_summary()
-    alliance = _alliance_status_summary(gemini_cli=gemini_cli, antigravity_cli=antigravity_cli)
-    cloud_sync = _cloud_sync_status_summary()
-    repo_summary = dict(repo_context.get("summary", {}))
-    repo_summary.pop("sample_repos", None)
-
-    ngrok_url = ""
-    for line in reversed(logs):
-        if "ngrok-free.dev" in line or "ngrok.io" in line:
-            match = re.search(r"https://[a-z0-9\-]+\.ngrok[a-z.\-]*/", line)
-            if match:
-                ngrok_url = match.group(0).rstrip("/")
-                break
-
-    return {
-        "ok": True,
-        "timestamp": now.isoformat(),
-        "cache_age_s": 0,
-        **runtime,
-        "bridge": {
-            "status": "running",
-            "uptime_s": uptime_s,
-            "uptime_human": _fmt_uptime(uptime_s),
-            "ngrok_url": ngrok_url,
-            "local_url": "http://127.0.0.1:5000",
-        },
-        "resource_pressure": {
-            "status": pressure.get("status", "unknown"),
-            "cpu_percent": pressure.get("cpu_percent"),
-            "memory_percent": pressure.get("memory_percent"),
-            "maxed_out": pressure.get("maxed_out", False),
-            "reasons": pressure.get("reasons", []),
-        },
-        "cloud": cloud,
-        "jules_fleet": fleet,
-        "gemini_cli": gemini_cli,
-        "antigravity_cli": antigravity_cli,
-        "alliance": alliance,
-        "cloud_sync": cloud_sync,
-        "codebase_analysis": codebase_analysis,
-        "repo_context": {
-            "status": repo_context.get("status", "unknown"),
-            "summary": repo_summary,
-            "collisions": repo_context.get("collisions", [])[:12],
-            "guardrails": repo_context.get("guardrails", []),
-            "cache_age_s": repo_context.get("cache_age_s", 0),
-        },
-        "recent_logs": logs,
-        "model_loop": {
-            "mode": "vm_browser",
-            "requires_provider_api_keys": False,
-        },
-        "env_keys_present": [
-            k for k in [
-                "BROWSER_MODEL_LOOP_URL",
-                "GCE_WORKER_IP",
-                "GMAIL_USER",
-                "GEMINI_CLI_PATH",
-                "ANTIGRAVITY_CLI_PATH",
-                "AGY_CLI_PATH",
-            ]
-            if env.get(k)
-        ],
-    }
-
 
 def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, Any]:
     """Aggregate full dashboard status. Never raises."""
@@ -521,47 +185,94 @@ def get_dashboard_status(bridge_start_utc: datetime | None = None) -> dict[str, 
         if _dashboard_status_cache:
             ts, cached_res = _dashboard_status_cache.get('last', (0, {}))
             if now_ts - ts < cache_ttl:
-                result = dict(cached_res)
-                result['cache_age_s'] = int(now_ts - ts)
-                return _stamp_contract(result, transport="poll")
+                cached_res['cache_age_s'] = int(now_ts - ts)
+                return cached_res
 
-        result = _stamp_contract(_build_dashboard_status(bridge_start_utc), transport="poll")
+        now = datetime.now(timezone.utc)
+        uptime_s = int((now - bridge_start_utc).total_seconds()) if bridge_start_utc else 0
+
+        env = _env_vars()
+        runtime = _runtime_context(env)
+        pressure = detect_resource_pressure()
+        fleet = _fleet_status()
+        cloud = _vm_info(env)
+        logs = _tail_log()
+        repo_context = build_repo_context_guard(include_repos=False)
+        repo_summary = dict(repo_context.get("summary", {}))
+        repo_summary.pop("sample_repos", None)
+
+        ghost = {}
+        try:
+            from modules.ghost_state import get_ghost_status  # pylint: disable=import-outside-toplevel
+
+            ghost = get_ghost_status()
+        except Exception:  # pylint: disable=broad-exception-caught
+            ghost = {"ghost_locked": False, "always_on_enforced": False}
+
+        ngrok_url = ""
+        # Try to extract ngrok URL from recent logs
+        for line in reversed(logs):
+            if "ngrok-free.dev" in line or "ngrok.io" in line:
+                match = re.search(r"https://[a-z0-9\-]+\.ngrok[a-z.\-]*/", line)
+                if match:
+                    ngrok_url = match.group(0).rstrip("/")
+                    break
+
+        result = {
+            "ok": True,
+            "timestamp": now.isoformat(),
+            "cache_age_s": 0,
+            **runtime,
+            "bridge": {
+                "status": "running",
+                "uptime_s": uptime_s,
+                "uptime_human": _fmt_uptime(uptime_s),
+                "ngrok_url": ngrok_url,
+                "local_url": "http://127.0.0.1:5000",
+            },
+            "resource_pressure": {
+                "status": pressure.get("status", "unknown"),
+                "cpu_percent": pressure.get("cpu_percent"),
+                "memory_percent": pressure.get("memory_percent"),
+                "maxed_out": pressure.get("maxed_out", False),
+                "reasons": pressure.get("reasons", []),
+            },
+            "cloud": cloud,
+            "jules_fleet": fleet,
+            "repo_context": {
+                "status": repo_context.get("status", "unknown"),
+                "summary": repo_summary,
+                "collisions": repo_context.get("collisions", [])[:12],
+                "guardrails": repo_context.get("guardrails", []),
+                "cache_age_s": repo_context.get("cache_age_s", 0),
+            },
+            "recent_logs": logs,
+            "model_loop": {
+                "mode": "vm_browser",
+                "requires_provider_api_keys": False,
+            },
+            "env_keys_present": [
+                k for k in ["BROWSER_MODEL_LOOP_URL", "GCE_WORKER_IP", "GMAIL_USER", "GMAIL_APP_PASSWORD", "EMAIL_TO"]
+                if env.get(k)
+            ],
+            "email_configured": bool(
+                env.get("GMAIL_USER")
+                and env.get("GMAIL_APP_PASSWORD")
+                and env.get("GMAIL_USER") not in ("your@gmail.com", "")
+                and env.get("GMAIL_APP_PASSWORD") not in ("your-16-char-app-password", "")
+            ),
+            "ghost": {
+                "ghost_locked": ghost.get("ghost_locked", False),
+                "always_on_enforced": ghost.get("always_on_enforced", False),
+                "host_id": ghost.get("host_id"),
+                "location": ghost.get("location"),
+                "locked_at_utc": ghost.get("locked_at_utc"),
+            },
+        }
         _dashboard_status_cache['last'] = (now_ts, result)
         return result
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        return _stamp_contract({"ok": False, "error": str(exc)}, transport="poll")
-
-
-def dashboard_status_event_stream(
-    bridge_start_utc: datetime | None = None,
-    *,
-    interval_s: float = _DEFAULT_STREAM_INTERVAL_S,
-    max_events: int = 0,
-    sleep_fn: Any = time.sleep,
-) -> Any:
-    """Yield Server-Sent Events carrying fresh dashboard status snapshots."""
-    try:
-        interval = max(0.2, min(float(interval_s or _DEFAULT_STREAM_INTERVAL_S), _MAX_STREAM_INTERVAL_S))
-    except (TypeError, ValueError):
-        interval = _DEFAULT_STREAM_INTERVAL_S
-    limit = max(0, int(max_events or 0))
-
-    yield f"retry: {_STREAM_RETRY_MS}\n\n"
-    sent = 0
-    while limit == 0 or sent < limit:
-        sent += 1
-        try:
-            result = _stamp_contract(_build_dashboard_status(bridge_start_utc), transport="sse", sequence=sent)
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            result = _stamp_contract(
-                {"ok": False, "error": "stream_error", "details": str(exc)[:160]},
-                transport="sse",
-                sequence=sent,
-            )
-        payload = json.dumps(result, ensure_ascii=True, separators=(",", ":"))
-        yield f"id: {sent}\nevent: dashboard-status\ndata: {payload}\n\n"
-        if limit == 0 or sent < limit:
-            sleep_fn(interval)
+        return {"ok": False, "error": str(exc)}
 
 
 def _fmt_uptime(seconds: int) -> str:

@@ -106,33 +106,6 @@ def inbox_write(
     return {"status": "success", "file": name}
 
 
-def inbox_append(
-    content: str,
-    file: str | None = None,
-    inbox_dir: str | None = None,
-) -> dict:
-    """Append content to a file in jules_inbox/.
-
-    Args:
-        content: Text to append (may be empty).
-        file: Basename of the target file.
-              Defaults to 'JULES_RESPONSE.md'.
-        inbox_dir: Override the default inbox directory path.
-
-    Returns:
-        dict with status and file keys.
-    """
-    base = inbox_dir or _DEFAULT_INBOX_DIR
-    name = _safe_basename(file, _DEFAULT_WRITE_FILE)
-    path = os.path.join(base, name)
-    os.makedirs(base, exist_ok=True)
-    with open(path, "a", encoding="utf-8") as handle:
-        handle.write(content)
-        if content and not content.endswith("\n"):
-            handle.write("\n")
-    return {"status": "success", "file": name, "mode": "append"}
-
-
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------

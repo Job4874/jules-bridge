@@ -13,9 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from collections import Counter
 from datetime import datetime, timezone
-from itertools import chain
 from pathlib import Path
 from typing import Iterable
 
@@ -464,7 +462,10 @@ def _context_metrics(capsules: Iterable[ContextCapsule]) -> dict:
     )
     omitted_chars = sum(int(row.get("omitted_middle_char_count") or 0) for row in rows)
     compression_ratio = round(prompt_chars / total_chars, 4) if total_chars else 0
-    signal_counts: dict[str, int] = dict(Counter(chain.from_iterable(row.get("signals", []) for row in rows)))
+    signal_counts: dict[str, int] = {}
+    for row in rows:
+        for signal in row.get("signals", []):
+            signal_counts[signal] = signal_counts.get(signal, 0) + 1
     return {
         "source_count": len(rows),
         "total_source_chars": total_chars,

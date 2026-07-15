@@ -11,7 +11,6 @@ Public interface:
 
 from __future__ import annotations
 
-import collections
 import hashlib
 import json
 import os
@@ -21,7 +20,6 @@ import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from collections import Counter
 from typing import Iterable
 
 from . import jules_api
@@ -1832,7 +1830,11 @@ def _compact_lines(lines: Iterable[str]) -> list[str]:
 
 
 def _count_statuses(tasks: Iterable[JulesTask]) -> dict[str, int]:
-    return dict(collections.Counter(str(task.get("status") or "unknown") for task in tasks))
+    counts: dict[str, int] = {}
+    for task in tasks:
+        status = str(task.get("status") or "unknown")
+        counts[status] = counts.get(status, 0) + 1
+    return counts
 
 
 def _status_filter(include_statuses: str | Iterable[str] | None) -> tuple[str, ...]:
@@ -2555,7 +2557,11 @@ def _looks_pulled_output(text: str) -> bool:
 
 
 def _count_row_statuses(rows: Iterable[dict]) -> dict[str, int]:
-    return dict(collections.Counter(str(row.get("cot_status") or "unknown") for row in rows))
+    counts: dict[str, int] = {}
+    for row in rows:
+        status = str(row.get("cot_status") or "unknown")
+        counts[status] = counts.get(status, 0) + 1
+    return counts
 
 
 def _cot_ledger_markdown(payload: JulesCotResult) -> str:
@@ -2757,7 +2763,11 @@ def _remote_last_active_seconds(line: str) -> int | None:
 
 
 def _count_remote_statuses(rows: Iterable[dict]) -> dict[str, int]:
-    return dict(collections.Counter(str(row.get("remote_status") or "unknown") for row in rows))
+    counts: dict[str, int] = {}
+    for row in rows:
+        status = str(row.get("remote_status") or "unknown")
+        counts[status] = counts.get(status, 0) + 1
+    return counts
 
 
 def _active_remote_session_count(rows: Iterable[dict]) -> int:

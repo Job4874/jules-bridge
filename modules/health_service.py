@@ -43,7 +43,7 @@ def _check_gcp() -> Dict[str, Any]:
                 capture_output=True,
                 text=True,
                 timeout=15,
-
+                shell=True,
                 check=False,
             )
             candidate = result.stdout.strip()
