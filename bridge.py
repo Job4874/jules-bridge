@@ -504,6 +504,10 @@ TENTACLES = [
     {"name": "browser_quiz",     "route": "POST /browser/quiz",              "reach": "Autonomously answer and submit a quiz using AI"},  # pylint: disable=line-too-long
     {"name": "browser_assignment","route": "POST /browser/assignment",       "reach": "Read assignment page and generate AI answer"},  # pylint: disable=line-too-long
     {"name": "learning_reflect", "route": "POST /learning/reflect",          "reach": "Post-task retrospective: write lessons to domain memory"},  # pylint: disable=line-too-long
+    # Antigravity SDK agent routes
+    {"name": "agent_preflight", "route": "POST /agent/preflight",            "reach": "Check google-antigravity SDK install and API key readiness"},  # pylint: disable=line-too-long
+    {"name": "agent_chat",      "route": "POST /agent/chat",                 "reach": "Send one prompt to an Antigravity SDK agent, return full text response"},  # pylint: disable=line-too-long
+    {"name": "agent_stream",    "route": "POST /agent/stream",               "reach": "Send one prompt and collect streaming tokens from the Antigravity SDK agent"},  # pylint: disable=line-too-long
 ]
 
 # ---------------------------------------------------------------------------
@@ -2385,6 +2389,107 @@ def learning_reflect_route():
         "memory_updated": reflection.memory_updated,
         "error": reflection.error,
     })
+
+
+
+# ---------------------------------------------------------------------------
+# Antigravity SDK agent routes
+# ---------------------------------------------------------------------------
+
+@app.route("/agent/preflight", methods=["POST"])
+@route_errors
+def agent_preflight_route():
+    """POST /agent/preflight — Check google-antigravity SDK install and API key.
+
+    Body (JSON): (none required)
+
+    Returns JSON with:
+        ready (bool): True when SDK is installed and GEMINI_API_KEY is set.
+        installed (bool): True when ``import google.antigravity`` succeeds.
+        api_key_present (bool): True when GEMINI_API_KEY env var is set.
+        sdk_version (str): SDK version or error message.
+        install_hint (str): Pip install hint when SDK is missing.
+        key_hint (str): Env var hint when API key is absent.
+        error (str): Non-empty on hard failure.
+    """
+    result = modules.agent_preflight()
+    return jsonify(dict(result))
+
+
+@app.route("/agent/chat", methods=["POST"])
+@route_errors
+def agent_chat_route():
+    """POST /agent/chat — Send one prompt to an Antigravity SDK agent.
+
+    Body (JSON):
+        prompt               (str, required): User message.
+        system_instructions  (str, optional): System prompt for the agent.
+        model                (str, optional): Model name (e.g. gemini-2.0-flash-exp).
+        timeout_s            (int, optional): Wall-clock timeout, default 90.
+        dry_run              (bool, optional): Default true — preview only.
+
+    Returns JSON with:
+        status (str): "ok" | "dry_run" | "timeout" | "error"
+        dry_run (bool)
+        text (str): Agent response text (empty on dry_run).
+        elapsed_ms (float): Time taken.
+        model (str): Model used.
+        error (str): Non-empty on failure.
+    """
+    data = json_payload()
+    prompt = string_field(data, "prompt")
+    system_instructions = string_field(data, "system_instructions", default="")
+    model = string_field(data, "model", default="")
+    timeout_s = int(data.get("timeout_s", 90) or 90)
+    dry_run = bool(data.get("dry_run", True))
+
+    result = modules.agent_chat(
+        prompt=prompt,
+        system_instructions=system_instructions,
+        model=model,
+        timeout_s=timeout_s,
+        dry_run=dry_run,
+    )
+    return jsonify(dict(result))
+
+
+@app.route("/agent/stream", methods=["POST"])
+@route_errors
+def agent_stream_route():
+    """POST /agent/stream — Collect full streaming token response from an Antigravity agent.
+
+    Body (JSON):
+        prompt               (str, required): User message.
+        system_instructions  (str, optional): System prompt.
+        model                (str, optional): Model name.
+        timeout_s            (int, optional): Wall-clock timeout, default 120.
+        dry_run              (bool, optional): Default true — preview only.
+
+    Returns JSON with:
+        status (str): "ok" | "dry_run" | "timeout" | "error"
+        dry_run (bool)
+        tokens (list[str]): Individual streamed tokens (empty on dry_run).
+        token_count (int): Length of tokens list.
+        text (str): Joined full response text.
+        elapsed_ms (float)
+        model (str)
+        error (str): Non-empty on failure.
+    """
+    data = json_payload()
+    prompt = string_field(data, "prompt")
+    system_instructions = string_field(data, "system_instructions", default="")
+    model = string_field(data, "model", default="")
+    timeout_s = int(data.get("timeout_s", 120) or 120)
+    dry_run = bool(data.get("dry_run", True))
+
+    result = modules.agent_stream(
+        prompt=prompt,
+        system_instructions=system_instructions,
+        model=model,
+        timeout_s=timeout_s,
+        dry_run=dry_run,
+    )
+    return jsonify(dict(result))
 
 
 # ---------------------------------------------------------------------------

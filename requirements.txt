@@ -4,3 +4,4 @@ pyautogui
 pyngrok
 requests
 google-cloud-aiplatform
+google-antigravity

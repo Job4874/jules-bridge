@@ -132,6 +132,14 @@ from .repo_context_guard import (
 )
 from .app_launcher import LaunchResult, launch_browser_to_url
 from .chat_service import ChatHealthResult, ChatResult, test_chat_providers, chat
+from .antigravity_agent import (
+    AgentPreflightResult,
+    AgentChatResult,
+    AgentStreamResult,
+    agent_preflight,
+    agent_chat,
+    agent_stream,
+)
 from .ghost_state import (
     GhostState,
     HostIdentity,
@@ -271,6 +279,13 @@ __all__ = [
     # repo_context_guard
     "RepoContextGuardResult",
     "build_repo_context_guard",
+    # antigravity_agent (SDK integration)
+    "AgentPreflightResult",
+    "AgentChatResult",
+    "AgentStreamResult",
+    "agent_preflight",
+    "agent_chat",
+    "agent_stream",
     # app_launcher
     "LaunchResult",
     "launch_browser_to_url",
