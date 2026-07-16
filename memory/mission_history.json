@@ -45,5 +45,17 @@
       "timing_ms": 800,
       "url": "https://www.reuters.com/business/finance/"
     }
+  },
+  {
+    "task_id": "TASK-003",
+    "title": "Keep Jules PR queue clear \u2014 review + merge safe PRs",
+    "type": "code",
+    "assigned_to": "jules_fleet",
+    "outcome": "done",
+    "timestamp": "2026-07-16T17:09:54.255485+00:00",
+    "result": {
+      "ok": true,
+      "dry_run": true
+    }
   }
 ]

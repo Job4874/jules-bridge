@@ -34,7 +34,7 @@
 - **url**: https://github.com/Job4874/jules-bridge/pulls
 - **deadline**: daily
 - **assigned_to**: jules_fleet
-- **status**: pending
+- **status**: done
 - **notes**: Run /jules/fleet-watch, auto-merge non-conflicting PRs
 
 ---

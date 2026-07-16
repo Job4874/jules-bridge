@@ -33,13 +33,15 @@ _SCREENSHOT_DIR = _ROOT_DIR / "memory" / "screenshots"
 _SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 # --- Default Chrome profile path (Windows) ---
+# Uses PLAYWRIGHT_CHROME_PROFILE env var, then detects current user automatically
+_CURRENT_USER = os.environ.get("USERNAME", os.environ.get("USER", ""))
 _DEFAULT_CHROME_PROFILE = os.environ.get(
     "PLAYWRIGHT_CHROME_PROFILE",
-    r"C:\Users\shpctac1002c\AppData\Local\Google\Chrome\User Data"
+    rf"C:\Users\{_CURRENT_USER}\AppData\Local\Google\Chrome\User Data"
 )
 _DEFAULT_EDGE_PROFILE = os.environ.get(
     "PLAYWRIGHT_EDGE_PROFILE",
-    r"C:\Users\shpctac1002c\AppData\Local\Microsoft\Edge\User Data"
+    rf"C:\Users\{_CURRENT_USER}\AppData\Local\Microsoft\Edge\User Data"
 )
 _SCREENSHOT_TIMEOUT = int(os.environ.get("PLAYWRIGHT_TIMEOUT_MS", "30000"))
 
