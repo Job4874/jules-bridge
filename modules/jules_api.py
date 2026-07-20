@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -40,9 +42,18 @@ def is_rest_api_requested(env: dict[str, str] | None = None) -> bool:
 
 
 def is_rest_api_enabled(env: dict[str, str] | None = None) -> bool:
-    """Return whether REST routing is requested and an API key is present."""
+    """Return whether REST routing is requested and a credential is present.
+
+    A credential is any of: an OAuth2 bearer token (``JULES_ACCESS_TOKEN``), a
+    token command (``JULES_TOKEN_CMD``), or a legacy API key (``JULES_API_KEY``).
+    """
     env_map = os.environ if env is None else env
-    return is_rest_api_requested(env_map) and bool(str(env_map.get("JULES_API_KEY", "")).strip())
+    has_credential = bool(
+        str(env_map.get("JULES_ACCESS_TOKEN", "")).strip()
+        or str(env_map.get("JULES_TOKEN_CMD", "")).strip()
+        or str(env_map.get("JULES_API_KEY", "")).strip()
+    )
+    return is_rest_api_requested(env_map) and has_credential
 
 
 def jules_api_preflight(
@@ -348,6 +359,56 @@ def sessions_to_stdout(sessions: list[dict]) -> str:
     return "\n".join(lines) + ("\n" if lines else "")
 
 
+# OAuth2 access-token cache for the auto-refresh (JULES_TOKEN_CMD) path.
+_TOKEN_CACHE: dict[str, Any] = {"token": "", "expires_at": 0.0}
+
+
+def _run_token_cmd(cmd: str, timeout_s: int = 30) -> str:
+    """Run the configured token command and return the first stdout line, or ''."""
+    try:
+        proc = subprocess.run(
+            cmd, shell=True, capture_output=True, text=True, timeout=max(1, timeout_s)
+        )
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
+    if proc.returncode != 0 or not proc.stdout:
+        return ""
+    lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    return lines[0] if lines else ""
+
+
+def _access_token(force_refresh: bool = False) -> str:
+    """Resolve an OAuth2 bearer token for Jules API auth.
+
+    Resolution order:
+      1. ``JULES_TOKEN_CMD`` — a shell command that prints a fresh access token
+         (e.g. ``gcloud auth print-access-token``). Its result is cached for
+         ``JULES_TOKEN_TTL_S`` seconds (default 3300 = 55 min) and auto-refreshed
+         on expiry or after a 401.
+      2. ``JULES_ACCESS_TOKEN`` — a static token supplied via the environment.
+
+    Returns "" when no token source is configured (caller falls back to the
+    legacy ``JULES_API_KEY`` header).
+    """
+    cmd = os.environ.get("JULES_TOKEN_CMD", "").strip()
+    if cmd:
+        now = time.time()
+        cached = str(_TOKEN_CACHE.get("token") or "")
+        if not force_refresh and cached and now < float(_TOKEN_CACHE.get("expires_at") or 0.0):
+            return cached
+        token = _run_token_cmd(cmd)
+        if token:
+            try:
+                ttl = int(os.environ.get("JULES_TOKEN_TTL_S", "3300"))
+            except ValueError:
+                ttl = 3300
+            _TOKEN_CACHE["token"] = token
+            _TOKEN_CACHE["expires_at"] = now + max(60, ttl)
+            return token
+        # Command failed — fall through to any static token below.
+    return os.environ.get("JULES_ACCESS_TOKEN", "").strip()
+
+
 def _api_request(
     method: str,
     path: str,
@@ -357,63 +418,83 @@ def _api_request(
     query: dict | None = None,
     timeout_s: int = 30,
 ) -> dict:
-    if not api_key:
+    token = _access_token()
+    if not token and not api_key:
         return {
             "ok": False,
             "http_status": None,
             "payload": {},
-            "error": "JULES_API_KEY is required",
-            "likely_blocker": "missing_api_key",
+            "error": "No Jules credential: set JULES_ACCESS_TOKEN, JULES_TOKEN_CMD, or JULES_API_KEY",
+            "likely_blocker": "missing_credentials",
         }
     url = _url(base_url, path, query=query)
-    data = None
-    headers = {
-        "X-Goog-Api-Key": api_key,
-        "Accept": "application/json",
-    }
-    if body is not None:
-        data = json.dumps(body).encode("utf-8")
-        headers["Content-Type"] = "application/json"
-    request = urllib.request.Request(url, data=data, headers=headers, method=method.upper())
-    try:
-        with urllib.request.urlopen(request, timeout=max(1, int(timeout_s or 30))) as response:
-            text = response.read().decode("utf-8", errors="replace")
+    data = json.dumps(body).encode("utf-8") if body is not None else None
+
+    def _send(bearer: str) -> dict:
+        # Prefer an OAuth2 bearer token (the Jules API requires this); fall back
+        # to the legacy API-key header only when no token is available.
+        headers = {"Accept": "application/json"}
+        if bearer:
+            headers["Authorization"] = "Bearer " + bearer
+            secret = bearer
+        else:
+            headers["X-Goog-Api-Key"] = api_key
+            secret = api_key
+        if data is not None:
+            headers["Content-Type"] = "application/json"
+        request = urllib.request.Request(url, data=data, headers=headers, method=method.upper())
+        try:
+            with urllib.request.urlopen(request, timeout=max(1, int(timeout_s or 30))) as response:
+                text = response.read().decode("utf-8", errors="replace")
+                return {
+                    "ok": 200 <= int(response.status) < 300,
+                    "http_status": int(response.status),
+                    "payload": _parse_json(text),
+                    "error": "",
+                    "likely_blocker": "",
+                    "url": _redact(url, secret),
+                }
+        except urllib.error.HTTPError as exc:
+            text = exc.read().decode("utf-8", errors="replace")
             return {
-                "ok": 200 <= int(response.status) < 300,
-                "http_status": int(response.status),
+                "ok": False,
+                "http_status": int(exc.code),
                 "payload": _parse_json(text),
-                "error": "",
-                "likely_blocker": "",
-                "url": _redact(url, api_key),
+                "error": _redact(f"HTTP {exc.code}: {text or exc.reason}", secret),
+                "likely_blocker": _http_blocker(int(exc.code)),
+                "url": _redact(url, secret),
             }
-    except urllib.error.HTTPError as exc:
-        text = exc.read().decode("utf-8", errors="replace")
-        return {
-            "ok": False,
-            "http_status": int(exc.code),
-            "payload": _parse_json(text),
-            "error": _redact(f"HTTP {exc.code}: {text or exc.reason}", api_key),
-            "likely_blocker": _http_blocker(int(exc.code)),
-            "url": _redact(url, api_key),
-        }
-    except urllib.error.URLError as exc:
-        return {
-            "ok": False,
-            "http_status": None,
-            "payload": {},
-            "error": _redact(str(exc.reason), api_key),
-            "likely_blocker": "network_error",
-            "url": _redact(url, api_key),
-        }
-    except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
-        return {
-            "ok": False,
-            "http_status": None,
-            "payload": {},
-            "error": _redact(str(exc), api_key),
-            "likely_blocker": "request_error",
-            "url": _redact(url, api_key),
-        }
+        except urllib.error.URLError as exc:
+            return {
+                "ok": False,
+                "http_status": None,
+                "payload": {},
+                "error": _redact(str(exc.reason), secret),
+                "likely_blocker": "network_error",
+                "url": _redact(url, secret),
+            }
+        except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
+            return {
+                "ok": False,
+                "http_status": None,
+                "payload": {},
+                "error": _redact(str(exc), secret),
+                "likely_blocker": "request_error",
+                "url": _redact(url, secret),
+            }
+
+    result = _send(token)
+    # Auto-refresh: if a command-sourced token expired mid-flight (401), mint a
+    # fresh one once and retry so long-running callers self-heal.
+    if (
+        result.get("http_status") == 401
+        and token
+        and os.environ.get("JULES_TOKEN_CMD", "").strip()
+    ):
+        refreshed = _access_token(force_refresh=True)
+        if refreshed and refreshed != token:
+            result = _send(refreshed)
+    return result
 
 
 def _operation_result(
