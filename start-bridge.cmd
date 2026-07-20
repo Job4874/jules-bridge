@@ -1,17 +1,17 @@
 @echo off
-REM start-bridge.cmd -- Starts the Jules Bridge as a fully detached background process.
-REM Called by Launch-AutoPilot.ps1 when bridge is not running.
+setlocal
 
-set PYTHONPATH=C:\Users\shpctac1002c\AppData\Roaming\Python\Python312\site-packages
-set PYTHONEXE=C:\Users\shpctac1002c\AppData\Local\Programs\Python\Python312\python.exe
+cd /d "%~dp0"
 
-REM Load .env into environment
-for /f "usebackq tokens=1,* delims==" %%A in ("%~dp0.env") do (
-    if not "%%A"=="" if not "%%A:~0,1%"=="#" (
-        set "%%A=%%B"
-    )
+set "PYTHON=%~dp0.venv\Scripts\python.exe"
+
+if not exist "%PYTHON%" (
+    echo ERROR: Virtual environment not found.
+    echo Run setup-bridge.cmd first to create the venv and install dependencies.
+    exit /b 1
 )
 
-REM Start bridge fully detached (not a child of this cmd window)
-start /b "" "%PYTHONEXE%" "%~dp0bridge.py"
-echo Bridge started.
+echo Starting Jules Bridge...
+echo Press Ctrl+C to stop.
+echo.
+"%PYTHON%" "%~dp0bridge.py"
