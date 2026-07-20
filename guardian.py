@@ -23,6 +23,7 @@ Safe stop: type  4874  then press Enter  in the terminal window.
 
 import argparse
 import ctypes
+import ctypes.wintypes
 import logging
 import os
 import sys
@@ -95,15 +96,19 @@ def _monitor_off() -> None:
         log.warning("Could not turn monitor off: %s", exc)
 
 
+MOUSEEVENTF_MOVE = 0x0001
+
+
 def _jiggle_mouse() -> None:
-    """Move mouse 1 pixel and back — imperceptible but resets idle timer."""
+    """Move mouse 1 pixel and back using ctypes — no pyautogui needed."""
     try:
-        import pyautogui  # lazy — headless-incompatible
-        pyautogui.FAILSAFE = False
-        x, y = pyautogui.position()
-        pyautogui.moveRel(1, 0, duration=0.05)
-        pyautogui.moveRel(-1, 0, duration=0.05)
-        log.debug("Mouse jiggled at (%d, %d)", x, y)
+        user32 = ctypes.windll.user32
+        pt = ctypes.wintypes.POINT()
+        user32.GetCursorPos(ctypes.byref(pt))
+        user32.mouse_event(MOUSEEVENTF_MOVE, 1, 0, 0, 0)
+        time.sleep(0.05)
+        user32.mouse_event(MOUSEEVENTF_MOVE, ctypes.c_ulong(-1).value, 0, 0, 0)
+        log.debug("Mouse jiggled at (%d, %d)", pt.x, pt.y)
     except Exception as exc:  # noqa: BLE001
         log.warning("Mouse jiggle failed: %s", exc)
 
