@@ -140,6 +140,16 @@ from .antigravity_agent import (
     agent_chat,
     agent_stream,
 )
+from .gemini_cli import (
+    gemini_preflight,
+    run_gemini_prompt,
+    gemini_status_snapshot,
+)
+from .antigravity_cli import (
+    antigravity_preflight,
+    run_antigravity_prompt,
+)
+from .collaboration_proof import build_collaboration_proof
 from .ghost_state import (
     GhostState,
     HostIdentity,
@@ -286,6 +296,15 @@ __all__ = [
     "agent_preflight",
     "agent_chat",
     "agent_stream",
+    # gemini_cli (Gemini CLI orchestration)
+    "gemini_preflight",
+    "run_gemini_prompt",
+    "gemini_status_snapshot",
+    # antigravity_cli (Antigravity CLI orchestration)
+    "antigravity_preflight",
+    "run_antigravity_prompt",
+    # collaboration_proof (no-slop collaboration proof harness)
+    "build_collaboration_proof",
     # app_launcher
     "LaunchResult",
     "launch_browser_to_url",

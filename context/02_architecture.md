@@ -268,4 +268,21 @@ Every module has a **simple typed interface** hiding complex implementation:
 - **Circuit Breaker**: An `@app.before_request` hook blocks any route that is
   called excessively (default 20 calls/min, polling routes 200 calls/min)
   with an HTTP 429 to prevent autonomous doom loops.
+
+## Agent Collaboration Surface (deep-module boundaries)
+
+The multi-agent collaboration surface follows the same guardrail as the rest of
+the bridge: bridge.py routes are ONLY request validation and JSON shaping, and
+every piece of orchestration logic lives in a deep module.
+
+- **Gemini boundary**: `modules/gemini_cli.py` owns Gemini CLI orchestration
+  (candidate discovery, argv construction, bounded subprocess calls). The bridge
+  exposes it through `POST /gemini/preflight` (read-only readiness) and
+  `POST /gemini/prompt` (headless, dry-run by default, plan approval mode).
+- **Antigravity boundary**: `modules/antigravity_cli.py` owns Antigravity (`agy`)
+  CLI orchestration. The bridge exposes it through
+  `POST /gemini/antigravity/preflight` and `POST /gemini/antigravity/prompt`.
+- **Collaboration proof**: `modules/collaboration_proof.py` gathers current-state
+  evidence across the Jules, Gemini, and Antigravity surfaces and returns a
+  rerunnable no-slop report via `POST /proof/collaboration`.
 - Observe: `retrospective_module.py` reads logs → writes memory

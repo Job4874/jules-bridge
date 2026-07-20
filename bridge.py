@@ -2493,6 +2493,140 @@ def agent_stream_route():
 
 
 # ---------------------------------------------------------------------------
+# Gemini / Antigravity collaboration surface
+# ---------------------------------------------------------------------------
+
+
+@app.route("/gemini/preflight", methods=["POST"])
+@route_errors
+def gemini_preflight_route():
+    """POST /gemini/preflight — Diagnose Gemini CLI readiness (read-only).
+
+    Body (JSON):
+        run_smoke (bool, optional): Run a minimal headless plan-mode smoke check.
+        model     (str, optional): Model passed through to the CLI.
+
+    Returns the GeminiPreflightResult as JSON. Never raises.
+    """
+    data = json_payload()
+    run_smoke = bool(data.get("run_smoke", False))
+    model = string_field(data, "model", default="")
+    result = modules.gemini_preflight(run_smoke=run_smoke, model=model, write_state=False)
+    return jsonify(dict(result))
+
+
+@app.route("/gemini/prompt", methods=["POST"])
+@route_errors
+def gemini_prompt_route():
+    """POST /gemini/prompt — Run one Gemini CLI headless prompt (dry-run by default).
+
+    Body (JSON):
+        prompt        (str, required): Headless prompt passed to `gemini -p`.
+        cwd           (str, optional): Working directory.
+        model         (str, optional): Model string passed to `--model`.
+        approval_mode (str, optional, default="plan"): Gemini approval mode.
+        output_format (str, optional, default="text"): text | json | stream-json.
+        timeout_s     (int, optional, default=120): Bounded subprocess timeout.
+        dry_run       (bool, optional, default=true): Preview only when true.
+
+    Returns the GeminiPromptResult as JSON. Never raises.
+    """
+    data = json_payload()
+    prompt = string_field(data, "prompt")
+    cwd = string_field(data, "cwd", default="")
+    model = string_field(data, "model", default="")
+    approval_mode = string_field(data, "approval_mode", default="plan")
+    output_format = string_field(data, "output_format", default="text")
+    timeout_s = int_field(data, "timeout_s", default=120, min_value=1)
+    dry_run = bool(data.get("dry_run", True))
+    result = modules.run_gemini_prompt(
+        prompt=prompt,
+        cwd=cwd,
+        model=model,
+        approval_mode=approval_mode,
+        output_format=output_format,
+        timeout_s=timeout_s,
+        dry_run=dry_run,
+        write_state=False,
+    )
+    return jsonify(dict(result))
+
+
+@app.route("/gemini/antigravity/preflight", methods=["POST"])
+@route_errors
+def antigravity_preflight_route():
+    """POST /gemini/antigravity/preflight — Diagnose Antigravity CLI readiness (read-only).
+
+    Body (JSON):
+        run_smoke (bool, optional): Run a minimal noninteractive smoke check.
+        model     (str, optional): Model passed through to the CLI.
+
+    Returns the AntigravityPreflightResult as JSON. Never raises.
+    """
+    data = json_payload()
+    run_smoke = bool(data.get("run_smoke", False))
+    model = string_field(data, "model", default="")
+    result = modules.antigravity_preflight(run_smoke=run_smoke, model=model, write_state=False)
+    return jsonify(dict(result))
+
+
+@app.route("/gemini/antigravity/prompt", methods=["POST"])
+@route_errors
+def antigravity_prompt_route():
+    """POST /gemini/antigravity/prompt — Run one Antigravity CLI prompt (dry-run by default).
+
+    Body (JSON):
+        prompt    (str, required): Headless prompt passed to `agy -p`.
+        cwd       (str, optional): Working directory.
+        model     (str, optional): Model string passed to `--model`.
+        timeout_s (int, optional, default=120): Bounded subprocess timeout.
+        dry_run   (bool, optional, default=true): Preview only when true.
+
+    Returns the AntigravityPromptResult as JSON. Never raises.
+    """
+    data = json_payload()
+    prompt = string_field(data, "prompt")
+    cwd = string_field(data, "cwd", default="")
+    model = string_field(data, "model", default="")
+    timeout_s = int_field(data, "timeout_s", default=120, min_value=1)
+    dry_run = bool(data.get("dry_run", True))
+    result = modules.run_antigravity_prompt(
+        prompt=prompt,
+        cwd=cwd,
+        model=model,
+        timeout_s=timeout_s,
+        dry_run=dry_run,
+        write_state=False,
+    )
+    return jsonify(dict(result))
+
+
+@app.route("/proof/collaboration", methods=["POST"])
+@route_errors
+def collaboration_proof_route():
+    """POST /proof/collaboration — Build the no-slop collaboration proof report.
+
+    Read-only: gathers current-state evidence from the agent surfaces and
+    returns a rerunnable proof. Does not launch Jules sessions or run edits.
+
+    Body (JSON):
+        include_live_checks (bool, optional, default=false): Allow read-only live probes.
+        run_gemini_smoke    (bool, optional, default=false): Run Gemini/Antigravity smoke checks.
+
+    Returns the CollaborationProofResult as JSON. Never raises.
+    """
+    data = json_payload()
+    include_live_checks = bool(data.get("include_live_checks", False))
+    run_gemini_smoke = bool(data.get("run_gemini_smoke", False))
+    result = modules.build_collaboration_proof(
+        include_live_checks=include_live_checks,
+        run_gemini_smoke=run_gemini_smoke,
+        write_state=False,
+    )
+    return jsonify(dict(result))
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 

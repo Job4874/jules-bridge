@@ -34,6 +34,15 @@ from typing import Any, Dict, List, Optional
 
 _LOGGER = logging.getLogger("jules_bridge.reasoning")
 
+# Canonical collaboration problem statement consumed by collaboration_proof.
+# Restored after it was dropped in the squashed architecture rewrite (dfc1ad4).
+HRM_COLLABORATION_PROBLEM = (
+    "Prove that Jules and Gemini can coordinate through a no-slop bridge.\n\n"
+    "Context: Use context, skills, HRM reasoning, evidence gates, and tests.\n\n"
+    "Return structured JSON with fields:\n"
+    "architecture_proven, not_yet_proven, operator_plan, tests, risk_controls."
+)
+
 # ---------------------------------------------------------------------------
 # Model alias table — callers use aliases, not provider model strings
 # ---------------------------------------------------------------------------

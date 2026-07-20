@@ -6,7 +6,7 @@ import modules.gemini_cli as gemini_cli
 
 def _candidate(path: str = "gemini"):
     return {
-        "label": "test",
+        "label": "requested",
         "requested": path,
         "resolved": path,
         "exists": True,
@@ -14,7 +14,7 @@ def _candidate(path: str = "gemini"):
 
 
 def test_gemini_preflight_writes_ready_state(monkeypatch, tmp_path):
-    def fake_run(command, timeout_s, cwd=None):
+    def fake_run(command, timeout_s, cwd=None, env=None):
         if "--version" in command:
             return {"exit_code": 0, "stdout": "0.49.0\n", "stderr": "", "timed_out": False}
         return {"exit_code": 0, "stdout": "ok\n", "stderr": "", "timed_out": False}
@@ -39,7 +39,7 @@ def test_gemini_preflight_smoke_uses_plan_mode(monkeypatch):
     monkeypatch.setattr(
         gemini_cli,
         "_run_cli_command",
-        lambda command, timeout_s, cwd=None: {
+        lambda command, timeout_s, cwd=None, env=None: {
             "exit_code": 0,
             "stdout": "0.49.0\n" if "--version" in command else "ok\n",
             "stderr": "",
@@ -72,7 +72,7 @@ def test_run_gemini_prompt_dry_run_redacts_prompt(monkeypatch):
 def test_run_gemini_prompt_live_builds_headless_command(monkeypatch, tmp_path):
     calls = []
 
-    def fake_run(command, timeout_s, cwd=None):
+    def fake_run(command, timeout_s, cwd=None, env=None):
         calls.append((command, timeout_s, cwd))
         return {"exit_code": 0, "stdout": "done\n", "stderr": "", "timed_out": False}
 

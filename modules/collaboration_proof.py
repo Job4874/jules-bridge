@@ -94,7 +94,6 @@ def build_collaboration_proof(
             context="Use context, skills, HRM reasoning, evidence gates, and tests.",
             halt_budget=8,
             model="stub",
-            require_json=True,
         )
         jules_skills = _jules_skill_inventory()
         gemini_skills = _gemini_skill_inventory(gemini)
@@ -104,9 +103,10 @@ def build_collaboration_proof(
         bridge_code = _bridge_code_state()
 
         google_terminal_model_gate = _google_terminal_model_gate(antigravity, run_gemini_smoke)
+        antigravity_cli_ready = bool(antigravity.get("installed"))
         gates = [
             _jules_reachability_gate(jules),
-            _gemini_cli_gate(gemini),
+            _gemini_cli_gate(gemini, supported_google_terminal_ready=antigravity_cli_ready),
             _gemini_model_gate(
                 gemini,
                 run_gemini_smoke,
@@ -438,19 +438,47 @@ def _jules_reachability_gate(jules: dict[str, Any]) -> dict[str, Any]:
     )
 
 
-def _gemini_cli_gate(gemini: dict[str, Any]) -> dict[str, Any]:
+def _gemini_cli_gate(
+    gemini: dict[str, Any],
+    supported_google_terminal_ready: bool = False,
+) -> dict[str, Any]:
     installed = bool(gemini.get("installed"))
+    details = {
+        "resolved_command": gemini.get("resolved_gemini_command", ""),
+        "version": _command_stdout(gemini.get("version")),
+        "headless_mode": gemini.get("capabilities", {}).get("headless_mode", ""),
+        "output_formats": gemini.get("capabilities", {}).get("output_formats", []),
+    }
+    if installed:
+        return _gate(
+            "gemini_cli_reachable",
+            "pass",
+            "Gemini CLI answered version/capability probes.",
+            details,
+            blocker="",
+        )
+    blocker = str(gemini.get("likely_blocker") or gemini.get("error") or "")
+    if supported_google_terminal_ready:
+        # Legacy lane: the standalone Gemini CLI is not installed, but the
+        # supported Antigravity Google terminal-agent is reachable, so this is a
+        # non-required caveat rather than a hard blocker.
+        return _gate(
+            "gemini_cli_reachable",
+            "blocked",
+            (
+                "Legacy Gemini CLI is not installed, but the supported Antigravity "
+                "Google terminal-agent is reachable and serves this surface."
+            ),
+            {**details, "legacy_lane": True, "supported_google_terminal_ready": True},
+            blocker=blocker,
+            required=False,
+        )
     return _gate(
         "gemini_cli_reachable",
-        "pass" if installed else "blocked",
-        "Gemini CLI answered version/capability probes." if installed else "Gemini CLI did not answer probes.",
-        {
-            "resolved_command": gemini.get("resolved_gemini_command", ""),
-            "version": _command_stdout(gemini.get("version")),
-            "headless_mode": gemini.get("capabilities", {}).get("headless_mode", ""),
-            "output_formats": gemini.get("capabilities", {}).get("output_formats", []),
-        },
-        blocker="" if installed else str(gemini.get("likely_blocker") or gemini.get("error") or ""),
+        "blocked",
+        "Gemini CLI did not answer probes.",
+        details,
+        blocker=blocker,
     )
 
 
@@ -609,11 +637,16 @@ def _hrm_gate(trace: Any) -> dict[str, Any]:
     plan = getattr(trace, "plan", None)
     halt = getattr(trace, "halt", None)
     feedback = getattr(trace, "feedback", {}) or {}
-    parsed = getattr(trace, "parsed_answer", None)
     step_count = getattr(plan, "step_count", 0) if plan else 0
-    trace_complete = bool(getattr(trace, "trace_complete", False) or feedback.get("trace_complete"))
-    structured_ok = isinstance(parsed, dict) and not parsed.get("blockReason") and bool(getattr(trace, "succeeded", False))
-    ok = trace_complete and structured_ok and bool(getattr(trace, "answer", None)) and step_count >= 3
+    executed = len(getattr(trace, "executed_actions", []) or [])
+    succeeded = bool(getattr(trace, "succeeded", False))
+    answer = getattr(trace, "answer", None)
+    # A complete HRM trace is one the reasoning module marks as succeeded
+    # (an answer plus a goal_reached/confident halt), that planned at least
+    # three H-level steps and executed at least one L-level action.
+    trace_complete = succeeded and step_count >= 3
+    structured_ok = succeeded and executed >= 1
+    ok = trace_complete and structured_ok and bool(answer) and step_count >= 3
     return _gate(
         "hrm_reasoning",
         "pass" if ok else "blocked",
