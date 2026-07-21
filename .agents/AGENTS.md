@@ -3,6 +3,16 @@
 > This file is auto-discovered by all AI agents (Codex, Claude, Gemini, Cursor, etc.).
 > It is the single source of truth for how agents work with this codebase.
 
+## Antigravity Agent Configuration
+
+**Antigravity** is the primary agentic pair programmer for this repository.
+* **Role**: Lead developer, systems architect, and test executor.
+* **Directives**:
+  1. Enforce strict separation of concerns (all business logic in `modules/`, never in `bridge.py`).
+  2. Implement features using the `/tdd` (Test-Driven Development) loop.
+  3. Ensure GHOST Mode and local/remote tunnel connections are healthy.
+  4. Perform self-unblocking HRE cycles before requesting human escalation.
+
 ## Context Loading Order
 
 Before any implementation, read these files **in this exact order**:
@@ -47,11 +57,14 @@ Every session MUST end with:
 
 ## Agent Skills — When to Use Each
 
-Five core skills are installed in `.agents/skills/`. Use them at these exact moments:
+Eight core skills are installed in `.agents/skills/`. Use them at these exact moments:
 
 | Skill | When to Run | What It Does |
 | --- | --- | --- |
 | **`architect`** | Before any new route, module, or complex feature | Reads context, asks focused questions, surfaces unmade decisions, produces a plan |
+| **`tdd`** | During any feature implementation or bug fixing | Enforces Red-Green-Refactor test cycle at pre-agreed seams (from `mattpocock/skills`) |
+| **`grill-with-docs`** | Before major design changes or architectural shifts | Runs a grilling session to align architecture and generate ADRs (from `mattpocock/skills`) |
+| **`diagnosing-bugs`** | When troubleshooting or debugging bug reports | Systematically traces complex codebase errors (from `mattpocock/skills`) |
 | **`imprint`** | After building or modifying endpoints/modules | Captures API patterns into gotchas and module registry so future features stay consistent |
 | **`review`** | After any feature is implemented | Checks implementation against plan, architecture boundaries, and code standards. Reports issues by severity. Never auto-fixes. |
 | **`recover`** | When tests fail repeatedly, agent is stuck, or doom loop detected | Diagnoses failure mode (targeted bug, polluted context, wrong assumption) and gives correct remediation |
