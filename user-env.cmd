@@ -1,11 +1,6 @@
 @echo off
-REM user-env.cmd -- Portable environment setup. No hardcoded user paths.
-REM Uses %~dp0 (directory containing this script) for all paths.
-setlocal
-
-set "JULES_REPO=%~dp0"
+set "JULES_USER_DATA=C:\Users\S02748217\AppData\Local\JulesBridge"
+set "JULES_REPO=C:\jules-bridge-master"
 set "PYTHONIOENCODING=utf-8"
-set "PYTHON_EXE=%~dp0.venv\Scripts\python.exe"
-set "JULES_EXE="
-REM Jules CLI: override by setting JULES_EXE in your system environment or .env
-REM Example: set "JULES_EXE=C:\Users\YourName\.npm-packages\bin\jules.exe"
+set "PYTHON_EXE="C:\Users\S02748217\tools\Python312\python.exe""
+set "JULES_EXE="C:\Users\S02748217\.npm-packages\bin\jules.exe""

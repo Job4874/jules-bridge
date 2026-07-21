@@ -26,7 +26,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from notify_email import load_env  # noqa: E402
-from modules.reasoning_module import HRM_CONTROL_PLANE_PROBLEM  # noqa: E402
+from modules.reasoning_module import HRM_COLLABORATION_PROBLEM  # noqa: E402
 
 DEFAULT_BASE_URL = "http://127.0.0.1:5000"
 
@@ -92,7 +92,7 @@ def main() -> int:
         post = _test_client_post(token)
 
     hrm_body = {
-        "problem": HRM_CONTROL_PLANE_PROBLEM,
+        "problem": HRM_COLLABORATION_PROBLEM,
         "model": "stub",
         "require_json": True,
         "halt_budget": 12,
