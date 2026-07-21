@@ -34,7 +34,8 @@ if (Test-Path (Join-Path $RepoRoot ".env")) {
 }
 
 $code = @"
-import os
+import sys, os
+sys.path.insert(0, r'$($RepoRoot.Replace("'","''"))')
 import modules.mesh_registry as m
 host_id = os.environ.get('HOST_ID') or None
 role = os.environ.get('HOST_ROLE') or None
