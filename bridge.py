@@ -25,6 +25,10 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
 import notify_email as email_service
 from notify_email import load_env
 import modules
