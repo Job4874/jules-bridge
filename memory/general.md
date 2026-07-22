@@ -491,7 +491,9 @@ has gone wrong before and what to avoid.
   - `scripts/UnifiedOperatorService.py`: Background service loop with active checkpoint resumption.
   - `scripts/UnifiedOperatorWatchdog.py`: Watchdog process monitoring `/health` and triggering `sc.exe` service restarts on stale heartbeats (>30s).
 - Comprehensive Test Suites:
-  - `tests/test_unified_operator.py`: **7 passed** (unit tests for DB, locks, queue, 4-step loop, and heartbeats).
-  - `tests/test_unified_operator_endurance.py`: **3 passed** (endurance benchmark for crash recovery, WAL checkpoint state resumption, and concurrency limits).
-  - Full Codebase pytest suite: `python -m pytest tests/ -q` executed **582 passed, 1 skipped** in 46.72s.
-- Evidence Published: `UNIFIED_OPERATOR_PROOFS.md`.
+  - `tests/test_unified_operator.py`: **8 passed** (unit tests for DB, locks, queue, 4-step loop, heartbeats, and observation-grounded reasoning).
+  - `tests/test_desktop_worker.py`: **3 passed** (Playwright browser & UI automation adapter tests).
+  - `tests/test_external_reconciliation.py`: **2 passed** (post-crash external action reconciliation tests).
+  - `tests/test_unified_operator_endurance.py`: **3 passed** (endurance benchmark for crash recovery and WAL state resumption).
+  - Full Codebase pytest suite: `python -m pytest tests/ -q` executed **589 passed** in 45.99s.
+- Updated Audit Artifact: published `FULL_UNIFIED_OPERATOR_CLAIMS_AUDIT.md` (Pylint score **7.31/10**).

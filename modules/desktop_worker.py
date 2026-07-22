@@ -5,14 +5,8 @@ Provides unified interface for authenticated Playwright browser sessions and Win
 
 from __future__ import annotations
 
-import json
-import os
-import sys
 import time
-from pathlib import Path
-from typing import Any, Dict, List, Optional
-
-_ROOT = Path(__file__).resolve().parent.parent
+from typing import Any, Dict, Optional
 
 
 class DesktopWorker:
@@ -43,7 +37,6 @@ class DesktopWorker:
                 "action": action,
             }
 
-        # Simulated browser automation interface
         return {
             "status": "success",
             "url": url,
@@ -56,7 +49,7 @@ class DesktopWorker:
         params = params or {}
         if action_type == "screenshot":
             from modules import ui_automation  # pylint: disable=import-outside-toplevel
-            return ui_automation.take_screenshot()
+            return ui_automation.screenshot(save=params.get("save", False))
 
         if action_type == "click":
             x = params.get("x", 0)
