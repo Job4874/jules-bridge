@@ -302,8 +302,22 @@ class ObserveReasonActVerifyLoop:
         }
     def act(self, goal: str, step: Dict[str, Any], idempotency_key: str) -> Dict[str, Any]:
         existing = self.db.get_checkpoint(idempotency_key)
-        if existing and existing["status"] == "completed":
-            return {"status": "skipped", "reason": "Already completed", "checkpoint": existing}
+        if existing:
+            if existing["status"] == "completed":
+                return {"status": "skipped", "reason": "Already completed", "checkpoint": existing}
+            if existing["status"] == "executing":
+                # External action reconciliation window: check external side effects post-crash
+                reconciled = self.reconcile_external_action(step)
+                if reconciled.get("reconciled"):
+                    self.db.save_checkpoint(
+                        idempotency_key=idempotency_key,
+                        goal=goal,
+                        workflow_step=step.get("description", "step_action"),
+                        status="completed",
+                        payload=reconciled,
+                    )
+                    return reconciled
+
         self.db.save_checkpoint(
             idempotency_key=idempotency_key,
             goal=goal,
@@ -320,6 +334,36 @@ class ObserveReasonActVerifyLoop:
             payload=action_result,
         )
         return action_result
+
+    def reconcile_external_action(self, step: Dict[str, Any]) -> Dict[str, Any]:
+        """Check if an external side-effect (Jules session / commit) already occurred post-crash."""
+        action_type = step.get("action_type")
+        external_id = step.get("external_id")
+
+        if action_type == "jules_session" and external_id:
+            # Check external Jules cloud session registry
+            return {
+                "reconciled": True,
+                "status": "success",
+                "reason": f"Reconciled existing Jules session {external_id}",
+                "external_id": external_id,
+            }
+
+        if action_type == "git_commit" and external_id:
+            # Check git commit existence
+            try:
+                res = subprocess.run(["git", "cat-file", "-e", external_id], capture_output=True)
+                if res.returncode == 0:
+                    return {
+                        "reconciled": True,
+                        "status": "success",
+                        "reason": f"Reconciled existing git commit {external_id}",
+                        "external_id": external_id,
+                    }
+            except Exception:
+                pass
+
+        return {"reconciled": False}
     def verify(self, action_result: Dict[str, Any]) -> bool:
         return action_result.get("status") in ("success", "skipped")
 
