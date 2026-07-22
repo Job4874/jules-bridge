@@ -23,6 +23,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+try:
+    from modules import ledger_adapter
+except ImportError:
+    import ledger_adapter  # type: ignore[no-redef]
+
 logger = logging.getLogger("jules_bridge.mission_controller")
 
 _ROOT_DIR = Path(os.path.dirname(os.path.abspath(__file__))).parent
@@ -174,6 +179,9 @@ def mark_task_active(task: MissionTask) -> None:
     """Write ACTIVE_MISSION.md and update queue status."""
     try:
         _update_queue_status(task.task_id, "active")
+        m = ledger_adapter.sync_task_to_ledger(task.task_id, task.title, task.task_type, task.url, task.deadline, "active", task.notes)
+        if m and isinstance(m, dict) and m.get("missionId"):
+            ledger_adapter.acquire_mission_lease(m["missionId"], task.assigned_to or "jules_worker")
         content = f"""# ACTIVE MISSION — {task.task_id}
 
 - **Started**: {_now_iso()}
@@ -198,6 +206,9 @@ def mark_task_done(task: MissionTask, result: dict) -> None:
     try:
         _update_queue_status(task.task_id, "done")
         _append_history(task, "done", result)
+        m = ledger_adapter.sync_task_to_ledger(task.task_id, task.title, task.task_type, task.url, task.deadline, "done", task.notes)
+        if m and isinstance(m, dict) and m.get("missionId"):
+            ledger_adapter.record_mission_completion(m["missionId"], task.assigned_to or "jules_worker", ok=True, summary=result)
         content = f"""# MISSION COMPLETE — {task.task_id}
 
 - **Completed**: {_now_iso()}
@@ -216,6 +227,9 @@ def mark_task_failed(task: MissionTask, reason: str) -> None:
     try:
         _update_queue_status(task.task_id, "failed")
         _append_history(task, "failed", {"reason": reason})
+        m = ledger_adapter.sync_task_to_ledger(task.task_id, task.title, task.task_type, task.url, task.deadline, "failed", task.notes)
+        if m and isinstance(m, dict) and m.get("missionId"):
+            ledger_adapter.record_mission_completion(m["missionId"], task.assigned_to or "jules_worker", ok=False, error=reason)
         logger.warning("Mission failed: %s — %s", task.task_id, reason)
     except Exception as exc:  # noqa: BLE001
         logger.warning("mark_task_failed failed: %s", exc)
