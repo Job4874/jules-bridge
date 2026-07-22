@@ -50,6 +50,40 @@ class TestHostIdentity(unittest.TestCase):
         self.assertFalse(payload["configured"])
         self.assertIsNone(payload["public_key"])
 
+    def test_host_identity_fallback_and_normalization(self):
+        # 1. Test normalization of unsupported JULES_CONTEXT values
+        os.environ["JULES_IDENTITY"] = ""
+        os.environ["JULES_CONTEXT"] = "[INVALID_CONTEXT]"
+        with patch.object(host_identity, "_ram_gb", return_value=16.0):
+            payload = host_identity.get_host_identity()
+        # Normalizes to [LOCAL] because RAM is < 32
+        self.assertEqual(payload["execution_context"], "[LOCAL]")
+
+        with patch.object(host_identity, "_ram_gb", return_value=32.0):
+            payload = host_identity.get_host_identity()
+        # Normalizes to [SCHOOL_COMPUTE] because RAM is >= 32
+        self.assertEqual(payload["execution_context"], "[SCHOOL_COMPUTE]")
+
+        # 2. Test fallback label based on RAM size
+        os.environ.pop("JULES_IDENTITY", None)
+        with patch.object(host_identity, "_read_system_id_file", return_value=""), \
+             patch.object(host_identity, "_ram_gb", return_value=16.0):
+            payload = host_identity.get_host_identity()
+        self.assertEqual(payload["identity"], "Laptop-PC-RAM-16GB")
+
+        with patch.object(host_identity, "_read_system_id_file", return_value=""), \
+             patch.object(host_identity, "_ram_gb", return_value=64.0):
+            payload = host_identity.get_host_identity()
+        self.assertEqual(payload["identity"], "School-PC-RAM-64GB")
+
+        # 3. Test RAM extraction from label file when other mechanisms return None
+        # We mock os.name to "nt" to bypass the Linux return-None check in _ram_gb
+        with patch.object(host_identity, "_read_system_id_file", return_value="My-Workstation-32GB-RAM"), \
+             patch("os.name", "nt"), \
+             patch("subprocess.check_output", side_effect=Exception("powershell failed")):
+            ram = host_identity._ram_gb()
+        self.assertEqual(ram, 32.0)
+
 
 if __name__ == "__main__":
     unittest.main()

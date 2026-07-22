@@ -6,7 +6,7 @@ import modules.gemini_cli as gemini_cli
 
 def _candidate(path: str = "gemini"):
     return {
-        "label": "test",
+        "label": "requested",
         "requested": path,
         "resolved": path,
         "exists": True,
