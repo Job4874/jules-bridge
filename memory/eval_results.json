@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-21T21:48:20.877459+00:00",
+  "generated_at_utc": "2026-07-22T16:50:39.019488+00:00",
   "model": "stub",
   "problem_count": 3,
   "average_score": 0.95,
@@ -82,7 +82,7 @@
           "steps_budget": 8
         },
         "answer": "Executed action for step 3",
-        "elapsed_ms": 0.045599997974932194,
+        "elapsed_ms": 0.0714999987394549,
         "feedback": {
           "plan_confidence": 0.8,
           "steps_planned": 4,
@@ -187,7 +187,7 @@
           "steps_budget": 8
         },
         "answer": "Executed action for step 3",
-        "elapsed_ms": 0.018999999156221747,
+        "elapsed_ms": 0.03429999924264848,
         "feedback": {
           "plan_confidence": 0.8,
           "steps_planned": 4,
@@ -292,7 +292,7 @@
           "steps_budget": 8
         },
         "answer": "Executed action for step 3",
-        "elapsed_ms": 0.015499994333367795,
+        "elapsed_ms": 0.028200000087963417,
         "feedback": {
           "plan_confidence": 0.8,
           "steps_planned": 4,

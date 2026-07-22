@@ -1,7 +1,7 @@
 {
-  "generated_at_utc": "2026-07-22T16:36:25.111543+00:00",
-  "status": "pass",
-  "summary": "10/12 proof gates passed; no required blockers; legacy caveats remain at gemini_cli_reachable, gemini_model_execution.",
+  "generated_at_utc": "2026-07-22T16:52:00.528294+00:00",
+  "status": "skipped",
+  "summary": "9/12 proof gates passed; no required blockers; legacy caveats remain at gemini_cli_reachable.",
   "objective_requirements": [
     "Jules is reachable through CLI or REST and through the local bridge.",
     "Gemini CLI is installed, callable, and exposes its capability surface.",
@@ -59,27 +59,21 @@
     {
       "id": "REQ-003",
       "requirement": "Legacy Gemini authenticated model execution works through the bridge when that legacy lane is supported for the account.",
-      "status": "blocked",
+      "status": "skipped",
       "required_for_completion": false,
       "evidence_refs": [
         {
           "gate": "gemini_model_execution",
-          "status": "blocked",
-          "summary": "Legacy Gemini CLI model execution is unavailable for this account, but the supported Antigravity Google terminal-agent smoke passed."
+          "status": "skipped",
+          "summary": "Authenticated Gemini model execution was not requested for this proof run."
         }
       ],
-      "blockers": [
-        {
-          "gate": "gemini_model_execution",
-          "blocker": "version_failed",
-          "status": "blocked"
-        }
-      ]
+      "blockers": []
     },
     {
       "id": "REQ-003A",
       "requirement": "Antigravity can execute a Google terminal-agent model smoke through the bridge.",
-      "status": "pass",
+      "status": "skipped",
       "required_for_completion": true,
       "evidence_refs": [
         {
@@ -89,8 +83,8 @@
         },
         {
           "gate": "google_terminal_model_execution",
-          "status": "pass",
-          "summary": "Antigravity headless smoke prompt completed."
+          "status": "skipped",
+          "summary": "Supported Google terminal-agent model execution was not requested for this proof run."
         }
       ],
       "blockers": []
@@ -178,7 +172,7 @@
     {
       "id": "REQ-009",
       "requirement": "Jules and Gemini work together end-to-end.",
-      "status": "pass",
+      "status": "skipped",
       "required_for_completion": true,
       "evidence_refs": [
         {
@@ -198,8 +192,8 @@
         },
         {
           "gate": "google_terminal_model_execution",
-          "status": "pass",
-          "summary": "Antigravity headless smoke prompt completed."
+          "status": "skipped",
+          "summary": "Supported Google terminal-agent model execution was not requested for this proof run."
         },
         {
           "gate": "skills_framework",
@@ -237,13 +231,12 @@
     }
   ],
   "completion_assessment": {
-    "safe_to_mark_goal_complete": true,
-    "status": "pass",
-    "reason": "All required proof gates pass.",
+    "safe_to_mark_goal_complete": false,
+    "status": "skipped",
+    "reason": "The original goal remains active until every required proof gate passes.",
     "blocking_gates": [],
     "legacy_caveats": [
-      "gemini_cli_reachable",
-      "gemini_model_execution"
+      "gemini_cli_reachable"
     ]
   },
   "collaboration_workflow": [
@@ -304,17 +297,13 @@
     },
     {
       "name": "gemini_model_execution",
-      "status": "blocked",
-      "required": false,
-      "summary": "Legacy Gemini CLI model execution is unavailable for this account, but the supported Antigravity Google terminal-agent smoke passed.",
+      "status": "skipped",
+      "required": true,
+      "summary": "Authenticated Gemini model execution was not requested for this proof run.",
       "evidence": {
-        "smoke_status": "failed",
-        "exit_code": null,
-        "likely_blocker": "",
-        "legacy_lane": true,
-        "supported_google_terminal_ready": true
+        "smoke_status": "skipped"
       },
-      "blocker": "version_failed"
+      "blocker": ""
     },
     {
       "name": "antigravity_cli_reachable",
@@ -332,13 +321,11 @@
     },
     {
       "name": "google_terminal_model_execution",
-      "status": "pass",
+      "status": "skipped",
       "required": true,
-      "summary": "Antigravity headless smoke prompt completed.",
+      "summary": "Supported Google terminal-agent model execution was not requested for this proof run.",
       "evidence": {
-        "smoke_status": "ok",
-        "exit_code": 0,
-        "likely_blocker": ""
+        "smoke_status": "skipped"
       },
       "blocker": ""
     },
@@ -613,8 +600,8 @@
     "jules_sessions_created": false,
     "gemini_live_edits": false,
     "live_read_only_checks": true,
-    "gemini_smoke_requested": true,
-    "antigravity_smoke_requested": true
+    "gemini_smoke_requested": false,
+    "antigravity_smoke_requested": false
   },
   "blockers": [],
   "legacy_caveats": [
@@ -623,12 +610,6 @@
       "blocker": "version_failed",
       "status": "blocked",
       "summary": "Legacy Gemini CLI is not installed, but the supported Antigravity Google terminal-agent is reachable and serves this surface."
-    },
-    {
-      "gate": "gemini_model_execution",
-      "blocker": "version_failed",
-      "status": "blocked",
-      "summary": "Legacy Gemini CLI model execution is unavailable for this account, but the supported Antigravity Google terminal-agent smoke passed."
     }
   ],
   "evidence": {
