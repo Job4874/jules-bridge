@@ -1,0 +1,6 @@
+# Pyrefly configuration for jules-bridge
+# Points to the project venv and sets the repo root as the import search path.
+
+[tool.pyrefly]
+python-interpreter = ".venv/Scripts/python.exe"
+search-path = ["."]

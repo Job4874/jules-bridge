@@ -6,6 +6,7 @@ import json
 import os
 import sqlite3
 import subprocess
+import uuid
 import sys
 import time
 from datetime import datetime, timezone
@@ -301,11 +302,25 @@ class ObserveReasonActVerifyLoop:
             "observation_prompt": prompt,
         }
     def act(self, goal: str, step: Dict[str, Any], idempotency_key: str) -> Dict[str, Any]:
+        """Execute a step with 4-state lifecycle: pending → dispatching → executing → completed.
+
+        The idempotency_key MUST be a non-empty, client-generated operation ID
+        (use generate_operation_id()). This prevents crash-induced duplication.
+
+        State machine:
+          pending     — intent recorded, no external call yet
+          dispatching — about to call external system
+          executing   — external call made, awaiting confirmation
+          completed   — external call confirmed, checkpoint saved
+        """
+        if not idempotency_key:
+            raise ValueError("idempotency_key is required; use generate_operation_id()")
+
         existing = self.db.get_checkpoint(idempotency_key)
         if existing:
             if existing["status"] == "completed":
                 return {"status": "skipped", "reason": "Already completed", "checkpoint": existing}
-            if existing["status"] == "executing":
+            if existing["status"] in ("executing", "dispatching"):
                 # External action reconciliation window: check external side effects post-crash
                 reconciled = self.reconcile_external_action(step)
                 if reconciled.get("reconciled"):
@@ -317,7 +332,25 @@ class ObserveReasonActVerifyLoop:
                         payload=reconciled,
                     )
                     return reconciled
+                # Not reconciled — re-enter dispatching to allow retry
+                self.db.save_checkpoint(
+                    idempotency_key=idempotency_key,
+                    goal=goal,
+                    workflow_step=step.get("description", "step_action"),
+                    status="dispatching",
+                    payload=step,
+                )
 
+        # Phase 1: Record intent (dispatching)
+        self.db.save_checkpoint(
+            idempotency_key=idempotency_key,
+            goal=goal,
+            workflow_step=step.get("description", "step_action"),
+            status="dispatching",
+            payload=step,
+        )
+
+        # Phase 2: Mark as executing (external call about to happen)
         self.db.save_checkpoint(
             idempotency_key=idempotency_key,
             goal=goal,
@@ -325,6 +358,8 @@ class ObserveReasonActVerifyLoop:
             status="executing",
             payload=step,
         )
+
+        # Phase 3: Execute and mark completed
         action_result = {"status": "success", "step_executed": step.get("description")}
         self.db.save_checkpoint(
             idempotency_key=idempotency_key,
@@ -391,4 +426,20 @@ def check_heartbeat_liveness(max_stale_s: float = 30.0) -> Tuple[bool, float]:
         return age <= max_stale_s, age
     except Exception:
         return False, 999999.0
+
+
+def generate_operation_id(action_type: str = "op") -> str:
+    """Generate a durable client-side operation ID before any external side effect.
+
+    Must be called BEFORE dispatching Jules sessions, git commits, submissions,
+    or any other external action. The returned ID becomes the idempotency key
+    that prevents crash-induced duplication.
+
+    Args:
+        action_type: Short prefix describing the operation (e.g., "jules", "commit", "submit").
+
+    Returns:
+        A unique operation ID like "jules_a1b2c3d4-e5f6-7890-abcd-ef1234567890".
+    """
+    return f"{action_type}_{uuid.uuid4()}"
 
