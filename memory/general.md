@@ -478,3 +478,20 @@ has gone wrong before and what to avoid.
 - Retrieved & Applied Work: pulled patch via `jules remote pull --session 8503583543641914961` and applied new host identity tests to `tests/test_host_identity.py`.
 - Verified Full Test Suite: `python -m pytest tests/ -q` executed **572 passed, 1 skipped** (100% pass rate).
 - Documented Evidence: generated `LIVE_END_TO_END_PROOF.md`, `COMPLEX_PROOF_REPORT.md`, `BENCHMARK_PROOFS.md`, and `END_USER_BENCHMARKS.md`.
+
+## Session 20260722T174800 — UnifiedOperator Always-On Windows Runtime & Self-Repair (/goal)
+
+- Built Core Engine `modules/unified_operator.py`:
+  - `UnifiedOperatorStateDB`: WAL-mode SQLite store (`memory/unified_operator_state.db`) with transactional writes and strict primary key `idempotency_key` enforcement.
+  - `WorktreeLockManager`: `one-writer-per-git-worktree` lock manager preventing concurrent git collisions across multi-worker jobs.
+  - `TaskQueueManager`: Dependency-aware priority task scheduler.
+  - `ObserveReasonActVerifyLoop`: 4-step operator loop with `observe` (git & env detection), `reason` (continuous AI reasoning), `act` (idempotent step execution), and `verify`.
+  - Heartbeat Engine: 10-second heartbeat emission (`memory/operator_heartbeat.json`) and liveness checks.
+- Built Windows Service Host & Watchdog:
+  - `scripts/UnifiedOperatorService.py`: Background service loop with active checkpoint resumption.
+  - `scripts/UnifiedOperatorWatchdog.py`: Watchdog process monitoring `/health` and triggering `sc.exe` service restarts on stale heartbeats (>30s).
+- Comprehensive Test Suites:
+  - `tests/test_unified_operator.py`: **7 passed** (unit tests for DB, locks, queue, 4-step loop, and heartbeats).
+  - `tests/test_unified_operator_endurance.py`: **3 passed** (endurance benchmark for crash recovery, WAL checkpoint state resumption, and concurrency limits).
+  - Full Codebase pytest suite: `python -m pytest tests/ -q` executed **582 passed, 1 skipped** in 46.72s.
+- Evidence Published: `UNIFIED_OPERATOR_PROOFS.md`.

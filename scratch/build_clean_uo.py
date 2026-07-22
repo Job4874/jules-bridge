@@ -1,0 +1,2 @@
+with open('modules/unified_operator.py', 'w', encoding='utf-8') as f:  
+    f.write('''import json, os, sqlite3, subprocess, sys, time\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nfrom typing import Any, Dict, List, Optional, Tuple, TypedDict\n\n_ROOT = Path(__file__).resolve().parent.parent\n_DB_PATH = _ROOT / \" "memory\ / \unified_operator_state.db\\n_HEARTBEAT_PATH = _ROOT / \memory\ / \operator_heartbeat.json\\n''')  
