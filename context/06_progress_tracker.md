@@ -358,5 +358,5 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Built `modules/unified_operator.py`: SQLite WAL mode state database (`memory/unified_operator_state.db`), `WorktreeLockManager`, `TaskQueueManager`, 4-step `ObserveReasonActVerifyLoop`, and 10-second heartbeat engine.
 - Built Windows Service Host & Watchdog: created `scripts/UnifiedOperatorService.py` and `scripts/UnifiedOperatorWatchdog.py` with `sc.exe` restart recovery.
 - Developed Unit & Endurance Test Suite: created `tests/test_unified_operator.py` (**7 passed**) and `tests/test_unified_operator_endurance.py` (**3 passed**), validating crash recovery, WAL checkpoint state resumption, and concurrency limits.
-- Verified Full Codebase Test Suite: `python -m pytest tests/ -q` executed **582 passed, 1 skipped** in 46.72s.
+- Verified Full Codebase Test Suite (.venv): `.\.venv\Scripts\python.exe -m pytest tests\ -q` executed **589 passed** in 45.99s.
 - Generated Evidence Artifact: published `UNIFIED_OPERATOR_PROOFS.md`.

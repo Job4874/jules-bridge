@@ -1,7 +1,5 @@
-# Unit tests for modules/unified_operator.py
+"""Unit tests for modules/unified_operator.py."""
 
-import json
-import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,15 +8,15 @@ from modules import unified_operator as uo
 
 
 class TestUnifiedOperator(unittest.TestCase):
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.db_path = Path(self.tmp_dir.name) / "test_state.db"
         self.db = uo.UnifiedOperatorStateDB(db_path=self.db_path)
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         try:
             self.tmp_dir.cleanup()
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
     def test_sqlite_state_db_checkpoint_idempotency(self):
@@ -29,7 +27,7 @@ class TestUnifiedOperator(unittest.TestCase):
             status="in_progress",
             git_branch="main",
             git_commit="abcdef123456",
-            payload={'step': 1},
+            payload={"step": 1},
         )
         self.assertIsNotNone(rec1)
         self.assertEqual(rec1["idempotency_key"], "key_001")
@@ -42,7 +40,7 @@ class TestUnifiedOperator(unittest.TestCase):
             status="completed",
             git_branch="main",
             git_commit="abcdef123456",
-            payload={'step': 1, 'result': 'ok'},
+            payload={"step": 1, "result": "ok"},
         )
         self.assertEqual(rec2["status"], "completed")
         self.assertEqual(rec2["payload"]["result"], "ok")
@@ -59,7 +57,7 @@ class TestUnifiedOperator(unittest.TestCase):
         self.assertNotIn("k2", keys)
 
     def test_record_recovery_event(self):
-        evt_id = self.db.record_recovery_event("Service crash", "UnifiedOperatorService", {'pid': 1234})
+        evt_id = self.db.record_recovery_event("Service crash", "UnifiedOperatorService", {"pid": 1234})
         self.assertTrue(evt_id.startswith("rec_"))
 
     def test_worktree_lock_manager(self):
@@ -76,8 +74,8 @@ class TestUnifiedOperator(unittest.TestCase):
 
     def test_task_queue_manager_dependency_scheduling(self):
         queue = uo.TaskQueueManager(max_concurrent=2)
-        t1 = queue.enqueue_task("task_1", "Initial build", priority=10)
-        t2 = queue.enqueue_task("task_2", "Run tests", dependencies=["task_1"], priority=5)
+        _t1 = queue.enqueue_task("task_1", "Initial build", priority=10)
+        _t2 = queue.enqueue_task("task_2", "Run tests", dependencies=["task_1"], priority=5)
 
         runnable = queue.get_runnable_tasks()
         self.assertEqual(len(runnable), 1)
@@ -97,12 +95,31 @@ class TestUnifiedOperator(unittest.TestCase):
         reasoning = loop.reason("Run test suite", obs)
         self.assertTrue(reasoning.get("coherence"))
 
-        act_result = loop.act("Run test suite", {'description': 'Execute pytest'}, "idemp_loop_1")
+        act_result = loop.act("Run test suite", {"description": "Execute pytest"}, "idemp_loop_1")
         self.assertEqual(act_result["status"], "success")
         self.assertTrue(loop.verify(act_result))
 
-        act_result2 = loop.act("Run test suite", {'description': 'Execute pytest'}, "idemp_loop_1")
+        act_result2 = loop.act("Run test suite", {"description": "Execute pytest"}, "idemp_loop_1")
         self.assertEqual(act_result2["status"], "skipped")
+
+    def test_observation_grounded_reasoning_difference(self):
+        """Prove that two materially different observations produce distinct observation-grounded reasoning prompts."""
+        loop = uo.ObserveReasonActVerifyLoop(self.db)
+        goal = "Deploy bridge to production"
+
+        obs_linux = {"host": "posix", "git_branch": "feature/cloud-sync", "git_commit": "11111111", "python_version": "3.12.10"}
+        obs_windows = {"host": "nt", "git_branch": "main", "git_commit": "99999999", "python_version": "3.12.10"}
+
+        res_linux = loop.reason(goal, obs_linux)
+        res_windows = loop.reason(goal, obs_windows)
+
+        self.assertIn("posix", res_linux["observation_prompt"])
+        self.assertIn("feature/cloud-sync", res_linux["observation_prompt"])
+
+        self.assertIn("nt", res_windows["observation_prompt"])
+        self.assertIn("main", res_windows["observation_prompt"])
+
+        self.assertNotEqual(res_linux["observation_prompt"], res_windows["observation_prompt"])
 
     def test_heartbeat_liveness(self):
         hb = uo.emit_heartbeat("ok")

@@ -1,3 +1,8 @@
 {
-    "cursor.cpp.disabledLanguages": []
+  "cursor.cpp.disabledLanguages": [],
+  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+  "pylint.interpreter": [
+    "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+  ],
+  "pylint.cwd": "${workspaceFolder}"
 }

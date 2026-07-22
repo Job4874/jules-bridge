@@ -9,10 +9,10 @@ from modules import host_identity
 
 
 class TestHostIdentity(unittest.TestCase):
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         self._orig_env = os.environ.copy()
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         os.environ.clear()
         os.environ.update(self._orig_env)
 
@@ -81,7 +81,7 @@ class TestHostIdentity(unittest.TestCase):
         with patch.object(host_identity, "_read_system_id_file", return_value="My-Workstation-32GB-RAM"), \
              patch("os.name", "nt"), \
              patch("subprocess.check_output", side_effect=Exception("powershell failed")):
-            ram = host_identity._ram_gb()
+            ram = host_identity._ram_gb()  # pylint: disable=protected-access
         self.assertEqual(ram, 32.0)
 
 

@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
+from modules import reasoning_module
+
 _ROOT = Path(__file__).resolve().parent.parent
 _DB_PATH = _ROOT / "memory" / "unified_operator_state.db"
 _HEARTBEAT_PATH = _ROOT / "memory" / "operator_heartbeat.json"
@@ -282,13 +284,21 @@ class ObserveReasonActVerifyLoop:
             "host": os.name,
         }
     def reason(self, goal: str, observation: Dict[str, Any]) -> Dict[str, Any]:
-        from modules import reasoning_module
-        res = reasoning_module.plan_only(f"Resolve goal: {goal}", model="stub")
+        """Step 2: Continuous AI reasoning grounded in observation context."""
+        obs_context = (
+            f"host={observation.get('host', 'unknown')}, "
+            f"branch={observation.get('git_branch', '')}, "
+            f"commit={observation.get('git_commit', '')}, "
+            f"python={observation.get('python_version', '')}"
+        )
+        prompt = f"Resolve goal: {goal} | Observation: {obs_context}"
+        res = reasoning_module.plan_only(prompt, model="stub")
         plan_data = res.to_dict() if hasattr(res, "to_dict") else (res if isinstance(res, dict) else {})
         return {
             "plan": plan_data.get("plan", {}) if isinstance(plan_data, dict) else {},
             "confidence": plan_data.get("confidence", 0.8) if isinstance(plan_data, dict) else 0.8,
             "coherence": True,
+            "observation_prompt": prompt,
         }
     def act(self, goal: str, step: Dict[str, Any], idempotency_key: str) -> Dict[str, Any]:
         existing = self.db.get_checkpoint(idempotency_key)
@@ -337,3 +347,4 @@ def check_heartbeat_liveness(max_stale_s: float = 30.0) -> Tuple[bool, float]:
         return age <= max_stale_s, age
     except Exception:
         return False, 999999.0
+

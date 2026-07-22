@@ -1,9 +1,6 @@
-# Endurance and Crash Recovery Benchmark for UnifiedOperator
+"""Endurance and Crash Recovery Benchmark for UnifiedOperator."""
 
-import json
-import os
 import tempfile
-import time
 import unittest
 from pathlib import Path
 
@@ -11,15 +8,15 @@ from modules import unified_operator as uo
 
 
 class TestUnifiedOperatorEndurance(unittest.TestCase):
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.db_path = Path(self.tmp_dir.name) / "endurance_state.db"
         self.db = uo.UnifiedOperatorStateDB(db_path=self.db_path)
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         try:
             self.tmp_dir.cleanup()
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
     def test_crash_recovery_resumption(self):
