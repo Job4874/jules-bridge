@@ -1,7 +1,7 @@
 {
-  "timestamp_utc": "2026-07-22T20:31:52.603102+00:00",
-  "timestamp_epoch": 1784752312.6031027,
-  "status": "soak_running",
-  "pid": 34060,
+  "timestamp_utc": "2026-07-22T21:03:52.374494+00:00",
+  "timestamp_epoch": 1784754232.3744943,
+  "status": "ok",
+  "pid": 36436,
   "host": "PPCEA200P350B4"
 }
