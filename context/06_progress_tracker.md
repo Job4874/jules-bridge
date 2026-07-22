@@ -358,8 +358,10 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Built `modules/unified_operator.py`: SQLite WAL mode state database (`memory/unified_operator_state.db`), `WorktreeLockManager`, `TaskQueueManager`, 4-step `ObserveReasonActVerifyLoop`, and 10-second heartbeat engine.
 - Built Windows Service Host & Watchdog: created `scripts/UnifiedOperatorService.py` and `scripts/UnifiedOperatorWatchdog.py` with `sc.exe` restart recovery.
 - Developed Unit & Endurance Test Suite: created `tests/test_unified_operator.py` (**7 passed**) and `tests/test_unified_operator_endurance.py` (**3 passed**), validating crash recovery, WAL checkpoint state resumption, and concurrency limits.
-- Verified Full Codebase Test Suite (.venv): `.\.venv\Scripts\python.exe -m pytest tests\ -q` executed **589 passed** in 45.99s.
+- Verified Full Codebase Test Suite (.venv): `.\.venv\Scripts\python.exe -m pytest tests\ -q` executed **601 passed** in 40.62s.
 - Created `scripts/install_windows_services.py`: Windows service installer for `UnifiedOperatorService` and `UnifiedOperatorWatchdog`.
 - Built Interactive Desktop Worker `modules/desktop_worker.py`: Playwright browser session availability checking and UI automation dispatch; verified via `tests/test_desktop_worker.py` (**3 passed**).
 - Closed External Action Crash Window: implemented `ObserveReasonActVerifyLoop.reconcile_external_action()`; verified post-crash Jules session and git ref reconciliation via `tests/test_external_reconciliation.py` (**2 passed**).
+- Built Jules Pipeline `modules/jules_pipeline.py`: automated Jules cloud session creation, polling, patch pulling, testing, and git committing; verified via `tests/test_jules_pipeline.py` (**2 passed**).
+- Connected Academic Workflow `modules/academic_workflow.py`: assignment discovery, submission safety validation (blank/incomplete detection), attempt logging, and single review/submit checkpointing; verified via `tests/test_academic_workflow.py` (**4 passed**).
 - Updated Audit Artifact: published updated `FULL_UNIFIED_OPERATOR_CLAIMS_AUDIT.md` (Pylint score **7.31/10**).
