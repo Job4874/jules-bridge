@@ -1,16 +1,10 @@
 # Jules Bridge — Gotchas
 
-
-
 > Context file 5 of 7. What goes wrong. Not comprehensive docs — just the landmines.
-
+>
 > Nick Ni: "I have 553 lines of gotchas. Instead of 10,000 lines of docs."
 
-
-
 ## bridge.py
-
-
 
 - **`string_field(data, key, default=...)`** — use `default=""` not `default=None` for optional strings
 
@@ -34,11 +28,7 @@
 
 - **`GET /` and `GET /info`** — authenticated discovery routes; unlike `/health` and `/ping`, they require the bearer token and return bridge metadata instead of browser-facing 404s
 
-
-
 ## modules/`__init__.py`
-
-
 
 - **Adding a new module** — must add BOTH the import AND the `__all__` entry
 
@@ -46,11 +36,7 @@
 
 - **Never re-export private helpers** (those prefixed with `_`)
 
-
-
 ## fs_service
-
-
 
 - **`grep(pattern, path)`** — pattern is Python `re` regex, not glob
 
@@ -60,11 +46,7 @@
 
 - **Encoding** — always `encoding="utf-8", errors="replace"` for reading text files on Windows
 
-
-
 ## shell_executor
-
-
 
 - **PowerShell on Windows** — always use `["powershell", "-Command", cmd]` not `["pwsh", ...]`
 
@@ -74,11 +56,7 @@
 
 - **Stderr** — captured into `stderr` field; check it even when returncode=0
 
-
-
 ## oracle_session
-
-
 
 - **`oracle_status()`** — NEVER raises; always returns dict with `error` key if something failed
 
@@ -92,15 +70,9 @@
 
 - **Quantower UI memory** — read `memory/quantower.md` before UI automation; it records Strategy Manager, connection dialog, screenshot evidence, and failure-mode patterns
 
-
-
 ## reasoning_module
 
-
-
 - **auto-injected**: HRE Depth & Skill Discovery injected successfully.
-
-
 
 - **Model aliases** — use `"stub"` for deterministic tests; `"fast"` and `"smart"` route through the VM/browser model loop. Do not add direct provider API calls back into `reasoning_module`.
 
@@ -120,11 +92,7 @@
 
 - **Model-loop fallback** — if the VM/browser loop fails or returns non-JSON, reasoning falls back to stub output silently; check logs for `WARNING jules_bridge.reasoning`
 
-
-
 ## retrospective_module
-
-
 
 - **`analyze_session()`** — reads bridge.log from `LOG_PATH`; if log doesn't exist, returns empty report
 
@@ -150,11 +118,7 @@
 
 - **Doom-loop memory** — dedupe repeated streaks by route and keep the largest streak so analyze output remains actionable
 
-
-
 ## akc_module
-
-
 
 - **AKC means Agent Knowledge Context** — source-backed checkpoint, not a vague memory note
 
@@ -178,11 +142,7 @@
 
 - **Google Drive/Cloud** — AKC may record them as an operating rule, but credentials and provider connection state must be verified separately before claiming integration readiness
 
-
-
 ## context_orchestrator
-
-
 
 - **`build_context_subagents(...)`** — source context planning only; it must not call Jules CLI, list remote sessions, or launch workers.
 
@@ -204,11 +164,7 @@
 
 - **Packet output** — defaults to `jules_inbox/context_subagents/` and writes `CONTEXT_SUBAGENT_INDEX.md`, `NO_SLOP_WORKFLOW.md`, `CONTEXT_MEMORY_STORE.json`, `CONTEXT_QUALITY_EVAL.md`, and `CONTEXT_SUBAGENT_STATE.json` when `write_packets=true`.
 
-
-
 ## repo_context_guard
-
-
 
 - **`build_repo_context_guard(...)`** — public function never raises; it returns `status`, `summary`, optional `repos`, `collisions`, `guardrails`, and `error`.
 
@@ -226,11 +182,7 @@
 
 - **Collisions** — `port_collision`, `node_ref_collision`, and `local_dependency_cross_project` are the no-slop warnings to review before launching agents or reusing servers.
 
-
-
 ## inbox_service
-
-
 
 - **`inbox_read()`** — reads all `.md` files in `jules_inbox/`; sorted alphabetically
 
@@ -238,11 +190,7 @@
 
 - **`inbox_write()`** — creates new file with timestamp; does NOT overwrite existing messages
 
-
-
 ## jules_orchestrator
-
-
 
 - **`POST /jules/dispatch`** only prepares worker packets and launch commands; it must not start remote Jules sessions by itself
 
@@ -296,11 +244,7 @@
 
 - **COT handling** means completion-of-task evidence summaries here, not private chain-of-thought disclosure
 
-
-
 ## Windows-specific
-
-
 
 - **Paths** — always use raw strings `r"C:\path"` or forward slashes `"C:/path"` (avoid backslash escaping bugs)
 
@@ -310,11 +254,7 @@
 
 - **File locking** — Windows locks files that are open; `oracle_status()` uses `try/except` on file reads
 
-
-
 ## human_mimic_driver
-
-
 
 - Keep H/L/ACT desktop-driving loops in `modules/human_mimic_driver.py`; `bridge.py` routes must only validate request fields, optionally build notification callbacks, call the module, and return JSON.
 
@@ -324,11 +264,7 @@
 
 - Notifications for Human-Mimic tasks are best-effort callbacks. Email failures must not crash the UI driver or leak secret material into error text.
 
-
-
 ## vm_manager
-
-
 
 - `detect_resource_pressure(...)` accepts injected `cpu_percent` and `memory_percent` for deterministic tests; when omitted it uses a bounded PowerShell/CIM host metric read and returns `status="error"` instead of raising if metrics cannot be collected.
 
@@ -338,21 +274,13 @@
 
 - `/vm/*` routes are Local Node executor routes. They should validate fields, call `modules.vm_manager`, and return typed JSON without policy logic in `bridge.py`.
 
-
-
 ## chat_service
-
-
 
 - Keep VM/browser-loop routing, timing, and stable offline behavior in `modules/chat_service.py`; `/chat` and `/chat/test` should only validate fields and return `dict(result)`.
 
 - `/chat/test` diagnostics should report loop readiness only. Do not make provider-key presence a bridge health signal.
 
-
-
 ## ngrok_tunnel
-
-
 
 - The ngrok tunnel is a **SINGLE POINT OF FAILURE** for all remote Jules sessions. When it dies, Jules on the VM loses all tool access (shell, UI, Oracle, screenshots, inbox write).
 
@@ -366,11 +294,7 @@
 
 - Zombie ngrok processes (WorkingSet64=0) can persist after crashes; kill them before restarting.
 
-
-
 ## jules_cli
-
-
 
 - The npm `jules.cmd` shim can hang on Windows stdin piping; always prefer a direct `jules.exe`, especially `C:\Users\abdul\.npm-packages\bin\jules.exe` on this machine.
 
@@ -384,11 +308,7 @@
 
 - **CRITICAL**: `/jules/watch`, `/jules/fleet`, `/jules/fleet-watch`, `/jules/cycle`, `/jules/dispatch`, `/jules/launch`, `/jules/pull`, `/jules/cot` are ALL **POST** routes, not GET. Using GET returns 405. Check `GET /tentacles` for the method column.
 
-
-
 ## doom_loop_prevention
-
-
 
 - `GET /dashboard/status` was called 814x consecutively in one session — the worst doom loop in bridge history. Ticket 007 (circuit breaker) must be completed before any dashboard polling.
 
@@ -400,12 +320,16 @@
 
 - Memory file `memory/general.md` contains 318 lines of prior doom loop learnings — read it BEFORE starting work.
 
-
-
 ## Circuit Breaker (Rate Limiting)
-
-
 
 - All bridge routes are rate-limited to 20 calls per 60 seconds (returns HTTP 429) to prevent doom loops.
 
 - Polling routes (\/ping\, \/health\, \/dashboard/status\) have a higher ceiling of 200 calls.
+
+## pytest & test execution
+
+- **`python -m pytest -o pythonpath=. tests/`** — always pass `-o pythonpath=.` on Windows so `modules` imports resolve cleanly.
+
+- **`record_test_evidence(test_output, evidence_path)`** — `evidence_path` must be the directory path (e.g. `"memory"`), not a file path, because `os.makedirs(evidence_path)` is called on it.
+
+- **Optional dependencies in tests** — use `pytest.importorskip("pandas")` at top of test files using heavy packages so test collection skips cleanly when packages are missing.

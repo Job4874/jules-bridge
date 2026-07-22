@@ -1,7 +1,7 @@
 {
-  "generated_at_utc": "2026-07-05T16:08:54.416730+00:00",
+  "generated_at_utc": "2026-07-22T16:36:25.111543+00:00",
   "status": "pass",
-  "summary": "11/12 proof gates passed; no required blockers; legacy caveats remain at gemini_model_execution.",
+  "summary": "10/12 proof gates passed; no required blockers; legacy caveats remain at gemini_cli_reachable, gemini_model_execution.",
   "objective_requirements": [
     "Jules is reachable through CLI or REST and through the local bridge.",
     "Gemini CLI is installed, callable, and exposes its capability surface.",
@@ -39,16 +39,22 @@
     {
       "id": "REQ-002",
       "requirement": "Gemini CLI is installed, callable, and exposes its capability surface.",
-      "status": "pass",
+      "status": "fail",
       "required_for_completion": true,
       "evidence_refs": [
         {
           "gate": "gemini_cli_reachable",
-          "status": "pass",
-          "summary": "Gemini CLI answered version/capability probes."
+          "status": "blocked",
+          "summary": "Legacy Gemini CLI is not installed, but the supported Antigravity Google terminal-agent is reachable and serves this surface."
         }
       ],
-      "blockers": []
+      "blockers": [
+        {
+          "gate": "gemini_cli_reachable",
+          "blocker": "version_failed",
+          "status": "blocked"
+        }
+      ]
     },
     {
       "id": "REQ-003",
@@ -65,7 +71,7 @@
       "blockers": [
         {
           "gate": "gemini_model_execution",
-          "blocker": "auth_required",
+          "blocker": "version_failed",
           "status": "blocked"
         }
       ]
@@ -126,7 +132,7 @@
         {
           "gate": "hrm_reasoning",
           "status": "pass",
-          "summary": "Reasoning module produced an H/L/ACT trace."
+          "summary": "Reasoning module produced a complete structured HRM trace."
         }
       ],
       "blockers": []
@@ -182,8 +188,8 @@
         },
         {
           "gate": "gemini_cli_reachable",
-          "status": "pass",
-          "summary": "Gemini CLI answered version/capability probes."
+          "status": "blocked",
+          "summary": "Legacy Gemini CLI is not installed, but the supported Antigravity Google terminal-agent is reachable and serves this surface."
         },
         {
           "gate": "antigravity_cli_reachable",
@@ -208,7 +214,7 @@
         {
           "gate": "hrm_reasoning",
           "status": "pass",
-          "summary": "Reasoning module produced an H/L/ACT trace."
+          "summary": "Reasoning module produced a complete structured HRM trace."
         },
         {
           "gate": "actual_code_changes",
@@ -221,7 +227,13 @@
           "summary": "Latest recorded local test evidence passed."
         }
       ],
-      "blockers": []
+      "blockers": [
+        {
+          "gate": "gemini_cli_reachable",
+          "blocker": "version_failed",
+          "status": "blocked"
+        }
+      ]
     }
   ],
   "completion_assessment": {
@@ -230,6 +242,7 @@
     "reason": "All required proof gates pass.",
     "blocking_gates": [],
     "legacy_caveats": [
+      "gemini_cli_reachable",
       "gemini_model_execution"
     ]
   },
@@ -262,30 +275,32 @@
       "required": true,
       "summary": "Jules preflight is ready.",
       "evidence": {
-        "preferred_command": "JULES_REST_API",
-        "resolved_command": "JULES_REST_API",
-        "rest_api": true,
-        "source": "sources/github/Job4874/jules-bridge",
+        "preferred_command": "C:\\Users\\S02748217\\.npm-packages\\bin\\jules.exe",
+        "resolved_command": "C:\\Users\\S02748217\\.npm-packages\\bin\\jules.exe",
+        "rest_api": false,
+        "source": "",
         "remote_status": "ok"
       },
       "blocker": ""
     },
     {
       "name": "gemini_cli_reachable",
-      "status": "pass",
-      "required": true,
-      "summary": "Gemini CLI answered version/capability probes.",
+      "status": "blocked",
+      "required": false,
+      "summary": "Legacy Gemini CLI is not installed, but the supported Antigravity Google terminal-agent is reachable and serves this surface.",
       "evidence": {
-        "resolved_command": "C:\\Program Files\\nodejs\\node.EXE C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js",
-        "version": "0.49.0",
+        "resolved_command": "gemini",
+        "version": "",
         "headless_mode": "-p/--prompt",
         "output_formats": [
           "json",
           "stream-json",
           "text"
-        ]
+        ],
+        "legacy_lane": true,
+        "supported_google_terminal_ready": true
       },
-      "blocker": ""
+      "blocker": "version_failed"
     },
     {
       "name": "gemini_model_execution",
@@ -294,12 +309,12 @@
       "summary": "Legacy Gemini CLI model execution is unavailable for this account, but the supported Antigravity Google terminal-agent smoke passed.",
       "evidence": {
         "smoke_status": "failed",
-        "exit_code": 1,
-        "likely_blocker": "auth_required",
+        "exit_code": null,
+        "likely_blocker": "",
         "legacy_lane": true,
         "supported_google_terminal_ready": true
       },
-      "blocker": "auth_required"
+      "blocker": "version_failed"
     },
     {
       "name": "antigravity_cli_reachable",
@@ -307,10 +322,10 @@
       "required": true,
       "summary": "Antigravity CLI answered version/model/plugin probes.",
       "evidence": {
-        "resolved_command": "C:\\Users\\abdul\\AppData\\Local\\agy\\bin\\agy.exe",
-        "version": "1.0.16",
+        "resolved_command": "C:\\Users\\S02748217\\AppData\\Local\\agy\\bin\\agy.EXE",
+        "version": "1.1.5",
         "headless_mode": "-p/--print",
-        "model_count": 8,
+        "model_count": 11,
         "plugin_management": "plugin list/install/uninstall/enable/disable"
       },
       "blocker": ""
@@ -333,12 +348,15 @@
       "required": true,
       "summary": "Jules and the Google terminal-agent surface expose skills/workflow metadata.",
       "evidence": {
-        "jules_skill_count": 11,
-        "gemini_skill_count": 2,
+        "jules_skill_count": 15,
+        "gemini_skill_count": 0,
         "antigravity_skill_count": 3,
         "jules_skill_names": [
           "architect",
+          "diagnosing-bugs",
+          "god",
           "grill-me",
+          "grill-with-docs",
           "imprint",
           "improve-codebase-architecture",
           "prd-to-issues",
@@ -346,13 +364,11 @@
           "recover",
           "remember",
           "review",
+          "tdd",
           "ubiquitous-language",
           "write-prd"
         ],
-        "gemini_skill_names": [
-          "antigravity-support",
-          "skill-creator"
-        ],
+        "gemini_skill_names": [],
         "antigravity_skill_names": [
           "plugin-management",
           "model-routing",
@@ -389,18 +405,20 @@
       "name": "hrm_reasoning",
       "status": "pass",
       "required": true,
-      "summary": "Reasoning module produced an H/L/ACT trace.",
+      "summary": "Reasoning module produced a complete structured HRM trace.",
       "evidence": {
         "goal_statement": "Resolve: Prove that Jules and Gemini can coordinate through a no-slop",
         "step_count": 4,
         "actions": 4,
-        "halt_reason": "budget_exhausted",
+        "halt_reason": "goal_reached",
+        "trace_complete": true,
+        "source": "",
         "feedback": {
           "plan_confidence": 0.8,
           "steps_planned": 4,
           "steps_executed": 4,
-          "halt_reason": "budget_exhausted",
-          "halted_early": false,
+          "halt_reason": "goal_reached",
+          "halted_early": true,
           "mean_action_confidence": 0.7
         }
       },
@@ -463,10 +481,10 @@
       "summary": "Latest recorded local test evidence passed.",
       "evidence": {
         "passed": true,
-        "test_count": 466,
-        "timestamp_utc": "2026-07-05T16:08:46.907657+00:00",
-        "output_hash": "02c7c3cbb6af31ebaec7c35c067b247d66f3317575b4eda9f6a14f74a634bc11",
-        "raw_output_tail": "........................................................................ [ 61%]\n........................................................................ [ 77%]\n........................................................................ [ 92%]\n..................................                                       [100%]\n466 passed in 16.55s"
+        "test_count": 571,
+        "timestamp_utc": "2026-07-22T16:36:13.687065+00:00",
+        "output_hash": "75d75fa458ff1180bb739faf356bda5a5436e97d0e21be6490ed56e90f4b79f2",
+        "raw_output_tail": "571 passed, 1 skipped, 1 warning in 47.79s"
       },
       "blocker": ""
     }
@@ -475,86 +493,95 @@
     "jules": {
       "point_of_view": "Jules is the asynchronous coding/workflow agent reached through the bridge. Its local project skill system lives in .agents/skills and its operational contract is loaded from .agents/AGENTS.md, AKC, gotchas, and memory.",
       "reachable": true,
-      "mode": "REST API",
-      "source": "sources/github/Job4874/jules-bridge",
-      "skill_count": 11,
+      "mode": "CLI",
+      "source": "",
+      "skill_count": 15,
       "skills": [
         {
           "name": "architect",
           "description": "Run before starting any complex feature, new module, or major change. Reads the project context files, interviews the user one question at a time to resolve design decisions, and produces a clear, structured implementation plan.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\architect\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\architect\\SKILL.md"
+        },
+        {
+          "name": "diagnosing-bugs",
+          "description": "Diagnosis loop for hard bugs and performance regressions. Use when the user says \"diagnose\"/\"debug this\", or reports something broken/throwing/failing/slow.",
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\diagnosing-bugs\\SKILL.md"
+        },
+        {
+          "name": "god",
+          "description": ">- Boots Jules Bridge, Jules CLI, and ngrok always-on remote access on Windows without admin (guest-safe). Restores auth, registers logon startup, keeps PC online with monitor off. Use when the user says /god, god mode, boot bridge, always-on backdoor, black screen boot, or Jules Bridge startup on the 64GB RAM PC.",
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\god\\SKILL.md"
         },
         {
           "name": "grill-me",
           "description": "Interview the user relentlessly to reach a shared design concept before any planning or coding begins. Use this at the very start of any new feature, project, or non-trivial task. Prevents misalignment. Never eagerly jump to producing a plan \u2014 keep asking until full alignment is achieved.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\grill-me\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\grill-me\\SKILL.md"
+        },
+        {
+          "name": "grill-with-docs",
+          "description": "A relentless interview to sharpen a plan or design, which also creates docs (ADR's and glossary) as we go.",
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\grill-with-docs\\SKILL.md"
         },
         {
           "name": "imprint",
           "description": "Run after creating or modifying API routes or module layouts. Captures coding patterns, route structures, and middleware registration to maintain system-wide consistency.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\imprint\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\imprint\\SKILL.md"
         },
         {
           "name": "improve-codebase-architecture",
           "description": "Identify shallow modules in a codebase and refactor them into deep modules (from John Ousterhout's \"A Philosophy of Software Design\"). Use when the AI keeps getting confused navigating the codebase, tests are hard to write, or you feel cognitive overload from too many small files with tangled concerns. Produces a clean module boundary map and executes the refactor incrementally.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\improve-codebase-architecture\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\improve-codebase-architecture\\SKILL.md"
         },
         {
           "name": "prd-to-issues",
           "description": "Break a PRD into independently grabbable implementation tickets using vertical slices (tracer bullets). Creates a kanban board of issues with dependency/blocking relationships and AFK vs human-in-loop classification. CRITICAL: Issues must be vertical slices, NOT horizontal layers.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\prd-to-issues\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\prd-to-issues\\SKILL.md"
         },
         {
           "name": "ralph-loop",
           "description": "Implements a Ralph Loop \u2014 a self-correcting, ticket-driven agentic loop that picks the next most important ticket, implements it with TDD principles, commits, and repeats. Named after Ralph Wiggum (The Simpsons) who just keeps trying the same thing until it works. Run this skill when you want to autonomously work through a backlog of tickets in doc/tickets/.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\ralph-loop\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\ralph-loop\\SKILL.md"
         },
         {
           "name": "recover",
           "description": "Run when a session is stuck, tests are failing repeatedly, or the agent is in a doom loop. Diagnoses the current failure mode and provides the correct remediation steps.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\recover\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\recover\\SKILL.md"
         },
         {
           "name": "remember",
           "description": "Run at the end of every coding session. Synthesizes decisions made, patterns established, and progress completed during the session, and compresses them into a memory file in the `memory/` directory.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\remember\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\remember\\SKILL.md"
         },
         {
           "name": "review",
           "description": "Run after completing any feature or file modification. Checks the implementation against the plan, verifies code standards, and surfaces potential bugs.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\review\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\review\\SKILL.md"
+        },
+        {
+          "name": "tdd",
+          "description": "Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions \"red-green-refactor\", or wants integration tests.",
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\tdd\\SKILL.md"
         },
         {
           "name": "ubiquitous-language",
           "description": "Scan the codebase to extract domain terminology and create a Ubiquitous Language document (from Domain-Driven Design). Use this to reduce AI verbosity, improve alignment between planning and implementation, and give the AI a shared vocabulary with the codebase. Run this at the start of any project or when the AI seems to be \"talking across purposes\".",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\ubiquitous-language\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\ubiquitous-language\\SKILL.md"
         },
         {
           "name": "write-prd",
           "description": "Distill the current conversation (ideally a completed grill-me session) into a Product Requirements Document. The PRD is the \"destination document\" \u2014 it defines WHERE you're going, not HOW you'll get there. Use after a grill-me session, or with a detailed problem description as input.",
-          "skill_path": "C:\\Users\\abdul\\jules-bridge\\.agents\\skills\\write-prd\\SKILL.md"
+          "skill_path": "C:\\jules-bridge-master\\.agents\\skills\\write-prd\\SKILL.md"
         }
       ],
       "akc_ready": true
     },
     "gemini": {
       "point_of_view": "Gemini CLI is the terminal agent reached through @google/gemini-cli. It exposes command-managed skills with SKILL.md packages, optional scripts/references/assets, MCP listings, extensions, and headless prompts.",
-      "cli_reachable": true,
+      "cli_reachable": false,
       "model_ready": false,
-      "likely_blocker": "auth_required",
-      "skill_count": 2,
-      "skills": [
-        {
-          "name": "antigravity-support",
-          "description": "Use when the user asks questions, seeks help, or requests instructions related to installing, setting up, or migrating to Antigravity CLI. This skill provides the latest up to date details, requirements, and commands sourced from the official Antigravity CLI documentation.",
-          "location": "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\builtin\\antigravity-support\\SKILL.md"
-        },
-        {
-          "name": "skill-creator",
-          "description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Gemini CLI's capabilities with specialized knowledge, workflows, or tool integrations.",
-          "location": "C:\\Users\\abdul\\.npm-packages\\node_modules\\@google\\gemini-cli\\bundle\\builtin\\skill-creator\\SKILL.md"
-        }
-      ]
+      "likely_blocker": "version_failed",
+      "skill_count": 0,
+      "skills": []
     },
     "antigravity": {
       "point_of_view": "Antigravity CLI is the supported Google terminal-agent path for individual Gemini CLI migration. It exposes print mode, model listing, plugin management, and prompt execution through agy.",
@@ -570,7 +597,7 @@
         },
         {
           "name": "model-routing",
-          "description": "Route terminal prompts across 8 available models.",
+          "description": "Route terminal prompts across 11 available models.",
           "location": "agy models"
         },
         {
@@ -592,8 +619,14 @@
   "blockers": [],
   "legacy_caveats": [
     {
+      "gate": "gemini_cli_reachable",
+      "blocker": "version_failed",
+      "status": "blocked",
+      "summary": "Legacy Gemini CLI is not installed, but the supported Antigravity Google terminal-agent is reachable and serves this surface."
+    },
+    {
       "gate": "gemini_model_execution",
-      "blocker": "auth_required",
+      "blocker": "version_failed",
       "status": "blocked",
       "summary": "Legacy Gemini CLI model execution is unavailable for this account, but the supported Antigravity Google terminal-agent smoke passed."
     }
@@ -609,10 +642,10 @@
     },
     "tests": {
       "passed": true,
-      "test_count": 466,
-      "timestamp_utc": "2026-07-05T16:08:46.907657+00:00",
-      "output_hash": "02c7c3cbb6af31ebaec7c35c067b247d66f3317575b4eda9f6a14f74a634bc11",
-      "raw_output_tail": "........................................................................ [ 61%]\n........................................................................ [ 77%]\n........................................................................ [ 92%]\n..................................                                       [100%]\n466 passed in 16.55s"
+      "test_count": 571,
+      "timestamp_utc": "2026-07-22T16:36:13.687065+00:00",
+      "output_hash": "75d75fa458ff1180bb739faf356bda5a5436e97d0e21be6490ed56e90f4b79f2",
+      "raw_output_tail": "571 passed, 1 skipped, 1 warning in 47.79s"
     },
     "bridge_code": {
       "collaboration_module_exists": true,
@@ -636,5 +669,5 @@
       "antigravity_blocker": ""
     }
   },
-  "state_path": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\proof\\COLLABORATION_PROOF.json"
+  "state_path": "C:\\jules-bridge-master\\jules_inbox\\proof\\COLLABORATION_PROOF.json"
 }

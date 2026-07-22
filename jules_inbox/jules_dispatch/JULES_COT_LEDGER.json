@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-22T16:23:31.487945+00:00",
+  "generated_at_utc": "2026-07-22T16:40:51.009616+00:00",
   "packet_dir": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch",
   "launch_state_path": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
   "report_dir": "",
@@ -13,7 +13,17 @@
   },
   "rows": [
     {
-      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
+      "packet": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
+      "packet_id": "JT-001-59ae6d",
+      "launch_status": "dry_run",
+      "session_ids": [],
+      "timed_out": false,
+      "exit_code": null,
+      "cot_status": "not_launched",
+      "report_files": []
+    },
+    {
+      "packet": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch\\JT-002-6b1194-codex-master-handover-prompt.md",
       "packet_id": "JT-002-6b1194",
       "launch_status": "dry_run",
       "session_ids": [],
@@ -23,9 +33,9 @@
       "report_files": []
     },
     {
-      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
+      "packet": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch\\JT-003-aab6ea-codex-phase0-repository-archaeology-prompt.md",
       "packet_id": "JT-003-aab6ea",
-      "launch_status": "dry_run",
+      "launch_status": "not_launched",
       "session_ids": [],
       "timed_out": false,
       "exit_code": null,
@@ -33,19 +43,9 @@
       "report_files": []
     },
     {
-      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
+      "packet": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch\\JT-004-1e0abd-codex-phase1-stabilization-prompt.md",
       "packet_id": "JT-004-1e0abd",
-      "launch_status": "dry_run",
-      "session_ids": [],
-      "timed_out": false,
-      "exit_code": null,
-      "cot_status": "not_launched",
-      "report_files": []
-    },
-    {
-      "packet": "C:\\Users\\abdul\\jules-bridge\\jules_inbox\\jules_dispatch\\JT-001-59ae6d-codex-decouple-quantower-and-build-api-foundation.md",
-      "packet_id": "JT-001-59ae6d",
-      "launch_status": "dry_run",
+      "launch_status": "not_launched",
       "session_ids": [],
       "timed_out": false,
       "exit_code": null,
