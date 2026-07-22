@@ -1,13 +1,15 @@
-import os
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:
+    sync_playwright = None
 from modules.ui_automation import detect_ui_state
 
 EDGE_PROFILE_PATH = r"C:\Users\abdul\AppData\Local\Microsoft\Edge\User Data"
 
 def init_browser():
     """Initialize Playwright configured to launch using the local Edge profile."""
-    # We do not actually manage the 'with' context lifecycle in this mock,
-    # as playwright usually requires it. But for the test we'll use a mocked instance.
+    if sync_playwright is None:
+        raise RuntimeError("Playwright is not installed")
     playwright = sync_playwright().start()
 
     # Launch persistent context using the Edge Profile

@@ -414,18 +414,16 @@ has gone wrong before and what to avoid.
 - Privacy boundary remains canonical: `/dashboard/status` stays compact and unauthenticated; do not show repo sample names/full paths/full remotes/env key lists. Use masked endpoints (`34.132.x.x`) and key counts only.
 - Verification: `npm run lint`, `npm run build`, `python -m pytest tests/test_dashboard_module.py -q`, `python -m pytest tests/ -q`, and `git diff --check` passed; Browser QA covered 1280x720 desktop, 390x844 mobile no-horizontal-overflow, no console errors, focus rail, stream pause/filter, worker selection, and model selector.
 
-
 ## Session 20260630T235000 - Chat Fallback and VM Provider Fix
-- Cloned the \cademic-command-center\ repository for future frontend UI and helper service integration.
+
+- Cloned the `academic-command-center` repository for future frontend UI and helper service integration.
 - Merged PR #74 to resolve the bridge offline provider state (VM Fallback logic).
-- \modules.chat\ fallback correctly fails over to the VM via \m_relay\ without crashing when no API key is supplied via \.env\.
-- Evaluated integration architecture via \grill-me\: determined that the Academic Command Center should interact directly with the Jules Bridge REST API via CORS rather than tunneling through \cademic-helper.mjs\, to reduce token state complexity and latency.
-- Validated tests via \python -m pytest tests/ -q\ which passed all 432 tests.
-
-
-- Removed all dependencies on Gemini and OpenRouter API keys from \modules/chat_service.py\.
-- Rewrote the bridge's chat service to strictly use the automated VM language model fallback loop (\m_relay\).
-- Updated and executed unit tests in \	est_chat_service.py\ and \	est_chat_service_pro.py\ to verify that VM Fallback acts as the sole primary model, with 426 tests passing successfully.
+- `modules.chat` fallback correctly fails over to the VM via `vm_relay` without crashing when no API key is supplied via `.env`.
+- Evaluated integration architecture via `grill-me`: determined that the Academic Command Center should interact directly with the Jules Bridge REST API via CORS rather than tunneling through `academic-helper.mjs`, to reduce token state complexity and latency.
+- Validated tests via `python -m pytest tests/ -q` which passed all 432 tests.
+- Removed all dependencies on Gemini and OpenRouter API keys from `modules/chat_service.py`.
+- Rewrote the bridge's chat service to strictly use the automated VM language model fallback loop (`vm_relay`).
+- Updated and executed unit tests in `tests/test_chat_service.py` and `tests/test_chat_service_pro.py` to verify that VM Fallback acts as the sole primary model, with 426 tests passing successfully.
 
 ## Session 20260630T211700 - Model Loop Cleanup And Local Boot Proof
 
@@ -448,3 +446,10 @@ has gone wrong before and what to avoid.
 - Closed stale draft PRs #64 and #67-#77 with comments after live merge-tree checks showed all conflicted against current master and were superseded or incompatible with the keyless model-loop contract.
 - Verification: `gh pr list --state open` returned `[]`, `python -m pytest tests/ -q` passed 436 tests in 22.36s, PowerShell parser checks passed, and `git rev-list --left-right --count origin/master...master` returned `0 0`.
 
+## Session 20260722T084500 - Agent-Driven Harness Inspection & Browser Agent Hardening
+
+- Executed Session Start Protocol: checked AKC readiness (`status: ready`), loaded all 8 context files in exact sequence, loaded `memory/general.md`.
+- Fixed optional dependency handling in `modules/browser_agent.py`: safely handled Playwright import when package is absent, ensuring module imports without raising `ModuleNotFoundError`.
+- Verified test suite: all 569 unit tests in `tests/` passed cleanly (including `test_browser_agent.py` and `test_tibin_core.py`).
+- Verified bridge HTTP server running on port 5000: live `/health`, `/dashboard/status`, `/akc/readiness`, `/mission/cycle` responded with status `ok`.
+- Built production bundle for `dashboard-ui` React Vite app (`npm run build` succeeded in 1.93s).
