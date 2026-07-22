@@ -453,3 +453,10 @@ has gone wrong before and what to avoid.
 - Verified test suite: all 569 unit tests in `tests/` passed cleanly (including `test_browser_agent.py` and `test_tibin_core.py`).
 - Verified bridge HTTP server running on port 5000: live `/health`, `/dashboard/status`, `/akc/readiness`, `/mission/cycle` responded with status `ok`.
 - Built production bundle for `dashboard-ui` React Vite app (`npm run build` succeeded in 1.93s).
+
+## Session 20260722T162331 — 2026-07-22T16:23:31.356786+00:00
+
+- DOOM LOOP: GET /ping called 2304x consecutively. Route 'GET /ping' called 2304x consecutively. Add a circuit breaker or cache the last response.
+- DOOM LOOP: GET /health called 4x consecutively. Route 'GET /health' called 4x consecutively. Add a circuit breaker or cache the last response.
+- PERFORMANCE: Route 'POST /chat' averaged 5176ms over 2 calls (threshold: 5000ms). Consider caching or reducing subprocess overhead.
+- RETROSPECTIVE BASELINE: analyze_session found 3 log patterns. Use the domain memories before the next bridge/runtime work.

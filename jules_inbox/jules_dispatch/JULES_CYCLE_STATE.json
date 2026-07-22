@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-22T16:20:09.939461+00:00",
+  "generated_at_utc": "2026-07-22T16:23:31.466278+00:00",
   "status": "pending",
   "dry_run": true,
   "packet_dir": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch",
@@ -8,11 +8,11 @@
   "launch_dry_run": true,
   "pull_requested": false,
   "check_remote": true,
-  "require_remote_ready": true,
+  "require_remote_ready": false,
   "blockers": [],
   "dispatch": {
     "source": "existing_packets",
-    "generated_at_utc": "2026-07-22T16:20:09.939461+00:00",
+    "generated_at_utc": "2026-07-22T16:23:31.466278+00:00",
     "task_count": 0,
     "selected_count": 4,
     "status_counts": {},
@@ -54,7 +54,7 @@
     "resolved_jules_command": "C:\\Users\\S02748217\\.npm-packages\\bin\\jules.exe"
   },
   "launch_result": {
-    "generated_at_utc": "2026-07-22T16:20:10.015221+00:00",
+    "generated_at_utc": "2026-07-22T16:23:31.487434+00:00",
     "dry_run": true,
     "packet_dir": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch",
     "selected_count": 4,
@@ -189,7 +189,7 @@
   },
   "pull_results": [],
   "cot": {
-    "generated_at_utc": "2026-07-22T16:20:10.037205+00:00",
+    "generated_at_utc": "2026-07-22T16:23:31.487945+00:00",
     "packet_dir": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch",
     "launch_state_path": "C:\\jules-bridge-master\\jules_inbox\\jules_dispatch\\JULES_LAUNCH_STATE.json",
     "report_dir": "",
