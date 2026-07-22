@@ -1,11 +1,11 @@
 {
-  "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+  "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
   "qualification_started_utc": "2026-07-22T19:31:36.118967+00:00",
   "steps": [
     {
       "step": 1,
       "capability": "SHA Freeze + JUnit XML + Pyrefly Config",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
       "evidence_files": [
         "test-results/FROZEN_SHA.txt",
         "test-results/junit_report.xml",
@@ -18,7 +18,7 @@
     {
       "step": 2,
       "capability": "course_id filtering + isolation",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
       "evidence_files": [
         "modules/academic_workflow.py",
         "tests/test_academic_workflow.py"
@@ -29,7 +29,7 @@
     {
       "step": 3,
       "capability": "Durable operation IDs + crash injection",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
       "evidence_files": [
         "modules/unified_operator.py",
         "modules/jules_pipeline.py",
@@ -42,7 +42,7 @@
     {
       "step": 4,
       "capability": "Live desktop qualification",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
       "evidence_files": [
         "test-results/desktop_qualification/01_notepad_open_1784748486.png",
         "test-results/desktop_qualification/02_text_typed_1784748491.png",
@@ -55,7 +55,7 @@
     {
       "step": 5,
       "capability": "Service installation",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
       "evidence_files": [],
       "test_count": 0,
       "status": "BLOCKED",
@@ -64,25 +64,29 @@
     {
       "step": 6,
       "capability": "Live Jules create-poll-pull-test-commit",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
-      "evidence_files": [],
-      "test_count": 0,
-      "status": "IN_PROGRESS",
-      "note": "Session 3835610141189649805 created, polling for completion."
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "evidence_files": [
+        "test-results/junit_post_jules_pull.xml"
+      ],
+      "test_count": 615,
+      "status": "PROVEN",
+      "note": "Session 3835610141189649805 completed in 72s. Pull auto-committed as 1c76d17. 615 passed post-pull.",
+      "jules_session_id": "3835610141189649805",
+      "jules_commit": "1c76d17"
     },
     {
       "step": 7,
       "capability": "ACC read-only against real course",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
       "evidence_files": [],
       "test_count": 0,
-      "status": "PENDING",
-      "note": "Awaiting user course_id selection."
+      "status": "PARTIAL",
+      "note": "Discovery isolation enforced. bus101 returned 6 results. Proof read-back verified."
     },
     {
       "step": 8,
       "capability": "Soak tests (1h + 12h)",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
       "evidence_files": [],
       "test_count": 0,
       "status": "PENDING"
@@ -90,7 +94,7 @@
     {
       "step": 9,
       "capability": "Evidence binding",
-      "frozen_sha": "\ufeff11ea350eef8bb219df72c4f9b7f75078883b76b1",
+      "frozen_sha": "11ea350eef8bb219df72c4f9b7f75078883b76b1",
       "evidence_files": [
         "test-results/QUALIFICATION_LEDGER.json"
       ],
