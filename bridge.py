@@ -29,9 +29,9 @@ _ROOT = os.path.dirname(os.path.abspath(__file__))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-import notify_email as email_service
-from notify_email import load_env
-import modules
+import notify_email as email_service  # noqa: E402  # pylint: disable=wrong-import-position
+from notify_email import load_env  # noqa: E402  # pylint: disable=wrong-import-position
+import modules  # noqa: E402  # pylint: disable=wrong-import-position
 
 # ---------------------------------------------------------------------------
 # Logging setup
@@ -61,7 +61,7 @@ def configure_logging():
     sh.setFormatter(formatter)
     root_logger.addHandler(fh)
     root_logger.addHandler(sh)
-    configure_logging.configured = True
+    setattr(configure_logging, "configured", True)
 
 
 configure_logging()
@@ -78,7 +78,7 @@ ALLOWED_ORIGINS = os.environ.get(
     "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5000,http://127.0.0.1:5000"
 ).split(",")
 
-CORS(app, origins=ALLOWED_ORIGINS)
+CORS(app, origins=ALLOWED_ORIGINS)  # pyrefly: ignore[bad-argument-type]  # flask-cors stubs target another Flask release
 
 BRIDGE_TOKEN = os.environ.get("BRIDGE_TOKEN")
 if not BRIDGE_TOKEN:
@@ -175,7 +175,7 @@ def route_errors(func):
 # Request field helpers (validation only — no business logic)
 # ---------------------------------------------------------------------------
 
-def json_payload():
+def json_payload() -> dict[str, Any]:
     raw = request.get_data(cache=True)
     if not raw:
         return {}
@@ -189,7 +189,8 @@ def json_payload():
     return data
 
 
-def string_field(data, key, default=MISSING, allow_empty=False, control_safe=False):
+def string_field(data: dict[str, Any], key: str, default: Any = MISSING,
+                 allow_empty: bool = False, control_safe: bool = False) -> Any:
     if key not in data:
         if default is MISSING:
             raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
@@ -204,13 +205,14 @@ def string_field(data, key, default=MISSING, allow_empty=False, control_safe=Fal
     return value
 
 
-def int_field(data, key, default=MISSING, min_value=None, max_value=None):
+def int_field(data: dict[str, Any], key: str, default: Any = MISSING,
+              min_value: int | None = None, max_value: int | None = None) -> Any:
     if key not in data or data.get(key) is None:
         if default is MISSING:
             raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
         return default
     value = data.get(key)
-    if isinstance(value, bool):
+    if value is None or isinstance(value, bool):
         raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be an integer")
     try:
         value = int(value)
@@ -223,7 +225,7 @@ def int_field(data, key, default=MISSING, min_value=None, max_value=None):
     return value
 
 
-def bool_field(data, key, default=MISSING):
+def bool_field(data: dict[str, Any], key: str, default: Any = MISSING) -> Any:
     if key not in data or data.get(key) is None:
         if default is MISSING:
             raise BridgeHTTPError(400, "Invalid input", details=f"{key} is required")
@@ -234,7 +236,8 @@ def bool_field(data, key, default=MISSING):
     return value
 
 
-def query_int_field(key, default, min_value=None, max_value=None):
+def query_int_field(key: str, default: Any,
+                    min_value: int | None = None, max_value: int | None = None) -> Any:
     value = request.args.get(key)
     if value is None:
         return default
@@ -249,7 +252,7 @@ def query_int_field(key, default, min_value=None, max_value=None):
     return parsed
 
 
-def query_bool_field(key, default):
+def query_bool_field(key: str, default: Any) -> Any:
     value = request.args.get(key)
     if value is None:
         return default
@@ -261,7 +264,8 @@ def query_bool_field(key, default):
     raise BridgeHTTPError(400, "Invalid input", details=f"{key} must be a boolean")
 
 
-def string_list_field(data, key, default=None, control_safe=False):
+def string_list_field(data: dict[str, Any], key: str, default: Any = None,
+                      control_safe: bool = False) -> list[str]:
     if key not in data or data.get(key) is None:
         return list(default or [])
     value = data.get(key)
@@ -277,11 +281,11 @@ def string_list_field(data, key, default=None, control_safe=False):
     return items
 
 
-def path_field(data, key="path", default=MISSING):
+def path_field(data: dict[str, Any], key: str = "path", default: Any = MISSING) -> Any:
     return string_field(data, key, default=default, control_safe=True)
 
 
-def existing_path(path, kind="file"):
+def existing_path(path: str, kind: str = "file") -> str:
     if not os.path.exists(path):
         raise BridgeHTTPError(404, "Resource not found", path=path)
     if kind == "file" and not os.path.isfile(path):
@@ -291,7 +295,7 @@ def existing_path(path, kind="file"):
     return path
 
 
-def content_field(data):
+def content_field(data: dict[str, Any]) -> Any:
     if "content" in data:
         return string_field(data, "content", allow_empty=True)
     if "data" in data:
@@ -299,7 +303,7 @@ def content_field(data):
     raise BridgeHTTPError(400, "Invalid input", details="content or data is required")
 
 
-def inbox_name_field(data, default):
+def inbox_name_field(data: dict[str, Any], default: str) -> str:
     if "file" not in data or data.get("file") in (None, ""):
         return default
     name = string_field(data, "file", control_safe=True)
@@ -309,7 +313,7 @@ def inbox_name_field(data, default):
     return name
 
 
-def optional_email(data, key):
+def optional_email(data: dict[str, Any], key: str) -> str | None:
     if key not in data or data.get(key) in (None, ""):
         return None
     val = string_field(data, key)
@@ -381,6 +385,7 @@ def _circuit_breaker_check():
             "route": request.path,
             "retry_after_s": retry_after
         }), 429
+    return None
 
 @app.after_request
 def _finalize_request(response):
@@ -522,7 +527,7 @@ def bridge_info_payload(include_routes=False):
     uptime_s = round(
         (datetime.now(timezone.utc) - _BRIDGE_START_UTC).total_seconds(), 1
     )
-    payload = {
+    payload: dict[str, Any] = {
         "status": "ok",
         "bridge": "Jules Bridge",
         "uptime_s": uptime_s,
@@ -2187,7 +2192,7 @@ def chat() -> Any:
 @route_errors
 def mission_queue_route():
     """GET /mission/queue — Load and return the current MISSION_QUEUE.md."""
-    from modules.mission_controller import load_queue  # noqa: PLC0415
+    from modules.mission_controller import load_queue  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     queue = load_queue()
     tasks = [{"task_id": t.task_id, "type": t.task_type, "title": t.title,
                "url": t.url, "deadline": t.deadline, "assigned_to": t.assigned_to,
@@ -2207,7 +2212,7 @@ def mission_queue_route():
 @route_errors
 def mission_cycle_route():
     """POST /mission/cycle — Pick next task, mark active, return task details."""
-    from modules.mission_controller import run_mission_cycle  # noqa: PLC0415
+    from modules.mission_controller import run_mission_cycle  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     result = run_mission_cycle()
     return jsonify({
         "ok": result.ok,
@@ -2223,7 +2228,7 @@ def mission_cycle_route():
 def mission_done_route():
     """POST /mission/done — Mark a task done with result evidence."""
     data = json_payload()
-    from modules.mission_controller import load_queue, mark_task_done  # noqa: PLC0415
+    from modules.mission_controller import load_queue, mark_task_done  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     task_id = string_field(data, "task_id")
     result = data.get("result", {})
     queue = load_queue()
@@ -2239,7 +2244,7 @@ def mission_done_route():
 def mission_failed_route():
     """POST /mission/failed — Mark a task failed with reason."""
     data = json_payload()
-    from modules.mission_controller import load_queue, mark_task_failed  # noqa: PLC0415
+    from modules.mission_controller import load_queue, mark_task_failed  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     task_id = string_field(data, "task_id")
     reason = string_field(data, "reason", default="unspecified")
     queue = load_queue()
@@ -2254,7 +2259,7 @@ def mission_failed_route():
 @route_errors
 def mission_digest_route():
     """GET /mission/digest — Weekly summary of completed/failed missions."""
-    from modules.learning_loop import weekly_digest  # noqa: PLC0415
+    from modules.learning_loop import weekly_digest  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     result = weekly_digest()
     return jsonify({
         "ok": result.ok,
@@ -2277,7 +2282,7 @@ def browser_navigate_route():
     data = json_payload()
     url = string_field(data, "url")
     profile = string_field(data, "profile", default=None, allow_empty=True)
-    from modules.playwright_agent import navigate  # noqa: PLC0415
+    from modules.playwright_agent import navigate  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     result = navigate(url, profile=profile or None)
     return jsonify({
         "ok": result.ok,
@@ -2296,8 +2301,8 @@ def browser_screenshot_route():
     data = json_payload()
     url = string_field(data, "url")
     profile = string_field(data, "profile", default=None, allow_empty=True)
-    from modules.playwright_agent import take_screenshot  # noqa: PLC0415
-    result = take_screenshot(url, profile=profile or None)
+    from modules.playwright_agent import take_screenshot as pw_take_screenshot  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
+    result = pw_take_screenshot(url, profile=profile or None)
     return jsonify({
         "ok": result.ok,
         "url": result.url,
@@ -2319,7 +2324,7 @@ def browser_form_route():
     submit_selector = string_field(data, "submit_selector",
                                    default="input[type=submit], button[type=submit]")
     profile = string_field(data, "profile", default=None, allow_empty=True)
-    from modules.playwright_agent import fill_and_submit_form  # noqa: PLC0415
+    from modules.playwright_agent import fill_and_submit_form  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     result = fill_and_submit_form(url, fields, submit_selector, profile=profile or None)
     return jsonify({
         "ok": result.ok,
@@ -2340,7 +2345,7 @@ def browser_quiz_route():
     url = string_field(data, "url")
     model = string_field(data, "model", default="fast")
     profile = string_field(data, "profile", default=None, allow_empty=True)
-    from modules.academic_agent import solve_quiz  # noqa: PLC0415
+    from modules.academic_agent import solve_quiz  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     result = solve_quiz(url, profile=profile or None, model=model)
     return jsonify({
         "ok": result.ok,
@@ -2362,7 +2367,7 @@ def browser_assignment_route():
     data = json_payload()
     url = string_field(data, "url")
     profile = string_field(data, "profile", default=None, allow_empty=True)
-    from modules.academic_agent import solve_assignment  # noqa: PLC0415
+    from modules.academic_agent import solve_assignment  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     result = solve_assignment(url, profile=profile or None)
     return jsonify({
         "ok": result.ok,
@@ -2384,7 +2389,7 @@ def learning_reflect_route():
     result = data.get("result", {})
     if not isinstance(task, dict):
         raise BridgeHTTPError(400, "Invalid input", details="task must be an object")
-    from modules.learning_loop import reflect_on_task  # noqa: PLC0415
+    from modules.learning_loop import reflect_on_task  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
     reflection = reflect_on_task(task, result)
     return jsonify({
         "ok": reflection.ok,

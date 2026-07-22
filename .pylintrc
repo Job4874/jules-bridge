@@ -1,6 +1,14 @@
 [MASTER]
 ignore=CVS,_extracted_jules_session
 
+[TYPECHECK]
+# The interpreter backing .venv is the "embeddable" CPython distribution: its
+# stdlib ships only as bytecode inside python312.zip, with no .py sources.
+# pylint/astroid cannot parse bytecode-only modules, so every stdlib import is
+# falsely reported as E0401 import-error. Suppress resolution for stdlib
+# modules until the venv is rebuilt from a full CPython install.
+ignored-modules=errno,json,logging,logging.handlers,os,os.path,re,subprocess,sys,typing,collections,datetime,functools
+
 [FORMAT]
 max-line-length=120
 

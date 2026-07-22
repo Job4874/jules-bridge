@@ -1,6 +1,7 @@
 # Pyrefly configuration for jules-bridge
 # Points to the project venv and sets the repo root as the import search path.
+# NOTE: standalone pyrefly.toml uses top-level keys; the [tool.pyrefly] table
+# form is only for pyproject.toml (nested keys are silently ignored here).
 
-[tool.pyrefly]
 python-interpreter = ".venv/Scripts/python.exe"
 search-path = ["."]
