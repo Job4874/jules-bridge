@@ -1,0 +1,15 @@
+{
+  "label": "soak_1h",
+  "started_utc": "2026-07-22T19:31:53.086974+00:00",
+  "finished_utc": "2026-07-22T20:31:53.090883+00:00",
+  "duration_requested_s": 3600,
+  "duration_actual_s": 3600.0,
+  "cycles_completed": 354,
+  "errors": 0,
+  "avg_cycle_ms": 192.89,
+  "max_cycle_ms": 748.88,
+  "min_cycle_ms": 143.98,
+  "interval_s": 10.0,
+  "status": "PASS",
+  "db_path": "C:\\jules-bridge-master\\test-results\\soak_1h_state.db"
+}

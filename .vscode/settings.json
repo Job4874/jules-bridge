@@ -4,5 +4,12 @@
   "pylint.interpreter": [
     "${workspaceFolder}\\.venv\\Scripts\\python.exe"
   ],
+  "files.watcherExclude": {
+    "**/.pytest_cache/**": true,
+    "**/__pycache__/**": true
+  },
+  "files.exclude": {
+    "**/.pytest_cache": true
+  },
   "pylint.cwd": "${workspaceFolder}"
 }
