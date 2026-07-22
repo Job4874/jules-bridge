@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-26T03:16:22.721231+00:00",
+  "generated_at_utc": "2026-07-21T21:48:20.877459+00:00",
   "model": "stub",
   "problem_count": 3,
   "average_score": 0.95,
@@ -39,7 +39,7 @@
             "step_description": "Understand the current state",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 0: Understand the current state]"
+              "text": "Executed action for step 0"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -49,7 +49,7 @@
             "step_description": "Identify what needs to change",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 1: Identify what needs to change]"
+              "text": "Executed action for step 1"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -59,7 +59,7 @@
             "step_description": "Make the change",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 2: Make the change]"
+              "text": "Executed action for step 2"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -69,7 +69,7 @@
             "step_description": "Verify the result",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 3: Verify the result]"
+              "text": "Executed action for step 3"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -81,8 +81,8 @@
           "steps_used": 4,
           "steps_budget": 8
         },
-        "answer": "[Stub execution of step 3: Verify the result]",
-        "elapsed_ms": 0.04949999856762588,
+        "answer": "Executed action for step 3",
+        "elapsed_ms": 0.045599997974932194,
         "feedback": {
           "plan_confidence": 0.8,
           "steps_planned": 4,
@@ -90,7 +90,11 @@
           "halt_reason": "goal_reached",
           "halted_early": true,
           "mean_action_confidence": 0.7
-        }
+        },
+        "hre_passes_taken": 1,
+        "self_unblocked": false,
+        "blockers_resolved": [],
+        "knowledge_sources_checked": []
       },
       "stub_baseline": {
         "steps_taken": 4,
@@ -140,7 +144,7 @@
             "step_description": "Understand the current state",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 0: Understand the current state]"
+              "text": "Executed action for step 0"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -150,7 +154,7 @@
             "step_description": "Identify what needs to change",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 1: Identify what needs to change]"
+              "text": "Executed action for step 1"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -160,7 +164,7 @@
             "step_description": "Make the change",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 2: Make the change]"
+              "text": "Executed action for step 2"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -170,7 +174,7 @@
             "step_description": "Verify the result",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 3: Verify the result]"
+              "text": "Executed action for step 3"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -182,8 +186,8 @@
           "steps_used": 4,
           "steps_budget": 8
         },
-        "answer": "[Stub execution of step 3: Verify the result]",
-        "elapsed_ms": 0.024100008886307478,
+        "answer": "Executed action for step 3",
+        "elapsed_ms": 0.018999999156221747,
         "feedback": {
           "plan_confidence": 0.8,
           "steps_planned": 4,
@@ -191,7 +195,11 @@
           "halt_reason": "goal_reached",
           "halted_early": true,
           "mean_action_confidence": 0.7
-        }
+        },
+        "hre_passes_taken": 1,
+        "self_unblocked": false,
+        "blockers_resolved": [],
+        "knowledge_sources_checked": []
       },
       "stub_baseline": {
         "steps_taken": 4,
@@ -241,7 +249,7 @@
             "step_description": "Understand the current state",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 0: Understand the current state]"
+              "text": "Executed action for step 0"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -251,7 +259,7 @@
             "step_description": "Identify what needs to change",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 1: Identify what needs to change]"
+              "text": "Executed action for step 1"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -261,7 +269,7 @@
             "step_description": "Make the change",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 2: Make the change]"
+              "text": "Executed action for step 2"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -271,7 +279,7 @@
             "step_description": "Verify the result",
             "action_type": "answer",
             "payload": {
-              "text": "[Stub execution of step 3: Verify the result]"
+              "text": "Executed action for step 3"
             },
             "confidence": 0.7,
             "reasoning": "[L module stub \u2014 replace with real LLM call]"
@@ -283,8 +291,8 @@
           "steps_used": 4,
           "steps_budget": 8
         },
-        "answer": "[Stub execution of step 3: Verify the result]",
-        "elapsed_ms": 0.016400008462369442,
+        "answer": "Executed action for step 3",
+        "elapsed_ms": 0.015499994333367795,
         "feedback": {
           "plan_confidence": 0.8,
           "steps_planned": 4,
@@ -292,7 +300,11 @@
           "halt_reason": "goal_reached",
           "halted_early": true,
           "mean_action_confidence": 0.7
-        }
+        },
+        "hre_passes_taken": 1,
+        "self_unblocked": false,
+        "blockers_resolved": [],
+        "knowledge_sources_checked": []
       },
       "stub_baseline": {
         "steps_taken": 4,
