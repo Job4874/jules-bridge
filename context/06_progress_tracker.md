@@ -365,3 +365,13 @@ Added a Ralph Loop agentic framework to Jules Bridge:
 - Built Jules Pipeline `modules/jules_pipeline.py`: automated Jules cloud session creation, polling, patch pulling, testing, and git committing; verified via `tests/test_jules_pipeline.py` (**2 passed**).
 - Connected Academic Workflow `modules/academic_workflow.py`: assignment discovery, submission safety validation (blank/incomplete detection), attempt logging, and single review/submit checkpointing; verified via `tests/test_academic_workflow.py` (**4 passed**).
 - Updated Audit Artifact: published updated `FULL_UNIFIED_OPERATOR_CLAIMS_AUDIT.md` (Pylint score **7.31/10**).
+
+## Session 20260723T134413 - New PC Bootstrapping & Full Test Suite Verification
+
+- Executed Session Start Protocol: loaded context files 1-8, `UBIQUITOUS_LANGUAGE.md`, `memory/general.md`, and `jules_inbox/JULES_SELF_UNBLOCKING_PROTOCOL.md`. Verified AKC readiness (`ready: true`).
+- New PC Environment Provisioning: installed Python 3.12 (`C:\Users\S02748217\AppData\Local\Programs\Python\Python312\python.exe`) and Node.js LTS (v24.18.0) via `winget`. Installed all Python dependencies from `requirements.txt` along with `pytest` and `pytest-mock`.
+- Initialized Git Repository & Commit: initialized `.git` repository, configured Git user credentials, and created initial commit on the new PC workspace.
+- Mock & Test Fixes: patched `psutil` mock in `tests/test_host_identity.py` so fallback memory calculation is correctly tested when `psutil` is present on physical hardware.
+- Verified Full Codebase Test Suite: executed `python -m pytest tests/ -q` (**627 passed, 1 skipped, 0 failed** in 45.84s).
+- Cryptographic Evidence Recorded: recorded test output SHA-256 `5e166f30dc8d127653b78b5fd144a576a56bd69b8f1e4918e15a1ed433497e0a` in `memory/test_evidence.json`.
+
