@@ -3,8 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jules Bridge — Professional Remote Control</title>
+    <title>Jules Bridge — Remote Control</title>
     <style>
+        :root {
+            --accent: #00e5a0;
+            --accent-dim: rgba(0, 229, 160, 0.35);
+            --accent-glow: rgba(0, 229, 160, 0.18);
+            --cyan: #33b8ff;
+            --bg-0: #07080d;
+            --bg-1: #0d1220;
+            --panel: rgba(14, 18, 32, 0.72);
+            --panel-border: rgba(0, 229, 160, 0.22);
+            --text: #e8ecf2;
+            --text-dim: #8891a3;
+            --danger: #ff5d6c;
+            --warn: #ffb84d;
+            --radius: 14px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,108 +28,137 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a3f 100%);
-            color: #eee;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background:
+                radial-gradient(circle at 15% 10%, rgba(0, 229, 160, 0.06), transparent 40%),
+                radial-gradient(circle at 85% 90%, rgba(51, 184, 255, 0.06), transparent 40%),
+                linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 100%);
+            color: var(--text);
             overflow: hidden;
             height: 100vh;
         }
 
         .container {
             display: grid;
-            grid-template-columns: 1fr 280px;
-            grid-template-rows: 70px 1fr 50px;
+            grid-template-columns: 1fr 300px;
+            grid-template-rows: 64px 1fr 40px;
             height: 100vh;
-            gap: 10px;
-            padding: 10px;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        header, .sidebar, .screen-area, footer {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
         }
 
         header {
             grid-column: 1 / -1;
-            background: linear-gradient(90deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 150, 255, 0.1) 100%);
-            border: 2px solid #00ff88;
-            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 25px;
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.15);
+            padding: 0 22px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
         }
 
         .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: #00ff88;
-            text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
-            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .logo-mark {
+            width: 22px;
+            height: 22px;
+            filter: drop-shadow(0 0 6px var(--accent-dim));
         }
 
         .connection-badge {
-            background: rgba(0, 255, 136, 0.2);
-            border: 1px solid #00ff88;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: #00ff88;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
+            background: rgba(0, 229, 160, 0.08);
+            border: 1px solid var(--panel-border);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            transition: all 0.25s ease;
+        }
+
+        .connection-badge.offline {
+            color: var(--danger);
+            border-color: rgba(255, 93, 108, 0.35);
+            background: rgba(255, 93, 108, 0.08);
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #00ff88;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
-            box-shadow: 0 0 8px #00ff88;
-            animation: pulse 2s infinite;
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
+            animation: pulse 2s ease-in-out infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(0.85); }
         }
 
         .header-stats {
             display: flex;
-            gap: 25px;
-            font-size: 13px;
+            gap: 26px;
         }
 
         .stat-item {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
         }
 
         .stat-label {
-            color: #aaa;
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
         }
 
         .stat-value {
-            color: #00ff88;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            font-family: 'SF Mono', 'Cascadia Code', 'Courier New', monospace;
         }
+
+        .stat-value.good { color: var(--accent); }
+        .stat-value.warn { color: var(--warn); }
+        .stat-value.bad { color: var(--danger); }
 
         .screen-area {
             grid-column: 1;
             grid-row: 2;
             background: #000;
-            border: 2px solid #00ff88;
-            border-radius: 12px;
             overflow: hidden;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(0, 229, 160, 0.06);
         }
 
         #screen {
@@ -121,46 +166,91 @@
             height: 100%;
             object-fit: contain;
             cursor: crosshair;
+            image-rendering: -webkit-optimize-contrast;
         }
 
         .screen-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             cursor: crosshair;
             z-index: 10;
+        }
+
+        .frame-hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .hud-chip {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-family: 'SF Mono', 'Cascadia Code', 'Courier New', monospace;
+            color: var(--accent);
+            letter-spacing: 0.3px;
+        }
+
+        .loading-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            color: var(--accent);
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            background: #000;
+            z-index: 15;
+            transition: opacity 0.4s ease;
+        }
+
+        .spinner {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 229, 160, 0.15);
+            border-top-color: var(--accent);
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .sidebar {
             grid-column: 2;
             grid-row: 2;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 50, 100, 0.3) 100%);
-            border: 2px solid #00ff88;
-            border-radius: 12px;
             padding: 18px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
+            gap: 22px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
         }
 
         .sidebar-section {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 11px;
         }
 
         .section-title {
-            font-size: 13px;
-            font-weight: bold;
-            color: #00ff88;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-dim);
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-bottom: 2px solid rgba(0, 255, 136, 0.3);
             padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .metric {
@@ -171,124 +261,154 @@
         }
 
         .metric-label {
-            color: #999;
+            color: var(--text-dim);
         }
 
         .metric-value {
-            color: #00ff88;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
+            color: var(--accent);
+            font-weight: 700;
+            font-family: 'SF Mono', 'Cascadia Code', 'Courier New', monospace;
         }
 
         .metric-bar {
             width: 100%;
-            height: 4px;
-            background: rgba(0, 255, 136, 0.1);
-            border-radius: 2px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
             overflow: hidden;
-            margin-top: 4px;
+            margin-top: 5px;
         }
 
         .metric-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #00ff88 0%, #00ccff 100%);
-            transition: width 0.3s ease;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--cyan) 100%);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
         .control-btn {
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 255, 0.15) 100%);
-            border: 1px solid #00ff88;
-            color: #00ff88;
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(0, 229, 160, 0.06);
+            border: 1px solid var(--panel-border);
+            color: var(--text);
+            padding: 10px 8px;
+            border-radius: 9px;
+            font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            font-weight: bold;
-            letter-spacing: 0.5px;
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.2px;
+        }
+
+        .control-btn svg {
+            width: 13px;
+            height: 13px;
+            stroke: var(--accent);
+            flex-shrink: 0;
         }
 
         .control-btn:hover {
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.3) 0%, rgba(0, 200, 255, 0.3) 100%);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
-            transform: translateY(-2px);
+            background: rgba(0, 229, 160, 0.14);
+            border-color: var(--accent-dim);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 229, 160, 0.12);
         }
 
         .control-btn:active {
             transform: translateY(0);
+            background: rgba(0, 229, 160, 0.22);
         }
 
         .keyboard-input {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #00ff88;
-            border-radius: 6px;
-            padding: 10px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--panel-border);
+            border-radius: 9px;
+            padding: 11px;
             font-size: 11px;
-            color: #00ff88;
-            font-family: 'Courier New', monospace;
+            color: var(--text-dim);
+            font-family: 'SF Mono', 'Cascadia Code', 'Courier New', monospace;
             text-align: center;
-            min-height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 20px;
+            transition: all 0.2s ease;
         }
 
         .keyboard-input.active {
-            background: rgba(0, 255, 136, 0.1);
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            color: var(--accent);
+            background: rgba(0, 229, 160, 0.08);
+            border-color: var(--accent-dim);
         }
 
         footer {
             grid-column: 1 / -1;
-            background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 50, 100, 0.3) 100%);
-            border: 2px solid #00ff88;
-            border-radius: 12px;
-            padding: 0 25px;
+            padding: 0 22px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-size: 11px;
-            color: #888;
+            color: var(--text-dim);
         }
 
-        .footer-text {
-            color: #00ff88;
-            font-weight: bold;
-        }
-
-        .scroll-bar {
-            width: 8px;
-            background: rgba(0, 255, 136, 0.1);
-        }
-
-        .scroll-bar-thumb {
-            background: #00ff88;
-            border-radius: 4px;
+        .footer-badge {
+            color: var(--accent);
+            font-weight: 600;
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-track {
-            background: rgba(0, 255, 136, 0.05);
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #00ff88;
-            border-radius: 4px;
+            background: rgba(0, 229, 160, 0.25);
+            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #00ff88;
-            opacity: 0.8;
+            background: rgba(0, 229, 160, 0.4);
         }
 
-        .loading {
-            text-align: center;
-            color: #00ff88;
-            font-size: 14px;
+        .toast-stack {
+            position: fixed;
+            bottom: 56px;
+            right: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(10, 14, 24, 0.92);
+            border: 1px solid var(--panel-border);
+            color: var(--accent);
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            animation: toast-in 0.25s cubic-bezier(0.4, 0, 0.2, 1), toast-out 0.3s ease 1.7s forwards;
+        }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes toast-out {
+            to { opacity: 0; transform: translateY(-6px); }
         }
     </style>
 </head>
@@ -296,37 +416,52 @@
     <div class="container">
         <header>
             <div class="header-left">
-                <div class="logo">⚡ JULES BRIDGE</div>
-                <div class="connection-badge">
+                <div class="logo">
+                    <svg class="logo-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#00e5a0"/>
+                    </svg>
+                    <span>Jules Bridge</span>
+                </div>
+                <div class="connection-badge" id="connection-badge">
                     <div class="status-dot"></div>
-                    <span>Connected</span>
+                    <span id="connection-text">Connecting…</span>
                 </div>
             </div>
             <div class="header-stats">
                 <div class="stat-item">
-                    <span class="stat-label">CPU:</span>
-                    <span class="stat-value" id="cpu-stat">--</span>
+                    <span class="stat-label">CPU</span>
+                    <span class="stat-value good" id="cpu-stat">--</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">RAM:</span>
-                    <span class="stat-value" id="ram-stat">--</span>
+                    <span class="stat-label">Memory</span>
+                    <span class="stat-value good" id="ram-stat">--</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Latency:</span>
-                    <span class="stat-value" id="latency-stat">--ms</span>
+                    <span class="stat-label">Latency</span>
+                    <span class="stat-value good" id="latency-stat">--ms</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">FPS</span>
+                    <span class="stat-value good" id="fps-stat">--</span>
                 </div>
             </div>
         </header>
 
         <div class="screen-area">
-            <canvas id="screen" width="1920" height="1080"></canvas>
-            <div class="screen-overlay"></div>
-            <div class="loading" style="position: absolute; display: none;" id="loading">Loading...</div>
+            <canvas id="screen"></canvas>
+            <div class="screen-overlay" id="screen-overlay"></div>
+            <div class="frame-hud">
+                <div class="hud-chip" id="resolution-chip">--×--</div>
+            </div>
+            <div class="loading-state" id="loading-state">
+                <div class="spinner"></div>
+                <span>Connecting to workstation…</span>
+            </div>
         </div>
 
         <div class="sidebar">
             <div class="sidebar-section">
-                <div class="section-title">📊 Performance</div>
+                <div class="section-title">Performance</div>
                 <div class="metric">
                     <span class="metric-label">CPU Usage</span>
                     <span class="metric-value" id="cpu-usage">0%</span>
@@ -335,7 +470,7 @@
                     <div class="metric-bar-fill" id="cpu-bar" style="width: 0%"></div>
                 </div>
 
-                <div class="metric" style="margin-top: 8px;">
+                <div class="metric" style="margin-top: 6px;">
                     <span class="metric-label">Memory</span>
                     <span class="metric-value" id="ram-usage">0 GB</span>
                 </div>
@@ -343,27 +478,41 @@
                     <div class="metric-bar-fill" id="ram-bar" style="width: 0%"></div>
                 </div>
 
-                <div class="metric" style="margin-top: 8px;">
+                <div class="metric" style="margin-top: 6px;">
                     <span class="metric-label">Disk Free</span>
                     <span class="metric-value" id="disk-usage">0 GB</span>
                 </div>
             </div>
 
             <div class="sidebar-section">
-                <div class="section-title">⌨️ Input</div>
-                <div class="keyboard-input" id="keyboard-status">Ready for input</div>
+                <div class="section-title">Input</div>
+                <div class="keyboard-input" id="keyboard-status">Click the screen, then type</div>
             </div>
 
             <div class="sidebar-section">
-                <div class="section-title">🎮 Controls</div>
-                <button class="control-btn" onclick="captureScreen()">📸 Refresh</button>
-                <button class="control-btn" onclick="sendCommand('Alt+Tab')">🔄 Alt+Tab</button>
-                <button class="control-btn" onclick="sendCommand('Win+D')">🏠 Desktop</button>
-                <button class="control-btn" onclick="sendCommand('Win+L')">🔒 Lock</button>
+                <div class="section-title">Controls</div>
+                <div class="btn-grid">
+                    <button class="control-btn" id="btn-refresh">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+                        Refresh
+                    </button>
+                    <button class="control-btn" data-cmd="Alt+Tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        Alt+Tab
+                    </button>
+                    <button class="control-btn" data-cmd="Win+D">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 20h18"/></svg>
+                        Desktop
+                    </button>
+                    <button class="control-btn" data-cmd="Win+L">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                        Lock
+                    </button>
+                </div>
             </div>
 
             <div class="sidebar-section">
-                <div class="section-title">🔗 Connection</div>
+                <div class="section-title">Connection</div>
                 <div class="metric">
                     <span class="metric-label">Protocol</span>
                     <span class="metric-value">HTTPS</span>
@@ -374,125 +523,224 @@
                 </div>
                 <div class="metric" style="margin-top: 6px;">
                     <span class="metric-label">Status</span>
-                    <span class="metric-value" id="pc-status">Online</span>
+                    <span class="metric-value" id="pc-status">--</span>
                 </div>
             </div>
         </div>
 
         <footer>
-            <span>Jules Bridge — Remote Workstation Control | <span class="footer-text">🔒 Encrypted</span> | <span class="footer-text">⚡ Realtime</span></span>
-            <span id="footer-info">Connected via Cloudflare tunnel</span>
+            <span>Jules Bridge — Remote Workstation Control &nbsp;·&nbsp; <span class="footer-badge">Encrypted</span> &nbsp;·&nbsp; <span class="footer-badge">Realtime</span></span>
+            <span id="footer-info">Connecting…</span>
         </footer>
     </div>
 
+    <div class="toast-stack" id="toast-stack"></div>
+
     <script>
         const BRIDGE_URL = window.location.origin;
-        let lastScreenCapture = 0;
-        const SCREEN_CAPTURE_INTERVAL = 500;
+        const SCREEN_CAPTURE_INTERVAL = 500; // ms between frame requests
+        const MOUSE_MOVE_THROTTLE = 40;      // ms between mousemove sends
 
-        async function init() {
-            console.log('Jules Bridge Dashboard initialized');
-            captureScreen();
-            updateMetrics();
-            setInterval(updateMetrics, 2000);
-            setInterval(captureScreen, SCREEN_CAPTURE_INTERVAL);
-            setupRemoteControl();
+        const canvas = document.getElementById('screen');
+        const ctx = canvas.getContext('2d');
+        const screenOverlay = document.getElementById('screen-overlay');
+        const loadingState = document.getElementById('loading-state');
+        const connectionBadge = document.getElementById('connection-badge');
+        const connectionText = document.getElementById('connection-text');
+        const resolutionChip = document.getElementById('resolution-chip');
+        const footerInfo = document.getElementById('footer-info');
+        const pcStatus = document.getElementById('pc-status');
+
+        let lastFrameSize = { w: 0, h: 0 };
+        let frameTimestamps = [];
+        let hasRenderedFrame = false;
+        let screenLoopActive = false;
+
+        // ---------------------------------------------------------------
+        // Screen capture loop — self-pacing (schedules next fetch only
+        // after the current one resolves, so a slow network can't pile
+        // up overlapping requests). Uses createImageBitmap for a fast,
+        // leak-free decode path instead of Image() + object URLs.
+        // ---------------------------------------------------------------
+        async function screenLoop() {
+            if (screenLoopActive) return;
+            screenLoopActive = true;
+            const start = performance.now();
+
+            try {
+                const response = await fetch(`${BRIDGE_URL}/remote/screen`, { cache: 'no-store' });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const bitmap = await createImageBitmap(blob);
+
+                    if (bitmap.width !== lastFrameSize.w || bitmap.height !== lastFrameSize.h) {
+                        canvas.width = bitmap.width;
+                        canvas.height = bitmap.height;
+                        lastFrameSize = { w: bitmap.width, h: bitmap.height };
+                        resolutionChip.textContent = `${bitmap.width}×${bitmap.height}`;
+                    }
+
+                    ctx.drawImage(bitmap, 0, 0);
+                    bitmap.close();
+
+                    if (!hasRenderedFrame) {
+                        hasRenderedFrame = true;
+                        loadingState.style.opacity = '0';
+                        setTimeout(() => { loadingState.style.display = 'none'; }, 400);
+                    }
+
+                    recordFrame(performance.now() - start);
+                    setConnected(true);
+                } else {
+                    setConnected(false);
+                }
+            } catch (error) {
+                setConnected(false);
+            }
+
+            screenLoopActive = false;
+            setTimeout(screenLoop, SCREEN_CAPTURE_INTERVAL);
         }
 
-        function setupRemoteControl() {
-            const screenOverlay = document.querySelector('.screen-overlay');
-            const canvas = document.getElementById('screen');
+        function recordFrame(rtt) {
+            const now = performance.now();
+            frameTimestamps.push(now);
+            frameTimestamps = frameTimestamps.filter(t => now - t < 3000);
+            const fps = frameTimestamps.length > 1
+                ? Math.round((frameTimestamps.length - 1) / ((now - frameTimestamps[0]) / 1000))
+                : 0;
 
-            screenOverlay.addEventListener('click', async (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const x = Math.round((e.clientX - rect.left) / rect.width * canvas.width);
-                const y = Math.round((e.clientY - rect.top) / rect.height * canvas.height);
-                await sendRemoteInput('mouse_click', { x, y });
-            });
-
-            screenOverlay.addEventListener('mousemove', async (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const x = Math.round((e.clientX - rect.left) / rect.width * canvas.width);
-                const y = Math.round((e.clientY - rect.top) / rect.height * canvas.height);
-                await sendRemoteInput('mouse_move', { x, y });
-            });
-
-            document.addEventListener('keydown', async (e) => {
-                if (e.target !== document.body) return;
-                const key = e.key;
-                const ctrl = e.ctrlKey;
-                const alt = e.altKey;
-                const shift = e.shiftKey;
-                await sendRemoteInput('keyboard', { key, ctrl, alt, shift });
-                updateKeyboardStatus(key);
-            });
+            document.getElementById('fps-stat').textContent = fps;
+            const latencyEl = document.getElementById('latency-stat');
+            latencyEl.textContent = Math.round(rtt) + 'ms';
+            latencyEl.className = 'stat-value ' + (rtt < 150 ? 'good' : rtt < 400 ? 'warn' : 'bad');
         }
 
+        function setConnected(isOnline) {
+            connectionBadge.classList.toggle('offline', !isOnline);
+            connectionText.textContent = isOnline ? 'Connected' : 'Reconnecting…';
+            pcStatus.textContent = isOnline ? 'Online' : 'Offline';
+            footerInfo.textContent = isOnline ? 'Connected via Cloudflare tunnel' : 'Attempting to reconnect…';
+        }
+
+        // ---------------------------------------------------------------
+        // Metrics polling
+        // ---------------------------------------------------------------
+        async function updateMetrics() {
+            try {
+                const response = await fetch(`${BRIDGE_URL}/remote/metrics`);
+                if (!response.ok) return;
+                const data = await response.json();
+
+                document.getElementById('cpu-usage').textContent = data.cpu + '%';
+                document.getElementById('cpu-bar').style.width = data.cpu + '%';
+                document.getElementById('cpu-stat').textContent = data.cpu + '%';
+
+                const ramPercent = (data.ram_used / data.ram_total) * 100;
+                document.getElementById('ram-usage').textContent = data.ram_used + ' / ' + data.ram_total + ' GB';
+                document.getElementById('ram-bar').style.width = ramPercent + '%';
+                document.getElementById('ram-stat').textContent = Math.round(ramPercent) + '%';
+
+                document.getElementById('disk-usage').textContent = data.disk_free + ' GB free';
+            } catch (error) {
+                // metrics failure isn't fatal — screen loop drives connection state
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // Remote input — mouse click/move + keyboard.
+        // Only sends input types the backend actually implements
+        // (mouse_click, mouse_move, keyboard, command).
+        // ---------------------------------------------------------------
         async function sendRemoteInput(inputType, data) {
             try {
                 await fetch(`${BRIDGE_URL}/remote/input`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: inputType, ...data })
+                    body: JSON.stringify({ type: inputType, ...data }),
                 });
             } catch (error) {
-                console.error('Input error:', error);
+                // best-effort; screen loop surfaces connection loss
             }
         }
 
-        async function captureScreen() {
-            try {
-                const response = await fetch(`${BRIDGE_URL}/remote/screen`);
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.getElementById('screen');
-                        const ctx = canvas.getContext('2d');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        ctx.drawImage(img, 0, 0);
-                        document.getElementById('pc-status').textContent = 'Online';
-                    };
-                    img.src = URL.createObjectURL(blob);
-                }
-            } catch (error) {
-                console.error('Screen capture error:', error);
-                document.getElementById('pc-status').textContent = 'Offline';
-            }
+        function canvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: Math.round((e.clientX - rect.left) / rect.width * canvas.width),
+                y: Math.round((e.clientY - rect.top) / rect.height * canvas.height),
+            };
         }
 
-        async function updateMetrics() {
-            try {
-                const response = await fetch(`${BRIDGE_URL}/remote/metrics`);
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('cpu-usage').textContent = data.cpu + '%';
-                    document.getElementById('cpu-bar').style.width = data.cpu + '%';
-                    document.getElementById('cpu-stat').textContent = data.cpu + '%';
+        let lastMoveSent = 0;
+        function setupRemoteControl() {
+            screenOverlay.addEventListener('click', (e) => {
+                const { x, y } = canvasCoords(e);
+                sendRemoteInput('mouse_click', { x, y });
+            });
 
-                    const ramPercent = (data.ram_used / data.ram_total) * 100;
-                    document.getElementById('ram-usage').textContent = data.ram_used + ' / ' + data.ram_total + ' GB';
-                    document.getElementById('ram-bar').style.width = ramPercent + '%';
-                    document.getElementById('ram-stat').textContent = Math.round(ramPercent) + '%';
+            screenOverlay.addEventListener('mousemove', (e) => {
+                const now = performance.now();
+                if (now - lastMoveSent < MOUSE_MOVE_THROTTLE) return;
+                lastMoveSent = now;
+                const { x, y } = canvasCoords(e);
+                sendRemoteInput('mouse_move', { x, y });
+            });
 
-                    document.getElementById('disk-usage').textContent = data.disk_free + ' GB free';
-                    document.getElementById('latency-stat').textContent = data.latency + 'ms';
+            document.addEventListener('keydown', (e) => {
+                // Prevent keys that would otherwise navigate/scroll the
+                // browser itself (Backspace = back, Space = scroll, etc.)
+                // so every keystroke reaches the workstation instead.
+                if (['Backspace', ' ', 'Tab', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                    e.preventDefault();
                 }
-            } catch (error) {
-                console.error('Metrics error:', error);
-            }
+                sendRemoteInput('keyboard', {
+                    key: e.key,
+                    ctrl: e.ctrlKey,
+                    alt: e.altKey,
+                    shift: e.shiftKey,
+                });
+                updateKeyboardStatus(e.key);
+            });
         }
 
         function updateKeyboardStatus(key) {
             const status = document.getElementById('keyboard-status');
             status.textContent = 'Last key: ' + key;
             status.classList.add('active');
-            setTimeout(() => status.classList.remove('active'), 500);
+            clearTimeout(status._resetTimer);
+            status._resetTimer = setTimeout(() => status.classList.remove('active'), 600);
         }
 
-        async function sendCommand(command) {
-            await sendRemoteInput('command', { command });
+        function showToast(message) {
+            const stack = document.getElementById('toast-stack');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            stack.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        document.getElementById('btn-refresh').addEventListener('click', () => {
+            hasRenderedFrame = false;
+            loadingState.style.display = 'flex';
+            loadingState.style.opacity = '1';
+            showToast('Refreshing…');
+        });
+
+        document.querySelectorAll('[data-cmd]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const command = btn.dataset.cmd;
+                sendRemoteInput('command', { command });
+                showToast(command + ' sent');
+            });
+        });
+
+        function init() {
+            screenLoop();
+            updateMetrics();
+            setInterval(updateMetrics, 2000);
+            setupRemoteControl();
         }
 
         window.addEventListener('load', init);
