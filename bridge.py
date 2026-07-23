@@ -87,8 +87,16 @@ if not BRIDGE_TOKEN:
 
 @app.before_request
 def require_auth():
-    # Remote dashboard routes (cloud-only access via ngrok, no local access)
-    if request.path.startswith("/remote/") or request.path in ("/", "/health", "/ping", "/host/identity", "/ghost/status", "/dashboard/status", "/vm/status", "/chat", "/chat/test"):
+    if request.path.startswith("/remote/") or request.path in (
+        "/health",
+        "/ping",
+        "/host/identity",
+        "/ghost/status",
+        "/dashboard/status",
+        "/vm/status",
+        "/chat",
+        "/chat/test",
+    ):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -541,14 +549,7 @@ def bridge_info_payload(include_routes=False):
 @app.route("/", methods=["GET"])
 @route_errors
 def root_info():
-    """GET / - Serve enhanced dashboard or fallback to standard dashboard."""
-    from flask import send_file
-    enhanced_path = os.path.join(_ROOT, "dashboard_enhanced.html")
-    dashboard_path = os.path.join(_ROOT, "dashboard.html")
-    if os.path.exists(enhanced_path):
-        return send_file(enhanced_path, mimetype='text/html')
-    if os.path.exists(dashboard_path):
-        return send_file(dashboard_path, mimetype='text/html')
+    """GET / - Authenticated bridge discovery for browser/manual probes."""
     return jsonify(bridge_info_payload(include_routes=True))
 
 
