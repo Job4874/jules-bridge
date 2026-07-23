@@ -1,15 +1,21 @@
 {
-  "cursor.cpp.disabledLanguages": [],
-  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
-  "pylint.interpreter": [
-    "${workspaceFolder}\\.venv\\Scripts\\python.exe"
-  ],
-  "files.watcherExclude": {
-    "**/.pytest_cache/**": true,
-    "**/__pycache__/**": true
-  },
-  "files.exclude": {
-    "**/.pytest_cache": true
-  },
-  "pylint.cwd": "${workspaceFolder}"
+    "cursor.cpp.disabledLanguages":  [
+
+                                     ],
+    "python.defaultInterpreterPath":  "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+    "pylint.interpreter":  [
+                               "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+                           ],
+    "files.watcherExclude":  {
+                                 "**/.pytest_cache/**":  true,
+                                 "**/__pycache__/**":  true
+                             },
+    "files.exclude":  {
+                          "**/.pytest_cache":  true
+                      },
+    "pylint.cwd":  "${workspaceFolder}",
+    "pylint.importStrategy":  "fromEnvironment",
+    "git.ignoredRepositories":  [
+                                    "c:\\jules-bridge-master\\.claude\\worktrees\\boot-up-running-9c7ce8"
+                                ]
 }
