@@ -5,3 +5,5 @@ pyngrok
 requests
 google-cloud-aiplatform
 google-antigravity
+pillow
+psutil

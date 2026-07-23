@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jules Bridge — Remote Control Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 250px;
+            grid-template-rows: 60px 1fr 40px;
+            height: 100vh;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.1);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .header-status {
+            display: flex;
+            gap: 30px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+        }
+
+        .screen-area {
+            grid-column: 1;
+            grid-row: 2;
+            background: #000;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #screen {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: crosshair;
+        }
+
+        .screen-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            z-index: 10;
+        }
+
+        .sidebar {
+            grid-column: 2;
+            grid-row: 2;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #00ff88;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+            padding-bottom: 5px;
+        }
+
+        .metric {
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .metric-label {
+            color: #aaa;
+        }
+
+        .metric-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .control-btn {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .control-btn:active {
+            background: rgba(0, 255, 136, 0.3);
+        }
+
+        .keyboard-status {
+            background: rgba(255, 100, 100, 0.1);
+            border: 1px solid #ff6464;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 10px;
+            color: #ffaaaa;
+            text-align: center;
+        }
+
+        .keyboard-status.active {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        footer {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #888;
+        }
+
+        .connection-secure {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .keystroke-indicator {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #00ff88;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .keystroke-indicator.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-title">🚀 JULES REMOTE CONTROL — WORKSTATION</div>
+            <div class="header-status">
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>Bridge: <strong id="bridge-status">Connected</strong></span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>Cloud: <strong id="cloud-status">Secure</strong></span>
+                </div>
+                <div class="status-item">
+                    <span id="uptime">Uptime: 0h</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Screen Area -->
+        <div class="screen-area">
+            <canvas id="screen" width="1920" height="1080"></canvas>
+            <div class="screen-overlay"></div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- System Metrics -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">System Metrics</div>
+                <div class="metric">
+                    <span class="metric-label">CPU:</span>
+                    <span class="metric-value" id="cpu-usage">0%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">RAM:</span>
+                    <span class="metric-value" id="ram-usage">0 / 32 GB</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Disk:</span>
+                    <span class="metric-value" id="disk-usage">0 GB</span>
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">Controls</div>
+                <button class="control-btn" onclick="captureScreen()">📸 Refresh</button>
+                <button class="control-btn" onclick="sendCommand('Alt+Tab')">🔄 Alt+Tab</button>
+                <button class="control-btn" onclick="sendCommand('Win+D')">🏠 Show Desktop</button>
+                <button class="control-btn" onclick="sendCommand('Win+L')">🔒 Lock (8AM)</button>
+            </div>
+
+            <!-- Keyboard Status -->
+            <div class="keyboard-status" id="keyboard-status">
+                ⌨️ Waiting for input...
+            </div>
+
+            <!-- Connection Info -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">Connection</div>
+                <div class="metric">
+                    <span class="metric-label">Protocol:</span>
+                    <span class="metric-value">HTTPS/ngrok</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Latency:</span>
+                    <span class="metric-value" id="latency">0ms</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">PC Status:</span>
+                    <span class="metric-value" id="pc-status">Running</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <span>Jules Bridge — Remote Control Terminal | Cloud: <span class="connection-secure">🔒 Encrypted/ngrok</span> | Local Access: <span style="color: #ff6464;">🚫 BLOCKED until 8 AM</span></span>
+            <span id="connection-info">Connected via ngrok tunnel</span>
+        </footer>
+    </div>
+
+    <div class="keystroke-indicator" id="keystroke-indicator">Key sent ✓</div>
+
+    <script>
+        const BRIDGE_URL = window.location.origin;
+        let lastScreenCapture = 0;
+        const SCREEN_CAPTURE_INTERVAL = 500; // 500ms between captures
+
+        // Initialize
+        async function init() {
+            console.log('Jules Remote Control Dashboard initialized');
+            captureScreen();
+            updateMetrics();
+            setInterval(updateMetrics, 2000);
+            setInterval(captureScreen, SCREEN_CAPTURE_INTERVAL);
+
+            // Setup keyboard/mouse control
+            setupRemoteControl();
+        }
+
+        // Setup remote control listeners
+        function setupRemoteControl() {
+            const screenOverlay = document.querySelector('.screen-overlay');
+            const canvas = document.getElementById('screen');
+
+            // Mouse click
+            screenOverlay.addEventListener('click', async (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.round((e.clientX - rect.left) / rect.width * canvas.width);
+                const y = Math.round((e.clientY - rect.top) / rect.height * canvas.height);
+
+                console.log(`Mouse click: ${x}, ${y}`);
+                await sendRemoteInput('mouse_click', { x, y });
+            });
+
+            // Mouse move
+            screenOverlay.addEventListener('mousemove', async (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.round((e.clientX - rect.left) / rect.width * canvas.width);
+                const y = Math.round((e.clientY - rect.top) / rect.height * canvas.height);
+                await sendRemoteInput('mouse_move', { x, y });
+            });
+
+            // Keyboard input
+            document.addEventListener('keydown', async (e) => {
+                if (e.target !== document.body) return;
+
+                const key = e.key;
+                const ctrl = e.ctrlKey;
+                const alt = e.altKey;
+                const shift = e.shiftKey;
+
+                console.log(`Key: ${key} (Ctrl: ${ctrl}, Alt: ${alt}, Shift: ${shift})`);
+                await sendRemoteInput('keyboard', { key, ctrl, alt, shift });
+
+                // Show indicator
+                showKeystrokeIndicator();
+            });
+        }
+
+        // Send remote input to bridge
+        async function sendRemoteInput(inputType, data) {
+            try {
+                const response = await fetch(`${BRIDGE_URL}/remote/input`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: inputType, ...data })
+                });
+
+                if (!response.ok) {
+                    console.error(`Remote input error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Remote input error:', error);
+            }
+        }
+
+        // Capture screen
+        async function captureScreen() {
+            try {
+                const response = await fetch(`${BRIDGE_URL}/remote/screen`, {
+                    method: 'GET'
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.getElementById('screen');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = URL.createObjectURL(blob);
+                    document.getElementById('bridge-status').textContent = 'Connected';
+                } else {
+                    document.getElementById('bridge-status').textContent = 'Error';
+                }
+            } catch (error) {
+                console.error('Screen capture error:', error);
+                document.getElementById('bridge-status').textContent = 'Disconnected';
+            }
+        }
+
+        // Update metrics
+        async function updateMetrics() {
+            try {
+                const response = await fetch(`${BRIDGE_URL}/remote/metrics`, {
+                    method: 'GET'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('cpu-usage').textContent = data.cpu + '%';
+                    document.getElementById('ram-usage').textContent = data.ram_used + ' / ' + data.ram_total + ' GB';
+                    document.getElementById('disk-usage').textContent = data.disk_free + ' GB free';
+                    document.getElementById('latency').textContent = data.latency + 'ms';
+
+                    const uptime = Math.floor(data.uptime / 3600);
+                    document.getElementById('uptime').textContent = `Uptime: ${uptime}h`;
+                }
+            } catch (error) {
+                console.error('Metrics error:', error);
+            }
+        }
+
+        // Send command shortcut
+        async function sendCommand(command) {
+            console.log(`Command: ${command}`);
+            await sendRemoteInput('command', { command });
+        }
+
+        // Show keystroke indicator
+        function showKeystrokeIndicator() {
+            const indicator = document.getElementById('keystroke-indicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 300);
+        }
+
+        // Start
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

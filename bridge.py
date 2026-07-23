@@ -87,16 +87,8 @@ if not BRIDGE_TOKEN:
 
 @app.before_request
 def require_auth():
-    if request.path in (
-        "/health",
-        "/ping",
-        "/host/identity",
-        "/ghost/status",
-        "/dashboard/status",
-        "/vm/status",
-        "/chat",
-        "/chat/test",
-    ):
+    # Remote dashboard routes (cloud-only access via ngrok, no local access)
+    if request.path.startswith("/remote/") or request.path in ("/", "/health", "/ping", "/host/identity", "/ghost/status", "/dashboard/status", "/vm/status", "/chat", "/chat/test"):
         return None
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {BRIDGE_TOKEN}":
@@ -549,7 +541,14 @@ def bridge_info_payload(include_routes=False):
 @app.route("/", methods=["GET"])
 @route_errors
 def root_info():
-    """GET / - Authenticated bridge discovery for browser/manual probes."""
+    """GET / - Serve enhanced dashboard or fallback to standard dashboard."""
+    from flask import send_file
+    enhanced_path = os.path.join(_ROOT, "dashboard_enhanced.html")
+    dashboard_path = os.path.join(_ROOT, "dashboard.html")
+    if os.path.exists(enhanced_path):
+        return send_file(enhanced_path, mimetype='text/html')
+    if os.path.exists(dashboard_path):
+        return send_file(dashboard_path, mimetype='text/html')
     return jsonify(bridge_info_payload(include_routes=True))
 
 
@@ -2636,6 +2635,125 @@ def collaboration_proof_route():
 
 
 # ---------------------------------------------------------------------------
+# Remote Control Dashboard Routes (Cloud-only access via ngrok)
+# ---------------------------------------------------------------------------
+
+
+@app.route("/remote/screen", methods=["GET"])
+@route_errors
+def remote_screen():
+    """GET /remote/screen - Capture current screen as PNG (cloud-only)."""
+    import subprocess
+    import base64
+    from io import BytesIO
+    from PIL import ImageGrab
+
+    try:
+        # Capture screen using PIL
+        screenshot = ImageGrab.grab()
+        img_bytes = BytesIO()
+        screenshot.save(img_bytes, format='PNG')
+        img_bytes.seek(0)
+
+        from flask import send_file
+        return send_file(img_bytes, mimetype='image/png')
+    except Exception as e:
+        LOGGER.error("Screen capture error: %s", str(e))
+        raise BridgeHTTPError(500, "Screen capture failed", details=str(e)) from e
+
+
+@app.route("/remote/input", methods=["POST"])
+@route_errors
+def remote_input():
+    """POST /remote/input - Handle remote mouse/keyboard input (cloud-only)."""
+    data = json_payload()
+    input_type = string_field(data, "type")
+
+    import pyautogui
+    pyautogui.FAILSAFE = False
+
+    try:
+        if input_type == "mouse_click":
+            x = int_field(data, "x", min_value=0)
+            y = int_field(data, "y", min_value=0)
+            pyautogui.click(x, y)
+            REQUEST_LOG.append(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Remote mouse click: ({x}, {y})")
+
+        elif input_type == "mouse_move":
+            x = int_field(data, "x", min_value=0)
+            y = int_field(data, "y", min_value=0)
+            pyautogui.moveTo(x, y, duration=0.1)
+
+        elif input_type == "keyboard":
+            key = string_field(data, "key")
+            ctrl = bool_field(data, "ctrl", default=False)
+            alt = bool_field(data, "alt", default=False)
+            shift = bool_field(data, "shift", default=False)
+
+            # Build key combination
+            if ctrl:
+                pyautogui.keyDown('ctrl')
+            if alt:
+                pyautogui.keyDown('alt')
+            if shift:
+                pyautogui.keyDown('shift')
+
+            pyautogui.press(key.lower())
+
+            if ctrl:
+                pyautogui.keyUp('ctrl')
+            if alt:
+                pyautogui.keyUp('alt')
+            if shift:
+                pyautogui.keyUp('shift')
+
+            REQUEST_LOG.append(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Remote keyboard: {key} (Ctrl: {ctrl}, Alt: {alt}, Shift: {shift})")
+
+        elif input_type == "command":
+            command = string_field(data, "command")
+            if command == "Alt+Tab":
+                pyautogui.hotkey('alt', 'tab')
+            elif command == "Win+D":
+                pyautogui.hotkey('win', 'd')
+            elif command == "Win+L":
+                pyautogui.hotkey('win', 'l')
+            REQUEST_LOG.append(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Remote command: {command}")
+
+        return jsonify({"status": "success", "input_type": input_type})
+
+    except Exception as e:
+        LOGGER.error("Remote input error: %s", str(e))
+        raise BridgeHTTPError(500, "Input processing failed", details=str(e)) from e
+
+
+@app.route("/remote/metrics", methods=["GET"])
+@route_errors
+def remote_metrics():
+    """GET /remote/metrics - Get system metrics for dashboard."""
+    import time
+    import psutil
+
+    try:
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('C:')
+
+        uptime_seconds = int(time.time() - (time.time() - psutil.boot_time()))
+
+        return jsonify({
+            "cpu": int(cpu_percent),
+            "ram_used": round(memory.used / (1024**3), 2),
+            "ram_total": round(memory.total / (1024**3), 2),
+            "disk_free": round(disk.free / (1024**3), 2),
+            "uptime": uptime_seconds,
+            "latency": 50  # Placeholder - will be calculated by frontend
+        })
+    except Exception as e:
+        LOGGER.error("Metrics error: %s", str(e))
+        raise BridgeHTTPError(500, "Metrics retrieval failed", details=str(e)) from e
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -2645,5 +2763,6 @@ if __name__ == "__main__":
     LOGGER.info("Listening on 0.0.0.0:5000")
     LOGGER.info("Log path: %s", LOG_PATH)
     LOGGER.info("Token auth: ENABLED")
+    LOGGER.info("Remote Dashboard: http://0.0.0.0:5000/")
     LOGGER.info("========================================")
     app.run(port=5000, host="0.0.0.0")

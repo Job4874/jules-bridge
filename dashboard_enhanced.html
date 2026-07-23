@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jules Bridge — Professional Remote Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a3f 100%);
+            color: #eee;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            grid-template-rows: 70px 1fr 50px;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            background: linear-gradient(90deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 150, 255, 0.1) 100%);
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.15);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+            letter-spacing: 1px;
+        }
+
+        .connection-badge {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #00ff88;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 25px;
+            font-size: 13px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            color: #aaa;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .screen-area {
+            grid-column: 1;
+            grid-row: 2;
+            background: #000;
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2);
+        }
+
+        #screen {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: crosshair;
+        }
+
+        .screen-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            z-index: 10;
+        }
+
+        .sidebar {
+            grid-column: 2;
+            grid-row: 2;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 50, 100, 0.3) 100%);
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 18px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(0, 255, 136, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .metric {
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-label {
+            color: #999;
+        }
+
+        .metric-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .metric-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88 0%, #00ccff 100%);
+            transition: width 0.3s ease;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 255, 0.15) 100%);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .control-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.3) 0%, rgba(0, 200, 255, 0.3) 100%);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .keyboard-input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff88;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 11px;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .keyboard-input.active {
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        footer {
+            grid-column: 1 / -1;
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 50, 100, 0.3) 100%);
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 0 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .footer-text {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .scroll-bar {
+            width: 8px;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .scroll-bar-thumb {
+            background: #00ff88;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00ff88;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00ff88;
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            color: #00ff88;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <div class="logo">⚡ JULES BRIDGE</div>
+                <div class="connection-badge">
+                    <div class="status-dot"></div>
+                    <span>Connected</span>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">CPU:</span>
+                    <span class="stat-value" id="cpu-stat">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">RAM:</span>
+                    <span class="stat-value" id="ram-stat">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Latency:</span>
+                    <span class="stat-value" id="latency-stat">--ms</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="screen-area">
+            <canvas id="screen" width="1920" height="1080"></canvas>
+            <div class="screen-overlay"></div>
+            <div class="loading" style="position: absolute; display: none;" id="loading">Loading...</div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="section-title">📊 Performance</div>
+                <div class="metric">
+                    <span class="metric-label">CPU Usage</span>
+                    <span class="metric-value" id="cpu-usage">0%</span>
+                </div>
+                <div class="metric-bar">
+                    <div class="metric-bar-fill" id="cpu-bar" style="width: 0%"></div>
+                </div>
+
+                <div class="metric" style="margin-top: 8px;">
+                    <span class="metric-label">Memory</span>
+                    <span class="metric-value" id="ram-usage">0 GB</span>
+                </div>
+                <div class="metric-bar">
+                    <div class="metric-bar-fill" id="ram-bar" style="width: 0%"></div>
+                </div>
+
+                <div class="metric" style="margin-top: 8px;">
+                    <span class="metric-label">Disk Free</span>
+                    <span class="metric-value" id="disk-usage">0 GB</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">⌨️ Input</div>
+                <div class="keyboard-input" id="keyboard-status">Ready for input</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">🎮 Controls</div>
+                <button class="control-btn" onclick="captureScreen()">📸 Refresh</button>
+                <button class="control-btn" onclick="sendCommand('Alt+Tab')">🔄 Alt+Tab</button>
+                <button class="control-btn" onclick="sendCommand('Win+D')">🏠 Desktop</button>
+                <button class="control-btn" onclick="sendCommand('Win+L')">🔒 Lock</button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">🔗 Connection</div>
+                <div class="metric">
+                    <span class="metric-label">Protocol</span>
+                    <span class="metric-value">HTTPS</span>
+                </div>
+                <div class="metric" style="margin-top: 6px;">
+                    <span class="metric-label">Tunnel</span>
+                    <span class="metric-value">Cloudflare</span>
+                </div>
+                <div class="metric" style="margin-top: 6px;">
+                    <span class="metric-label">Status</span>
+                    <span class="metric-value" id="pc-status">Online</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <span>Jules Bridge — Remote Workstation Control | <span class="footer-text">🔒 Encrypted</span> | <span class="footer-text">⚡ Realtime</span></span>
+            <span id="footer-info">Connected via Cloudflare tunnel</span>
+        </footer>
+    </div>
+
+    <script>
+        const BRIDGE_URL = window.location.origin;
+        let lastScreenCapture = 0;
+        const SCREEN_CAPTURE_INTERVAL = 500;
+
+        async function init() {
+            console.log('Jules Bridge Dashboard initialized');
+            captureScreen();
+            updateMetrics();
+            setInterval(updateMetrics, 2000);
+            setInterval(captureScreen, SCREEN_CAPTURE_INTERVAL);
+            setupRemoteControl();
+        }
+
+        function setupRemoteControl() {
+            const screenOverlay = document.querySelector('.screen-overlay');
+            const canvas = document.getElementById('screen');
+
+            screenOverlay.addEventListener('click', async (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.round((e.clientX - rect.left) / rect.width * canvas.width);
+                const y = Math.round((e.clientY - rect.top) / rect.height * canvas.height);
+                await sendRemoteInput('mouse_click', { x, y });
+            });
+
+            screenOverlay.addEventListener('mousemove', async (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.round((e.clientX - rect.left) / rect.width * canvas.width);
+                const y = Math.round((e.clientY - rect.top) / rect.height * canvas.height);
+                await sendRemoteInput('mouse_move', { x, y });
+            });
+
+            document.addEventListener('keydown', async (e) => {
+                if (e.target !== document.body) return;
+                const key = e.key;
+                const ctrl = e.ctrlKey;
+                const alt = e.altKey;
+                const shift = e.shiftKey;
+                await sendRemoteInput('keyboard', { key, ctrl, alt, shift });
+                updateKeyboardStatus(key);
+            });
+        }
+
+        async function sendRemoteInput(inputType, data) {
+            try {
+                await fetch(`${BRIDGE_URL}/remote/input`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: inputType, ...data })
+                });
+            } catch (error) {
+                console.error('Input error:', error);
+            }
+        }
+
+        async function captureScreen() {
+            try {
+                const response = await fetch(`${BRIDGE_URL}/remote/screen`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.getElementById('screen');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        document.getElementById('pc-status').textContent = 'Online';
+                    };
+                    img.src = URL.createObjectURL(blob);
+                }
+            } catch (error) {
+                console.error('Screen capture error:', error);
+                document.getElementById('pc-status').textContent = 'Offline';
+            }
+        }
+
+        async function updateMetrics() {
+            try {
+                const response = await fetch(`${BRIDGE_URL}/remote/metrics`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('cpu-usage').textContent = data.cpu + '%';
+                    document.getElementById('cpu-bar').style.width = data.cpu + '%';
+                    document.getElementById('cpu-stat').textContent = data.cpu + '%';
+
+                    const ramPercent = (data.ram_used / data.ram_total) * 100;
+                    document.getElementById('ram-usage').textContent = data.ram_used + ' / ' + data.ram_total + ' GB';
+                    document.getElementById('ram-bar').style.width = ramPercent + '%';
+                    document.getElementById('ram-stat').textContent = Math.round(ramPercent) + '%';
+
+                    document.getElementById('disk-usage').textContent = data.disk_free + ' GB free';
+                    document.getElementById('latency-stat').textContent = data.latency + 'ms';
+                }
+            } catch (error) {
+                console.error('Metrics error:', error);
+            }
+        }
+
+        function updateKeyboardStatus(key) {
+            const status = document.getElementById('keyboard-status');
+            status.textContent = 'Last key: ' + key;
+            status.classList.add('active');
+            setTimeout(() => status.classList.remove('active'), 500);
+        }
+
+        async function sendCommand(command) {
+            await sendRemoteInput('command', { command });
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

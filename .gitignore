@@ -19,3 +19,4 @@ bridge.log
 .env.*
 !.env.example
 scratch/vm.env
+.claude/
