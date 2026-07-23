@@ -1,7 +1,7 @@
 {
-  "status": "healthy",
-  "last_check_utc": "2026-07-22T22:14:08.918440+00:00",
-  "consecutive_failures": 0,
+  "status": "degraded",
+  "last_check_utc": "2026-07-23T20:32:56.009101+00:00",
+  "consecutive_failures": 1,
   "last_reconnect_utc": null,
-  "uptime_s": 0.0
+  "uptime_s": 60.15786
 }

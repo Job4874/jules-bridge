@@ -39,7 +39,7 @@
     {
       "host_id": "school-64gb",
       "role": "primary",
-      "hostname": "PPCEA200P350B4",
+      "hostname": "PPCEA200P35096",
       "location": "school",
       "ram_gb": 64,
       "capabilities": [
@@ -60,13 +60,13 @@
         "repo": "Job4874/jules-bridge",
         "remote": "https://github.com/Job4874/jules-bridge.git"
       },
-      "jules_source": "sources/github/owner/repo",
-      "ghost_locked": true,
-      "last_seen_utc": "2026-07-22T21:04:29.139511+00:00",
+      "jules_source": "sources/github/Job4874/jules-bridge",
+      "ghost_locked": false,
+      "last_seen_utc": "2026-07-23T20:33:31.773149+00:00",
       "status": "online"
     }
   ],
-  "updated_utc": "2026-07-22T21:04:29.158671+00:00",
+  "updated_utc": "2026-07-23T20:33:31.806700+00:00",
   "connect": {
     "primary_bridge_remote": "https://parade-marrow-pulp.ngrok-free.dev",
     "auth_header": "Authorization: Bearer <BRIDGE_TOKEN>",
