@@ -25,9 +25,29 @@ def test_verify_quantower_login(mock_detect, mock_init_browser):
     mock_context.new_page.return_value = mock_page
     mock_init_browser.return_value = mock_context
 
-    mock_detect.return_value = "LOGGED_IN"
+    # detect_ui_state returns a UIDetectionResult dict; "quantower_ready" is the
+    # logged-in/ready state.
+    mock_detect.return_value = {"state": "quantower_ready", "confidence": 0.8, "signals": [], "error": None}
 
     result = verify_quantower_login()
 
     mock_page.goto.assert_called_once_with("https://quantower.com")
-    assert result == True
+    # The page text must be passed as the ocr_text keyword, not positionally.
+    assert mock_detect.call_args.kwargs.get("ocr_text") == mock_page.content.return_value
+    assert result is True
+
+
+@patch('modules.browser_agent.init_browser')
+@patch('modules.browser_agent.detect_ui_state')
+def test_verify_quantower_login_not_ready_returns_false(mock_detect, mock_init_browser):
+    mock_page = MagicMock()
+    mock_page.content.return_value = "<html>Sign in - password</html>"
+    mock_context = MagicMock()
+    mock_context.new_page.return_value = mock_page
+    mock_init_browser.return_value = mock_context
+
+    mock_detect.return_value = {"state": "auth_prompt", "confidence": 0.8, "signals": [], "error": None}
+
+    result = verify_quantower_login()
+
+    assert result is False

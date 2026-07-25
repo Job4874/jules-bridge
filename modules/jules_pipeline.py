@@ -82,10 +82,17 @@ class JulesPipeline:
             cmd = ["jules", "remote", "list", "--session"]
             try:
                 res = subprocess.run(cmd, cwd=self.repo_dir, capture_output=True, text=True, check=False)
-                if session_id in res.stdout:
-                    if "COMPLETED" in res.stdout:
+                # Evaluate the status only against the polled session's own row.
+                # Matching COMPLETED/FAILED against the entire multi-session output
+                # would attribute another session's terminal state to this one.
+                session_line = next(
+                    (line for line in res.stdout.splitlines() if session_id in line),
+                    None,
+                )
+                if session_line is not None:
+                    if "COMPLETED" in session_line:
                         return {"status": "COMPLETED", "session_id": session_id, "elapsed_s": time.time() - start_t}
-                    if "FAILED" in res.stdout:
+                    if "FAILED" in session_line:
                         return {"status": "FAILED", "session_id": session_id, "elapsed_s": time.time() - start_t}
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 return {"status": "error", "error": str(exc)}

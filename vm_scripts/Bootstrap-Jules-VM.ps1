@@ -122,7 +122,7 @@ Write-Host "[DEPS] Installing Python dependencies on VM..." -ForegroundColor Yel
 Write-Host "[START] Starting jules-worker-agent on VM..." -ForegroundColor Yellow
 & gcloud compute ssh "julesadmin@$VM_NAME" `
     --zone=$VM_ZONE --project=$VM_PROJECT `
-    --command="pkill -f jules-worker-agent 2>/dev/null; nohup python3 /home/julesadmin/jules-worker-agent.py > /home/julesadmin/worker.log 2>&1 &; sleep 2; curl -s http://localhost:6000/ping" 2>&1
+    --command="pkill -f jules-worker-agent 2>/dev/null; nohup python3 /home/julesadmin/jules-worker-agent.py > /home/julesadmin/worker.log 2>&1 & sleep 2; curl -s http://localhost:6000/ping" 2>&1
 
 Write-Host "`n=== Bootstrap Complete ===" -ForegroundColor Green
 Write-Host "VM Agent: http://${VM_IP}:6000/status" -ForegroundColor Cyan

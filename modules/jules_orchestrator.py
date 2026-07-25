@@ -544,7 +544,10 @@ def list_remote_sessions(
     Returns:
         JulesRemoteResult. Never raises.
     """
-    cache_ttl = int(os.environ.get('JULES_SESSION_CACHE_TTL_S', '30'))
+    try:
+        cache_ttl = int(os.environ.get('JULES_SESSION_CACHE_TTL_S', '30') or '30')
+    except (ValueError, TypeError):
+        cache_ttl = 30
     now = time.time()
     use_rest_api = jules_api.is_rest_api_enabled()
     cache_key = f"rest:{jules_api._config()['base_url']}" if use_rest_api else jules_command
