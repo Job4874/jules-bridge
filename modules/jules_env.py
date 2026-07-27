@@ -78,8 +78,13 @@ def _set_env_value(path: Path, key: str, value: str, *, only_if_missing: bool = 
 
 
 def load_env() -> None:
-    """Load mirror env first, then repo env. Repo values win on conflict."""
-    for path in (MIRROR_ENV_PATH, REPO_ENV_PATH):
+    """Load repo env first, then mirror. Repo values win on conflict.
+
+    ``os.environ.setdefault`` keeps the first value written for a key, so the
+    canonical repo ``.env`` must be applied before the durable mirror; an env
+    var already present in the process still takes highest precedence.
+    """
+    for path in (REPO_ENV_PATH, MIRROR_ENV_PATH):
         if not path.is_file():
             continue
         for key, value in _parse_env_file(path).items():

@@ -38,12 +38,15 @@ def _check_gcp() -> Dict[str, Any]:
     token = ""
     for cmd in (["gcloud", "auth", "print-access-token"], ["gcloud.cmd", "auth", "print-access-token"]):
         try:
+            # shell=False so the full argv (including the subcommand) is executed
+            # directly. With shell=True on POSIX only cmd[0] becomes the shell
+            # command string and "auth print-access-token" would be discarded.
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 timeout=15,
-                shell=True,
+                shell=False,
                 check=False,
             )
             candidate = result.stdout.strip()

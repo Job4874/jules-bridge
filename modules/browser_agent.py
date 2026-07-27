@@ -29,9 +29,12 @@ def verify_quantower_login() -> bool:
     # Extract text from the page to simulate OCR/UI detection
     page_text = page.content()
 
-    state = detect_ui_state(page_text)
+    # Pass the text as ocr_text (the first positional param is _image_path).
+    # detect_ui_state returns a UIDetectionResult dict; compare on the
+    # classified state, not the dict itself.
+    result = detect_ui_state(ocr_text=page_text)
 
     # Clean up (mocked cleanup)
     # context.close()
 
-    return state == "LOGGED_IN"
+    return result.get("state") == "quantower_ready"

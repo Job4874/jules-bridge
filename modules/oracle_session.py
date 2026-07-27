@@ -145,7 +145,12 @@ def _info_xml_settings(path: str) -> InstanceInfo:
     if not os.path.isfile(path):
         return InstanceInfo(exists=False, path=path)
 
-    tree = ET.parse(path)
+    # info.xml may be truncated/corrupt (e.g. Quantower mid-write). Guard the
+    # parse so oracle_status() honors its documented "never raises" contract.
+    try:
+        tree = ET.parse(path)
+    except (ET.ParseError, OSError) as exc:
+        return InstanceInfo(exists=True, path=path, error=str(exc))
     root = tree.getroot()
     strategy = root.find("strategy")
     state = strategy.findtext("State") if strategy is not None else None

@@ -28,8 +28,10 @@ _BASH_CANDIDATES = (
     r"C:\Program Files\Git\usr\bin\bash.exe",
 )
 
-# In-memory cache for shell results: { hash(cmd+cwd+shell): (timestamp, ShellResult) }
+# In-memory cache for shell results: { hash(cmd+cwd+shell+stdin): (timestamp, ShellResult) }
 _shell_result_cache = {}
+# Upper bound on cached entries; prevents unbounded growth on long-running processes.
+_SHELL_CACHE_MAX_ENTRIES = 256
 
 # ---------------------------------------------------------------------------
 # Typed return contract
@@ -182,8 +184,9 @@ def execute(
     effective_cwd = cwd or os.getcwd()
     cache_ttl = int(os.environ.get('SHELL_CACHE_TTL_S', '0'))
 
-    # Cache key: hash(command + cwd + shell)
-    cache_key = hashlib.sha256(f"{command}{effective_cwd}{shell}".encode()).hexdigest()
+    # Cache key: hash(command + cwd + shell + stdin). stdin materially changes
+    # output, so omitting it would collide two calls that differ only in stdin.
+    cache_key = hashlib.sha256(f"{command}|{effective_cwd}|{shell}|{stdin!r}".encode()).hexdigest()
 
     now = time.time()
     if not bypass_cache and cache_key in _shell_result_cache and cache_ttl > 0:
@@ -216,9 +219,18 @@ def execute(
             shell=resolved_shell,
         )
 
-        # Update cache
-        if not bypass_cache:
+        # Update cache only when caching is enabled; otherwise the dict would
+        # grow unbounded (writes gated only on bypass_cache) while never being
+        # read. Evict expired entries and cap total size to prevent a leak.
+        if not bypass_cache and cache_ttl > 0:
             _shell_result_cache[cache_key] = (now, result)
+            if len(_shell_result_cache) > _SHELL_CACHE_MAX_ENTRIES:
+                for key, (ts_key, _val) in list(_shell_result_cache.items()):
+                    if now - ts_key >= cache_ttl:
+                        del _shell_result_cache[key]
+                while len(_shell_result_cache) > _SHELL_CACHE_MAX_ENTRIES:
+                    oldest = min(_shell_result_cache, key=lambda k: _shell_result_cache[k][0])
+                    del _shell_result_cache[oldest]
         return result
 
     except subprocess.TimeoutExpired:

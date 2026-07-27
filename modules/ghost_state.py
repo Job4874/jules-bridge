@@ -88,14 +88,20 @@ def load_ghost_state() -> GhostState:
         if isinstance(raw, dict):
             state.update(raw)
     except (OSError, json.JSONDecodeError):
-        pass
+        # The file exists but is unreadable/corrupt (e.g. a partial write from a
+        # crash while locked). Fail closed: never silently drop the ghost lock,
+        # which would let the bridge be stopped/altered without the password.
+        state["locked"] = True
     return GhostState(state)
 
 
 def _write_state(state: dict[str, Any]) -> GhostState:
     path = ghost_state_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    # Write atomically so a crash mid-write cannot corrupt the live lock file.
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    os.replace(tmp, path)
     return GhostState(state)
 
 

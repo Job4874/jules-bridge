@@ -854,8 +854,9 @@ def _index_markdown(
         "|---|---|---:|---:|---|",
     ]
     for subagent, packet_file in zip(subagents, packet_files):
+        escaped_packet = packet_file.replace('|', '\\|')
         lines.append(
-            f"| {subagent.get('id', '')} | {subagent.get('role_id', '')} | {subagent.get('packet_char_count', 0)} | {subagent.get('within_budget', False)} | {packet_file.replace('|', '\\|')} |"
+            f"| {subagent.get('id', '')} | {subagent.get('role_id', '')} | {subagent.get('packet_char_count', 0)} | {subagent.get('within_budget', False)} | {escaped_packet} |"
         )
     lines.append("")
     return "\n".join(lines)
@@ -898,8 +899,9 @@ def _plan_markdown(
         "|---|---|---|",
     ]
     for phase in workflow.get("phases", []):
+        done_when = str(phase.get('done_when', '')).replace('|', '\\|')
         lines.append(
-            f"| {phase.get('id', '')} | {phase.get('artifact', '')} | {str(phase.get('done_when', '')).replace('|', '\\|')} |"
+            f"| {phase.get('id', '')} | {phase.get('artifact', '')} | {done_when} |"
         )
     lines.extend([
         "",
@@ -927,8 +929,10 @@ def _plan_markdown(
     }
     for subagent in subagents:
         packet = packet_by_id.get(str(subagent.get("id", "")), "")
+        mission = str(subagent.get('mission', '')).replace('|', '\\|')
+        escaped_packet = packet.replace('|', '\\|')
         lines.append(
-            f"| {subagent.get('id', '')} | {subagent.get('role_id', '')} | {str(subagent.get('mission', '')).replace('|', '\\|')} | {packet.replace('|', '\\|')} |"
+            f"| {subagent.get('id', '')} | {subagent.get('role_id', '')} | {mission} | {escaped_packet} |"
         )
     lines.extend([
         "",

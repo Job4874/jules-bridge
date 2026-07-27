@@ -129,7 +129,8 @@ foreach ($vmName in $VmNames) {
     Write-Log "$vmName external IP: $ip"
     
     # Save to .env-style file for bridge to read
-    Add-Content -Path "$env:USERPROFILE\.jules\.env" -Value "`nAZURE_WORKER_${vmName.ToUpper().Replace('-','_')}=$ip"
+    $workerKey = $vmName.ToUpper().Replace('-','_')
+    Add-Content -Path "$env:USERPROFILE\.jules\.env" -Value "`nAZURE_WORKER_$workerKey=$ip"
 }
 
 Write-Log "=== Azure provisioning complete. Log: $log ==="
