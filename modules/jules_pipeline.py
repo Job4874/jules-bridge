@@ -78,6 +78,7 @@ class JulesPipeline:
     def poll_session(self, session_id: str, max_wait_s: float = 300.0) -> Dict[str, Any]:
         """Poll Jules remote session status until COMPLETED or FAILED."""
         start_t = time.time()
+        wait_time = 1.0
         while time.time() - start_t < max_wait_s:
             cmd = ["jules", "remote", "list", "--session"]
             try:
@@ -96,7 +97,8 @@ class JulesPipeline:
                         return {"status": "FAILED", "session_id": session_id, "elapsed_s": time.time() - start_t}
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 return {"status": "error", "error": str(exc)}
-            time.sleep(5.0)
+            time.sleep(wait_time)
+            wait_time = min(wait_time * 1.5, 5.0)
 
         return {"status": "TIMEOUT", "session_id": session_id, "elapsed_s": time.time() - start_t}
 
