@@ -64,52 +64,26 @@ def build_alliance_switchboard(
     """
     generated_at = datetime.now(timezone.utc).isoformat()
     try:
-        clean_objective = _compact(objective)
-        clean_files = _clean_target_files(target_files or [])
-        clean_complexity = _normalize_token(complexity, "complex")
-        creator_key = _normalize_actor(preferred_creator, "jules")
-        implementer_key = _normalize_actor(preferred_implementer, "antigravity_cli")
-        timeout = max(1, int(timeout_s or 1))
+        clean_objective, clean_files, clean_complexity, creator_key, implementer_key, timeout = _parse_args(
+            objective, target_files, complexity, preferred_creator, preferred_implementer, timeout_s
+        )
 
-        proof = _read_json(_DEFAULT_PROOF_STATE)
-        jules = _jules_readiness(include_live_checks, timeout)
-        antigravity = _antigravity_readiness(include_live_checks, run_implementer_smoke, timeout)
-        gemini = _gemini_readiness(include_live_checks, timeout)
-        akc = check_akc_readiness()
+        proof, jules, antigravity, gemini, akc = _gather_readiness(
+            include_live_checks, run_implementer_smoke, timeout
+        )
 
-        active_implementer = _select_implementer(
-            implementer_key=implementer_key,
-            antigravity=antigravity,
-            gemini=gemini,
-            jules=jules,
+        active_implementer, roles, switching_policy, gates, workflow, agent_views, packet_previews = _build_alliance_components(
+            clean_objective,
+            clean_files,
+            clean_complexity,
+            creator_key,
+            implementer_key,
+            proof,
+            jules,
+            antigravity,
+            gemini,
+            akc,
         )
-        roles = _role_assignments(
-            objective=clean_objective,
-            complexity=clean_complexity,
-            preferred_creator=creator_key,
-            preferred_implementer=implementer_key,
-            active_implementer=active_implementer,
-            target_files=clean_files,
-        )
-        switching_policy = _switching_policy(
-            preferred_creator=creator_key,
-            preferred_implementer=implementer_key,
-            active_implementer=active_implementer,
-        )
-        gates = _gates(
-            objective=clean_objective,
-            creator_key=creator_key,
-            implementer_key=implementer_key,
-            active_implementer=active_implementer,
-            jules=jules,
-            antigravity=antigravity,
-            gemini=gemini,
-            akc=akc,
-            proof=proof,
-        )
-        workflow = _workflow(clean_complexity, active_implementer)
-        agent_views = _agent_views(jules, antigravity, gemini, akc, proof)
-        packet_previews = _packet_previews(clean_objective, clean_files, roles, switching_policy)
 
         payload = AllianceSwitchboardResult(
             generated_at_utc=generated_at,
@@ -130,40 +104,13 @@ def build_alliance_switchboard(
                 "packet_paths": {},
                 "previews": packet_previews,
             },
-            safety_policy={
-                "default_mode": "dry_run",
-                "live_side_effects": "none",
-                "jules_sessions_created": False,
-                "google_cli_prompts_run": bool(include_live_checks and run_implementer_smoke),
-                "workspace_edits": False,
-                "note": (
-                    "This switchboard only assigns roles and prepares packets. "
-                    "Execution still requires explicit route calls and live flags."
-                ),
-            },
-            readiness={
-                "jules": _readiness_summary(jules),
-                "antigravity_cli": _readiness_summary(antigravity),
-                "legacy_gemini_cli": _readiness_summary(gemini),
-                "akc": {
-                    "ready": bool(akc.get("ready")),
-                    "status": akc.get("status", ""),
-                    "checkpoint_path": akc.get("checkpoint_path", ""),
-                },
-                "collaboration_proof_state": {
-                    "available": bool(proof),
-                    "status": proof.get("status", "") if isinstance(proof, dict) else "",
-                    "state_path": str(_DEFAULT_PROOF_STATE) if _DEFAULT_PROOF_STATE.exists() else "",
-                },
-            },
+            safety_policy=_build_safety_policy(include_live_checks, run_implementer_smoke),
+            readiness=_build_readiness_block(jules, antigravity, gemini, akc, proof),
             completion_assessment=_completion_assessment(gates, active_implementer),
         )
 
         if write_packets:
-            packet_result = _write_packets(payload, state_path)
-            payload["packets"].update(packet_result)
-            if packet_result.get("error"):
-                payload["status"] = "partial" if payload["status"] == "ready" else payload["status"]
+            _apply_packet_writes(payload, state_path)
 
         return payload
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -175,6 +122,138 @@ def build_alliance_switchboard(
             gates=[_gate("switchboard_runtime", "blocked", str(exc), required=True, blocker=str(exc))],
             blockers=[{"gate": "switchboard_runtime", "blocker": str(exc), "status": "blocked"}],
         )
+
+
+def _parse_args(
+    objective: str,
+    target_files: list[str] | None,
+    complexity: str,
+    preferred_creator: str,
+    preferred_implementer: str,
+    timeout_s: int,
+) -> tuple[str, list[str], str, str, str, int]:
+    return (
+        _compact(objective),
+        _clean_target_files(target_files or []),
+        _normalize_token(complexity, "complex"),
+        _normalize_actor(preferred_creator, "jules"),
+        _normalize_actor(preferred_implementer, "antigravity_cli"),
+        max(1, int(timeout_s or 1)),
+    )
+
+
+def _gather_readiness(
+    include_live_checks: bool, run_implementer_smoke: bool, timeout: int
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+    return (
+        _read_json(_DEFAULT_PROOF_STATE),
+        _jules_readiness(include_live_checks, timeout),
+        _antigravity_readiness(include_live_checks, run_implementer_smoke, timeout),
+        _gemini_readiness(include_live_checks, timeout),
+        check_akc_readiness(),
+    )
+
+
+def _build_alliance_components(
+    clean_objective: str,
+    clean_files: list[str],
+    clean_complexity: str,
+    creator_key: str,
+    implementer_key: str,
+    proof: dict[str, Any],
+    jules: dict[str, Any],
+    antigravity: dict[str, Any],
+    gemini: dict[str, Any],
+    akc: dict[str, Any],
+) -> tuple[
+    dict[str, Any],
+    dict[str, Any],
+    dict[str, Any],
+    list[dict[str, Any]],
+    dict[str, Any],
+    dict[str, Any],
+    dict[str, str],
+]:
+    active_implementer = _select_implementer(
+        implementer_key=implementer_key,
+        antigravity=antigravity,
+        gemini=gemini,
+        jules=jules,
+    )
+    roles = _role_assignments(
+        objective=clean_objective,
+        complexity=clean_complexity,
+        preferred_creator=creator_key,
+        preferred_implementer=implementer_key,
+        active_implementer=active_implementer,
+        target_files=clean_files,
+    )
+    switching_policy = _switching_policy(
+        preferred_creator=creator_key,
+        preferred_implementer=implementer_key,
+        active_implementer=active_implementer,
+    )
+    gates = _gates(
+        objective=clean_objective,
+        creator_key=creator_key,
+        implementer_key=implementer_key,
+        active_implementer=active_implementer,
+        jules=jules,
+        antigravity=antigravity,
+        gemini=gemini,
+        akc=akc,
+        proof=proof,
+    )
+    workflow = _workflow(clean_complexity, active_implementer)
+    agent_views = _agent_views(jules, antigravity, gemini, akc, proof)
+    packet_previews = _packet_previews(clean_objective, clean_files, roles, switching_policy)
+
+    return active_implementer, roles, switching_policy, gates, workflow, agent_views, packet_previews
+
+
+def _apply_packet_writes(payload: dict[str, Any], state_path: str) -> None:
+    packet_result = _write_packets(payload, state_path)
+    payload["packets"].update(packet_result)
+    if packet_result.get("error"):
+        payload["status"] = "partial" if payload["status"] == "ready" else payload["status"]
+
+
+def _build_safety_policy(include_live_checks: bool, run_implementer_smoke: bool) -> dict[str, Any]:
+    return {
+        "default_mode": "dry_run",
+        "live_side_effects": "none",
+        "jules_sessions_created": False,
+        "google_cli_prompts_run": bool(include_live_checks and run_implementer_smoke),
+        "workspace_edits": False,
+        "note": (
+            "This switchboard only assigns roles and prepares packets. "
+            "Execution still requires explicit route calls and live flags."
+        ),
+    }
+
+
+def _build_readiness_block(
+    jules: dict[str, Any],
+    antigravity: dict[str, Any],
+    gemini: dict[str, Any],
+    akc: dict[str, Any],
+    proof: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "jules": _readiness_summary(jules),
+        "antigravity_cli": _readiness_summary(antigravity),
+        "legacy_gemini_cli": _readiness_summary(gemini),
+        "akc": {
+            "ready": bool(akc.get("ready")),
+            "status": akc.get("status", ""),
+            "checkpoint_path": akc.get("checkpoint_path", ""),
+        },
+        "collaboration_proof_state": {
+            "available": bool(proof),
+            "status": proof.get("status", "") if isinstance(proof, dict) else "",
+            "state_path": str(_DEFAULT_PROOF_STATE) if _DEFAULT_PROOF_STATE.exists() else "",
+        },
+    }
 
 
 def _jules_readiness(include_live_checks: bool, timeout_s: int) -> dict[str, Any]:
