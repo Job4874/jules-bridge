@@ -68,6 +68,7 @@ class TestEvidence:
     If the hash matches a known pattern, the tests ran and passed.
     If the output is just "tests passed" with no hash, distrust it.
     """
+    __test__ = False
     output_hash: str       # SHA-256 of the full test output
     timestamp_utc: str     # When the tests were run
     passed: bool           # Whether tests passed (from parsing output)
