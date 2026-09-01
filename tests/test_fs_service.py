@@ -46,6 +46,16 @@ class TestFsRead(unittest.TestCase):
                 self.fs.read(d)
 
 
+    def test_read_permission_error(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "file.txt")
+            with open(path, "w") as f:
+                f.write("content")
+            with patch("builtins.open", side_effect=PermissionError("Permission denied")):
+                with self.assertRaises(PermissionError):
+                    self.fs.read(path)
+
 class TestFsWrite(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
@@ -101,6 +111,11 @@ class TestFsTail(unittest.TestCase):
             self.fs.tail(r"C:\missing.txt")
 
 
+    def test_tail_directory_raises(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(IsADirectoryError):
+                self.fs.tail(d)
+
 class TestFsGrep(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
@@ -135,6 +150,15 @@ class TestFsGrep(unittest.TestCase):
         with self.assertRaises(re.error):
             self.fs.grep(path, pattern="[invalid")
 
+
+    def test_grep_missing_file_raises(self):
+        with self.assertRaises(FileNotFoundError):
+            self.fs.grep(r"C:\missing.txt", pattern="error")
+
+    def test_grep_directory_raises(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(IsADirectoryError):
+                self.fs.grep(d, pattern="error")
 
 class TestFsListDir(unittest.TestCase):
     def setUp(self):
