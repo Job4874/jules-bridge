@@ -20,7 +20,6 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime, timezone
 
 # Force UTF-8 output on Windows so non-ASCII chars in identity/logs don't crash
 if hasattr(sys.stdout, "reconfigure"):
@@ -50,15 +49,16 @@ def _load_env():
     if not env_path.exists():
         return
     try:
-        for line in env_path.read_text(encoding="utf-8-sig").splitlines():  # utf-8-sig strips BOM
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, val = line.partition("=")
-            key = key.strip()
-            val = val.strip().strip('"').strip("'")
-            if key and key not in os.environ:
-                os.environ[key] = val
+        with env_path.open(encoding="utf-8-sig") as f:
+            for line in f:  # utf-8-sig strips BOM
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, val = line.partition("=")
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = val
     except Exception as exc:
         LOGGER.warning("Could not load .env: %s", exc)
 
@@ -68,7 +68,8 @@ BRIDGE_TOKEN = os.environ.get("BRIDGE_TOKEN", BRIDGE_TOKEN)
 
 
 def _call_bridge(path, payload=None, method="POST"):
-    import urllib.request, urllib.error
+    import urllib.request
+    import urllib.error
     url = f"{BRIDGE_URL}{path}"
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {BRIDGE_TOKEN}"}
     try:
