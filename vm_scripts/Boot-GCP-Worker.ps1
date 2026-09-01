@@ -25,7 +25,7 @@ if (-not (Test-Path $gcloud)) {
     exit 1
 }
 
-# --- Fix: point gcloud and ADC quota to tibin-terminal-2026, not the API key project ---
+# --- point gcloud and ADC quota to tibin-terminal-2026, not the API key project ---
 Write-Log "Setting active project and ADC quota project to tibin-terminal-2026"
 & $gcloud config set project "tibin-terminal-2026" --quiet 2>&1 | ForEach-Object { Write-Log $_ }
 & $gcloud auth application-default set-quota-project "tibin-terminal-2026" 2>&1 | ForEach-Object { Write-Log $_ }
