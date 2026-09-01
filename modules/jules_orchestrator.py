@@ -1138,6 +1138,113 @@ def _cycle_pull(
     return pull_results
 
 
+
+def _finalize_cycle(
+    payload: JulesCycleResult,
+    write_state: bool,
+    cycle_state_path: str,
+    base_dir: Path,
+) -> JulesCycleResult:
+    if write_state:
+        destination = Path(cycle_state_path) if cycle_state_path else base_dir / _DEFAULT_CYCLE_STATE
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        payload["cycle_state_path"] = str(destination)
+        destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return payload
+
+
+def _process_cycle_steps(
+    content: str,
+    source_path: str,
+    max_instances: int,
+    include_statuses: str | Iterable[str] | None,
+    write_packets: bool,
+    base_dir: Path,
+    repo_path: str,
+    generated_at: str,
+    check_remote: bool,
+    jules_command: str,
+    timeout_s: int,
+    dry_run: bool,
+    require_remote_ready: bool,
+    launch: bool,
+    launch_limit: int,
+    pull: bool,
+    session_ids: Iterable[str] | None,
+) -> tuple[dict, dict, dict, list[dict], dict, list[str], bool]:
+    dispatch_result = _cycle_dispatch(
+        content=content,
+        source_path=source_path,
+        max_instances=max_instances,
+        include_statuses=include_statuses,
+        write_packets=write_packets,
+        base_dir=base_dir,
+        repo_path=repo_path,
+        generated_at=generated_at,
+    )
+
+    blockers = []
+    if dispatch_result.get("error"):
+        blockers.append(f"Dispatch failed: {dispatch_result.get('error')}")
+
+    sessions_result = _cycle_check_remote(
+        check_remote=check_remote,
+        jules_command=jules_command,
+        timeout_s=timeout_s,
+        dry_run=dry_run,
+    )
+
+    remote_ready = (not check_remote) or dry_run or sessions_result.get("status") == "ok"
+    if check_remote and not dry_run and require_remote_ready and not remote_ready:
+        blockers.append(
+            "Remote Jules session listing did not return ok; live launch/pull stayed disabled."
+        )
+
+    existing_launch_state, launch_result, launch_dry_run = _cycle_launch(
+        base_dir=base_dir,
+        repo_path=repo_path,
+        launch=launch,
+        launch_limit=launch_limit,
+        dry_run=dry_run,
+        blockers=blockers,
+        require_remote_ready=require_remote_ready,
+        remote_ready=remote_ready,
+        timeout_s=timeout_s,
+        jules_command=jules_command,
+        content=content,
+        source_path=source_path,
+    )
+
+    pull_results = _cycle_pull(
+        base_dir=base_dir,
+        repo_path=repo_path,
+        pull=pull,
+        session_ids=session_ids,
+        existing_launch_state=existing_launch_state,
+        launch_result=launch_result,
+        sessions_result=sessions_result,
+        dry_run=dry_run,
+        require_remote_ready=require_remote_ready,
+        remote_ready=remote_ready,
+        timeout_s=timeout_s,
+        jules_command=jules_command,
+    )
+
+    cot_result = build_cot_ledger(packet_dir=str(base_dir), write_ledger=True)
+    if cot_result.get("error"):
+        blockers.append(f"COT ledger failed: {cot_result.get('error')}")
+
+    return (
+        dispatch_result,
+        sessions_result,
+        launch_result,
+        pull_results,
+        cot_result,
+        blockers,
+        launch_dry_run,
+    )
+
+
 def run_jules_cycle(
     content: str = "",
     source_path: str = "",
@@ -1170,7 +1277,15 @@ def run_jules_cycle(
     generated_at = datetime.now(timezone.utc).isoformat()
     base_dir = Path(packet_dir) if packet_dir else _DEFAULT_OUTPUT_DIR
     try:
-        dispatch_result = _cycle_dispatch(
+        (
+            dispatch_result,
+            sessions_result,
+            launch_result,
+            pull_results,
+            cot_result,
+            blockers,
+            launch_dry_run,
+        ) = _process_cycle_steps(
             content=content,
             source_path=source_path,
             max_instances=max_instances,
@@ -1179,58 +1294,17 @@ def run_jules_cycle(
             base_dir=base_dir,
             repo_path=repo_path,
             generated_at=generated_at,
-        )
-
-        blockers = []
-        if dispatch_result.get("error"):
-            blockers.append(f"Dispatch failed: {dispatch_result.get('error')}")
-
-        sessions_result = _cycle_check_remote(
             check_remote=check_remote,
             jules_command=jules_command,
             timeout_s=timeout_s,
             dry_run=dry_run,
-        )
-
-        remote_ready = (not check_remote) or dry_run or sessions_result.get("status") == "ok"
-        if check_remote and not dry_run and require_remote_ready and not remote_ready:
-            blockers.append(
-                "Remote Jules session listing did not return ok; live launch/pull stayed disabled."
-            )
-
-        existing_launch_state, launch_result, launch_dry_run = _cycle_launch(
-            base_dir=base_dir,
-            repo_path=repo_path,
+            require_remote_ready=require_remote_ready,
             launch=launch,
             launch_limit=launch_limit,
-            dry_run=dry_run,
-            blockers=blockers,
-            require_remote_ready=require_remote_ready,
-            remote_ready=remote_ready,
-            timeout_s=timeout_s,
-            jules_command=jules_command,
-            content=content,
-            source_path=source_path,
-        )
-
-        pull_results = _cycle_pull(
-            base_dir=base_dir,
-            repo_path=repo_path,
             pull=pull,
             session_ids=session_ids,
-            existing_launch_state=existing_launch_state,
-            launch_result=launch_result,
-            sessions_result=sessions_result,
-            dry_run=dry_run,
-            require_remote_ready=require_remote_ready,
-            remote_ready=remote_ready,
-            timeout_s=timeout_s,
-            jules_command=jules_command,
         )
 
-        cot_result = build_cot_ledger(packet_dir=str(base_dir), write_ledger=True)
-        if cot_result.get("error"):
-            blockers.append(f"COT ledger failed: {cot_result.get('error')}")
         all_complete = bool(cot_result.get("all_complete"))
         status = "complete" if all_complete else "blocked" if blockers else "pending"
 
@@ -1255,12 +1329,7 @@ def run_jules_cycle(
             note="COT means completion-of-task evidence summaries, not private chain-of-thought.",
         )
 
-        if write_state:
-            destination = Path(cycle_state_path) if cycle_state_path else base_dir / _DEFAULT_CYCLE_STATE
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            payload["cycle_state_path"] = str(destination)
-            destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        return payload
+        return _finalize_cycle(payload, write_state, cycle_state_path, base_dir)
     except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
         return JulesCycleResult(
             error=str(exc),
