@@ -1503,23 +1503,9 @@ def run_jules_fleet(
         if cot_result.get("error"):
             blockers.append(f"COT ledger failed: {cot_result.get('error')}")
 
-        launched_this_cycle = sum(
-            1
-            for item in launch_result.get("attempt_results", []) or []
-            if item.get("status") == "launched"
-        )
-        all_complete = bool(cot_result.get("all_complete"))
-        status = (
-            "complete" if all_complete
-            else "blocked" if blockers
-            else "scaled" if launched_this_cycle
-            else "pending"
-        )
-        payload = JulesFleetResult(
-            generated_at_utc=generated_at,
-            status=status,
-            dry_run=dry_run,
-            packet_dir=str(base_dir),
+        payload = _build_fleet_payload(
+            generated_at=generated_at,
+            base_dir=base_dir,
             repo_path=repo_path,
             max_instances=max_instances,
             max_concurrent=max_concurrent,
@@ -1527,30 +1513,25 @@ def run_jules_fleet(
             timeout_s=timeout_s,
             jules_command=jules_command,
             require_remote_ready=require_remote_ready,
+            dry_run=dry_run,
             blockers=blockers,
-            dispatch=dict(dispatch_result),
-            sessions=dict(sessions_result),
-            remote_statuses=remote_status_rows,
-            remote_status_counts=_count_remote_statuses(remote_status_rows),
-            active_remote_count=active_count,
-            completed_remote_session_ids=completed_ids,
-            already_pulled_session_ids=sorted(already_pulled),
-            failed_remote_packet_files=failed_packet_files,
-            stale_unknown_remote_packet_files=stale_unknown_packet_files,
-            plan_awaiting_remote_packet_files=plan_awaiting_packet_files,
-            retry_remote_packet_files=retry_packet_files,
-            relaunch_failed_limit=relaunch_limit,
-            available_launch_capacity=capacity,
-            requested_launch_limit=launch_limit,
+            dispatch_result=dispatch_result,
+            sessions_result=sessions_result,
+            remote_status_rows=remote_status_rows,
+            active_count=active_count,
+            completed_ids=completed_ids,
+            already_pulled=already_pulled,
+            failed_packet_files=failed_packet_files,
+            stale_unknown_packet_files=stale_unknown_packet_files,
+            plan_awaiting_packet_files=plan_awaiting_packet_files,
+            retry_packet_files=retry_packet_files,
+            relaunch_limit=relaunch_limit,
+            capacity=capacity,
+            launch_limit=launch_limit,
             launch_dry_run=launch_dry_run,
-            launch_result=dict(launch_result),
-            pull_results=[dict(result) for result in pull_results],
-            cot=dict(cot_result),
-            fleet_state_path="",
-            note=(
-                "Fleet cycle scales only within max_concurrent and only launches packets "
-                "not already marked launched in JULES_LAUNCH_STATE.json."
-            ),
+            launch_result=launch_result,
+            pull_results=pull_results,
+            cot_result=cot_result,
         )
         if write_state:
             destination = Path(fleet_state_path) if fleet_state_path else base_dir / _DEFAULT_FLEET_STATE
@@ -2866,6 +2847,87 @@ def _launch_script(commands: list[str]) -> str:
 def _ps_quote(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
+
+
+def _build_fleet_payload(
+    generated_at: str,
+    base_dir: Path,
+    repo_path: str,
+    max_instances: int,
+    max_concurrent: int,
+    launch_batch_size: int,
+    timeout_s: int,
+    jules_command: str,
+    require_remote_ready: bool,
+    dry_run: bool,
+    blockers: list[str],
+    dispatch_result: dict,
+    sessions_result: dict,
+    remote_status_rows: list,
+    active_count: int,
+    completed_ids: list,
+    already_pulled: set,
+    failed_packet_files: list,
+    stale_unknown_packet_files: list,
+    plan_awaiting_packet_files: list,
+    retry_packet_files: list,
+    relaunch_limit: int,
+    capacity: int,
+    launch_limit: int,
+    launch_dry_run: bool,
+    launch_result: dict,
+    pull_results: list,
+    cot_result: dict,
+) -> JulesFleetResult:
+    launched_this_cycle = sum(
+        1
+        for item in launch_result.get("attempt_results", []) or []
+        if item.get("status") == "launched"
+    )
+    all_complete = bool(cot_result.get("all_complete"))
+    status = (
+        "complete" if all_complete
+        else "blocked" if blockers
+        else "scaled" if launched_this_cycle
+        else "pending"
+    )
+    return JulesFleetResult(
+        generated_at_utc=generated_at,
+        status=status,
+        dry_run=dry_run,
+        packet_dir=str(base_dir),
+        repo_path=repo_path,
+        max_instances=max_instances,
+        max_concurrent=max_concurrent,
+        launch_batch_size=launch_batch_size,
+        timeout_s=timeout_s,
+        jules_command=jules_command,
+        require_remote_ready=require_remote_ready,
+        blockers=blockers,
+        dispatch=dict(dispatch_result),
+        sessions=dict(sessions_result),
+        remote_statuses=remote_status_rows,
+        remote_status_counts=_count_remote_statuses(remote_status_rows),
+        active_remote_count=active_count,
+        completed_remote_session_ids=completed_ids,
+        already_pulled_session_ids=sorted(already_pulled),
+        failed_remote_packet_files=failed_packet_files,
+        stale_unknown_remote_packet_files=stale_unknown_packet_files,
+        plan_awaiting_remote_packet_files=plan_awaiting_packet_files,
+        retry_remote_packet_files=retry_packet_files,
+        relaunch_failed_limit=relaunch_limit,
+        available_launch_capacity=capacity,
+        requested_launch_limit=launch_limit,
+        launch_dry_run=launch_dry_run,
+        launch_result=dict(launch_result),
+        pull_results=[dict(result) for result in pull_results],
+        cot=dict(cot_result),
+        fleet_state_path="",
+        note=(
+            "Fleet cycle scales only within max_concurrent and only launches packets "
+            "not already marked launched in JULES_LAUNCH_STATE.json."
+        ),
+    )
 
 def _fleet_dispatch(
     content: str,
