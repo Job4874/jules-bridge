@@ -224,21 +224,9 @@ def build_cloud_publish_packet(
         timeout = max(1, min(int(timeout_s), 30))
         status = get_cloud_sync_status(repo_root, timeout_s=timeout, use_cache=use_cache)
         if status.get("status") == "error":
-            return CloudPublishPacketResult(
-                status="error",
-                state="error",
-                generated_at_utc=generated_at,
-                blockers=["sync_status_error"],
-                warnings=[],
-                status_snapshot=status,
-                change_families=[],
-                change_count=0,
-                include_candidate_count=0,
-                exclude_candidate_count=0,
-                commands=[],
-                packet="",
-                artifacts={"packet_written": False, "packet_path": "", "state_path": ""},
-            )
+            result = _error_publish_packet(generated_at, "", "sync_status_error")
+            result["status_snapshot"] = status
+            return result
 
         top = _git(repo_root, ["rev-parse", "--show-toplevel"], timeout)
         if top["ok"] and top["stdout"].strip():
@@ -263,26 +251,7 @@ def build_cloud_publish_packet(
         )
         if planned_entries:
             entries = [*entries, *planned_entries]
-            status = CloudSyncStatusResult(copy.deepcopy(status))
-            git_status = status.setdefault("git", {})
-            git_status["dirty_count"] = int(git_status.get("dirty_count", 0)) + len(planned_entries)
-            untracked_add = 0
-            unstaged_add = 0
-            for entry in planned_entries:
-                if entry.get("tracked"):
-                    unstaged_add += 1
-                else:
-                    untracked_add += 1
-            git_status["untracked_count"] = int(git_status.get("untracked_count", 0)) + untracked_add
-            git_status["unstaged_count"] = int(git_status.get("unstaged_count", 0)) + unstaged_add
-            blockers = list(status.get("blockers", []))
-            if "dirty_worktree" not in blockers:
-                blockers.append("dirty_worktree")
-            status["blockers"] = blockers
-            status["status"] = "blocked"
-            status["state"] = "blocked"
-            status["publish_ready"] = False
-            status["synced"] = False
+            status = _merge_planned_entries(status, planned_entries)
         families = _change_families(entries)
         include_candidates = [row["path"] for row in entries if row.get("publish_candidate")]
         exclude_candidates = [row["path"] for row in entries if not row.get("publish_candidate")]
@@ -346,21 +315,50 @@ def build_cloud_publish_packet(
             result["artifacts"] = artifacts
         return result
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        return CloudPublishPacketResult(
-            status="error",
-            state="error",
-            generated_at_utc=generated_at,
-            error=str(exc),
-            blockers=["publish_packet_error"],
-            warnings=[],
-            change_families=[],
-            change_count=0,
-            include_candidate_count=0,
-            exclude_candidate_count=0,
-            commands=[],
-            packet="",
-            artifacts={"packet_written": False, "packet_path": "", "state_path": ""},
-        )
+        return _error_publish_packet(generated_at, str(exc), "publish_packet_error")
+
+
+def _error_publish_packet(generated_at: str, error_msg: str, blocker: str) -> CloudPublishPacketResult:
+    return CloudPublishPacketResult(
+        status="error",
+        state="error",
+        generated_at_utc=generated_at,
+        error=error_msg,
+        blockers=[blocker],
+        warnings=[],
+        change_families=[],
+        change_count=0,
+        include_candidate_count=0,
+        exclude_candidate_count=0,
+        commands=[],
+        packet="",
+        status_snapshot={},
+        artifacts={"packet_written": False, "packet_path": "", "state_path": ""},
+    )
+
+
+def _merge_planned_entries(status: CloudSyncStatusResult, planned_entries: list[dict[str, Any]]) -> CloudSyncStatusResult:
+    status = CloudSyncStatusResult(copy.deepcopy(status))
+    git_status = status.setdefault("git", {})
+    git_status["dirty_count"] = int(git_status.get("dirty_count", 0)) + len(planned_entries)
+    untracked_add = 0
+    unstaged_add = 0
+    for entry in planned_entries:
+        if entry.get("tracked"):
+            unstaged_add += 1
+        else:
+            untracked_add += 1
+    git_status["untracked_count"] = int(git_status.get("untracked_count", 0)) + untracked_add
+    git_status["unstaged_count"] = int(git_status.get("unstaged_count", 0)) + unstaged_add
+    blockers = list(status.get("blockers", []))
+    if "dirty_worktree" not in blockers:
+        blockers.append("dirty_worktree")
+    status["blockers"] = blockers
+    status["status"] = "blocked"
+    status["state"] = "blocked"
+    status["publish_ready"] = False
+    status["synced"] = False
+    return status
 
 
 def _blocked(generated_at: str, blocker: str, error: str) -> CloudSyncStatusResult:
