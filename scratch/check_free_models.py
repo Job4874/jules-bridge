@@ -7,10 +7,11 @@ import requests
 from pathlib import Path
 
 env_file = Path(os.path.expanduser("~/.jules_worker.env"))
-for line in env_file.read_text(encoding='utf-8').splitlines():
-    if "=" in line and not line.startswith("#"):
-        k, _, v = line.partition("=")
-        os.environ[k.strip()] = v.strip()
+with env_file.open(encoding='utf-8') as f:
+    for line in f:
+        if "=" in line and not line.startswith("#"):
+            k, _, v = line.partition("=")
+            os.environ[k.strip()] = v.strip()
 
 OR_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
