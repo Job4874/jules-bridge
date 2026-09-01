@@ -1138,6 +1138,77 @@ def _cycle_pull(
     return pull_results
 
 
+
+def _build_cycle_payload(
+    generated_at: str,
+    base_dir: Path,
+    repo_path: str,
+    launch: bool,
+    launch_dry_run: bool,
+    pull: bool,
+    dry_run: bool,
+    check_remote: bool,
+    require_remote_ready: bool,
+    blockers: list[str],
+    dispatch_result: dict,
+    sessions_result: dict,
+    launch_result: dict,
+    pull_results: list[dict],
+    cot_result: dict,
+) -> JulesCycleResult:
+    all_complete = bool(cot_result.get("all_complete"))
+    status = "complete" if all_complete else "blocked" if blockers else "pending"
+
+    return JulesCycleResult(
+        generated_at_utc=generated_at,
+        status=status,
+        dry_run=dry_run,
+        packet_dir=str(base_dir),
+        repo_path=repo_path,
+        launch_requested=launch,
+        launch_dry_run=launch_dry_run,
+        pull_requested=pull,
+        check_remote=check_remote,
+        require_remote_ready=require_remote_ready,
+        blockers=blockers,
+        dispatch=dict(dispatch_result),
+        sessions=dict(sessions_result),
+        launch_result=dict(launch_result),
+        pull_results=pull_results,
+        cot=dict(cot_result),
+        cycle_state_path="",
+        note="COT means completion-of-task evidence summaries, not private chain-of-thought.",
+    )
+
+
+def _build_error_payload(
+    exc: Exception,
+    generated_at: str,
+    dry_run: bool,
+    base_dir: Path,
+) -> JulesCycleResult:
+    return JulesCycleResult(
+        error=str(exc),
+        generated_at_utc=generated_at,
+        status="error",
+        dry_run=dry_run,
+        packet_dir=str(base_dir),
+        blockers=[str(exc)],
+        dispatch={},
+        sessions={},
+        launch_result={},
+        pull_results=[],
+        cot={},
+    )
+
+
+def _write_cycle_state(payload: JulesCycleResult, base_dir: Path, cycle_state_path: str) -> None:
+    destination = Path(cycle_state_path) if cycle_state_path else base_dir / _DEFAULT_CYCLE_STATE
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    payload["cycle_state_path"] = str(destination)
+    destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
 def run_jules_cycle(
     content: str = "",
     source_path: str = "",
@@ -1231,49 +1302,34 @@ def run_jules_cycle(
         cot_result = build_cot_ledger(packet_dir=str(base_dir), write_ledger=True)
         if cot_result.get("error"):
             blockers.append(f"COT ledger failed: {cot_result.get('error')}")
-        all_complete = bool(cot_result.get("all_complete"))
-        status = "complete" if all_complete else "blocked" if blockers else "pending"
-
-        payload = JulesCycleResult(
-            generated_at_utc=generated_at,
-            status=status,
-            dry_run=dry_run,
-            packet_dir=str(base_dir),
+        payload = _build_cycle_payload(
+            generated_at=generated_at,
+            base_dir=base_dir,
             repo_path=repo_path,
-            launch_requested=launch,
+            launch=launch,
             launch_dry_run=launch_dry_run,
-            pull_requested=pull,
+            pull=pull,
+            dry_run=dry_run,
             check_remote=check_remote,
             require_remote_ready=require_remote_ready,
             blockers=blockers,
-            dispatch=dict(dispatch_result),
-            sessions=dict(sessions_result),
-            launch_result=dict(launch_result),
+            dispatch_result=dispatch_result,
+            sessions_result=sessions_result,
+            launch_result=launch_result,
             pull_results=pull_results,
-            cot=dict(cot_result),
-            cycle_state_path="",
-            note="COT means completion-of-task evidence summaries, not private chain-of-thought.",
+            cot_result=cot_result,
         )
 
         if write_state:
-            destination = Path(cycle_state_path) if cycle_state_path else base_dir / _DEFAULT_CYCLE_STATE
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            payload["cycle_state_path"] = str(destination)
-            destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            _write_cycle_state(payload, base_dir, cycle_state_path)
+
         return payload
     except Exception as exc:  # pylint: disable=broad-exception-caught  # noqa: BLE001
-        return JulesCycleResult(
-            error=str(exc),
-            generated_at_utc=generated_at,
-            status="error",
+        return _build_error_payload(
+            exc=exc,
+            generated_at=generated_at,
             dry_run=dry_run,
-            packet_dir=str(base_dir),
-            blockers=[str(exc)],
-            dispatch={},
-            sessions={},
-            launch_result={},
-            pull_results=[],
-            cot={},
+            base_dir=base_dir,
         )
 
 
