@@ -743,38 +743,34 @@ def _write_packets(
     for path in output_dir.glob("CA-*.md"):
         if path.is_file():
             path.unlink()
+
+    files_to_write = {}
     packet_files = []
+
     for subagent in subagents:
         path = output_dir / f"{subagent['id']}.md"
-        path.write_text(subagent["packet_text"], encoding="utf-8")
+        files_to_write[path] = subagent["packet_text"]
         packet_files.append(str(path))
+
     index = _index_markdown(generated_at, task, metrics, subagents, packet_files)
-    (output_dir / "CONTEXT_SUBAGENT_INDEX.md").write_text(index, encoding="utf-8")
-    (output_dir / "NO_SLOP_WORKFLOW.md").write_text(
-        _workflow_markdown(generated_at, task, context_budget, workflow),
-        encoding="utf-8",
-    )
-    (output_dir / "CONTEXT_MEMORY_STORE.json").write_text(
-        json.dumps(memory_store, indent=2),
-        encoding="utf-8",
-    )
-    (output_dir / "CONTEXT_QUALITY_EVAL.md").write_text(
-        _eval_plan_markdown(generated_at, task, eval_plan),
-        encoding="utf-8",
-    )
-    (output_dir / "CONTEXT_SUBAGENT_STATE.json").write_text(
-        json.dumps({
-            "generated_at_utc": generated_at,
-            "task": task,
-            "context_metrics": metrics,
-            "context_budget": context_budget,
-            "context_memory_store": memory_store,
-            "long_session_eval_plan": eval_plan,
-            "no_slop_workflow": workflow,
-            "packet_files": packet_files,
-        }, indent=2),
-        encoding="utf-8",
-    )
+    files_to_write[output_dir / "CONTEXT_SUBAGENT_INDEX.md"] = index
+    files_to_write[output_dir / "NO_SLOP_WORKFLOW.md"] = _workflow_markdown(generated_at, task, context_budget, workflow)
+    files_to_write[output_dir / "CONTEXT_MEMORY_STORE.json"] = json.dumps(memory_store, indent=2)
+    files_to_write[output_dir / "CONTEXT_QUALITY_EVAL.md"] = _eval_plan_markdown(generated_at, task, eval_plan)
+    files_to_write[output_dir / "CONTEXT_SUBAGENT_STATE.json"] = json.dumps({
+        "generated_at_utc": generated_at,
+        "task": task,
+        "context_metrics": metrics,
+        "context_budget": context_budget,
+        "context_memory_store": memory_store,
+        "long_session_eval_plan": eval_plan,
+        "no_slop_workflow": workflow,
+        "packet_files": packet_files,
+    }, indent=2)
+
+    for path, content in files_to_write.items():
+        path.write_text(content, encoding="utf-8")
+
     return packet_files
 
 
