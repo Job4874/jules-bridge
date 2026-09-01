@@ -158,7 +158,11 @@ def run_cycle():
     LOGGER.info("MISSION START: %s — %s", task_id, active_task.get("title"))
     LOGGER.info("=" * 60)
 
-    result = _execute_task(active_task)
+    try:
+        result = _execute_task(active_task)
+    except Exception as exc:
+        LOGGER.exception("Task execution crashed: %s", exc)
+        result = {"ok": False, "error": str(exc)}
 
     if result.get("ok"):
         _call_bridge("/mission/done", {"task_id": task_id, "result": result})
