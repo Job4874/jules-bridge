@@ -482,10 +482,11 @@ def _update_memory_with_learnings(
             continue
 
         existing = _load_existing_memory(memory_path, domain)
-        new_section = f"\n## Session {session_id} — {now}\n\n"
+        new_section_lines = [f"\n## Session {session_id} — {now}\n\n"]
         for learning in domain_specific_learnings:
-            new_section += f"- {learning}\n"
+            new_section_lines.append(f"- {learning}\n")
 
+        new_section = "".join(new_section_lines)
         updated_content = existing.rstrip() + "\n" + new_section
         _write_memory(memory_path, domain, updated_content)
         updated[domain] = new_section
@@ -829,7 +830,7 @@ def prune_memory(
         if current:
             sections.append(current)
 
-        kept: List[List[str]] = []
+        kept: List[str] = []
         pruned_in_file = 0
 
         for section in sections:
@@ -837,14 +838,14 @@ def prune_memory(
 
             # Always preserve non-session headers
             if any(heading.startswith(p) for p in _preserve_prefixes):
-                kept.append(section)
+                kept.extend(section)
                 continue
 
             # Try to parse a timestamp from the heading
             m = _ts_re.search(heading)
             if not m:
                 # No timestamp found — keep conservatively
-                kept.append(section)
+                kept.extend(section)
                 continue
 
             try:
@@ -853,12 +854,12 @@ def prune_memory(
                 if ts < cutoff:
                     pruned_in_file += 1
                 else:
-                    kept.append(section)
+                    kept.extend(section)
             except ValueError:
                 pruned_in_file += 1  # malformed timestamp - prune
 
         if pruned_in_file > 0:
-            new_text = "".join("".join(s) for s in kept)
+            new_text = "".join(kept)
             md_file.write_text(new_text, encoding="utf-8")
             total_pruned += pruned_in_file
             domains_affected.append(md_file.stem)
