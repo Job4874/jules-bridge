@@ -20,6 +20,7 @@ import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from typing import Iterable
 
 from . import jules_api
@@ -1973,14 +1974,21 @@ def _write_dispatch_files(
     _clear_previous_dispatch(output_dir)
     packet_files: list[str] = []
     packet_commands: list[str] = []
+    writes: list[tuple[Path, str]] = []
     for task, packet in zip(selected, packets):
         filename = f"{task.get('id')}-{_slug(str(task.get('title', 'task')))}.md"
-        path = output_dir / filename
-        path.write_text(packet, encoding="utf-8")
-        packet_files.append(str(path))
+        file_path = output_dir / filename
+        writes.append((file_path, packet))
+        packet_files.append(str(file_path))
         packet_commands.append(
-            _launch_command(str(path), task, str(task.get("repo_path") or repo_path))
+            _launch_command(str(file_path), task, str(task.get("repo_path") or repo_path))
         )
+
+    def _write_file(item: tuple[Path, str]) -> None:
+        item[0].write_text(item[1], encoding="utf-8")
+
+    with ThreadPoolExecutor() as executor:
+        list(executor.map(_write_file, writes))
 
     index = _dispatch_index(selected, packet_files, source_label, source_hash, repo_path)
     (output_dir / "JULES_DISPATCH_INDEX.md").write_text(index, encoding="utf-8")
