@@ -625,21 +625,32 @@ def _write_packets(payload: dict[str, Any], state_path: str) -> dict[str, Any]:
         state_file, packet_dir = _state_destination(state_path)
         packet_dir.mkdir(parents=True, exist_ok=True)
         previews = payload.get("packets", {}).get("previews", {})
+        path_creator = packet_dir / "ALLIANCE_CREATOR_JULES.md"
+        path_implementer = packet_dir / "ALLIANCE_IMPLEMENTER_GOOGLE_TERMINAL.md"
+        path_policy = packet_dir / "ALLIANCE_SWITCHING_POLICY.md"
+
+        path_creator.write_text(previews.get("creator_jules", ""), encoding="utf-8")
+        path_implementer.write_text(previews.get("implementer_google", ""), encoding="utf-8")
+        path_policy.write_text(previews.get("switching_policy", ""), encoding="utf-8")
+
         paths = {
-            "creator_jules": packet_dir / "ALLIANCE_CREATOR_JULES.md",
-            "implementer_google": packet_dir / "ALLIANCE_IMPLEMENTER_GOOGLE_TERMINAL.md",
-            "switching_policy": packet_dir / "ALLIANCE_SWITCHING_POLICY.md",
+            "creator_jules": str(path_creator),
+            "implementer_google": str(path_implementer),
+            "switching_policy": str(path_policy),
         }
-        for key, path in paths.items():
-            path.write_text(previews.get(key, ""), encoding="utf-8")
-        payload["packets"]["state_path"] = str(state_file)
-        payload["packets"]["packet_paths"] = {key: str(path) for key, path in paths.items()}
-        payload["packets"]["written"] = True
+
+        payload_packets = payload.get("packets", {})
+        payload_packets["state_path"] = str(state_file)
+        payload_packets["packet_paths"] = paths
+        payload_packets["written"] = True
+        payload["packets"] = payload_packets
+
         state_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
         return {
             "written": True,
             "state_path": str(state_file),
-            "packet_paths": {key: str(path) for key, path in paths.items()},
+            "packet_paths": paths,
         }
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return {"written": False, "state_path": "", "packet_paths": {}, "error": str(exc)}
