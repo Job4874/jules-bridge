@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from concurrent.futures import ThreadPoolExecutor
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -743,11 +744,13 @@ def _write_packets(
     for path in output_dir.glob("CA-*.md"):
         if path.is_file():
             path.unlink()
-    packet_files = []
-    for subagent in subagents:
+    def _write_single_packet(subagent: dict) -> str:
         path = output_dir / f"{subagent['id']}.md"
         path.write_text(subagent["packet_text"], encoding="utf-8")
-        packet_files.append(str(path))
+        return str(path)
+
+    with ThreadPoolExecutor() as executor:
+        packet_files = list(executor.map(_write_single_packet, subagents))
     index = _index_markdown(generated_at, task, metrics, subagents, packet_files)
     (output_dir / "CONTEXT_SUBAGENT_INDEX.md").write_text(index, encoding="utf-8")
     (output_dir / "NO_SLOP_WORKFLOW.md").write_text(
