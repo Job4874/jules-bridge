@@ -814,18 +814,16 @@ def prune_memory(
         return {"pruned_count": 0, "domains_affected": []}
 
     for md_file in sorted(memory_dir.glob("*.md")):
-        text = md_file.read_text(encoding="utf-8")
-        lines = text.splitlines(keepends=True)
-
         # Split into sections at "## " boundaries
         sections: List[List[str]] = []
         current: List[str] = []
-        for line in lines:
-            if line.startswith("## ") and current:
-                sections.append(current)
-                current = [line]
-            else:
-                current.append(line)
+        with open(md_file, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("## ") and current:
+                    sections.append(current)
+                    current = [line]
+                else:
+                    current.append(line)
         if current:
             sections.append(current)
 
