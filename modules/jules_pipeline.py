@@ -6,6 +6,7 @@ a durable operation ID and checkpointing intent, closing the crash-duplication w
 
 from __future__ import annotations
 
+import asyncio
 import subprocess
 import time
 from pathlib import Path
@@ -75,18 +76,25 @@ class JulesPipeline:
         )
         return result
 
-    def poll_session(self, session_id: str, max_wait_s: float = 300.0) -> Dict[str, Any]:
+    async def poll_session(self, session_id: str, max_wait_s: float = 300.0) -> Dict[str, Any]:
         """Poll Jules remote session status until COMPLETED or FAILED."""
         start_t = time.time()
         while time.time() - start_t < max_wait_s:
             cmd = ["jules", "remote", "list", "--session"]
             try:
-                res = subprocess.run(cmd, cwd=self.repo_dir, capture_output=True, text=True, check=False)
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    cwd=self.repo_dir,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                stdout, _ = await proc.communicate()
+                stdout_str = stdout.decode("utf-8")
                 # Evaluate the status only against the polled session's own row.
                 # Matching COMPLETED/FAILED against the entire multi-session output
                 # would attribute another session's terminal state to this one.
                 session_line = next(
-                    (line for line in res.stdout.splitlines() if session_id in line),
+                    (line for line in stdout_str.splitlines() if session_id in line),
                     None,
                 )
                 if session_line is not None:
@@ -96,7 +104,7 @@ class JulesPipeline:
                         return {"status": "FAILED", "session_id": session_id, "elapsed_s": time.time() - start_t}
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 return {"status": "error", "error": str(exc)}
-            time.sleep(5.0)
+            await asyncio.sleep(5.0)
 
         return {"status": "TIMEOUT", "session_id": session_id, "elapsed_s": time.time() - start_t}
 

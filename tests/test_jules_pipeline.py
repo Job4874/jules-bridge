@@ -3,13 +3,13 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 from modules.jules_pipeline import JulesPipeline
 from modules.unified_operator import UnifiedOperatorStateDB
 
 
-class TestJulesPipeline(unittest.TestCase):
+class TestJulesPipeline(unittest.IsolatedAsyncioTestCase):
     def setUp(self):  # pylint: disable=invalid-name
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.db_path = Path(self.tmp_dir.name) / "pipeline_state.db"
@@ -44,11 +44,12 @@ class TestJulesPipeline(unittest.TestCase):
             self.assertIsNotNone(chk)
             self.assertEqual(chk["status"], "completed")
 
-    def test_poll_session_completed(self):
-        with patch("modules.jules_pipeline.subprocess.run") as mock_run:
-            mock_run.return_value.returncode = 0
-            mock_run.return_value.stdout = "session 8503583543641914961 COMPLETED"
-            res = self.pipeline.poll_session("8503583543641914961", max_wait_s=1.0)
+    async def test_poll_session_completed(self):
+        with patch("modules.jules_pipeline.asyncio.create_subprocess_exec") as mock_exec:
+            mock_proc = AsyncMock()
+            mock_proc.communicate.return_value = (b"session 8503583543641914961 COMPLETED", b"")
+            mock_exec.return_value = mock_proc
+            res = await self.pipeline.poll_session("8503583543641914961", max_wait_s=1.0)
             self.assertEqual(res["status"], "COMPLETED")
 
 
