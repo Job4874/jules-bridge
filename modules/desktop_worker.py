@@ -6,7 +6,6 @@ Includes a live qualification sequence for proving desktop operation capability.
 
 from __future__ import annotations
 
-import os
 import subprocess
 import time
 from datetime import datetime, timezone
@@ -27,7 +26,7 @@ class DesktopWorker:
 
     def _check_playwright(self) -> None:
         try:
-            import playwright  # pylint: disable=unused-import,import-outside-toplevel
+            import playwright  # noqa: F401  # pylint: disable=unused-import,import-outside-toplevel
             self._browser_available = True
         except ImportError:
             self._browser_available = False
@@ -128,7 +127,35 @@ $bitmap.Dispose()
                 "pid": notepad_proc.pid,
                 "timestamp": time.time(),
             })
-            time.sleep(2.0)  # Wait for Notepad to fully render
+
+            # Wait for Notepad to fully render by polling window handles via ctypes
+            try:
+                import ctypes
+
+
+                EnumWindows = ctypes.windll.user32.EnumWindows
+                EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+                GetWindowThreadProcessId = ctypes.windll.user32.GetWindowThreadProcessId
+                IsWindowVisible = ctypes.windll.user32.IsWindowVisible
+
+                for _ in range(20):
+                    found = [False]
+                    def foreach_window(hwnd, lParam):
+                        pid = ctypes.c_ulong()
+                        GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                        if pid.value == notepad_proc.pid and IsWindowVisible(hwnd):
+                            found[0] = True
+                            return False # Stop enumerating
+                        return True
+
+                    EnumWindows(EnumWindowsProc(foreach_window), 0)
+                    if found[0]:
+                        time.sleep(0.1) # Small buffer after rendering starts
+                        break
+                    time.sleep(0.1)
+            except (ImportError, AttributeError):
+                time.sleep(2.0)  # Fallback for non-Windows or environments without ctypes.windll
+
 
             # Step 2: Screenshot — Notepad open
             ss1 = _take_screenshot("01_notepad_open")
