@@ -27,7 +27,7 @@ class DesktopWorker:
 
     def _check_playwright(self) -> None:
         try:
-            import playwright  # pylint: disable=unused-import,import-outside-toplevel
+            import playwright  # type: ignore # noqa: F401 # pylint: disable=unused-import,import-outside-toplevel
             self._browser_available = True
         except ImportError:
             self._browser_available = False
@@ -120,7 +120,7 @@ $bitmap.Dispose()
             # Step 1: Open Notepad
             notepad_proc = subprocess.Popen(
                 ["notepad.exe"],
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                creationflags=getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0),
             )
             steps.append({
                 "step": 1,
@@ -128,7 +128,18 @@ $bitmap.Dispose()
                 "pid": notepad_proc.pid,
                 "timestamp": time.time(),
             })
-            time.sleep(2.0)  # Wait for Notepad to fully render
+            if os.name == "nt":
+                try:
+                    import ctypes
+                    handle = int(getattr(notepad_proc, "_handle", 0))
+                    if handle:
+                        getattr(ctypes, 'windll').user32.WaitForInputIdle(handle, 2000)  # type: ignore
+                    else:
+                        time.sleep(2.0)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    time.sleep(2.0)
+            else:
+                time.sleep(2.0)  # Wait for Notepad to fully render
 
             # Step 2: Screenshot — Notepad open
             ss1 = _take_screenshot("01_notepad_open")
