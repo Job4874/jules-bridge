@@ -130,32 +130,8 @@ def build_alliance_switchboard(
                 "packet_paths": {},
                 "previews": packet_previews,
             },
-            safety_policy={
-                "default_mode": "dry_run",
-                "live_side_effects": "none",
-                "jules_sessions_created": False,
-                "google_cli_prompts_run": bool(include_live_checks and run_implementer_smoke),
-                "workspace_edits": False,
-                "note": (
-                    "This switchboard only assigns roles and prepares packets. "
-                    "Execution still requires explicit route calls and live flags."
-                ),
-            },
-            readiness={
-                "jules": _readiness_summary(jules),
-                "antigravity_cli": _readiness_summary(antigravity),
-                "legacy_gemini_cli": _readiness_summary(gemini),
-                "akc": {
-                    "ready": bool(akc.get("ready")),
-                    "status": akc.get("status", ""),
-                    "checkpoint_path": akc.get("checkpoint_path", ""),
-                },
-                "collaboration_proof_state": {
-                    "available": bool(proof),
-                    "status": proof.get("status", "") if isinstance(proof, dict) else "",
-                    "state_path": str(_DEFAULT_PROOF_STATE) if _DEFAULT_PROOF_STATE.exists() else "",
-                },
-            },
+            safety_policy=_build_safety_policy(include_live_checks, run_implementer_smoke),
+            readiness=_build_readiness_block(jules, antigravity, gemini, akc, proof),
             completion_assessment=_completion_assessment(gates, active_implementer),
         )
 
@@ -175,6 +151,39 @@ def build_alliance_switchboard(
             gates=[_gate("switchboard_runtime", "blocked", str(exc), required=True, blocker=str(exc))],
             blockers=[{"gate": "switchboard_runtime", "blocker": str(exc), "status": "blocked"}],
         )
+
+
+
+def _build_safety_policy(include_live_checks: bool, run_implementer_smoke: bool) -> dict[str, Any]:
+    return {
+        "default_mode": "dry_run",
+        "live_side_effects": "none",
+        "jules_sessions_created": False,
+        "google_cli_prompts_run": bool(include_live_checks and run_implementer_smoke),
+        "workspace_edits": False,
+        "note": (
+            "This switchboard only assigns roles and prepares packets. "
+            "Execution still requires explicit route calls and live flags."
+        ),
+    }
+
+
+def _build_readiness_block(jules: dict[str, Any], antigravity: dict[str, Any], gemini: dict[str, Any], akc: dict[str, Any], proof: dict[str, Any] | None) -> dict[str, Any]:
+    return {
+        "jules": _readiness_summary(jules),
+        "antigravity_cli": _readiness_summary(antigravity),
+        "legacy_gemini_cli": _readiness_summary(gemini),
+        "akc": {
+            "ready": bool(akc.get("ready")),
+            "status": akc.get("status", ""),
+            "checkpoint_path": akc.get("checkpoint_path", ""),
+        },
+        "collaboration_proof_state": {
+            "available": bool(proof),
+            "status": proof.get("status", "") if isinstance(proof, dict) else "",
+            "state_path": str(_DEFAULT_PROOF_STATE) if _DEFAULT_PROOF_STATE.exists() else "",
+        },
+    }
 
 
 def _jules_readiness(include_live_checks: bool, timeout_s: int) -> dict[str, Any]:
