@@ -100,6 +100,11 @@ class TestFsTail(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             self.fs.tail(r"C:\missing.txt")
 
+    def test_tail_directory_raises(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(IsADirectoryError):
+                self.fs.tail(d)
+
 
 class TestFsGrep(unittest.TestCase):
     def setUp(self):
@@ -135,6 +140,15 @@ class TestFsGrep(unittest.TestCase):
         with self.assertRaises(re.error):
             self.fs.grep(path, pattern="[invalid")
 
+    def test_grep_missing_file_raises(self):
+        with self.assertRaises(FileNotFoundError):
+            self.fs.grep(r"C:\missing.txt", pattern="error")
+
+    def test_grep_directory_raises(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(IsADirectoryError):
+                self.fs.grep(d, pattern="error")
+
 
 class TestFsListDir(unittest.TestCase):
     def setUp(self):
@@ -143,19 +157,49 @@ class TestFsListDir(unittest.TestCase):
 
     def test_list_dir_returns_entries(self):
         with tempfile.TemporaryDirectory() as d:
-            open(os.path.join(d, "file.txt"), "w", encoding="utf-8").close()
-            os.makedirs(os.path.join(d, "subdir"))
+            file_path = os.path.join(d, "file.txt")
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write("test content")
+            subdir_path = os.path.join(d, "subdir")
+            os.makedirs(subdir_path)
             entries = self.fs.list_dir(d)
+
             names = [e["name"] for e in entries]
             self.assertIn("file.txt", names)
             self.assertIn("subdir", names)
 
+            # Find specific entries
+            file_entry = next(e for e in entries if e["name"] == "file.txt")
+            dir_entry = next(e for e in entries if e["name"] == "subdir")
+
+            # Check directory entry attributes
+            self.assertTrue(dir_entry["is_dir"])
+            self.assertEqual(dir_entry["path"], subdir_path)
+            self.assertIsNone(dir_entry["size"])
+
+            # Check file entry attributes
+            self.assertFalse(file_entry["is_dir"])
+            self.assertEqual(file_entry["path"], file_path)
+            self.assertEqual(file_entry["size"], 12) # length of "test content"
+
     def test_list_dir_dirs_sorted_first(self):
         with tempfile.TemporaryDirectory() as d:
             open(os.path.join(d, "z_file.txt"), "w", encoding="utf-8").close()
+            open(os.path.join(d, "a_file.txt"), "w", encoding="utf-8").close()
+            os.makedirs(os.path.join(d, "z_dir"))
             os.makedirs(os.path.join(d, "a_dir"))
+
             entries = self.fs.list_dir(d)
+            names = [e["name"] for e in entries]
+
+            # Expected sort: dirs first (alpha), then files (alpha)
+            expected_names = ["a_dir", "z_dir", "a_file.txt", "z_file.txt"]
+            self.assertEqual(names, expected_names)
+
             self.assertTrue(entries[0]["is_dir"])
+            self.assertTrue(entries[1]["is_dir"])
+            self.assertFalse(entries[2]["is_dir"])
+            self.assertFalse(entries[3]["is_dir"])
 
     def test_list_dir_missing_raises(self):
         with self.assertRaises(FileNotFoundError):
