@@ -437,24 +437,25 @@ def _env_info(repo_path: Path) -> dict[str, Any]:
         if not path.exists():
             continue
         try:
-            for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                key, _, value = line.partition("=")
-                key = key.strip()
-                value = value.strip().strip('"').strip("'")
-                if not key:
-                    continue
-                keys.append(key)
-                source = f"{name}:{key}"
-                secret = _is_secret_key(key)
-                if not secret:
-                    ports.extend(
-                        _ports_from_text(value, source, allow_bare_number=bool(_PORT_KEY_RE.search(key)))
-                    )
-                    if _NODE_KEY_RE.search(key) and value:
-                        node_refs.append({"value": _safe_value(value), "source": source})
+            with path.open("r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    key, _, value = line.partition("=")
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    if not key:
+                        continue
+                    keys.append(key)
+                    source = f"{name}:{key}"
+                    secret = _is_secret_key(key)
+                    if not secret:
+                        ports.extend(
+                            _ports_from_text(value, source, allow_bare_number=bool(_PORT_KEY_RE.search(key)))
+                        )
+                        if _NODE_KEY_RE.search(key) and value:
+                            node_refs.append({"value": _safe_value(value), "source": source})
         except Exception:  # pylint: disable=broad-exception-caught
             continue
 
