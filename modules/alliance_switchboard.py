@@ -14,6 +14,7 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from dataclasses import dataclass
 from typing import Any
 
 from .akc_module import check_akc_readiness
@@ -27,6 +28,19 @@ _DEFAULT_STATE = "ALLIANCE_SWITCHBOARD_STATE.json"
 _DEFAULT_PROOF_STATE = _ROOT / "jules_inbox" / "proof" / "COLLABORATION_PROOF.json"
 _JULES_PREFLIGHT_STATE = _ROOT / "jules_inbox" / "jules_dispatch" / "JULES_PREFLIGHT.json"
 _WORD_RE = re.compile(r"\s+")
+
+
+@dataclass
+class _SwitchboardContext:
+    objective: str
+    complexity: str
+    creator_key: str
+    implementer_key: str
+    target_files: list[str]
+    timeout: int
+    include_live_checks: bool
+    run_implementer_smoke: bool
+    generated_at: str
 
 
 class AllianceSwitchboardResult(dict):
@@ -64,117 +78,69 @@ def build_alliance_switchboard(
     """
     generated_at = datetime.now(timezone.utc).isoformat()
     try:
-        clean_objective = _compact(objective)
-        clean_files = _clean_target_files(target_files or [])
-        clean_complexity = _normalize_token(complexity, "complex")
-        creator_key = _normalize_actor(preferred_creator, "jules")
-        implementer_key = _normalize_actor(preferred_implementer, "antigravity_cli")
-        timeout = max(1, int(timeout_s or 1))
-
-        proof = _read_json(_DEFAULT_PROOF_STATE)
-        jules = _jules_readiness(include_live_checks, timeout)
-        antigravity = _antigravity_readiness(include_live_checks, run_implementer_smoke, timeout)
-        gemini = _gemini_readiness(include_live_checks, timeout)
-        akc = check_akc_readiness()
-
-        active_implementer = _select_implementer(
-            implementer_key=implementer_key,
-            antigravity=antigravity,
-            gemini=gemini,
-            jules=jules,
+        (
+            clean_objective,
+            clean_files,
+            clean_complexity,
+            creator_key,
+            implementer_key,
+            timeout,
+        ) = _normalize_inputs(
+            objective, target_files, complexity, preferred_creator, preferred_implementer, timeout_s
         )
-        roles = _role_assignments(
+
+        proof, jules, antigravity, gemini, akc = _collect_readiness(
+            include_live_checks, run_implementer_smoke, timeout
+        )
+
+        ctx = _SwitchboardContext(
             objective=clean_objective,
             complexity=clean_complexity,
-            preferred_creator=creator_key,
-            preferred_implementer=implementer_key,
-            active_implementer=active_implementer,
-            target_files=clean_files,
-        )
-        switching_policy = _switching_policy(
-            preferred_creator=creator_key,
-            preferred_implementer=implementer_key,
-            active_implementer=active_implementer,
-        )
-        gates = _gates(
-            objective=clean_objective,
             creator_key=creator_key,
             implementer_key=implementer_key,
+            target_files=clean_files,
+            timeout=timeout,
+            include_live_checks=include_live_checks,
+            run_implementer_smoke=run_implementer_smoke,
+            generated_at=generated_at,
+        )
+
+        (
+            active_implementer,
+            roles,
+            switching_policy,
+            gates,
+            workflow,
+            agent_views,
+            packet_previews,
+        ) = _build_core_components(
+            ctx,
+            jules,
+            antigravity,
+            gemini,
+            akc,
+            proof,
+        )
+
+        payload = _build_payload(
+            ctx=ctx,
+            gates=gates,
             active_implementer=active_implementer,
+            roles=roles,
+            switching_policy=switching_policy,
+            workflow=workflow,
+            agent_views=agent_views,
+            packet_previews=packet_previews,
             jules=jules,
             antigravity=antigravity,
             gemini=gemini,
             akc=akc,
             proof=proof,
         )
-        workflow = _workflow(clean_complexity, active_implementer)
-        agent_views = _agent_views(jules, antigravity, gemini, akc, proof)
-        packet_previews = _packet_previews(clean_objective, clean_files, roles, switching_policy)
 
-        payload = AllianceSwitchboardResult(
-            generated_at_utc=generated_at,
-            status=_overall_status(gates),
-            summary=_summary(gates, active_implementer),
-            objective=clean_objective,
-            complexity=clean_complexity,
-            target_files=clean_files,
-            roles=roles,
-            active_implementer=active_implementer,
-            switching_policy=switching_policy,
-            workflow=workflow,
-            agent_views=agent_views,
-            gates=gates,
-            packets={
-                "written": False,
-                "state_path": "",
-                "packet_paths": {},
-                "previews": packet_previews,
-            },
-            safety_policy={
-                "default_mode": "dry_run",
-                "live_side_effects": "none",
-                "jules_sessions_created": False,
-                "google_cli_prompts_run": bool(include_live_checks and run_implementer_smoke),
-                "workspace_edits": False,
-                "note": (
-                    "This switchboard only assigns roles and prepares packets. "
-                    "Execution still requires explicit route calls and live flags."
-                ),
-            },
-            readiness={
-                "jules": _readiness_summary(jules),
-                "antigravity_cli": _readiness_summary(antigravity),
-                "legacy_gemini_cli": _readiness_summary(gemini),
-                "akc": {
-                    "ready": bool(akc.get("ready")),
-                    "status": akc.get("status", ""),
-                    "checkpoint_path": akc.get("checkpoint_path", ""),
-                },
-                "collaboration_proof_state": {
-                    "available": bool(proof),
-                    "status": proof.get("status", "") if isinstance(proof, dict) else "",
-                    "state_path": str(_DEFAULT_PROOF_STATE) if _DEFAULT_PROOF_STATE.exists() else "",
-                },
-            },
-            completion_assessment=_completion_assessment(gates, active_implementer),
-        )
-
-        if write_packets:
-            packet_result = _write_packets(payload, state_path)
-            payload["packets"].update(packet_result)
-            if packet_result.get("error"):
-                payload["status"] = "partial" if payload["status"] == "ready" else payload["status"]
-
-        return payload
+        return _handle_write_packets_and_return(payload, write_packets, state_path)
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        return AllianceSwitchboardResult(
-            generated_at_utc=generated_at,
-            status="error",
-            summary="Alliance switchboard failed before role assignment completed.",
-            error=str(exc),
-            gates=[_gate("switchboard_runtime", "blocked", str(exc), required=True, blocker=str(exc))],
-            blockers=[{"gate": "switchboard_runtime", "blocker": str(exc), "status": "blocked"}],
-        )
+        return _handle_switchboard_error(exc, generated_at)
 
 
 def _jules_readiness(include_live_checks: bool, timeout_s: int) -> dict[str, Any]:
@@ -958,3 +924,180 @@ def _normalize_token(value: str, default: str) -> str:
 
 def _compact(value: str) -> str:
     return _WORD_RE.sub(" ", (value or "").strip())
+
+
+def _build_payload(
+    ctx: _SwitchboardContext,
+    gates: list[dict[str, Any]],
+    active_implementer: dict[str, Any],
+    roles: dict[str, Any],
+    switching_policy: dict[str, Any],
+    workflow: list[dict[str, Any]],
+    agent_views: dict[str, Any],
+    packet_previews: dict[str, str],
+    jules: dict[str, Any],
+    antigravity: dict[str, Any],
+    gemini: dict[str, Any],
+    akc: dict[str, Any],
+    proof: dict[str, Any],
+) -> AllianceSwitchboardResult:
+    return AllianceSwitchboardResult(
+        generated_at_utc=ctx.generated_at,
+        status=_overall_status(gates),
+        summary=_summary(gates, active_implementer),
+        objective=ctx.objective,
+        complexity=ctx.complexity,
+        target_files=ctx.target_files,
+        roles=roles,
+        active_implementer=active_implementer,
+        switching_policy=switching_policy,
+        workflow=workflow,
+        agent_views=agent_views,
+        gates=gates,
+        packets={
+            "written": False,
+            "state_path": "",
+            "packet_paths": {},
+            "previews": packet_previews,
+        },
+        safety_policy={
+            "default_mode": "dry_run",
+            "live_side_effects": "none",
+            "jules_sessions_created": False,
+            "google_cli_prompts_run": bool(ctx.include_live_checks and ctx.run_implementer_smoke),
+            "workspace_edits": False,
+            "note": (
+                "This switchboard only assigns roles and prepares packets. "
+                "Execution still requires explicit route calls and live flags."
+            ),
+        },
+        readiness={
+            "jules": _readiness_summary(jules),
+            "antigravity_cli": _readiness_summary(antigravity),
+            "legacy_gemini_cli": _readiness_summary(gemini),
+            "akc": {
+                "ready": bool(akc.get("ready")),
+                "status": akc.get("status", ""),
+                "checkpoint_path": akc.get("checkpoint_path", ""),
+            },
+            "collaboration_proof_state": {
+                "available": bool(proof),
+                "status": proof.get("status", "") if isinstance(proof, dict) else "",
+                "state_path": str(_DEFAULT_PROOF_STATE) if _DEFAULT_PROOF_STATE.exists() else "",
+            },
+        },
+        completion_assessment=_completion_assessment(gates, active_implementer),
+    )
+
+
+def _normalize_inputs(
+    objective: str,
+    target_files: list[str] | None,
+    complexity: str,
+    preferred_creator: str,
+    preferred_implementer: str,
+    timeout_s: int,
+) -> tuple[str, list[str], str, str, str, int]:
+    clean_objective = _compact(objective)
+    clean_files = _clean_target_files(target_files or [])
+    clean_complexity = _normalize_token(complexity, "complex")
+    creator_key = _normalize_actor(preferred_creator, "jules")
+    implementer_key = _normalize_actor(preferred_implementer, "antigravity_cli")
+    timeout = max(1, int(timeout_s or 1))
+    return clean_objective, clean_files, clean_complexity, creator_key, implementer_key, timeout
+
+
+def _collect_readiness(
+    include_live_checks: bool, run_implementer_smoke: bool, timeout: int
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+    proof = _read_json(_DEFAULT_PROOF_STATE)
+    jules = _jules_readiness(include_live_checks, timeout)
+    antigravity = _antigravity_readiness(include_live_checks, run_implementer_smoke, timeout)
+    gemini = _gemini_readiness(include_live_checks, timeout)
+    akc = check_akc_readiness()
+    return proof, jules, antigravity, gemini, akc
+
+
+
+def _build_core_components(
+    ctx: _SwitchboardContext,
+    jules: dict[str, Any],
+    antigravity: dict[str, Any],
+    gemini: dict[str, Any],
+    akc: dict[str, Any],
+    proof: dict[str, Any],
+) -> tuple[
+    dict[str, Any],
+    dict[str, Any],
+    dict[str, Any],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    dict[str, Any],
+    dict[str, str],
+]:
+    active_implementer = _select_implementer(
+        implementer_key=ctx.implementer_key,
+        antigravity=antigravity,
+        gemini=gemini,
+        jules=jules,
+    )
+    roles = _role_assignments(
+        objective=ctx.objective,
+        complexity=ctx.complexity,
+        preferred_creator=ctx.creator_key,
+        preferred_implementer=ctx.implementer_key,
+        active_implementer=active_implementer,
+        target_files=ctx.target_files,
+    )
+    switching_policy = _switching_policy(
+        preferred_creator=ctx.creator_key,
+        preferred_implementer=ctx.implementer_key,
+        active_implementer=active_implementer,
+    )
+    gates = _gates(
+        objective=ctx.objective,
+        creator_key=ctx.creator_key,
+        implementer_key=ctx.implementer_key,
+        active_implementer=active_implementer,
+        jules=jules,
+        antigravity=antigravity,
+        gemini=gemini,
+        akc=akc,
+        proof=proof,
+    )
+    workflow = _workflow(ctx.complexity, active_implementer)
+    agent_views = _agent_views(jules, antigravity, gemini, akc, proof)
+    packet_previews = _packet_previews(ctx.objective, ctx.target_files, roles, switching_policy)
+    return (
+        active_implementer,
+        roles,
+        switching_policy,
+        gates,
+        workflow,
+        agent_views,
+        packet_previews,
+    )
+
+
+def _handle_write_packets_and_return(
+    payload: AllianceSwitchboardResult,
+    write_packets: bool,
+    state_path: str,
+) -> AllianceSwitchboardResult:
+    if write_packets:
+        packet_result = _write_packets(payload, state_path)
+        payload["packets"].update(packet_result)
+        if packet_result.get("error"):
+            payload["status"] = "partial" if payload["status"] == "ready" else payload["status"]
+    return payload
+
+
+def _handle_switchboard_error(exc: Exception, generated_at: str) -> AllianceSwitchboardResult:
+    return AllianceSwitchboardResult(
+        generated_at_utc=generated_at,
+        status="error",
+        summary="Alliance switchboard failed before role assignment completed.",
+        error=str(exc),
+        gates=[_gate("switchboard_runtime", "blocked", str(exc), required=True, blocker=str(exc))],
+        blockers=[{"gate": "switchboard_runtime", "blocker": str(exc), "status": "blocked"}],
+    )
