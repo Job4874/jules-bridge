@@ -20,7 +20,6 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime, timezone
 
 # Force UTF-8 output on Windows so non-ASCII chars in identity/logs don't crash
 if hasattr(sys.stdout, "reconfigure"):
@@ -68,7 +67,8 @@ BRIDGE_TOKEN = os.environ.get("BRIDGE_TOKEN", BRIDGE_TOKEN)
 
 
 def _call_bridge(path, payload=None, method="POST"):
-    import urllib.request, urllib.error
+    import urllib.request
+    import urllib.error
     url = f"{BRIDGE_URL}{path}"
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {BRIDGE_TOKEN}"}
     try:
@@ -188,13 +188,14 @@ def main():
     LOGGER.info("Bridge: %s | Poll: %ds | Dry run: %s", BRIDGE_URL, POLL_SECONDS, DRY_RUN)
     LOGGER.info("=" * 60)
 
-    for attempt in range(20):
+    for attempt in range(120):
         health = _call_bridge("/health", method="GET")
         if health.get("status") == "ok":
             LOGGER.info("Bridge ready: %s", health.get("identity", ""))
             break
-        LOGGER.info("Waiting for bridge... %d/20", attempt + 1)
-        time.sleep(3)
+        if attempt % 6 == 0:
+            LOGGER.info("Waiting for bridge... %d/120", attempt + 1)
+        time.sleep(0.5)
     else:
         LOGGER.error("Bridge not available after 60s. Is bridge.py running?")
         sys.exit(1)
