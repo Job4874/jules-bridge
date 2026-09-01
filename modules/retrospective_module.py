@@ -33,6 +33,7 @@ import json
 import logging
 import os
 import re
+import itertools
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -849,7 +850,7 @@ def prune_memory(
 
             try:
                 ts = datetime.strptime(m.group(1), "%Y%m%dT%H%M%S")
-                now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+
                 if ts < cutoff:
                     pruned_in_file += 1
                 else:
@@ -858,7 +859,7 @@ def prune_memory(
                 pruned_in_file += 1  # malformed timestamp - prune
 
         if pruned_in_file > 0:
-            new_text = "".join("".join(s) for s in kept)
+            new_text = "".join(itertools.chain.from_iterable(kept))
             md_file.write_text(new_text, encoding="utf-8")
             total_pruned += pruned_in_file
             domains_affected.append(md_file.stem)
