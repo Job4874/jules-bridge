@@ -38,12 +38,13 @@ def _env_vars() -> dict[str, str]:
     """Read .env file into a dict (no process env side effects)."""
     env: dict[str, str] = {}
     try:
-        for line in _ENV_PATH.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, val = line.partition("=")
-            env[key.strip()] = val.strip()
+        with _ENV_PATH.open(encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, val = line.partition("=")
+                env[key.strip()] = val.strip()
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     return env

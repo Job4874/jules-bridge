@@ -1,3 +1,4 @@
+import unittest
 import pytest
 from unittest.mock import patch, mock_open, MagicMock
 from datetime import datetime, timezone
@@ -133,7 +134,7 @@ def test_fmt_uptime():
 
 def test_env_vars():
     env_content = "BROWSER_MODEL_LOOP_URL=http://127.0.0.1:8765/model-loop\n#COMMENT\n\nGCE_WORKER_IP = 10.0.0.1"
-    with patch('pathlib.Path.read_text', return_value=env_content):
+    with patch('pathlib.Path.open', new_callable=unittest.mock.mock_open, read_data=env_content):
         env = _env_vars()
         assert env.get("BROWSER_MODEL_LOOP_URL") == "http://127.0.0.1:8765/model-loop"
         assert env.get("GCE_WORKER_IP") == "10.0.0.1"
