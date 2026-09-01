@@ -25,6 +25,7 @@ from __future__ import annotations
 import socket
 import subprocess
 import threading
+import functools
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -35,13 +36,15 @@ _RELAY_LOG = _ROOT / "jules_inbox" / "relay.log"
 _RELAY_LOG.parent.mkdir(parents=True, exist_ok=True)
 
 # VM config from .env
+@functools.lru_cache(maxsize=1)
 def _env() -> dict:
     env = {}
     try:
-        for line in _ENV_PATH.read_text().splitlines():
-            if "=" in line and not line.startswith("#"):
-                k, _, v = line.partition("=")
-                env[k.strip()] = v.strip()
+        with open(_ENV_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                if "=" in line and not line.startswith("#"):
+                    k, _, v = line.partition("=")
+                    env[k.strip()] = v.strip()
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     return env
