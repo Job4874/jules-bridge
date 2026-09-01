@@ -80,7 +80,7 @@ class TestHostIdentity(unittest.TestCase):
         # We mock os.name to "nt" to bypass the Linux return-None check in _ram_gb
         with patch.object(host_identity, "_read_system_id_file", return_value="My-Workstation-32GB-RAM"), \
              patch("os.name", "nt"), \
-             patch("psutil.virtual_memory", side_effect=Exception("psutil unavailable")), \
+             patch.dict("sys.modules", {"psutil": None}), \
              patch("subprocess.check_output", side_effect=Exception("powershell failed")):
             ram = host_identity._ram_gb()  # pylint: disable=protected-access
         self.assertEqual(ram, 32.0)
