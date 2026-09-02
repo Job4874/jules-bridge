@@ -1147,10 +1147,22 @@ class TestBridgeTokenAuth(unittest.TestCase):
         bridge.app.testing = True
         self.client = bridge.app.test_client()
 
-    def test_ping_and_health_exempt_without_token(self):
-        for path in ("/ping", "/health", "/host/identity"):
+    @patch("modules.vm_relay.get_vm_status")
+    def test_ping_and_health_exempt_without_token(self, mock_vm_status):
+        mock_vm_status.return_value = {"online": True}
+        for path in ("/ping", "/health", "/host/identity", "/dashboard/status", "/vm/status"):
             response = self.client.get(path)
             self.assertEqual(response.status_code, 200, path)
+
+    def test_chat_routes_require_token(self):
+        for path in ("/chat", "/chat/test"):
+            response = self.client.get(path) if path.endswith("test") else self.client.post(path, json={})
+            self.assertEqual(response.status_code, 401, path)
+
+    def test_remote_routes_require_token(self):
+        for path in ("/remote/screen", "/remote/input", "/remote/metrics"):
+            response = self.client.get(path) if not path.endswith("input") else self.client.post(path, json={})
+            self.assertEqual(response.status_code, 401, path)
 
     def test_host_gpg_public_requires_auth(self):
         response = self.client.get("/host/gpg/public")
@@ -1232,7 +1244,7 @@ class TestBridgeTokenAuth(unittest.TestCase):
 class TestChatRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
-        self.client = bridge.app.test_client()
+        self.client = authed_client(bridge.app.test_client())
 
     @patch("modules.test_chat_providers")
     def test_chat_test_delegates_to_module(self, mock_test):
@@ -1256,7 +1268,7 @@ class TestChatRoutes(unittest.TestCase):
                 "system": "system",
                 "image_base64": "abc",
                 "history": [{"role": "user", "content": "prior"}],
-            },
+            }
         )
 
         self.assertEqual(response.status_code, 200)
