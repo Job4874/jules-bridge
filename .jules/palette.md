@@ -1,0 +1,3 @@
+## 2026-09-02 - Disable Send Button for Empty Chat Inputs
+**Learning:** For interactive chat interfaces like the Comm Link, users benefit from immediate visual feedback indicating that empty messages (without text or an attached image) cannot be submitted. Disabling the button reduces unnecessary clicks and confusion, while adding an aria-label to the text area improves screen reader context for the chat input.
+**Action:** Always verify that interactive inputs provide clear, disabled states when their submission conditions are not met, and ensure complex form fields have appropriate aria-labels.
