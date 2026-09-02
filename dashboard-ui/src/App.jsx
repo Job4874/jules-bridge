@@ -704,6 +704,7 @@ function CommPanel({
         )}
         <div className="chat-row">
           <textarea
+            aria-label="Message input"
             className="chat-input"
             placeholder="Message Jules..."
             value={inputValue}
@@ -712,7 +713,7 @@ function CommPanel({
             rows={1}
             title="Message input"
           />
-          <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking} />
+          <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking || (!inputValue.trim() && !pendingImage)} />
         </div>
       </div>
     </Panel>
