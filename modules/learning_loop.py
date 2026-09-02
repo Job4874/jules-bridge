@@ -152,7 +152,7 @@ def weekly_digest() -> DigestResult:
         done = [h for h in recent if h.get("outcome") == "done"]
         failed = [h for h in recent if h.get("outcome") == "failed"]
 
-        summary = f"""# Weekly Mission Digest — {_now_iso()[:10]}
+        summary_parts = [f"""# Weekly Mission Digest — {_now_iso()[:10]}
 
 ## Stats
 - ✅ Completed: {len(done)}
@@ -160,16 +160,17 @@ def weekly_digest() -> DigestResult:
 - 📋 Total: {len(recent)}
 
 ## Completed Tasks
-"""
+"""]
         for h in done:
-            summary += f"- [{h['task_id']}] {h.get('title', '')} ({h.get('type', '')})\n"
+            summary_parts.append(f"- [{h['task_id']}] {h.get('title', '')} ({h.get('type', '')})\n")
 
         if failed:
-            summary += "\n## Failed Tasks (Need Attention)\n"
+            summary_parts.append("\n## Failed Tasks (Need Attention)\n")
             for h in failed:
                 r = h.get("result", {})
-                summary += f"- [{h['task_id']}] {h.get('title', '')} — {r.get('reason', r.get('error', 'unknown'))}\n"
+                summary_parts.append(f"- [{h['task_id']}] {h.get('title', '')} — {r.get('reason', r.get('error', 'unknown'))}\n")
 
+        summary = "".join(summary_parts)
         _DIGEST_PATH.write_text(summary, encoding="utf-8")
 
         return DigestResult(

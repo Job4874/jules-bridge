@@ -482,9 +482,10 @@ def _update_memory_with_learnings(
             continue
 
         existing = _load_existing_memory(memory_path, domain)
-        new_section = f"\n## Session {session_id} — {now}\n\n"
+        new_section_parts = [f"\n## Session {session_id} — {now}\n\n"]
         for learning in domain_specific_learnings:
-            new_section += f"- {learning}\n"
+            new_section_parts.append(f"- {learning}\n")
+        new_section = "".join(new_section_parts)
 
         updated_content = existing.rstrip() + "\n" + new_section
         _write_memory(memory_path, domain, updated_content)
