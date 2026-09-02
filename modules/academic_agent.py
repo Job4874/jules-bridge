@@ -58,13 +58,14 @@ def build_answer_prompt(page_text: str, questions: list) -> str:
     """
     memory = _load_academic_memory()
 
-    questions_str = ""
+    parts = []
     for q in questions:
-        questions_str += f"\nQ{q.get('index', '?')}: {q.get('text', '')}"
+        parts.append(f"\nQ{q.get('index', '?')}: {q.get('text', '')}")
         if q.get("type") == "radio" and q.get("options"):
             for j, opt in enumerate(q["options"]):
-                questions_str += f"\n  [{j}] {opt}"
-        questions_str += "\n"
+                parts.append(f"\n  [{j}] {opt}")
+        parts.append("\n")
+    questions_str = "".join(parts)
 
     prompt = f"""You are an expert academic assistant helping answer quiz questions accurately.
 
@@ -219,20 +220,21 @@ def _write_academic_memory(url: str, questions: list, ai_answers: list) -> None:
     """Append quiz Q&A to academic memory for future learning."""
     try:
         _MEMORY_PATH.parent.mkdir(parents=True, exist_ok=True)
-        entry = f"""
+        entry_parts = [f"""
 ## Quiz Session — {_now_iso()}
 - URL: {url}
 - Questions: {len(questions)}
 - Answered: {len(ai_answers)}
 
-"""
+"""]
         for q in questions:
             idx = q.get("index", "?")
             ai_ans = next((a for a in ai_answers if a.get("index") == idx), None)
-            entry += f"**Q{idx}**: {q.get('text', '')}\n"
+            entry_parts.append(f"**Q{idx}**: {q.get('text', '')}\n")
             if ai_ans:
-                entry += f"**A**: {ai_ans.get('answer_text', '')} (confidence: {ai_ans.get('confidence', '?')})\n"
-            entry += "\n"
+                entry_parts.append(f"**A**: {ai_ans.get('answer_text', '')} (confidence: {ai_ans.get('confidence', '?')})\n")
+            entry_parts.append("\n")
+        entry = "".join(entry_parts)
 
         if _MEMORY_PATH.exists():
             existing = _MEMORY_PATH.read_text(encoding="utf-8")
