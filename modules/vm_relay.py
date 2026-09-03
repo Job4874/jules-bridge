@@ -38,10 +38,11 @@ _RELAY_LOG.parent.mkdir(parents=True, exist_ok=True)
 def _env() -> dict:
     env = {}
     try:
-        for line in _ENV_PATH.read_text().splitlines():
-            if "=" in line and not line.startswith("#"):
-                k, _, v = line.partition("=")
-                env[k.strip()] = v.strip()
+        with _ENV_PATH.open(encoding="utf-8") as f:
+            for line in f:
+                if "=" in line and not line.startswith("#"):
+                    k, _, v = line.partition("=")
+                    env[k.strip()] = v.strip()
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     return env
@@ -215,10 +216,11 @@ from pathlib import Path
 from flask import Flask, request, jsonify
 
 # Load env
-for line in Path("/home/julesadmin/.jules_worker.env").read_text().splitlines():
-    if "=" in line and not line.startswith("#"):
-        k, _, v = line.partition("=")
-        os.environ[k.strip()] = v.strip()
+with open("/home/julesadmin/.jules_worker.env", encoding="utf-8") as f:
+    for line in f:
+        if "=" in line and not line.startswith("#"):
+            k, _, v = line.partition("=")
+            os.environ[k.strip()] = v.strip()
 
 app = Flask(__name__)
 TOKEN = "JULES-VM-WORKER-999"
