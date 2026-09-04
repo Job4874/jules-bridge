@@ -197,6 +197,7 @@ function NavRail({ activeFocus, setActiveFocus }) {
           type="button"
           onClick={() => setActiveFocus(item.id)}
           title={item.label}
+          aria-current={activeFocus === item.id ? 'page' : undefined}
         >
           <Icon name={item.icon} />
           <span>{item.label}</span>
