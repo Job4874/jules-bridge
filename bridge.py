@@ -87,7 +87,7 @@ if not BRIDGE_TOKEN:
 
 @app.before_request
 def require_auth():
-    if request.path.startswith("/remote/") or request.path in (
+    if request.path in (
         "/health",
         "/ping",
         "/host/identity",
