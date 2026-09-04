@@ -1,0 +1,3 @@
+## 2024-05-18 - Fix set-state-in-effect warning in dashboard-ui
+**Learning:** Calling setState synchronously within an effect (e.g. `useEffect(() => { if (...) setState(...) })`) causes an immediate re-render, which degrades performance and is flagged by React compiler linting (`oxlint` in this case).
+**Action:** Remove the `useEffect` block that updates state directly, and instead derive the value dynamically during the render process. For selected UI keys (like workers or collisions in `App.jsx`), dynamically determine the default selected item when rendering instead of enforcing the default via a reactive side-effect loop.
