@@ -858,7 +858,12 @@ def prune_memory(
                 pruned_in_file += 1  # malformed timestamp - prune
 
         if pruned_in_file > 0:
-            new_text = "".join("".join(s) for s in kept)
+            # ⚡ Bolt Optimization: Flatten nested list of strings into a single list before
+            # joining to avoid the memory/CPU overhead of intermediate generator joining.
+            flat_kept = []
+            for s in kept:
+                flat_kept.extend(s)
+            new_text = "".join(flat_kept)
             md_file.write_text(new_text, encoding="utf-8")
             total_pruned += pruned_in_file
             domains_affected.append(md_file.stem)
