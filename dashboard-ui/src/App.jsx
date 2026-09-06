@@ -678,7 +678,7 @@ function CommPanel({
         </select>
       }
     >
-      <div className="chat-messages" ref={chatBoxRef}>
+      <div className="chat-messages" ref={chatBoxRef} aria-live="polite">
         {chatHistory.map((message, index) => (
           <div className={`msg ${message.role}`} key={`${message.role}-${index}`}>
             {message.content}
