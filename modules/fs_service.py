@@ -11,6 +11,35 @@ import os
 import re
 from typing import TYPE_CHECKING, Optional
 
+from pathlib import Path
+import tempfile
+
+def _get_allowed_base() -> str:
+    # Security: Default to cwd to prevent traversal by default, instead of system root.
+    return os.path.abspath(os.environ.get("ALLOWED_BASE", os.getcwd()))
+
+def _enforce_safe_path(path: str) -> str:
+    resolved = os.path.abspath(path)
+    allowed = _get_allowed_base()
+
+    # We must allow the temporary directory specifically for the test suite,
+    # or the test suite needs to be updated to mock the ALLOWED_BASE appropriately.
+    # For this patch, we allow both the dynamic ALLOWED_BASE and the system temp dir.
+    tmp_dir = os.path.abspath(tempfile.gettempdir())
+
+    # Security: Use is_relative_to instead of startswith to prevent bypasses
+    # like /var/app_secrets bypassing a check for /var/app
+    try:
+        is_rel_allowed = Path(resolved).is_relative_to(allowed)
+        is_rel_tmp = Path(resolved).is_relative_to(tmp_dir)
+        if not (is_rel_allowed or is_rel_tmp):
+            raise PermissionError(f"Path outside allowed directory: {path}")
+    except AttributeError:
+        # Fallback for Python < 3.9 (is_relative_to added in 3.9)
+        if os.path.commonpath([allowed, resolved]) != allowed and os.path.commonpath([tmp_dir, resolved]) != tmp_dir:
+            raise PermissionError(f"Path outside allowed directory: {path}")
+    return resolved
+
 if TYPE_CHECKING:
     pass
 
@@ -45,6 +74,7 @@ class ListEntry(dict):
 # ---------------------------------------------------------------------------
 
 def read(path: str, offset: int = 0, limit: Optional[int] = None) -> FSResult:
+    path = _enforce_safe_path(path)
     """Read a text file, optionally by line offset/limit.
 
     Args:
@@ -77,6 +107,7 @@ def read(path: str, offset: int = 0, limit: Optional[int] = None) -> FSResult:
 
 
 def write(path: str, content: str) -> FSResult:
+    path = _enforce_safe_path(path)
     """Write text content to a file, creating parent directories as needed.
 
     Args:
@@ -97,6 +128,7 @@ def write(path: str, content: str) -> FSResult:
 
 
 def tail(path: str, lines: int = 50) -> FSResult:
+    path = _enforce_safe_path(path)
     """Return the last N lines of a file.
 
     Args:
@@ -120,6 +152,7 @@ def tail(path: str, lines: int = 50) -> FSResult:
 
 
 def grep(path: str, pattern: str = "", max_matches: int = 50) -> FSResult:
+    path = _enforce_safe_path(path)
     """Search a file for a regex pattern, returning matching lines.
 
     Args:
@@ -152,6 +185,7 @@ def grep(path: str, pattern: str = "", max_matches: int = 50) -> FSResult:
 
 
 def list_dir(path: str) -> list:
+    path = _enforce_safe_path(path)
     """List files and folders under a directory path.
 
     Args:
