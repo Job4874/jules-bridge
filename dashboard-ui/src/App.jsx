@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, memo } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -142,19 +142,25 @@ const ringOptions = {
   animation: { duration: 300 }
 };
 
-function Icon({ name }) {
+// ⚡ Bolt Performance Optimization:
+// Memoize Icon to prevent unnecessary SVG re-renders on every App state tick.
+const Icon = memo(function Icon({ name }) {
   return (
     <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
       {ICONS[name] || ICONS.overview}
     </svg>
   );
-}
+});
 
-function StatusPill({ tone = 'info', children }) {
+// ⚡ Bolt Performance Optimization:
+// Memoize StatusPill to avoid re-rendering unchanged pill UI elements.
+const StatusPill = memo(function StatusPill({ tone = 'info', children }) {
   return <span className={`status-pill ${tone}`}>{children}</span>;
-}
+});
 
-function IconButton({ icon, label, onClick, disabled = false, pressed = false }) {
+// ⚡ Bolt Performance Optimization:
+// Memoize IconButton to reduce re-renders of static buttons (e.g. play/pause, close).
+const IconButton = memo(function IconButton({ icon, label, onClick, disabled = false, pressed = false }) {
   return (
     <button
       className="icon-button"
@@ -168,7 +174,7 @@ function IconButton({ icon, label, onClick, disabled = false, pressed = false })
       <Icon name={icon} />
     </button>
   );
-}
+});
 
 function Panel({ title, meta, tone = 'info', focus, activeFocus, className = '', actions, children }) {
   const dimmed = activeFocus !== 'overview' && focus && focus !== activeFocus;
@@ -187,7 +193,10 @@ function Panel({ title, meta, tone = 'info', focus, activeFocus, className = '',
   );
 }
 
-function NavRail({ activeFocus, setActiveFocus }) {
+// ⚡ Bolt Performance Optimization:
+// Memoize NavRail to prevent it from re-rendering every 2 seconds when dashboard status polls.
+// activeFocus only changes on user interaction, and setActiveFocus is stable.
+const NavRail = memo(function NavRail({ activeFocus, setActiveFocus }) {
   return (
     <nav className="nav-rail" aria-label="Dashboard focus">
       {NAV_ITEMS.map(item => (
@@ -204,7 +213,7 @@ function NavRail({ activeFocus, setActiveFocus }) {
       ))}
     </nav>
   );
-}
+});
 
 function TopologyMap({ nodes }) {
   return (
@@ -801,28 +810,24 @@ function App() {
     [repoContext]
   );
 
-  useEffect(() => {
-    if (workers.length === 0) {
-      setSelectedWorkerKey('');
-      return;
-    }
-    if (!workers.some((worker, index) => workerKey(worker, index) === selectedWorkerKey)) {
-      setSelectedWorkerKey(workerKey(workers[0], 0));
-    }
-  }, [selectedWorkerKey, workers]);
+  // ⚡ Bolt Performance Optimization:
+  // Derived state to replace synchronous setState in effects.
+  let activeWorkerKey = selectedWorkerKey;
+  if (workers.length === 0) {
+    activeWorkerKey = '';
+  } else if (!workers.some((worker, index) => workerKey(worker, index) === activeWorkerKey)) {
+    activeWorkerKey = workerKey(workers[0], 0);
+  }
 
-  useEffect(() => {
-    if (collisions.length === 0) {
-      setSelectedCollisionKey('');
-      return;
-    }
-    if (!collisions.some((collision, index) => collisionKey(collision, index) === selectedCollisionKey)) {
-      setSelectedCollisionKey(collisionKey(collisions[0], 0));
-    }
-  }, [collisions, selectedCollisionKey]);
+  let activeCollisionKey = selectedCollisionKey;
+  if (collisions.length === 0) {
+    activeCollisionKey = '';
+  } else if (!collisions.some((collision, index) => collisionKey(collision, index) === activeCollisionKey)) {
+    activeCollisionKey = collisionKey(collisions[0], 0);
+  }
 
-  const selectedWorker = workers.find((worker, index) => workerKey(worker, index) === selectedWorkerKey);
-  const selectedCollision = collisions.find((collision, index) => collisionKey(collision, index) === selectedCollisionKey);
+  const selectedWorker = workers.find((worker, index) => workerKey(worker, index) === activeWorkerKey);
+  const selectedCollision = collisions.find((collision, index) => collisionKey(collision, index) === activeCollisionKey);
   const topology = useMemo(() => buildTopology(sysStatus), [sysStatus]);
   const opsItems = useMemo(() => buildOpsChecklist(sysStatus), [sysStatus]);
   const eventRows = useMemo(
@@ -908,13 +913,13 @@ function App() {
         <WorkerDirectory
           workers={workers}
           cloud={cloud}
-          selectedWorkerKey={selectedWorkerKey}
+          selectedWorkerKey={activeWorkerKey}
           setSelectedWorkerKey={setSelectedWorkerKey}
           activeFocus={activeFocus}
         />
         <RepoGuard
           repoContext={repoContext}
-          selectedCollisionKey={selectedCollisionKey}
+          selectedCollisionKey={activeCollisionKey}
           setSelectedCollisionKey={setSelectedCollisionKey}
           activeFocus={activeFocus}
         />

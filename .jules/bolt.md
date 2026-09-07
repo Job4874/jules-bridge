@@ -1,0 +1,3 @@
+## 2026-07-21 - Derived State for Selection
+**Learning:** Calling `setState` synchronously within a `useEffect` triggers cascading re-renders in React and is caught by `oxlint`'s `react(set-state-in-effect)`. When trying to auto-select a fallback item (like first item in list) based on incoming data changes, standard `useEffect` + `setState` pattern harms performance.
+**Action:** Instead of `useEffect` for fallback selection, derive the active selection dynamically during render (e.g. `let activeKey = selectedKey; if (!exists) activeKey = fallbackKey;`) and pass the derived value down. This eliminates the extra render cycle completely.
