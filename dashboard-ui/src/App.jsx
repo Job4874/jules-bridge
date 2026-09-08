@@ -801,28 +801,17 @@ function App() {
     [repoContext]
   );
 
-  useEffect(() => {
-    if (workers.length === 0) {
-      setSelectedWorkerKey('');
-      return;
-    }
-    if (!workers.some((worker, index) => workerKey(worker, index) === selectedWorkerKey)) {
-      setSelectedWorkerKey(workerKey(workers[0], 0));
-    }
-  }, [selectedWorkerKey, workers]);
 
-  useEffect(() => {
-    if (collisions.length === 0) {
-      setSelectedCollisionKey('');
-      return;
-    }
-    if (!collisions.some((collision, index) => collisionKey(collision, index) === selectedCollisionKey)) {
-      setSelectedCollisionKey(collisionKey(collisions[0], 0));
-    }
-  }, [collisions, selectedCollisionKey]);
+  // Optimization (Bolt): Derive active valid keys during render cycle
+  // This prevents cascading re-renders that would occur if we used useEffect to synchronize state
+  const isWorkerValid = workers.some((worker, index) => workerKey(worker, index) === selectedWorkerKey);
+  const activeWorkerKey = isWorkerValid ? selectedWorkerKey : (workers.length > 0 ? workerKey(workers[0], 0) : '');
+  const selectedWorker = workers.find((worker, index) => workerKey(worker, index) === activeWorkerKey);
 
-  const selectedWorker = workers.find((worker, index) => workerKey(worker, index) === selectedWorkerKey);
-  const selectedCollision = collisions.find((collision, index) => collisionKey(collision, index) === selectedCollisionKey);
+  // Optimization (Bolt): Derive active valid collision key during render cycle
+  const isCollisionValid = collisions.some((collision, index) => collisionKey(collision, index) === selectedCollisionKey);
+  const activeCollisionKey = isCollisionValid ? selectedCollisionKey : (collisions.length > 0 ? collisionKey(collisions[0], 0) : '');
+  const selectedCollision = collisions.find((collision, index) => collisionKey(collision, index) === activeCollisionKey);
   const topology = useMemo(() => buildTopology(sysStatus), [sysStatus]);
   const opsItems = useMemo(() => buildOpsChecklist(sysStatus), [sysStatus]);
   const eventRows = useMemo(
@@ -908,13 +897,13 @@ function App() {
         <WorkerDirectory
           workers={workers}
           cloud={cloud}
-          selectedWorkerKey={selectedWorkerKey}
+          selectedWorkerKey={activeWorkerKey}
           setSelectedWorkerKey={setSelectedWorkerKey}
           activeFocus={activeFocus}
         />
         <RepoGuard
           repoContext={repoContext}
-          selectedCollisionKey={selectedCollisionKey}
+          selectedCollisionKey={activeCollisionKey}
           setSelectedCollisionKey={setSelectedCollisionKey}
           activeFocus={activeFocus}
         />
