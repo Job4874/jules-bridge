@@ -20,3 +20,4 @@ bridge.log
 !.env.example
 scratch/vm.env
 .claude/
+.test_deps/
