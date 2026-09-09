@@ -51,3 +51,24 @@ def test_verify_quantower_login_not_ready_returns_false(mock_detect, mock_init_b
     result = verify_quantower_login()
 
     assert result is False
+
+@patch('modules.browser_agent.init_browser')
+@patch('modules.browser_agent.detect_ui_state')
+def test_verify_quantower_login_success(mock_detect, mock_init_browser):
+    mock_page = MagicMock()
+    mock_page.content.return_value = "<html>Quantower - Connected</html>"
+    mock_context = MagicMock()
+    mock_context.new_page.return_value = mock_page
+    mock_init_browser.return_value = mock_context
+
+    mock_detect.return_value = {"state": "quantower_ready"}
+
+    result = verify_quantower_login()
+
+    # Check that new_page was called
+    mock_context.new_page.assert_called_once()
+    mock_page.goto.assert_called_once_with("https://quantower.com")
+    mock_page.content.assert_called_once()
+
+    # Verify the return value based on detect_ui_state result
+    assert result is True
