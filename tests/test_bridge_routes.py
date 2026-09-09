@@ -1238,7 +1238,7 @@ class TestChatRoutes(unittest.TestCase):
     def test_chat_test_delegates_to_module(self, mock_test):
         mock_test.return_value = {"healthy": False, "providers": {"gemini": {"status": "no_key"}}}
 
-        response = self.client.get("/chat/test")
+        response = self.client.get("/chat/test", headers=BRIDGE_AUTH_HEADER)
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.get_json()["healthy"])
@@ -1250,6 +1250,7 @@ class TestChatRoutes(unittest.TestCase):
 
         response = self.client.post(
             "/chat",
+            headers=BRIDGE_AUTH_HEADER,
             json={
                 "message": "hello",
                 "model": "smart",
