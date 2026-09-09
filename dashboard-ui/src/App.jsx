@@ -705,14 +705,15 @@ function CommPanel({
         <div className="chat-row">
           <textarea
             className="chat-input"
-            placeholder="Message Jules..."
+            placeholder="Message Jules... (Enter to send)"
             value={inputValue}
             onChange={event => setInputValue(event.target.value)}
             onKeyDown={onKey}
             rows={1}
             title="Message input"
+            aria-label="Message input"
           />
-          <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking} />
+          <IconButton icon="send" label={isThinking ? 'AI is processing...' : 'Send message (Enter)'} onClick={sendChat} disabled={isThinking} />
         </div>
       </div>
     </Panel>
@@ -875,7 +876,9 @@ function App() {
   const onKey = event => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      sendChat();
+      if (!isThinking) {
+        sendChat();
+      }
     }
   };
 
