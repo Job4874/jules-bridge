@@ -161,14 +161,16 @@ def weekly_digest() -> DigestResult:
 
 ## Completed Tasks
 """
+        summary_parts = [summary]
         for h in done:
-            summary += f"- [{h['task_id']}] {h.get('title', '')} ({h.get('type', '')})\n"
+            summary_parts.append(f"- [{h['task_id']}] {h.get('title', '')} ({h.get('type', '')})\n")
 
         if failed:
-            summary += "\n## Failed Tasks (Need Attention)\n"
+            summary_parts.append("\n## Failed Tasks (Need Attention)\n")
             for h in failed:
                 r = h.get("result", {})
-                summary += f"- [{h['task_id']}] {h.get('title', '')} — {r.get('reason', r.get('error', 'unknown'))}\n"
+                summary_parts.append(f"- [{h['task_id']}] {h.get('title', '')} — {r.get('reason', r.get('error', 'unknown'))}\n")
+        summary = "".join(summary_parts)
 
         _DIGEST_PATH.write_text(summary, encoding="utf-8")
 

@@ -58,13 +58,14 @@ def build_answer_prompt(page_text: str, questions: list) -> str:
     """
     memory = _load_academic_memory()
 
-    questions_str = ""
+    questions_parts = []
     for q in questions:
-        questions_str += f"\nQ{q.get('index', '?')}: {q.get('text', '')}"
+        questions_parts.append(f"\nQ{q.get('index', '?')}: {q.get('text', '')}")
         if q.get("type") == "radio" and q.get("options"):
             for j, opt in enumerate(q["options"]):
-                questions_str += f"\n  [{j}] {opt}"
-        questions_str += "\n"
+                questions_parts.append(f"\n  [{j}] {opt}")
+        questions_parts.append("\n")
+    questions_str = "".join(questions_parts)
 
     prompt = f"""You are an expert academic assistant helping answer quiz questions accurately.
 
@@ -226,13 +227,15 @@ def _write_academic_memory(url: str, questions: list, ai_answers: list) -> None:
 - Answered: {len(ai_answers)}
 
 """
+        entry_parts = [entry]
         for q in questions:
             idx = q.get("index", "?")
             ai_ans = next((a for a in ai_answers if a.get("index") == idx), None)
-            entry += f"**Q{idx}**: {q.get('text', '')}\n"
+            entry_parts.append(f"**Q{idx}**: {q.get('text', '')}\n")
             if ai_ans:
-                entry += f"**A**: {ai_ans.get('answer_text', '')} (confidence: {ai_ans.get('confidence', '?')})\n"
-            entry += "\n"
+                entry_parts.append(f"**A**: {ai_ans.get('answer_text', '')} (confidence: {ai_ans.get('confidence', '?')})\n")
+            entry_parts.append("\n")
+        entry = "".join(entry_parts)
 
         if _MEMORY_PATH.exists():
             existing = _MEMORY_PATH.read_text(encoding="utf-8")
