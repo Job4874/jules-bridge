@@ -197,6 +197,7 @@ function NavRail({ activeFocus, setActiveFocus }) {
           type="button"
           onClick={() => setActiveFocus(item.id)}
           title={item.label}
+          aria-pressed={activeFocus === item.id}
         >
           <Icon name={item.icon} />
           <span>{item.label}</span>
@@ -448,6 +449,7 @@ function WorkerDirectory({ workers, cloud, selectedWorkerKey, setSelectedWorkerK
                 type="button"
                 key={key}
                 onClick={() => setSelectedWorkerKey(key)}
+                aria-pressed={selectedWorkerKey === key}
               >
                 <span className="worker-node">
                   <i className={`worker-light ${tone}`} />
@@ -514,6 +516,7 @@ function RepoGuard({ repoContext, selectedCollisionKey, setSelectedCollisionKey,
                 type="button"
                 key={key}
                 onClick={() => setSelectedCollisionKey(key)}
+                aria-pressed={selectedCollisionKey === key}
               >
                 <span className={`collision-dot ${severity}`} />
                 <span>{collision.type || 'collision'}</span>
@@ -547,6 +550,7 @@ function EventConsole({ rows, filter, setFilter, paused, togglePaused, activeFoc
                 type="button"
                 key={item}
                 onClick={() => setFilter(item)}
+                aria-pressed={filter === item}
               >
                 {item}
               </button>
