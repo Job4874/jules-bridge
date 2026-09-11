@@ -2735,7 +2735,7 @@ def remote_metrics():
     import psutil
 
     try:
-        cpu_percent = psutil.cpu_percent(interval=0.1)
+        cpu_percent = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage('C:')
 
