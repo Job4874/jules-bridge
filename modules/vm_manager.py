@@ -98,7 +98,7 @@ def _read_psutil_metrics() -> tuple[float | None, float | None, str | None]:
     try:
         import psutil  # pylint: disable=import-outside-toplevel
 
-        cpu = psutil.cpu_percent(interval=0.1)
+        cpu = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory().percent
         return _as_percent(cpu, "cpu_percent"), _as_percent(memory, "memory_percent"), None
     except ImportError:
