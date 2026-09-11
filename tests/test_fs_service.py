@@ -9,12 +9,19 @@ import os
 import re
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 class TestFsRead(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
         self.fs = fs_service
+        import tempfile
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def _write_temp(self, content, suffix=".txt"):
         handle, path = tempfile.mkstemp(suffix=suffix)
@@ -38,7 +45,7 @@ class TestFsRead(unittest.TestCase):
 
     def test_read_missing_file_raises(self):
         with self.assertRaises(FileNotFoundError):
-            self.fs.read(r"C:\definitely\missing.txt")
+            self.fs.read(os.path.join(tempfile.gettempdir(), "missing.txt"))
 
     def test_read_directory_raises(self):
         with tempfile.TemporaryDirectory() as d:
@@ -50,6 +57,12 @@ class TestFsWrite(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
         self.fs = fs_service
+        import tempfile
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_write_creates_file(self):
         with tempfile.TemporaryDirectory() as d:
@@ -76,6 +89,12 @@ class TestFsTail(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
         self.fs = fs_service
+        import tempfile
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def _write_temp(self, content):
         handle, path = tempfile.mkstemp(suffix=".txt")
@@ -98,13 +117,19 @@ class TestFsTail(unittest.TestCase):
 
     def test_tail_missing_file_raises(self):
         with self.assertRaises(FileNotFoundError):
-            self.fs.tail(r"C:\missing.txt")
+            self.fs.tail(os.path.join(tempfile.gettempdir(), "missing.txt"))
 
 
 class TestFsGrep(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
         self.fs = fs_service
+        import tempfile
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def _write_temp(self, content):
         handle, path = tempfile.mkstemp(suffix=".txt")
@@ -140,6 +165,12 @@ class TestFsListDir(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
         self.fs = fs_service
+        import tempfile
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_list_dir_returns_entries(self):
         with tempfile.TemporaryDirectory() as d:
@@ -159,7 +190,7 @@ class TestFsListDir(unittest.TestCase):
 
     def test_list_dir_missing_raises(self):
         with self.assertRaises(FileNotFoundError):
-            self.fs.list_dir(r"C:\does\not\exist")
+            self.fs.list_dir(os.path.join(tempfile.gettempdir(), "does", "not", "exist"))
 
     def test_list_dir_file_path_raises(self):
         handle, path = tempfile.mkstemp()

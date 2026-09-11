@@ -39,6 +39,13 @@ class TestInboxRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_inbox_read_missing_file(self):
         response = self.client.post("/inbox/read", json={"file": "nonexistent.json"})
@@ -55,6 +62,13 @@ class TestJulesDispatchRoute(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     @patch("modules.build_dispatch")
     def test_jules_dispatch_passes_payload_to_module(self, mock_dispatch):
@@ -470,6 +484,13 @@ class TestFsRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_fs_read_invalid_input(self):
         response = self.client.post("/fs/read", json={})
@@ -504,6 +525,13 @@ class TestShellRoute(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     @patch("modules.shell_executor.subprocess.run")
     def test_shell_powershell_default(self, mock_run):
@@ -563,6 +591,13 @@ class TestExecuteRoute(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_execute_requires_at_least_one_action(self):
         response = self.client.post("/execute", json={})
@@ -643,6 +678,13 @@ class TestUIRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_ui_click_negative_coordinate(self):
         response = self.client.post("/ui/click", json={"x": -10, "y": 500})
@@ -695,6 +737,13 @@ class TestAKCRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     @patch("modules.build_akc_context")
     def test_akc_context_post_validates_and_returns_checkpoint(self, mock_build):
@@ -827,6 +876,13 @@ class TestEvidenceGate(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def _write_evidence(self, root_dir, timestamp):
         memory_dir = os.path.join(root_dir, "memory")
@@ -949,6 +1005,13 @@ class TestRetrospectiveRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def _report(self):
         report = MagicMock()
@@ -987,6 +1050,13 @@ class TestAppLauncherRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     @patch("modules.launch_browser_to_url")
     def test_launch_browser_route_is_thin(self, mock_launch):
@@ -1019,6 +1089,13 @@ class TestRepoContextGuardRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     @patch("modules.build_repo_context_guard")
     def test_repo_context_guard_delegates_to_module(self, mock_guard):
@@ -1055,6 +1132,13 @@ class TestVMRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     @patch("modules.detect_resource_pressure")
     def test_vm_resource_pressure_route_is_thin(self, mock_pressure):
@@ -1113,6 +1197,13 @@ class TestDiscoveryRoutes(unittest.TestCase):
     def setUp(self):
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        import tempfile
+        from unittest.mock import patch
+        self.patcher = patch('modules.fs_service.ALLOWED_BASE', __import__('pathlib').Path(tempfile.gettempdir()).resolve())
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
 
     def test_root_returns_authenticated_route_manifest(self):
         response = self.client.get("/")
