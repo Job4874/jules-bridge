@@ -9,7 +9,17 @@ from __future__ import annotations
 
 import os
 import re
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional
+
+ALLOWED_BASE = Path(os.environ.get("JULES_ALLOWED_BASE", os.getcwd())).resolve()
+
+def enforce_safe_path(path: str) -> str:
+    resolved_path = Path(path).resolve()
+    if not resolved_path.is_relative_to(ALLOWED_BASE):
+        raise PermissionError(f"Path traversal detected: {path} is outside allowed base {ALLOWED_BASE}")
+    return str(resolved_path)
+
 
 if TYPE_CHECKING:
     pass
@@ -45,6 +55,7 @@ class ListEntry(dict):
 # ---------------------------------------------------------------------------
 
 def read(path: str, offset: int = 0, limit: Optional[int] = None) -> FSResult:
+    path = enforce_safe_path(path)
     """Read a text file, optionally by line offset/limit.
 
     Args:
@@ -77,6 +88,7 @@ def read(path: str, offset: int = 0, limit: Optional[int] = None) -> FSResult:
 
 
 def write(path: str, content: str) -> FSResult:
+    path = enforce_safe_path(path)
     """Write text content to a file, creating parent directories as needed.
 
     Args:
@@ -97,6 +109,7 @@ def write(path: str, content: str) -> FSResult:
 
 
 def tail(path: str, lines: int = 50) -> FSResult:
+    path = enforce_safe_path(path)
     """Return the last N lines of a file.
 
     Args:
@@ -120,6 +133,7 @@ def tail(path: str, lines: int = 50) -> FSResult:
 
 
 def grep(path: str, pattern: str = "", max_matches: int = 50) -> FSResult:
+    path = enforce_safe_path(path)
     """Search a file for a regex pattern, returning matching lines.
 
     Args:
@@ -152,6 +166,7 @@ def grep(path: str, pattern: str = "", max_matches: int = 50) -> FSResult:
 
 
 def list_dir(path: str) -> list:
+    path = enforce_safe_path(path)
     """List files and folders under a directory path.
 
     Args:
