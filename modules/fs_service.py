@@ -9,7 +9,16 @@ from __future__ import annotations
 
 import os
 import re
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional
+
+# Security Concern: Path Traversal. Prevent attackers from escaping the allowed directory (e.g. via ../../)
+ALLOWED_BASE = os.path.abspath(os.environ.get("ALLOWED_BASE", os.sep))
+
+def _check_allowed_path(path: str) -> None:
+    resolved_path = os.path.abspath(path)
+    if not Path(resolved_path).is_relative_to(ALLOWED_BASE):
+        raise PermissionError(f"Path outside allowed directory: {path}")
 
 if TYPE_CHECKING:
     pass
@@ -60,6 +69,7 @@ def read(path: str, offset: int = 0, limit: Optional[int] = None) -> FSResult:
         IsADirectoryError: if path points to a directory.
         PermissionError: if file is not readable.
     """
+    _check_allowed_path(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file: {path}", path)
     if not os.path.isfile(path):
@@ -90,6 +100,7 @@ def write(path: str, content: str) -> FSResult:
         PermissionError: if path is not writable.
         OSError: for other OS-level failures.
     """
+    _check_allowed_path(path)
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(content)
@@ -106,6 +117,7 @@ def tail(path: str, lines: int = 50) -> FSResult:
     Returns:
         FSResult with keys: path, lines (actual count), content, data.
     """
+    _check_allowed_path(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file: {path}", path)
     if not os.path.isfile(path):
@@ -133,6 +145,7 @@ def grep(path: str, pattern: str = "", max_matches: int = 50) -> FSResult:
     Raises:
         re.error: if pattern is not valid regex.
     """
+    _check_allowed_path(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file: {path}", path)
     if not os.path.isfile(path):
@@ -164,6 +177,7 @@ def list_dir(path: str) -> list:
         FileNotFoundError: if path does not exist.
         NotADirectoryError: if path is not a directory.
     """
+    _check_allowed_path(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such directory: {path}", path)
     if not os.path.isdir(path):
