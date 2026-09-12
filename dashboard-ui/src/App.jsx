@@ -197,6 +197,7 @@ function NavRail({ activeFocus, setActiveFocus }) {
           type="button"
           onClick={() => setActiveFocus(item.id)}
           title={item.label}
+          aria-current={activeFocus === item.id ? 'page' : undefined}
         >
           <Icon name={item.icon} />
           <span>{item.label}</span>
@@ -547,6 +548,7 @@ function EventConsole({ rows, filter, setFilter, paused, togglePaused, activeFoc
                 type="button"
                 key={item}
                 onClick={() => setFilter(item)}
+                aria-pressed={filter === item}
               >
                 {item}
               </button>
@@ -672,7 +674,7 @@ function CommPanel({
       activeFocus="comms"
       className="comm-panel"
       actions={
-        <select className="model-select" value={model} onChange={event => setModel(event.target.value)} title="Select model">
+        <select className="model-select" value={model} onChange={event => setModel(event.target.value)} title="Select model" aria-label="Select AI model">
           <option value="fast">flash fast</option>
           <option value="smart">pro smart</option>
         </select>
@@ -687,10 +689,10 @@ function CommPanel({
           </div>
         ))}
         {isThinking && (
-          <div className="msg ai thinking">
-            <span />
-            <span />
-            <span />
+          <div className="msg ai thinking" role="status" aria-label="Jules is thinking">
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
           </div>
         )}
       </div>
@@ -711,6 +713,7 @@ function CommPanel({
             onKeyDown={onKey}
             rows={1}
             title="Message input"
+            aria-label="Message input"
           />
           <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking} />
         </div>
