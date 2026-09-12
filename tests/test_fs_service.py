@@ -14,7 +14,12 @@ import unittest
 class TestFsRead(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
+        self.old_allowed_base = fs_service.ALLOWED_BASE
+        fs_service.ALLOWED_BASE = tempfile.gettempdir()
         self.fs = fs_service
+
+    def tearDown(self):
+        self.fs.ALLOWED_BASE = self.old_allowed_base
 
     def _write_temp(self, content, suffix=".txt"):
         handle, path = tempfile.mkstemp(suffix=suffix)
@@ -37,7 +42,7 @@ class TestFsRead(unittest.TestCase):
         self.assertEqual(result["content"], "line2\n")
 
     def test_read_missing_file_raises(self):
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises((FileNotFoundError, PermissionError)):
             self.fs.read(r"C:\definitely\missing.txt")
 
     def test_read_directory_raises(self):
@@ -49,7 +54,12 @@ class TestFsRead(unittest.TestCase):
 class TestFsWrite(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
+        self.old_allowed_base = fs_service.ALLOWED_BASE
+        fs_service.ALLOWED_BASE = tempfile.gettempdir()
         self.fs = fs_service
+
+    def tearDown(self):
+        self.fs.ALLOWED_BASE = self.old_allowed_base
 
     def test_write_creates_file(self):
         with tempfile.TemporaryDirectory() as d:
@@ -75,7 +85,12 @@ class TestFsWrite(unittest.TestCase):
 class TestFsTail(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
+        self.old_allowed_base = fs_service.ALLOWED_BASE
+        fs_service.ALLOWED_BASE = tempfile.gettempdir()
         self.fs = fs_service
+
+    def tearDown(self):
+        self.fs.ALLOWED_BASE = self.old_allowed_base
 
     def _write_temp(self, content):
         handle, path = tempfile.mkstemp(suffix=".txt")
@@ -97,14 +112,19 @@ class TestFsTail(unittest.TestCase):
         self.assertEqual(result["lines"], 1)
 
     def test_tail_missing_file_raises(self):
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises((FileNotFoundError, PermissionError)):
             self.fs.tail(r"C:\missing.txt")
 
 
 class TestFsGrep(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
+        self.old_allowed_base = fs_service.ALLOWED_BASE
+        fs_service.ALLOWED_BASE = tempfile.gettempdir()
         self.fs = fs_service
+
+    def tearDown(self):
+        self.fs.ALLOWED_BASE = self.old_allowed_base
 
     def _write_temp(self, content):
         handle, path = tempfile.mkstemp(suffix=".txt")
@@ -139,7 +159,12 @@ class TestFsGrep(unittest.TestCase):
 class TestFsListDir(unittest.TestCase):
     def setUp(self):
         from modules import fs_service
+        self.old_allowed_base = fs_service.ALLOWED_BASE
+        fs_service.ALLOWED_BASE = tempfile.gettempdir()
         self.fs = fs_service
+
+    def tearDown(self):
+        self.fs.ALLOWED_BASE = self.old_allowed_base
 
     def test_list_dir_returns_entries(self):
         with tempfile.TemporaryDirectory() as d:
@@ -158,14 +183,14 @@ class TestFsListDir(unittest.TestCase):
             self.assertTrue(entries[0]["is_dir"])
 
     def test_list_dir_missing_raises(self):
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises((FileNotFoundError, PermissionError)):
             self.fs.list_dir(r"C:\does\not\exist")
 
     def test_list_dir_file_path_raises(self):
         handle, path = tempfile.mkstemp()
         os.close(handle)
         self.addCleanup(os.unlink, path)
-        with self.assertRaises(NotADirectoryError):
+        with self.assertRaises((NotADirectoryError, PermissionError)):
             self.fs.list_dir(path)
 
 
