@@ -1,0 +1,3 @@
+## 2024-03-20 - Missing ARIA Labels on Select and Form Inputs
+**Learning:** The application uses native `<select>` and `<textarea>` elements without associated `<label>`s or `aria-label`s, which is critical for screen reader users to understand the input's purpose. There are also interactive buttons lacking proper roles and pressed states, like the filter buttons.
+**Action:** When adding or modifying interactive elements (inputs, selects, toggle buttons), always ensure there is an accessible name (either via `aria-label` or a linked `<label>`) and properly expose state changes like `aria-pressed`.
