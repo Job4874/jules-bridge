@@ -126,8 +126,18 @@ export const normalizeDashboardPayload = payload => {
   };
 };
 
+// ⚡ Bolt: Cache parsed log lines to avoid re-evaluating expensive RegEx 4 times per line on every 2-second polling tick.
+// Impact: Reduces CPU burn and garbage collection pressure, especially for long log arrays.
+const parseLogCache = new Map();
+const MAX_CACHE_SIZE = 1000;
+
 export const parseLogLine = (line, index = 0) => {
   const text = String(line || '');
+  if (parseLogCache.has(text)) {
+    const cached = parseLogCache.get(text);
+    return { ...cached, id: `${index}-${cached.message.slice(0, 24)}` };
+  }
+
   const match = text.match(/^(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}\])\s*(.*)$/);
   const timestamp = match ? match[1] : '';
   const message = match ? match[2] : text;
@@ -138,13 +148,20 @@ export const parseLogLine = (line, index = 0) => {
   else if (/(READY|COMPLETE|SUCCESS|ONLINE|HEALTHY|STARTED)/.test(upper)) level = 'OK';
 
   const sourceMatch = message.match(/^\[?([A-Z][A-Z0-9_-]{2,})\]?\s*[:|-]/);
-  return {
-    id: `${index}-${message.slice(0, 24)}`,
+  const result = {
     timestamp,
     source: sourceMatch ? sourceMatch[1] : 'bridge',
     level,
     message
   };
+
+  if (parseLogCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = parseLogCache.keys().next().value;
+    parseLogCache.delete(firstKey);
+  }
+  parseLogCache.set(text, result);
+
+  return { ...result, id: `${index}-${result.message.slice(0, 24)}` };
 };
 
 export const buildEventRows = logs => logs.map((line, index) => parseLogLine(line, index));
