@@ -29,6 +29,7 @@ Public interface:
 from __future__ import annotations
 
 import hashlib
+import itertools
 import json
 import logging
 import os
@@ -858,7 +859,7 @@ def prune_memory(
                 pruned_in_file += 1  # malformed timestamp - prune
 
         if pruned_in_file > 0:
-            new_text = "".join("".join(s) for s in kept)
+            new_text = "".join(itertools.chain.from_iterable(kept))
             md_file.write_text(new_text, encoding="utf-8")
             total_pruned += pruned_in_file
             domains_affected.append(md_file.stem)
