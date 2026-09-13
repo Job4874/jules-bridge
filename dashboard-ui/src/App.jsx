@@ -712,7 +712,7 @@ function CommPanel({
             rows={1}
             title="Message input"
           />
-          <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking} />
+          <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking || (!inputValue.trim() && !pendingImage)} />
         </div>
       </div>
     </Panel>
