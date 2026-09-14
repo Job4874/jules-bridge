@@ -672,7 +672,7 @@ function CommPanel({
       activeFocus="comms"
       className="comm-panel"
       actions={
-        <select className="model-select" value={model} onChange={event => setModel(event.target.value)} title="Select model">
+        <select className="model-select" value={model} onChange={event => setModel(event.target.value)} title="Select model" aria-label="Select AI model">
           <option value="fast">flash fast</option>
           <option value="smart">pro smart</option>
         </select>
@@ -705,14 +705,20 @@ function CommPanel({
         <div className="chat-row">
           <textarea
             className="chat-input"
-            placeholder="Message Jules..."
+            placeholder="Message Jules... (Enter to send)"
             value={inputValue}
             onChange={event => setInputValue(event.target.value)}
             onKeyDown={onKey}
             rows={1}
             title="Message input"
+            aria-label="Message input"
           />
-          <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking} />
+          <IconButton
+            icon="send"
+            label={isThinking ? 'Processing...' : (!inputValue.trim() && !pendingImage) ? 'Type a message to send' : 'Send message'}
+            onClick={sendChat}
+            disabled={isThinking || (!inputValue.trim() && !pendingImage)}
+          />
         </div>
       </div>
     </Panel>
