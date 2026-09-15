@@ -53,6 +53,20 @@ VM_PROJ = _env().get("GCE_WORKER_PROJECT", "tibin-terminal-2026")
 VM_USER = "julesadmin"
 VM_PORT = 6000   # The agent port on the VM
 
+_TOKEN_FILE = _ROOT / ".vm_worker_token"
+
+def _get_worker_token() -> str:
+    """Get or generate a secure token for VM authentication."""
+    env_token = _env().get("VM_WORKER_TOKEN")
+    if env_token:
+        return env_token
+    if _TOKEN_FILE.exists():
+        return _TOKEN_FILE.read_text(encoding="utf-8").strip()
+    import secrets
+    new_token = secrets.token_hex(16)
+    _TOKEN_FILE.write_text(new_token, encoding="utf-8")
+    return new_token
+
 _relay_log_lock = threading.Lock()
 
 
@@ -148,6 +162,7 @@ def _build_worker_env(env_vars: dict[str, str], local_ip: str) -> str:
         f"BROWSER_MODEL_LOOP_URL={env_vars.get('BROWSER_MODEL_LOOP_URL','')}",
         f"LOCAL_BRIDGE_URL=http://{local_ip}:5000",
         f"LOCAL_BRIDGE_TOKEN={bridge_token}",
+        f"VM_WORKER_TOKEN={_get_worker_token()}",
     ])
 
 
@@ -181,7 +196,7 @@ def send_task_to_vm(task: str, task_type: str = "build", context: str = "") -> d
         r = _req.post(
             f"http://{VM_IP}:{VM_PORT}/task",
             json=payload, timeout=30,
-            headers={"Authorization": "Bearer JULES-VM-WORKER-999"}
+            headers={"Authorization": f"Bearer {_get_worker_token()}"}
         )
         return r.json()
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -221,7 +236,7 @@ for line in Path("/home/julesadmin/.jules_worker.env").read_text().splitlines():
         os.environ[k.strip()] = v.strip()
 
 app = Flask(__name__)
-TOKEN = "JULES-VM-WORKER-999"
+TOKEN = os.environ.get("VM_WORKER_TOKEN", "")
 BROWSER_MODEL_LOOP_URL = os.environ.get("BROWSER_MODEL_LOOP_URL", "")
 LOCAL_BRIDGE = os.environ.get("LOCAL_BRIDGE_URL", "http://127.0.0.1:5000")
 LOCAL_TOKEN = os.environ.get("LOCAL_BRIDGE_TOKEN", "")
