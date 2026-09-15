@@ -194,6 +194,7 @@ function NavRail({ activeFocus, setActiveFocus }) {
         <button
           key={item.id}
           className={`rail-button ${activeFocus === item.id ? 'active' : ''}`}
+          aria-current={activeFocus === item.id ? 'page' : undefined}
           type="button"
           onClick={() => setActiveFocus(item.id)}
           title={item.label}
@@ -447,6 +448,7 @@ function WorkerDirectory({ workers, cloud, selectedWorkerKey, setSelectedWorkerK
                 className={`worker-entry ${selectedWorkerKey === key ? 'selected' : ''}`}
                 type="button"
                 key={key}
+                aria-pressed={selectedWorkerKey === key}
                 onClick={() => setSelectedWorkerKey(key)}
               >
                 <span className="worker-node">
@@ -513,6 +515,7 @@ function RepoGuard({ repoContext, selectedCollisionKey, setSelectedCollisionKey,
                 className={`collision-entry ${selectedCollisionKey === key ? 'selected' : ''}`}
                 type="button"
                 key={key}
+                aria-pressed={selectedCollisionKey === key}
                 onClick={() => setSelectedCollisionKey(key)}
               >
                 <span className={`collision-dot ${severity}`} />
@@ -546,6 +549,7 @@ function EventConsole({ rows, filter, setFilter, paused, togglePaused, activeFoc
                 className={filter === item ? 'active' : ''}
                 type="button"
                 key={item}
+                aria-pressed={filter === item}
                 onClick={() => setFilter(item)}
               >
                 {item}
@@ -672,7 +676,7 @@ function CommPanel({
       activeFocus="comms"
       className="comm-panel"
       actions={
-        <select className="model-select" value={model} onChange={event => setModel(event.target.value)} title="Select model">
+        <select className="model-select" value={model} onChange={event => setModel(event.target.value)} title="Select model" aria-label="Select model">
           <option value="fast">flash fast</option>
           <option value="smart">pro smart</option>
         </select>
@@ -711,8 +715,9 @@ function CommPanel({
             onKeyDown={onKey}
             rows={1}
             title="Message input"
+            aria-label="Message input"
           />
-          <IconButton icon="send" label="Send message" onClick={sendChat} disabled={isThinking} />
+          <IconButton icon="send" label="Send message (Enter)" onClick={sendChat} disabled={isThinking} />
         </div>
       </div>
     </Panel>
