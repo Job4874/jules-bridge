@@ -194,6 +194,7 @@ function NavRail({ activeFocus, setActiveFocus }) {
         <button
           key={item.id}
           className={`rail-button ${activeFocus === item.id ? 'active' : ''}`}
+          aria-current={activeFocus === item.id ? 'page' : undefined}
           type="button"
           onClick={() => setActiveFocus(item.id)}
           title={item.label}
@@ -445,6 +446,7 @@ function WorkerDirectory({ workers, cloud, selectedWorkerKey, setSelectedWorkerK
             return (
               <button
                 className={`worker-entry ${selectedWorkerKey === key ? 'selected' : ''}`}
+                aria-selected={selectedWorkerKey === key}
                 type="button"
                 key={key}
                 onClick={() => setSelectedWorkerKey(key)}
@@ -511,6 +513,7 @@ function RepoGuard({ repoContext, selectedCollisionKey, setSelectedCollisionKey,
             return (
               <button
                 className={`collision-entry ${selectedCollisionKey === key ? 'selected' : ''}`}
+                aria-selected={selectedCollisionKey === key}
                 type="button"
                 key={key}
                 onClick={() => setSelectedCollisionKey(key)}
@@ -544,6 +547,7 @@ function EventConsole({ rows, filter, setFilter, paused, togglePaused, activeFoc
             {FILTERS.map(item => (
               <button
                 className={filter === item ? 'active' : ''}
+                aria-pressed={filter === item}
                 type="button"
                 key={item}
                 onClick={() => setFilter(item)}
@@ -705,7 +709,7 @@ function CommPanel({
         <div className="chat-row">
           <textarea
             className="chat-input"
-            placeholder="Message Jules..."
+            placeholder="Message Jules... (Press Enter to send)"
             value={inputValue}
             onChange={event => setInputValue(event.target.value)}
             onKeyDown={onKey}
