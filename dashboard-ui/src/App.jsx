@@ -687,7 +687,7 @@ function CommPanel({
           </div>
         ))}
         {isThinking && (
-          <div className="msg ai thinking">
+          <div className="msg ai thinking" role="status" aria-label="Jules is thinking...">
             <span />
             <span />
             <span />
@@ -705,7 +705,9 @@ function CommPanel({
         <div className="chat-row">
           <textarea
             className="chat-input"
-            placeholder="Message Jules..."
+            placeholder="Message Jules... (Press Enter to send)"
+            aria-label="Message input"
+            disabled={isThinking}
             value={inputValue}
             onChange={event => setInputValue(event.target.value)}
             onKeyDown={onKey}
