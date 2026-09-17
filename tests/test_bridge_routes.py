@@ -468,8 +468,15 @@ class TestJulesDispatchRoute(unittest.TestCase):
 
 class TestFsRoutes(unittest.TestCase):
     def setUp(self):
+        from modules import fs_service
         bridge.app.testing = True
         self.client = authed_client(bridge.app.test_client())
+        self.fs_service = fs_service
+        self._old_base = fs_service.ALLOWED_BASE
+        fs_service.ALLOWED_BASE = tempfile.gettempdir()
+
+    def tearDown(self):
+        self.fs_service.ALLOWED_BASE = self._old_base
 
     def test_fs_read_invalid_input(self):
         response = self.client.post("/fs/read", json={})

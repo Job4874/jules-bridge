@@ -10,6 +10,17 @@ from __future__ import annotations
 import os
 import re
 from typing import TYPE_CHECKING, Optional
+from pathlib import Path
+
+# By default restrict to /app (where bridge runs)
+ALLOWED_BASE = os.environ.get("JULES_ALLOWED_BASE", "/app")
+
+def _validate_path(path: str) -> str:
+    resolved = os.path.abspath(path)
+    allowed = os.path.abspath(ALLOWED_BASE)
+    if not Path(resolved).is_relative_to(allowed):
+        raise PermissionError(f"Path outside allowed directory: {path}")
+    return resolved
 
 if TYPE_CHECKING:
     pass
@@ -60,6 +71,7 @@ def read(path: str, offset: int = 0, limit: Optional[int] = None) -> FSResult:
         IsADirectoryError: if path points to a directory.
         PermissionError: if file is not readable.
     """
+    path = _validate_path(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file: {path}", path)
     if not os.path.isfile(path):
@@ -90,6 +102,7 @@ def write(path: str, content: str) -> FSResult:
         PermissionError: if path is not writable.
         OSError: for other OS-level failures.
     """
+    path = _validate_path(path)
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(content)
@@ -106,6 +119,7 @@ def tail(path: str, lines: int = 50) -> FSResult:
     Returns:
         FSResult with keys: path, lines (actual count), content, data.
     """
+    path = _validate_path(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file: {path}", path)
     if not os.path.isfile(path):
@@ -133,6 +147,7 @@ def grep(path: str, pattern: str = "", max_matches: int = 50) -> FSResult:
     Raises:
         re.error: if pattern is not valid regex.
     """
+    path = _validate_path(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file: {path}", path)
     if not os.path.isfile(path):
@@ -164,6 +179,7 @@ def list_dir(path: str) -> list:
         FileNotFoundError: if path does not exist.
         NotADirectoryError: if path is not a directory.
     """
+    path = _validate_path(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such directory: {path}", path)
     if not os.path.isdir(path):
