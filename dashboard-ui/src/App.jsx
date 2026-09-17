@@ -801,28 +801,13 @@ function App() {
     [repoContext]
   );
 
-  useEffect(() => {
-    if (workers.length === 0) {
-      setSelectedWorkerKey('');
-      return;
-    }
-    if (!workers.some((worker, index) => workerKey(worker, index) === selectedWorkerKey)) {
-      setSelectedWorkerKey(workerKey(workers[0], 0));
-    }
-  }, [selectedWorkerKey, workers]);
-
-  useEffect(() => {
-    if (collisions.length === 0) {
-      setSelectedCollisionKey('');
-      return;
-    }
-    if (!collisions.some((collision, index) => collisionKey(collision, index) === selectedCollisionKey)) {
-      setSelectedCollisionKey(collisionKey(collisions[0], 0));
-    }
-  }, [collisions, selectedCollisionKey]);
-
-  const selectedWorker = workers.find((worker, index) => workerKey(worker, index) === selectedWorkerKey);
-  const selectedCollision = collisions.find((collision, index) => collisionKey(collision, index) === selectedCollisionKey);
+  // ⚡ Bolt: Derive active keys during render instead of useEffect to prevent cascading re-renders (react/set-state-in-effect)
+  const validWorkerSelected = selectedWorkerKey && workers.some((worker, index) => workerKey(worker, index) === selectedWorkerKey);
+  const activeWorkerKey = validWorkerSelected ? selectedWorkerKey : (workers.length > 0 ? workerKey(workers[0], 0) : '');
+  const selectedWorker = workers.find((worker, index) => workerKey(worker, index) === activeWorkerKey);
+  const validCollisionSelected = selectedCollisionKey && collisions.some((collision, index) => collisionKey(collision, index) === selectedCollisionKey);
+  const activeCollisionKey = validCollisionSelected ? selectedCollisionKey : (collisions.length > 0 ? collisionKey(collisions[0], 0) : '');
+  const selectedCollision = collisions.find((collision, index) => collisionKey(collision, index) === activeCollisionKey);
   const topology = useMemo(() => buildTopology(sysStatus), [sysStatus]);
   const opsItems = useMemo(() => buildOpsChecklist(sysStatus), [sysStatus]);
   const eventRows = useMemo(
@@ -908,13 +893,13 @@ function App() {
         <WorkerDirectory
           workers={workers}
           cloud={cloud}
-          selectedWorkerKey={selectedWorkerKey}
+          selectedWorkerKey={activeWorkerKey}
           setSelectedWorkerKey={setSelectedWorkerKey}
           activeFocus={activeFocus}
         />
         <RepoGuard
           repoContext={repoContext}
-          selectedCollisionKey={selectedCollisionKey}
+          selectedCollisionKey={activeCollisionKey}
           setSelectedCollisionKey={setSelectedCollisionKey}
           activeFocus={activeFocus}
         />
