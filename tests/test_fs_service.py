@@ -85,6 +85,19 @@ class TestFsTail(unittest.TestCase):
         self.addCleanup(os.unlink, path)
         return path
 
+
+    def test_tail_default_lines(self):
+        # The happy path test: testing tail() with a temporary file containing known lines
+        content = "\n".join(str(i) for i in range(100)) + "\n"
+        path = self._write_temp(content)
+        result = self.fs.tail(path)
+        self.assertEqual(result["lines"], 50)
+
+        expected = "\n".join(str(i) for i in range(50, 100)) + "\n"
+        self.assertEqual(result["content"], expected)
+        self.assertEqual(result["data"], expected)
+        self.assertEqual(result["path"], path)
+
     def test_tail_returns_last_n_lines(self):
         path = self._write_temp("a\nb\nc\nd\ne\n")
         result = self.fs.tail(path, lines=2)
@@ -99,6 +112,11 @@ class TestFsTail(unittest.TestCase):
     def test_tail_missing_file_raises(self):
         with self.assertRaises(FileNotFoundError):
             self.fs.tail(r"C:\missing.txt")
+
+    def test_tail_directory_raises(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(IsADirectoryError):
+                self.fs.tail(d)
 
 
 class TestFsGrep(unittest.TestCase):
@@ -134,6 +152,15 @@ class TestFsGrep(unittest.TestCase):
         path = self._write_temp("abc\n")
         with self.assertRaises(re.error):
             self.fs.grep(path, pattern="[invalid")
+
+    def test_grep_missing_file_raises(self):
+        with self.assertRaises(FileNotFoundError):
+            self.fs.grep(r"C:\missing.txt", pattern="error")
+
+    def test_grep_directory_raises(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(IsADirectoryError):
+                self.fs.grep(d, pattern="error")
 
 
 class TestFsListDir(unittest.TestCase):
