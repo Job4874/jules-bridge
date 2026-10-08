@@ -2019,17 +2019,18 @@ def _packet_files_from_index(packet_dir: Path) -> list[Path]:
     ordered: list[Path] = []
     seen: set[str] = set()
     try:
-        for line in index_path.read_text(encoding="utf-8", errors="replace").splitlines():
-            if not line.startswith("| JT-"):
-                continue
-            columns = [column.strip() for column in line.split("|")]
-            if len(columns) < 7:
-                continue
-            packet = Path(columns[6])
-            key = str(packet).lower()
-            if key not in seen and packet.is_file():
-                ordered.append(packet)
-                seen.add(key)
+        with open(index_path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if not line.startswith("| JT-"):
+                    continue
+                columns = [column.strip() for column in line.split("|")]
+                if len(columns) < 7:
+                    continue
+                packet = Path(columns[6])
+                key = str(packet).lower()
+                if key not in seen and packet.is_file():
+                    ordered.append(packet)
+                    seen.add(key)
     except Exception:  # pylint: disable=broad-exception-caught
         return []
     return ordered
