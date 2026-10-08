@@ -1,5 +1,3 @@
-import os
-os.environ["BRIDGE_TOKEN"] = "JULES-SECURE-999"
 """Integration tests for bridge.py HTTP routes.
 
 These test the HTTP surface — validate → call module → JSON response.
@@ -7,6 +5,8 @@ Module internals are mocked. For module-level unit tests see test_*_service.py.
 """
 
 import os
+import sys
+os.environ["BRIDGE_TOKEN"] = "JULES-SECURE-999"
 import json
 import subprocess
 import tempfile
@@ -1319,6 +1319,488 @@ class TestGhostRoutes(unittest.TestCase):
         self.assertIn("ghost_locked", body)
         self.assertIn("host_id", body)
 
+
+
+
+class TestAdditionalFsRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.read")
+    def test_fs_read_success(self, mock_read):
+        mock_read.return_value = {"content": "hello"}
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(b"")
+            path = f.name
+        try:
+            response = self.client.post("/fs/read", json={"path": path, "offset": 0, "limit": 10})
+            self.assertEqual(response.status_code, 200)
+            mock_read.assert_called_with(path, offset=0, limit=10)
+        finally:
+            os.unlink(path)
+
+    @patch("modules.list_dir")
+    def test_fs_list_success(self, mock_list):
+        mock_list.return_value = [{"name": "file.txt"}]
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp_dir:
+            response = self.client.post("/fs/list", json={"path": temp_dir})
+            self.assertEqual(response.status_code, 200)
+            mock_list.assert_called_with(temp_dir)
+
+    @patch("modules.tail")
+    def test_fs_tail_success(self, mock_tail):
+        mock_tail.return_value = {"lines": ["end"]}
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(b"")
+            path = f.name
+        try:
+            response = self.client.post("/fs/tail", json={"path": path, "lines": 10})
+            self.assertEqual(response.status_code, 200)
+            mock_tail.assert_called_with(path, lines=10)
+        finally:
+            os.unlink(path)
+
+    @patch("modules.grep")
+    def test_fs_grep_success(self, mock_grep):
+        mock_grep.return_value = {"matches": []}
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(b"")
+            path = f.name
+        try:
+            response = self.client.post("/fs/grep", json={"path": path, "pattern": "error", "max_matches": 10})
+            self.assertEqual(response.status_code, 200)
+            mock_grep.assert_called_with(path, pattern="error", max_matches=10)
+        finally:
+            os.unlink(path)
+
+
+class TestAdditionalOracleRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.oracle_build_deploy")
+    def test_oracle_build_deploy(self, mock_build):
+        mock_build.return_value = {"status": "deployed"}
+        response = self.client.post("/oracle/build-deploy")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "deployed")
+        mock_build.assert_called_once()
+
+
+class TestCodexHandoverRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.codex_handover_index")
+    def test_codex_handover(self, mock_codex):
+        mock_codex.return_value = {"status": "ok"}
+        response = self.client.get("/codex/handover")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "ok")
+        mock_codex.assert_called_once()
+
+
+class TestAdditionalUIRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.screenshot")
+    def test_ui_screenshot(self, mock_screenshot):
+        mock_screenshot.return_value = {"status": "ok"}
+        response = self.client.get("/ui/screenshot?save=1")
+        self.assertEqual(response.status_code, 200)
+        mock_screenshot.assert_called_once_with(save=True)
+
+    @patch("modules.type_text")
+    def test_ui_type(self, mock_type):
+        mock_type.return_value = {"status": "typed"}
+        response = self.client.post("/ui/type", json={"text": "hello"})
+        self.assertEqual(response.status_code, 200)
+        mock_type.assert_called_once_with("hello")
+
+
+class TestReasoningRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.reason")
+    def test_reasoning_solve(self, mock_reason):
+        mock_reason.return_value = MagicMock(
+            problem="prob", answer="ans", succeeded=True, elapsed_ms=10.0,
+            plan=MagicMock(goal_statement="g", steps=[], confidence=1.0, model="m"),
+            actions=[],
+            halt=MagicMock(reason="done", steps_used=1, steps_budget=8, halted_early=False),
+            feedback="fb"
+        )
+        response = self.client.post("/reasoning/solve", json={"problem": "prob"})
+        self.assertEqual(response.status_code, 200)
+        mock_reason.assert_called_once()
+
+    @patch("modules.plan_only")
+    def test_reasoning_plan(self, mock_plan):
+        mock_plan.return_value = MagicMock(
+            goal_statement="g", steps=[], step_count=0, confidence=1.0, model="m"
+        )
+        response = self.client.post("/reasoning/plan", json={"problem": "prob"})
+        self.assertEqual(response.status_code, 200)
+        mock_plan.assert_called_once()
+
+    @patch("modules.execute_step")
+    def test_reasoning_execute_step(self, mock_exec):
+        mock_exec.return_value = MagicMock(
+            step_index=0, step_description="d", action_type="a", payload={}, confidence=1.0, should_execute=True
+        )
+        response = self.client.post("/reasoning/execute_step", json={"step": "step1"})
+        self.assertEqual(response.status_code, 200)
+        mock_exec.assert_called_once()
+
+    @patch("modules.reasoning_module.discover_skills")
+    def test_reasoning_skills(self, mock_skills):
+        mock_skills.return_value = []
+        response = self.client.get("/reasoning/skills")
+        self.assertEqual(response.status_code, 200)
+        mock_skills.assert_called_once()
+
+    @patch("modules.reasoning_module.inject_gotcha")
+    def test_reasoning_inject_gotcha(self, mock_gotcha):
+        mock_gotcha.return_value = {"status": "injected"}
+        response = self.client.post("/reasoning/inject_gotcha", json={"module": "m", "text": "t"})
+        self.assertEqual(response.status_code, 200)
+        mock_gotcha.assert_called_once()
+
+
+class TestAdditionalRetrospectiveRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.load_memory")
+    def test_retrospective_memory(self, mock_load):
+        mock_load.return_value = "memory content"
+        response = self.client.get("/retrospective/memory?domain=general")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["content"], "memory content")
+        mock_load.assert_called_once()
+
+    def test_retrospective_memory_invalid_domain(self):
+        response = self.client.get("/retrospective/memory?domain=invalid")
+        self.assertEqual(response.status_code, 400)
+
+    @patch("modules.prune_memory")
+    def test_retrospective_prune_memory(self, mock_prune):
+        mock_prune.return_value = {"pruned_count": 1, "domains_affected": ["general"]}
+        response = self.client.post("/retrospective/prune_memory", json={"max_age_days": 10})
+        self.assertEqual(response.status_code, 200)
+        mock_prune.assert_called_once()
+
+    @patch("modules.retrospective_module.assess_memory_quality")
+    def test_retrospective_memory_quality(self, mock_assess):
+        mock_assess.return_value = {"quality": "good"}
+        response = self.client.get("/retrospective/memory_quality?domain=general")
+        self.assertEqual(response.status_code, 200)
+        mock_assess.assert_called_once()
+
+
+class TestDashboardRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.dashboard_module.get_dashboard_status")
+    def test_dashboard_status(self, mock_dash):
+        mock_dash.return_value = {"ok": True, "data": "data"}
+        response = self.client.get("/dashboard/status")
+        self.assertEqual(response.status_code, 200)
+        mock_dash.assert_called_once()
+
+
+class TestAdditionalVMRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.vm_relay.bootstrap_vm")
+    def test_vm_bootstrap(self, mock_boot):
+        mock_boot.return_value = {"ok": True}
+        response = self.client.post("/vm/bootstrap")
+        self.assertEqual(response.status_code, 200)
+        mock_boot.assert_called_once()
+
+    @patch("modules.vm_relay.send_task_to_vm")
+    def test_vm_task(self, mock_task):
+        mock_task.return_value = {"ok": True}
+        response = self.client.post("/vm/task", json={"task": "t", "task_type": "build"})
+        self.assertEqual(response.status_code, 200)
+        mock_task.assert_called_once()
+
+    @patch("modules.vm_relay.get_vm_status")
+    def test_vm_status(self, mock_status):
+        mock_status.return_value = {"ok": True}
+        response = self.client.get("/vm/status")
+        self.assertEqual(response.status_code, 200)
+        mock_status.assert_called_once()
+
+
+class TestMissionRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.mission_controller.load_queue")
+    def test_mission_queue(self, mock_load):
+        q = MagicMock(tasks=[], pending_count=0, active_count=0, done_count=0, parsed_at="now")
+        mock_load.return_value = q
+        response = self.client.get("/mission/queue")
+        self.assertEqual(response.status_code, 200)
+        mock_load.assert_called_once()
+
+    @patch("modules.mission_controller.run_mission_cycle")
+    def test_mission_cycle(self, mock_cycle):
+        mock_cycle.return_value = MagicMock(ok=True, active_task=None, queue_summary={}, timestamp="now", error=None)
+        response = self.client.post("/mission/cycle")
+        self.assertEqual(response.status_code, 200)
+        mock_cycle.assert_called_once()
+
+    @patch("modules.mission_controller.load_queue")
+    @patch("modules.mission_controller.mark_task_done")
+    def test_mission_done(self, mock_mark, mock_load):
+        t = MagicMock(task_id="t1")
+        mock_load.return_value = MagicMock(tasks=[t])
+        response = self.client.post("/mission/done", json={"task_id": "t1"})
+        self.assertEqual(response.status_code, 200)
+        mock_mark.assert_called_once()
+
+    @patch("modules.mission_controller.load_queue")
+    @patch("modules.mission_controller.mark_task_failed")
+    def test_mission_failed(self, mock_mark, mock_load):
+        t = MagicMock(task_id="t1")
+        mock_load.return_value = MagicMock(tasks=[t])
+        response = self.client.post("/mission/failed", json={"task_id": "t1"})
+        self.assertEqual(response.status_code, 200)
+        mock_mark.assert_called_once()
+
+    @patch("modules.learning_loop.weekly_digest")
+    def test_mission_digest(self, mock_digest):
+        mock_digest.return_value = MagicMock(ok=True, tasks_done=0, tasks_failed=0, summary="", digest_path="", error="")
+        response = self.client.get("/mission/digest")
+        self.assertEqual(response.status_code, 200)
+        mock_digest.assert_called_once()
+
+
+class TestBrowserRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.playwright_agent.navigate")
+    def test_browser_navigate(self, mock_nav):
+        mock_nav.return_value = MagicMock(ok=True, url="url", page_text="", screenshot_path="", timing_ms=1, error="")
+        response = self.client.post("/browser/navigate", json={"url": "http://a.b"})
+        self.assertEqual(response.status_code, 200)
+        mock_nav.assert_called_once()
+
+    @patch("modules.playwright_agent.take_screenshot")
+    def test_browser_screenshot(self, mock_sc):
+        mock_sc.return_value = MagicMock(ok=True, url="url", screenshot_path="", timing_ms=1, error="")
+        response = self.client.post("/browser/screenshot", json={"url": "http://a.b"})
+        self.assertEqual(response.status_code, 200)
+        mock_sc.assert_called_once()
+
+    @patch("modules.playwright_agent.fill_and_submit_form")
+    def test_browser_form(self, mock_form):
+        mock_form.return_value = MagicMock(ok=True, url="url", form_submitted=True, screenshot_path="", page_text="", timing_ms=1, error="")
+        response = self.client.post("/browser/form", json={"url": "http://a.b"})
+        self.assertEqual(response.status_code, 200)
+        mock_form.assert_called_once()
+
+    @patch("modules.academic_agent.solve_quiz")
+    def test_browser_quiz(self, mock_quiz):
+        mock_quiz.return_value = MagicMock(ok=True, url="url", questions_found=0, questions_answered=0, submitted=True, screenshot_path="", ai_answers=[], timestamp="", error="")
+        response = self.client.post("/browser/quiz", json={"url": "http://a.b"})
+        self.assertEqual(response.status_code, 200)
+        mock_quiz.assert_called_once()
+
+    @patch("modules.academic_agent.solve_assignment")
+    def test_browser_assignment(self, mock_ass):
+        mock_ass.return_value = MagicMock(ok=True, url="url", questions_found=0, ai_answers=[], screenshot_path="", timestamp="", error="")
+        response = self.client.post("/browser/assignment", json={"url": "http://a.b"})
+        self.assertEqual(response.status_code, 200)
+        mock_ass.assert_called_once()
+
+
+class TestLearningReflectRoute(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.learning_loop.reflect_on_task")
+    def test_learning_reflect(self, mock_reflect):
+        mock_reflect.return_value = MagicMock(ok=True, task_id="t", lesson="l", memory_updated=True, error="")
+        response = self.client.post("/learning/reflect", json={"task": {}})
+        self.assertEqual(response.status_code, 200)
+        mock_reflect.assert_called_once()
+
+
+class TestAgentRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.agent_preflight")
+    def test_agent_preflight(self, mock_pre):
+        mock_pre.return_value = {"ready": True}
+        response = self.client.post("/agent/preflight")
+        self.assertEqual(response.status_code, 200)
+        mock_pre.assert_called_once()
+
+    @patch("modules.agent_chat")
+    def test_agent_chat(self, mock_chat):
+        mock_chat.return_value = {"status": "ok"}
+        response = self.client.post("/agent/chat", json={"prompt": "hi"})
+        self.assertEqual(response.status_code, 200)
+        mock_chat.assert_called_once()
+
+    @patch("modules.agent_stream")
+    def test_agent_stream(self, mock_stream):
+        mock_stream.return_value = {"status": "ok"}
+        response = self.client.post("/agent/stream", json={"prompt": "hi"})
+        self.assertEqual(response.status_code, 200)
+        mock_stream.assert_called_once()
+
+
+class TestGeminiRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.gemini_preflight")
+    def test_gemini_preflight(self, mock_pre):
+        mock_pre.return_value = {"ready": True}
+        response = self.client.post("/gemini/preflight", json={})
+        self.assertEqual(response.status_code, 200)
+        mock_pre.assert_called_once()
+
+    @patch("modules.run_gemini_prompt")
+    def test_gemini_prompt(self, mock_prompt):
+        mock_prompt.return_value = {"status": "ok"}
+        response = self.client.post("/gemini/prompt", json={"prompt": "hi"})
+        self.assertEqual(response.status_code, 200)
+        mock_prompt.assert_called_once()
+
+
+class TestAntigravityRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.antigravity_preflight")
+    def test_antigravity_preflight(self, mock_pre):
+        mock_pre.return_value = {"ready": True}
+        response = self.client.post("/gemini/antigravity/preflight", json={})
+        self.assertEqual(response.status_code, 200)
+        mock_pre.assert_called_once()
+
+    @patch("modules.run_antigravity_prompt")
+    def test_antigravity_prompt(self, mock_prompt):
+        mock_prompt.return_value = {"status": "ok"}
+        response = self.client.post("/gemini/antigravity/prompt", json={"prompt": "hi"})
+        self.assertEqual(response.status_code, 200)
+        mock_prompt.assert_called_once()
+
+
+class TestProofRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = authed_client(bridge.app.test_client())
+
+    @patch("modules.build_collaboration_proof")
+    def test_proof_collaboration(self, mock_proof):
+        mock_proof.return_value = {"status": "ok"}
+        response = self.client.post("/proof/collaboration", json={})
+        self.assertEqual(response.status_code, 200)
+        mock_proof.assert_called_once()
+
+
+class TestRemoteRoutes(unittest.TestCase):
+    def setUp(self):
+        bridge.app.testing = True
+        self.client = bridge.app.test_client()
+
+    @patch("PIL.ImageGrab.grab")
+    def test_remote_screen_success(self, mock_grab):
+        mock_img = MagicMock()
+        mock_img.save.side_effect = lambda fp, format: fp.write(b"png")
+        mock_grab.return_value = mock_img
+
+        response = self.client.get("/remote/screen")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, b"png")
+
+    @patch("PIL.ImageGrab.grab")
+    def test_remote_screen_error(self, mock_grab):
+        mock_grab.side_effect = Exception("failed")
+        response = self.client.get("/remote/screen")
+        self.assertEqual(response.status_code, 500)
+
+    @patch.dict("sys.modules", {"pyautogui": MagicMock()})
+    def test_remote_input_mouse_click(self):
+        response = self.client.post("/remote/input", json={"type": "mouse_click", "x": 10, "y": 20})
+        self.assertEqual(response.status_code, 200)
+        sys.modules["pyautogui"].click.assert_called_once_with(10, 20)
+
+    @patch.dict("sys.modules", {"pyautogui": MagicMock()})
+    def test_remote_input_mouse_move(self):
+        response = self.client.post("/remote/input", json={"type": "mouse_move", "x": 10, "y": 20})
+        self.assertEqual(response.status_code, 200)
+        sys.modules["pyautogui"].moveTo.assert_called_once_with(10, 20, duration=0.1)
+
+    @patch.dict("sys.modules", {"pyautogui": MagicMock()})
+    def test_remote_input_keyboard(self):
+        response = self.client.post("/remote/input", json={"type": "keyboard", "key": "A", "ctrl": True})
+        self.assertEqual(response.status_code, 200)
+        sys.modules["pyautogui"].keyDown.assert_called_with("ctrl")
+        sys.modules["pyautogui"].press.assert_called_with("a")
+        sys.modules["pyautogui"].keyUp.assert_called_with("ctrl")
+
+    @patch.dict("sys.modules", {"pyautogui": MagicMock()})
+    def test_remote_input_command(self):
+        response = self.client.post("/remote/input", json={"type": "command", "command": "Alt+Tab"})
+        self.assertEqual(response.status_code, 200)
+        sys.modules["pyautogui"].hotkey.assert_called_with("alt", "tab")
+
+    @patch("psutil.cpu_percent", create=True)
+    @patch("psutil.virtual_memory", create=True)
+    @patch("psutil.disk_usage", create=True)
+    @patch("psutil.boot_time", create=True)
+    def test_remote_metrics_success(self, mock_boot, mock_disk, mock_mem, mock_cpu):
+        mock_cpu.return_value = 10
+        mock_mem.return_value = MagicMock(used=1024**3, total=4*1024**3)
+        mock_disk.return_value = MagicMock(free=100*1024**3)
+        mock_boot.return_value = 0
+        with patch("time.time", return_value=1000):
+            response = self.client.get("/remote/metrics")
+            self.assertEqual(response.status_code, 200)
+            data = response.get_json()
+            self.assertEqual(data["cpu"], 10)
+            self.assertEqual(data["ram_used"], 1.0)
+
+    @patch("psutil.cpu_percent", create=True)
+    @patch("psutil.virtual_memory", create=True)
+    @patch("psutil.disk_usage", create=True)
+    @patch("psutil.boot_time", create=True)
+    def test_remote_metrics_error(self, mock_boot, mock_disk, mock_mem, mock_cpu):
+        mock_cpu.side_effect = Exception("failed")
+        response = self.client.get("/remote/metrics")
+        self.assertEqual(response.status_code, 500)
 
 if __name__ == "__main__":
     unittest.main()
